@@ -1,0 +1,36 @@
+,,,,,,,,,,,
+,HOUSEHOLD HUB & MASTER DIRECTORY,,,,,,,,,,
+,"Centralized household administration: Family member occupancy, pet care routines, and chore allocation master rules.",,,,,,,,,,
+,,,,,,,,,,,
+,HOUSEHOLD MEMBERS,,,,,,MASTER CHORE REGISTRY & ALLOCATION RULES,,,,
+,Name,Role,Occupancy,Special Rotation Groups,Active Status,,Chore,Member / Group,Frequency,Suggested Days,Details / Notes
+,Thom,Supreme Overlord,Full-Time,"Parents, Non-Casual, All",TRUE,,Empty the Litter Box (Morning & Evening),Non-Casual,Daily,N/A,"Scoop waste, refresh litter, dispose of waste."
+,Meghan,Supreme Overlord,Full-Time,"Parents, Non-Casual, All",TRUE,,Feed the Herd (Breakfast & Supper),Non-Casual,Daily,N/A,Feed all animals the appropriate food and portions.
+,Sydney,Minion,Full-Time,"Kids, Non-Casual, All",TRUE,,Empty Dishwasher,All Non-Casual,Daily,Mon – Sun,"Put away clean dishes, Load any dirty dishes"
+,Cadence,Minion,Bi-Weekly,"Kids, Non-Casual, All",TRUE,,Make Supper: Plan Ahead!,Non-Casual,Daily,Mon – Sun,"Think of a menu, make a list if items are needed, prepare & serve (try to have a plan in place by at least the day before)"
+,Mason,Minion,Bi-Weekly,"Kids, Non-Casual, All",TRUE,,Dinner Dishes & Kitchen Cleanup,Non-Casual,Daily,N/A,"Load dishwasher, put leftovers in containers and put away, wash and dry any extra dishes, wipe counters, table, stove & other surfaces"
+,Koda,Minion,Casual,All,TRUE,,Tidy Bedrooms / Personal Spaces,Kids,Once a Week,Saturday,"Pick up mess & laundry, dust surfaces, vacuum floors (each individual kid is responsible for their own space)"
+,Keyanna,Minion,Casual,All,TRUE,,Laundry,All,Once a Week,Saturday,"Wash, dry, fold & put away (each kid responsible for their own items)"
+,,,,,,,"Clean Basement (Pick Up, Dust, Vacuum)",Non-Casual,Once a Week,Sunday,"Pick up mess & laundry, dust surfaces, vacuum floors"
+,OCCUPANCY CATEGORIES,,,,,,Herd Feeding Station Deep Clean,All,Once a Week,Sunday,"Wash & sanitize pet bowls, vacuum feeding mat"
+,Type,Description,Rules,,Active Status,,Curbside Recycling,Thom,Bi-Weekly,Thursday Evening (required),Roll recycling bin to curb Thursday evening for Friday pickup (alternating weeks)
+,Full-Time,Constant Residency,Included in all weekly/monthly schedulings,,TRUE,,Curbside Waste,Non-Casual,Bi-Weekly,Thursday Evening (required),Roll waste bin to curb Thursday evening for Friday pickup (alternating weeks)
+,Bi-Weekly,Half-Time Residency,"Included in weekly/monthly schedulings when in residence, Use ""Custody Schedule Rotation"" data",,TRUE,,,,,,
+,Casual,Periodic Residency,Manually added to any schedules,,TRUE,,SCHEDULE CONFIGURATIONS,,,,
+,SPECIAL ROTATION GROUPS,,,,,,Active Week Start Date,2026-10-19,Printable Weekly Schedule,,
+,Name,Members,,,Active Status,,,,,,
+,All,"Thom, Meghan, Sydney, Cadence, Mason, Koda, Keyanna",,,TRUE,,Custody Schedule Rotation,Kids Week,Bi-Weekly Schedule,,"Mason, Cadence"
+,Kids,"Sydney, Cadence, Mason",,,TRUE,,,,,,
+,Parents,"Thom, Meghan",,,TRUE,,,,,,
+,Non-Casual,"Thom, Meghan, Sydney, Cadence, Mason",,,TRUE,,,,,,
+,,,,,,,,,,,
+,PET CARE PROFILES & FEEDING ROUTINES,,,,,,,,,,
+,Pet Name,Dog / Cat,Routine,Care Responsibilities,Active Status,,,,,,
+,Ellie,Dog,Morning & Evening,"Feed morning/evening, let outside, walk frequently, fresh water",TRUE,,,,,,
+,Lewis,Dog,Morning & Evening,"Feed morning/evening, let outside, walk frequently, fresh water",TRUE,,,,,,
+,Casey,Cat,Morning & Evening,"Feed morning/evening, scoop litter box, fresh water",TRUE,,,,,,
+,Gigi,Cat,Morning & Evening,"Feed morning/evening, scoop litter box, fresh water",TRUE,,,,,,
+,Sloane,Cat,Morning & Evening,"Feed morning/evening, scoop litter box, fresh water",TRUE,,,,,,
+,Scoob,Cat,Morning & Evening,"Feed morning/evening, scoop litter box, fresh water",TRUE,,,,,,
+,,,,,FALSE,,Weekly Sign-Off & Inspection,Parents,Once a Week,Sunday,"Rigorously review completed tasks, administer severe punishments if not done satisfactorily, sign off if work is acceptible"
+,,,,,FALSE,,Empty Dishwasher,All Non-Casual,Daily,Mon – Sun,

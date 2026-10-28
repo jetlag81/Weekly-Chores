@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weekly Chores & Household Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      html, body, #root {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      @media print {
+        @page {
+          size: letter landscape;
+          margin: 0.28in 0.32in;
+        }
+
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+
+        html, body, #root, #app-container {
+          height: auto !important;
+          min-height: 0 !important;
+          background: #ffffff !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: visible !important;
+        }
+
+        header,
+        #__code-inspector-ui,
+        .no-print,
+        .print\:hidden {
+          display: none !important;
+        }
+
+        main {
+          max-width: 100% !important;
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        #printable-schedule-card {
+          border: none !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100% !important;
+          overflow: visible !important;
+        }
+
+        #printable-schedule-card .overflow-x-auto {
+          overflow: visible !important;
+        }
+
+        #printable-schedule-table {
+          width: 100% !important;
+          table-layout: fixed !important;
+          border-collapse: collapse !important;
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+        }
+
+        #printable-schedule-table th,
+        #printable-schedule-table td {
+          position: static !important;
+        }
+
+        /* Clean up interactive controls when printing so it looks like a printed sheet */
+        #printable-schedule-table select {
+          appearance: none !important;
+          -webkit-appearance: none !important;
+          -moz-appearance: none !important;
+          border: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          text-align: center !important;
+          text-align-last: center !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/main.tsx"></script>
+  </body>
+</html>
+

@@ -6,6 +6,7 @@ import {
   Award,
   Calendar,
   CalendarDays,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Circle,
@@ -1858,44 +1859,14 @@ function App({
       active: true
     }];
   }, [rosterSheet]);
-  const hubSpecialGroups = useMemo(() => {
-    const rRows = rosterSheet.data || [];
-    const groups = [];
-    rRows.forEach(r => {
-      if (!r.row || r.index_ < 20 || r.index_ > 25) return;
-      const col0 = String(r.row[0] || "").trim();
-      if (!col0 || col0.toLowerCase() === "name" || col0.toLowerCase().includes("special rotation")) return;
-      groups.push({
-        name: col0,
-        members: String(r.row[1] || "").trim(),
-        active: r.row[4] !== false && String(r.row[4]).toLowerCase() !== "false"
-      });
-    });
-    if (groups.length > 0) return groups;
-    return [{
-      name: "All",
-      members: "Thom, Meghan, Sydney, Cadence, Mason, Koda, Keyanna",
-      active: true
-    }, {
-      name: "Kids",
-      members: "Sydney, Cadence, Mason",
-      active: true
-    }, {
-      name: "Parents",
-      members: "Thom, Meghan",
-      active: true
-    }, {
-      name: "Non-Casual",
-      members: "Thom, Meghan, Sydney, Cadence, Mason",
-      active: true
-    }];
-  }, [rosterSheet]);
   const familyMembers = useMemo(() => {
     const rRows = rosterSheet.data || [];
     const memberRows = rRows.filter(r => {
-      if (r.index_ < 4 || r.index_ > 12) return false;
+      const isAddedMemberRow = Boolean(r.row && r.row[5] === "MEMBER_ROW");
+      if (!isAddedMemberRow && (r.index_ < 4 || r.index_ > 12)) return false;
       if (!r.row || !r.row[0]) return false;
       const rawName = String(r.row[0]).trim();
+      if (!rawName) return false;
       const lower = rawName.toLowerCase();
       if (lower === "household members" || lower === "name" || lower.includes("directory") || lower.includes("occupancy")) {
         return false;
@@ -2019,10 +1990,30 @@ function App({
       };
     });
   }, [rosterSheet]);
+  const hubSpecialGroups = useMemo(() => {
+    const groupNames = ["All", "Kids", "Parents", "Non-Casual"];
+    return groupNames.map(groupName => {
+      const matchedMembers = familyMembers
+        .filter(m => {
+          const parsed = String(m.specialGroups || "")
+            .split(",")
+            .map(s => s.trim().toLowerCase())
+            .filter(Boolean);
+          return parsed.includes(groupName.toLowerCase());
+        })
+        .map(m => m.name);
+      return {
+        name: groupName,
+        members: matchedMembers.length > 0 ? matchedMembers.join(", ") : "None",
+        active: true
+      };
+    });
+  }, [familyMembers]);
   const kidsList = useMemo(() => {
     return familyMembers.filter(m => {
+      if (m.active === false) return false;
       const roleLower = String(m.role || "").toLowerCase();
-      return !roleLower.includes("parent") && !roleLower.includes("overseer") && !roleLower.includes("admin") && !roleLower.includes("mom") && !roleLower.includes("dad");
+      return !roleLower.includes("parent") && !roleLower.includes("overseer") && !roleLower.includes("overlord") && !roleLower.includes("admin") && !roleLower.includes("mom") && !roleLower.includes("dad");
     }).map(m => m.name);
   }, [familyMembers]);
   const allKidsList = useMemo(() => {
@@ -2501,6 +2492,8 @@ function App({
   const [editChoreRotationGroup, setEditChoreRotationGroup] = useState("All Non-Casual");
   const [showCombineModal, setShowCombineModal] = useState(false);
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [openMemberGroupDropdown, setOpenMemberGroupDropdown] = useState(null);
+  const [newMemberGroups, setNewMemberGroups] = useState(["Kids", "Non-Casual", "All"]);
   const [combineTargetA, setCombineTargetA] = useState(null);
   const [combineTargetB, setCombineTargetB] = useState(null);
   const [customCombinedTitle, setCustomCombinedTitle] = useState("");
@@ -2689,8 +2682,9 @@ function App({
   }, [activeWeekDays]);
   const activeWeeklyKids = useMemo(() => {
     return familyMembers.filter(m => {
+      if (m.active === false) return false;
       const roleLower = String(m.role || "").toLowerCase();
-      const isKid = !roleLower.includes("parent") && !roleLower.includes("overseer");
+      const isKid = !roleLower.includes("parent") && !roleLower.includes("overseer") && !roleLower.includes("overlord");
       if (!isKid) return false;
       if (m.type === "regular") return true;
       if (m.type === "biweekly") return isBiWeeklyHereThisWeek;
@@ -2699,8 +2693,9 @@ function App({
   }, [familyMembers, isBiWeeklyHereThisWeek]);
   const casualKidsList = useMemo(() => {
     const list = familyMembers.filter(m => {
+      if (m.active === false) return false;
       const roleLower = String(m.role || "").toLowerCase();
-      const isKid = !roleLower.includes("parent") && !roleLower.includes("overseer");
+      const isKid = !roleLower.includes("parent") && !roleLower.includes("overseer") && !roleLower.includes("overlord");
       return isKid && m.type === "casual";
     }).map(m => m.name);
     return list.length > 0 ? list : ["Koda", "Keyanna"];
@@ -4164,28 +4159,39 @@ function App({
     if ("name" in patch) updateRow[0] = patch.name;
     if ("role" in patch) updateRow[1] = patch.role;
     if ("residency" in patch) updateRow[2] = patch.residency;
-    if ("schedule" in patch) updateRow[3] = patch.schedule;
+    if ("specialGroups" in patch) updateRow[3] = patch.specialGroups;
+    else if ("schedule" in patch) updateRow[3] = patch.schedule;
     if ("active" in patch) updateRow[4] = patch.active;
     updateItem(targetRange, rowIndex_, updateRow);
     setNotice(`Updated "${patch.name || ((_b2 = existingRow == null ? void 0 : existingRow.row) == null ? void 0 : _b2[0]) || "member"}" in Household Hub!`);
     setTimeout(() => setNotice(null), 3e3);
   };
-  const handleAddRosterMember = (name, role, residency, schedule) => {
+  const handleAddRosterMember = (name, role, residency, specialGroups, active = true) => {
     var _a2;
     if (!name || !name.trim()) return;
     const targetRange = hubRangeIndex >= 0 ? hubRangeIndex : (data == null ? void 0 : data.length) > 1 ? 1 : 0;
     const cleanName = name.trim();
-    const cleanRole = role ? role.trim() : "Family Member";
+    const cleanRole = role ? role.trim() : "Minion";
     const cleanRes = residency || "Full-Time";
-    const cleanSchedule = schedule ? schedule.trim() : "Daily chore rotation & bedroom checklist";
-    const petHeader = (_a2 = rosterSheet.data) == null ? void 0 : _a2.find(r => {
-      var _a3;
-      const c0 = String(((_a3 = r.row) == null ? void 0 : _a3[0]) || "").toLowerCase().trim();
-      return c0.includes("pet care profile") || c0.includes("pet name");
+    const defaultGroups = cleanRes === "Casual" ? "All" : cleanRole === "Supreme Overlord" ? "Parents, Non-Casual, All" : "Kids, Non-Casual, All";
+    const cleanGroups = specialGroups ? specialGroups.trim() : defaultGroups;
+    const emptySlot = (_a2 = rosterSheet.data) == null ? void 0 : _a2.find(r => {
+      if (r.index_ < 5 || r.index_ > 12) return false;
+      return !r.row || !r.row[0] || !String(r.row[0]).trim();
     });
-    const insertIdx = petHeader ? petHeader.index_ : void 0;
-    const newRow = [cleanName, cleanRole, cleanRes, cleanSchedule, true, null, void 0, void 0, void 0, void 0, void 0, void 0];
-    insertItem(targetRange, insertIdx, newRow);
+    if (emptySlot) {
+      const updateRow = new Array(12).fill(void 0);
+      updateRow[0] = cleanName;
+      updateRow[1] = cleanRole;
+      updateRow[2] = cleanRes;
+      updateRow[3] = cleanGroups;
+      updateRow[4] = active;
+      updateRow[5] = "MEMBER_ROW";
+      updateItem(targetRange, emptySlot.index_, updateRow);
+    } else {
+      const newRow = [cleanName, cleanRole, cleanRes, cleanGroups, active, "MEMBER_ROW", null, null, null, null, null, null];
+      insertItem(targetRange, void 0, newRow);
+    }
     setShowAddMemberModal(false);
     setNotice(`Added "${cleanName}" to Household Hub!`);
     setTimeout(() => setNotice(null), 3e3);
@@ -4883,9 +4889,34 @@ function App({
             const wasteActive = thu ? isCurbsideActiveOnDate("Curbside Waste", thu.year, thu.month, thu.day) : false;
             const recyclingActive = thu ? isCurbsideActiveOnDate("Curbside Recycling", thu.year, thu.month, thu.day) : true;
             return <>{"For selected week, "}<strong>{activeSyncWeek || hubScheduleConfig.activeWeekStart}</strong>{":"}<br />{"Waste = "}<strong className={wasteActive ? "text-emerald-700" : "text-rose-700"}>{wasteActive ? "Active" : "Inactive"}</strong><br />{"Recycling = "}<strong className={recyclingActive ? "text-emerald-700" : "text-rose-700"}>{recyclingActive ? "Active" : "Inactive"}</strong></>;
-          })()}</p></div></div></div><div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4"><div className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl"><div className="text-[10px] font-bold text-purple-900 uppercase tracking-wider">Full-Time Occupants</div><div className="text-lg font-extrabold text-purple-950 mt-0.5">{familyMembers.filter(m => m.type === "regular").length}{" Members"}</div><div className="text-[11px] text-purple-700 truncate mt-0.5">{familyMembers.filter(m => m.type === "regular").map(m => m.name).join(", ")}</div></div><div className="p-3 bg-pink-50/70 border border-pink-200 rounded-xl"><div className="text-[10px] font-bold text-pink-900 uppercase tracking-wider">Bi-Weekly Occupants</div><div className="text-lg font-extrabold text-pink-950 mt-0.5">{familyMembers.filter(m => m.type === "biweekly").length}{" Members"}</div><div className="text-[11px] text-pink-700 truncate mt-0.5">{familyMembers.filter(m => m.type === "biweekly").map(m => m.name).join(" & ")}{" (Kids Week)"}</div></div><div className="p-3 bg-sky-50/70 border border-sky-200 rounded-xl"><div className="text-[10px] font-bold text-sky-900 uppercase tracking-wider">Casual Assignees</div><div className="text-lg font-extrabold text-sky-950 mt-0.5">{familyMembers.filter(m => m.type === "casual").length}{" Members"}</div><div className="text-[11px] text-sky-700 truncate mt-0.5">{familyMembers.filter(m => m.type === "casual").map(m => m.name).join(", ")}{" (Manual Add)"}</div></div><div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl"><div className="text-[10px] font-bold text-amber-900 uppercase tracking-wider">Feed the Herd</div><div className="text-lg font-extrabold text-amber-950 mt-0.5">{rosterPets.length}{" Pets"}</div><div className="text-[11px] text-amber-800 truncate mt-0.5">{rosterPets.map(p => p.name).join(", ")}</div></div></div><div className="space-y-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Users className="w-4 h-4 text-indigo-600" /><h3 className="text-sm font-bold text-slate-900">Household Members</h3><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">{"Rows 5\u201311 \u2022 Linked Data"}</span></div><span className="text-xs text-slate-500">{familyMembers.length}{" Registered Occupants"}</span></div><div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs"><table className="w-full text-left text-xs"><thead className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3">Name</th><th className="p-3">Role</th><th className="p-3">Occupancy</th><th className="p-3">Special Rotation Groups</th><th className="p-3 text-center">Active Status</th></tr></thead><tbody className="divide-y divide-slate-200">{familyMembers.map(member => <tr key={member.index_} className="hover:bg-slate-50/70 transition"><td className="p-3 font-semibold text-slate-800"><div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full shrink-0" style={{
-            backgroundColor: member.color
-          }} /><span className="font-bold text-slate-900">{member.name}</span></div></td><td className="p-3"><span className={`px-2 py-0.5 rounded font-bold text-[11px] flex items-center gap-1 w-fit ${member.role === "Supreme Overlord" ? "bg-amber-100 text-amber-900 border border-amber-300" : "bg-indigo-50 text-indigo-800 border border-indigo-200"}`}><span>{member.role}</span><span className="text-[9px] font-normal opacity-75">({member.role === "Supreme Overlord" ? "Parent" : "Kid"})</span></span></td><td className="p-3"><span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${member.type === "biweekly" ? "bg-pink-50 text-pink-700 border border-pink-200" : member.type === "casual" ? "bg-sky-50 text-sky-700 border border-sky-200" : "bg-slate-100 text-slate-700 border border-slate-200"}`}>{member.residency}</span></td><td className="p-3 text-slate-700 font-medium">{member.specialGroups || "All"}</td><td className="p-3 text-center">{member.active ? <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><CircleCheck className="w-3.5 h-3.5 text-emerald-600" />Active</span> : <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200"><Circle className="w-3.5 h-3.5 text-slate-400" />Inactive</span>}</td></tr>)}</tbody></table></div></div><div className="mt-8 pt-5 border-t border-slate-200 space-y-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Layers className="w-4 h-4 text-purple-600" /><h3 className="text-sm font-bold text-slate-900">Occupancy Categories & Rules</h3><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">Rows 14–17</span></div></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">{hubOccupancyCategories.map(cat => <div key={cat.type} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2 shadow-2xs"><div className="flex items-center justify-between"><span className="font-bold text-sm text-slate-900">{cat.type}</span><span className="text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Active</span></div><div className="text-[11px] font-semibold text-indigo-700">{cat.description}</div><p className="text-[11px] text-slate-600 leading-snug"><strong>Rule:</strong>{" "}{cat.rules}</p></div>)}</div></div><div className="mt-8 pt-5 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-5 text-xs"><div className="space-y-3"><div className="flex items-center justify-between"><h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><Users className="w-4 h-4 text-indigo-600" /><span>Special Rotation Groups</span></h3><span className="text-[10px] text-slate-500 font-semibold">Rows 20–25</span></div><div className="space-y-2">{hubSpecialGroups.map(grp => <div key={grp.name} className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><div className="flex items-center justify-between"><span className="font-bold text-slate-900">{grp.name}</span><span className="text-[10px] text-slate-400 font-medium">Group</span></div><div className="text-[11px] text-slate-600 mt-1 leading-snug">{grp.members}</div></div>)}</div></div><div className="space-y-3"><div className="flex items-center justify-between"><h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><Settings2 className="w-4 h-4 text-purple-600" /><span>Schedule Configurations</span></h3><span className="text-[10px] text-slate-500 font-semibold">Rows 18–21</span></div><div className="space-y-2"><div className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><span className="font-bold text-slate-900 block">Active Week Start Date</span><div className="text-sm font-extrabold text-indigo-600 mt-0.5">{hubScheduleConfig.activeWeekStart}</div><span className="text-[10px] text-slate-500">Scope: Printable Weekly Schedule</span></div><div className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><span className="font-bold text-slate-900 block">Custody Schedule Rotation</span><div className="text-sm font-extrabold text-pink-600 mt-0.5">{hubScheduleConfig.custodyRotation}</div><span className="text-[10px] text-slate-500">{"Bi-Weekly Schedule \u2022 Members: "}{hubScheduleConfig.custodyMembers}</span></div><div className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><span className="font-bold text-slate-900 block">Waste / Recycling Schedule Rotation</span><div className="text-xs font-semibold text-slate-700 mt-0.5">{hubScheduleConfig.wasteRotation}</div><span className="text-[10px] text-slate-500">{"Alternating weeks \u2022 Members: "}{hubScheduleConfig.wasteMembers}</span></div></div></div></div><div className="mt-8 pt-5 border-t border-slate-200 space-y-4"><div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4"><div><div className="flex items-center gap-2"><div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs"><ListTodo className="w-4 h-4" /></div><h3 className="text-base font-bold text-slate-900">Master Chores Template & Registry</h3><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">{hubMasterChores.length}{" Tasks \u2022 Rows 5\u201315 (Cols 6\u201310)"}</span></div><p className="text-xs text-slate-500 mt-1">Central chore configuration defining categories, target days, frequencies, and rotation groups. Changes made here persist directly back to the spreadsheet.</p></div><div className="flex flex-wrap items-center gap-2"><button onClick={() => {
+          })()}</p></div></div></div><div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4"><div className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl"><div className="text-[10px] font-bold text-purple-900 uppercase tracking-wider">Full-Time Occupants</div><div className="text-lg font-extrabold text-purple-950 mt-0.5">{familyMembers.filter(m => m.type === "regular").length}{" Members"}</div><div className="text-[11px] text-purple-700 truncate mt-0.5">{familyMembers.filter(m => m.type === "regular").map(m => m.name).join(", ")}</div></div><div className="p-3 bg-pink-50/70 border border-pink-200 rounded-xl"><div className="text-[10px] font-bold text-pink-900 uppercase tracking-wider">Bi-Weekly Occupants</div><div className="text-lg font-extrabold text-pink-950 mt-0.5">{familyMembers.filter(m => m.type === "biweekly").length}{" Members"}</div><div className="text-[11px] text-pink-700 truncate mt-0.5">{familyMembers.filter(m => m.type === "biweekly").map(m => m.name).join(" & ")}{" (Kids Week)"}</div></div><div className="p-3 bg-sky-50/70 border border-sky-200 rounded-xl"><div className="text-[10px] font-bold text-sky-900 uppercase tracking-wider">Casual Assignees</div><div className="text-lg font-extrabold text-sky-950 mt-0.5">{familyMembers.filter(m => m.type === "casual").length}{" Members"}</div><div className="text-[11px] text-sky-700 truncate mt-0.5">{familyMembers.filter(m => m.type === "casual").map(m => m.name).join(", ")}{" (Manual Add)"}</div></div><div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl"><div className="text-[10px] font-bold text-amber-900 uppercase tracking-wider">Feed the Herd</div><div className="text-lg font-extrabold text-amber-950 mt-0.5">{rosterPets.length}{" Pets"}</div><div className="text-[11px] text-amber-800 truncate mt-0.5">{rosterPets.map(p => p.name).join(", ")}</div></div></div><div className="space-y-3"><div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><Users className="w-4 h-4 text-indigo-600" /><h3 className="text-sm font-bold text-slate-900">Household Members</h3><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">{"Rows 5\u201311 \u2022 Linked Data"}</span></div><div className="flex items-center gap-3"><span className="text-xs text-slate-500">{familyMembers.length}{" Registered Occupants"}</span><button type="button" onClick={() => setShowAddMemberModal(true)} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-xs transition cursor-pointer" title="Add a new household member"><Plus className="w-3.5 h-3.5" /><span>Add Member</span></button></div></div><div className="overflow-visible border border-slate-200 rounded-xl shadow-2xs"><table className="w-full text-left text-xs"><thead className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3">Name</th><th className="p-3">Role</th><th className="p-3">Occupancy</th><th className="p-3">Special Rotation Groups</th><th className="p-3 text-center">Active Status</th><th className="p-3 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-200">{familyMembers.map(member => {
+              const roleVal = member.role === "Supreme Overlord" || member.role === "Overseer Supreme" ? "Supreme Overlord" : "Minion";
+              const resVal = member.type === "biweekly" ? "Bi-Weekly" : member.type === "casual" ? "Casual" : "Full-Time";
+              const allGroupTypes = ["Parents", "Kids", "Non-Casual", "All"];
+              const selectedGroups = String(member.specialGroups || "")
+                .split(",")
+                .map(s => s.trim())
+                .filter(Boolean);
+              const isDropdownOpen = openMemberGroupDropdown === member.index_;
+              const toggleGroupType = (grpType: string) => {
+                const currentSet = new Set(selectedGroups);
+                if (currentSet.has(grpType)) {
+                  currentSet.delete(grpType);
+                } else {
+                  currentSet.add(grpType);
+                }
+                const nextOrdered = allGroupTypes.filter(g => currentSet.has(g));
+                handleUpdateRosterMember(member.index_, {
+                  specialGroups: nextOrdered.join(", ")
+                });
+              };
+              return <tr key={`${member.index_}-${member.name}`} className="hover:bg-slate-50/70 transition"><td className="p-3 font-semibold text-slate-800"><div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full shrink-0" style={{
+                backgroundColor: member.color
+              }} /><span className="font-bold text-slate-900">{member.name}</span></div></td><td className="p-3"><select value={roleVal} onChange={e => handleUpdateRosterMember(member.index_, { role: e.target.value })} className={`px-2.5 py-1 rounded-lg font-bold text-[11px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 ${roleVal === "Supreme Overlord" ? "bg-amber-100 text-amber-900 border border-amber-300" : "bg-indigo-50 text-indigo-800 border border-indigo-200"}`}><option value="Supreme Overlord">Supreme Overlord (Parent)</option><option value="Minion">Minion (Kid)</option></select></td><td className="p-3"><select value={resVal} onChange={e => handleUpdateRosterMember(member.index_, { residency: e.target.value })} className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 ${resVal === "Bi-Weekly" ? "bg-pink-50 text-pink-700 border border-pink-200" : resVal === "Casual" ? "bg-sky-50 text-sky-700 border border-sky-200" : "bg-slate-100 text-slate-700 border border-slate-200"}`}><option value="Full-Time">Full-Time</option><option value="Bi-Weekly">Bi-Weekly</option><option value="Casual">Casual</option></select></td><td className="p-3 relative"><button type="button" onClick={() => setOpenMemberGroupDropdown(isDropdownOpen ? null : member.index_)} className="w-full min-w-[180px] flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-slate-800 bg-white border border-slate-200 hover:border-indigo-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"><span className="truncate">{selectedGroups.length > 0 ? selectedGroups.join(", ") : "None selected"}</span><ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${isDropdownOpen ? "rotate-180 text-indigo-600" : ""}`} /></button>{isDropdownOpen && <><div className="fixed inset-0 z-20" onClick={() => setOpenMemberGroupDropdown(null)} /><div className="absolute left-3 top-full mt-1 z-30 w-48 bg-white rounded-xl border border-slate-200 shadow-xl p-2 space-y-1"><div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">Rotation Groups</div>{allGroupTypes.map(grpType => {
+                const isChecked = selectedGroups.includes(grpType);
+                return <label key={grpType} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-indigo-50/70 cursor-pointer select-none transition"><input type="checkbox" checked={isChecked} onChange={() => toggleGroupType(grpType)} className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" /><span className={`text-xs ${isChecked ? "font-bold text-indigo-950" : "font-medium text-slate-700"}`}>{grpType}</span></label>;
+              })}</div></>}</td><td className="p-3 text-center"><select value={member.active ? "true" : "false"} onChange={e => handleUpdateRosterMember(member.index_, { active: e.target.value === "true" })} className={`px-2.5 py-1 rounded-full text-[11px] font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 ${member.active ? "text-emerald-700 bg-emerald-50 border border-emerald-200" : "text-slate-500 bg-slate-100 border border-slate-200"}`}><option value="true">{"\u2713 Active"}</option><option value="false">{"\u25CB Inactive"}</option></select></td><td className="p-3 text-right"><button type="button" onClick={() => handleDeleteRosterMember(member.index_, member.name)} className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer" title={`Remove ${member.name} from Household Members`}><Trash2 className="w-3.5 h-3.5" /></button></td></tr>;
+            })}</tbody></table></div></div><div className="mt-8 pt-5 border-t border-slate-200 space-y-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Layers className="w-4 h-4 text-purple-600" /><h3 className="text-sm font-bold text-slate-900">Occupancy Categories & Rules</h3><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">Rows 14–17</span></div></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">{hubOccupancyCategories.map(cat => <div key={cat.type} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2 shadow-2xs"><div className="flex items-center justify-between"><span className="font-bold text-sm text-slate-900">{cat.type}</span><span className="text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Active</span></div><div className="text-[11px] font-semibold text-indigo-700">{cat.description}</div><p className="text-[11px] text-slate-600 leading-snug"><strong>Rule:</strong>{" "}{cat.rules}</p></div>)}</div></div><div className="mt-8 pt-5 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-5 text-xs"><div className="space-y-3"><div className="flex items-center justify-between"><h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><Users className="w-4 h-4 text-indigo-600" /><span>Special Rotation Groups</span></h3><span className="text-[10px] text-slate-500 font-semibold">Rows 20–25</span></div><div className="space-y-2">{hubSpecialGroups.map(grp => <div key={grp.name} className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><div className="flex items-center justify-between"><span className="font-bold text-slate-900">{grp.name}</span><span className="text-[10px] text-slate-400 font-medium">Group</span></div><div className="text-[11px] text-slate-600 mt-1 leading-snug">{grp.members}</div></div>)}</div></div><div className="space-y-3"><div className="flex items-center justify-between"><h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><Settings2 className="w-4 h-4 text-purple-600" /><span>Schedule Configurations</span></h3><span className="text-[10px] text-slate-500 font-semibold">Rows 18–21</span></div><div className="space-y-2"><div className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><span className="font-bold text-slate-900 block">Active Week Start Date</span><div className="text-sm font-extrabold text-indigo-600 mt-0.5">{hubScheduleConfig.activeWeekStart}</div><span className="text-[10px] text-slate-500">Scope: Printable Weekly Schedule</span></div><div className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><span className="font-bold text-slate-900 block">Custody Schedule Rotation</span><div className="text-sm font-extrabold text-pink-600 mt-0.5">{hubScheduleConfig.custodyRotation}</div><span className="text-[10px] text-slate-500">{"Bi-Weekly Schedule \u2022 Members: "}{hubScheduleConfig.custodyMembers}</span></div><div className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><span className="font-bold text-slate-900 block">Waste / Recycling Schedule Rotation</span><div className="text-xs font-semibold text-slate-700 mt-0.5">{hubScheduleConfig.wasteRotation}</div><span className="text-[10px] text-slate-500">{"Alternating weeks \u2022 Members: "}{hubScheduleConfig.wasteMembers}</span></div></div></div></div><div className="mt-8 pt-5 border-t border-slate-200 space-y-4"><div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4"><div><div className="flex items-center gap-2"><div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs"><ListTodo className="w-4 h-4" /></div><h3 className="text-base font-bold text-slate-900">Master Chores Template & Registry</h3><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">{hubMasterChores.length}{" Tasks \u2022 Rows 5\u201315 (Cols 6\u201310)"}</span></div><p className="text-xs text-slate-500 mt-1">Central chore configuration defining categories, target days, frequencies, and rotation groups. Changes made here persist directly back to the spreadsheet.</p></div><div className="flex flex-wrap items-center gap-2"><button onClick={() => {
             setAddRemoveMode("add");
             setEditingChoreIndex(null);
             setShowAddRemoveChoreModal(true);
@@ -5222,13 +5253,32 @@ function App({
             if (combineTargetA !== null && combineTargetB !== null && combineTargetA !== combineTargetB) {
               handleCombineChores(combineTargetA, combineTargetB, customCombinedTitle);
             }
-          }} disabled={combineTargetA === combineTargetB || !combineTargetA || !combineTargetB} className="px-4 py-2 text-xs font-bold bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-sm transition disabled:opacity-40">Merge & Combine Chores</button></div></div></div>}{showAddMemberModal && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden"><div className="p-4 bg-indigo-600 text-white flex items-center justify-between"><div className="flex items-center gap-2"><Users className="w-5 h-5 text-indigo-200" /><h3 className="text-base font-bold">Add Household Member</h3></div><button onClick={() => setShowAddMemberModal(false)} className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-black/10 transition"><X className="w-5 h-5" /></button></div><div className="p-5 space-y-3.5 text-xs"><div><label className="block font-bold text-slate-700 mb-1">Full Name</label><input type="text" id="new-member-name" placeholder="e.g. Alex, Jordan..." autoFocus className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800" /></div><div><label className="block font-bold text-slate-700 mb-1">Role / Relationship</label><input type="text" id="new-member-role" placeholder="e.g. Family Member, Parent / Admin..." defaultValue="Family Member" className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800" /></div><div><label className="block font-bold text-slate-700 mb-1">Residency Type</label><select id="new-member-residency" defaultValue="Full-Time" className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 bg-white"><option value="Full-Time">Full-Time (Regular weekly chore rotation)</option><option value="Bi-Weekly">Bi-Weekly (Alternating weeks Sun 5 PM – Sun 5 PM)</option><option value="Casual">Casual (Lesser scale rotation frequency)</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Schedule Details</label><input type="text" id="new-member-schedule" placeholder="e.g. Daily rotation & bedroom checklist..." defaultValue="Daily chore rotation & bedroom checklist" className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800" /></div><div className="bg-indigo-50 border border-indigo-200 rounded-lg p-2.5 text-indigo-900 text-[11px] flex items-start gap-2"><Info className="w-4 h-4 shrink-0 text-indigo-600 mt-0.5" /><span>Adding this member appends a new row to the Household Roster spreadsheet and immediately links them across all dashboard views.</span></div></div><div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2"><button onClick={() => setShowAddMemberModal(false)} className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition">Cancel</button><button onClick={() => {
-            const nameInput = document.getElementById("new-member-name");
-            const roleInput = document.getElementById("new-member-role");
-            const resInput = document.getElementById("new-member-residency");
-            const schedInput = document.getElementById("new-member-schedule");
+          }} disabled={combineTargetA === combineTargetB || !combineTargetA || !combineTargetB} className="px-4 py-2 text-xs font-bold bg-purple-600 text-white rounded-lg hover:bg-purple-700 shadow-sm transition disabled:opacity-40">Merge & Combine Chores</button></div></div></div>}{showAddMemberModal && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden"><div className="p-4 bg-indigo-600 text-white flex items-center justify-between"><div className="flex items-center gap-2"><Users className="w-5 h-5 text-indigo-200" /><h3 className="text-base font-bold">Add Household Member</h3></div><button onClick={() => setShowAddMemberModal(false)} className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-black/10 transition"><X className="w-5 h-5" /></button></div><div className="p-5 space-y-3.5 text-xs"><div><label className="block font-bold text-slate-700 mb-1">{"Full Name "}<span className="text-rose-500">{"*"}</span></label><input type="text" id="new-member-name" placeholder="e.g. Alex, Jordan..." autoFocus className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800" /></div><div><label className="block font-bold text-slate-700 mb-1">Role</label><select id="new-member-role" defaultValue="Minion" className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 bg-white"><option value="Supreme Overlord">Supreme Overlord (Parent)</option><option value="Minion">Minion (Kid)</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Occupancy</label><select id="new-member-residency" defaultValue="Full-Time" className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 bg-white"><option value="Full-Time">Full-Time (Constant Residency)</option><option value="Bi-Weekly">Bi-Weekly (Half-Time Residency)</option><option value="Casual">Casual (Periodic Residency)</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Special Rotation Groups</label><div className="grid grid-cols-2 gap-2 p-2.5 rounded-lg border border-slate-300 bg-slate-50/50">{["Parents", "Kids", "Non-Casual", "All"].map(grpType => {
+              const isChecked = newMemberGroups.includes(grpType);
+              return <label key={grpType} className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-white border border-slate-200 hover:border-indigo-300 cursor-pointer select-none transition"><input type="checkbox" checked={isChecked} onChange={() => {
+                setNewMemberGroups(prev => {
+                  const nextSet = new Set(prev);
+                  if (nextSet.has(grpType)) {
+                    nextSet.delete(grpType);
+                  } else {
+                    nextSet.add(grpType);
+                  }
+                  return ["Parents", "Kids", "Non-Casual", "All"].filter(g => nextSet.has(g));
+                });
+              }} className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" /><span className={`text-xs ${isChecked ? "font-bold text-indigo-950" : "font-medium text-slate-700"}`}>{grpType}</span></label>;
+            })}</div></div><div><label className="block font-bold text-slate-700 mb-1">Active Status</label><select id="new-member-active" defaultValue="true" className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 bg-white"><option value="true">Active</option><option value="false">Inactive</option></select></div><div className="bg-indigo-50 border border-indigo-200 rounded-lg p-2.5 text-indigo-900 text-[11px] flex items-start gap-2"><Info className="w-4 h-4 shrink-0 text-indigo-600 mt-0.5" /><span>Adding this member writes to the Household Hub spreadsheet and immediately links them across all dashboard views.</span></div></div><div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2"><button onClick={() => setShowAddMemberModal(false)} className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition">Cancel</button><button onClick={() => {
+            const nameInput = document.getElementById("new-member-name") as HTMLInputElement | null;
+            const roleInput = document.getElementById("new-member-role") as HTMLSelectElement | null;
+            const resInput = document.getElementById("new-member-residency") as HTMLSelectElement | null;
+            const activeInput = document.getElementById("new-member-active") as HTMLSelectElement | null;
             if (nameInput && nameInput.value.trim()) {
-              handleAddRosterMember(nameInput.value, roleInput ? roleInput.value : "", resInput ? resInput.value : "Full-Time", schedInput ? schedInput.value : "");
+              handleAddRosterMember(
+                nameInput.value,
+                roleInput ? roleInput.value : "Minion",
+                resInput ? resInput.value : "Full-Time",
+                newMemberGroups.length > 0 ? newMemberGroups.join(", ") : "All",
+                activeInput ? activeInput.value === "true" : true
+              );
             }
           }} className="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition">Add to Household Roster</button></div></div></div>}{showAddPetModal && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden"><div className="p-4 bg-amber-600 text-white flex items-center justify-between"><div className="flex items-center gap-2"><span className="text-xl">{"\u{1F43E}"}</span><h3 className="text-base font-bold">Add Pet Care Profile</h3></div><button onClick={() => setShowAddPetModal(false)} className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-black/10 transition"><X className="w-5 h-5" /></button></div><div className="p-5 space-y-3.5 text-xs"><div><label className="block font-bold text-slate-700 mb-1">{"Pet Name "}<span className="text-rose-500">{"*"}</span></label><input type="text" value={newPetDraft.name} onChange={e => setNewPetDraft(prev => ({
             ...{

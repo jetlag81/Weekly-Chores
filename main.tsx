@@ -193,7 +193,7 @@ function openFileInVsCode(file: string, line: number, col = 1, onToast?: (msg: s
     `/__open-in-vscode?file=${encodeURIComponent(file)}&line=${line}&col=${col}`
   ).catch(() => {
     const a = document.createElement('a');
-    a.href = `vscode://file/c:/Dev%20Projects/Chores/${encodeURIComponent(file)}:${line}:${col}`;
+    a.href = `vscode://file/c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/${encodeURIComponent(file)}:${line}:${col}`;
     a.click();
   });
   if (onToast) {
@@ -201,12 +201,26 @@ function openFileInVsCode(file: string, line: number, col = 1, onToast?: (msg: s
   }
 }
 
-function popOutCsvMapWindow(onToast?: (msg: string) => void) {
-  fetch('/__popout-csv-map').catch(() => {
-    window.open('http://localhost:5173/?view=csv-map', 'CsvVisualMapWindow', 'width=1280,height=820');
-  });
+function popOutCsvMapWindow(onToast?: (msg: string) => void, onBlockedFallback?: () => void) {
+  const mapUrl = `${window.location.origin}/?view=csv-map`;
+  const win = window.open(
+    mapUrl,
+    'CsvVisualMapWindow',
+    'popup=yes,width=1320,height=840,left=80,top=60'
+  );
+  if (win) {
+    win.focus();
+    if (onToast) {
+      onToast('Opened CSV Visual Map in a separate window!');
+    }
+    return;
+  }
+  fetch('/__popout-csv-map').catch(() => {});
+  if (onBlockedFallback) {
+    onBlockedFallback();
+  }
   if (onToast) {
-    onToast('Opened CSV Visual Map in a separate window!');
+    onToast('Opened CSV Visual Map!');
   }
 }
 
@@ -674,6 +688,9 @@ function CodeInspectorOverlay() {
   const [hovered, setHovered] = useState<SourceInfo | null>(null);
   const [snippet, setSnippet] = useState<SnippetLine[]>([]);
   const [jumpToast, setJumpToast] = useState<string | null>(null);
+  const [showInlineCsvMap, setShowInlineCsvMap] = useState(false);
+  const [inlineCsvSheetIdx, setInlineCsvSheetIdx] = useState<number>(1);
+  const [inlineSelectedCellKey, setInlineSelectedCellKey] = useState<string | null>(null);
   const lastLocKeyRef = useRef<string>('');
   const lastBroadcastCellRef = useRef<string>('');
 
@@ -750,6 +767,8 @@ function CodeInspectorOverlay() {
         const cKey = `${sIdx}:${dataMatch.rowIndex}:${dataMatch.colIndex}`;
         if (lastBroadcastCellRef.current !== cKey) {
           lastBroadcastCellRef.current = cKey;
+          setInlineCsvSheetIdx(sIdx);
+          setInlineSelectedCellKey(cKey);
           broadcastCsvCellSelection(sIdx, dataMatch.rowIndex, dataMatch.colIndex, dataMatch.line);
         }
       }
@@ -994,6 +1013,34 @@ function CodeInspectorOverlay() {
         </div>
       )}
 
+      {/* Inline CSV Visual Map Drawer (when opened inline or if popups are blocked) */}
+      {showInlineCsvMap && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '56px',
+            left: '16px',
+            right: '16px',
+            height: '52vh',
+            pointerEvents: 'auto',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            border: '2px solid #F59E0B',
+            boxShadow: '0 20px 45px rgba(0, 0, 0, 0.65)',
+          }}
+        >
+          <CsvVisualMapPanel
+            isStandalone={false}
+            activeCsvSheetIdx={inlineCsvSheetIdx}
+            setActiveCsvSheetIdx={setInlineCsvSheetIdx}
+            selectedCellKey={inlineSelectedCellKey}
+            setSelectedCellKey={setInlineSelectedCellKey}
+            onClose={() => setShowInlineCsvMap(false)}
+            onToast={triggerToast}
+          />
+        </div>
+      )}
+
       {/* Floating Bottom-Right Toolbar */}
       <div
         style={{
@@ -1008,7 +1055,7 @@ function CodeInspectorOverlay() {
       >
         <button
           type="button"
-          onClick={() => popOutCsvMapWindow(triggerToast)}
+          onClick={() => popOutCsvMapWindow(triggerToast, () => setShowInlineCsvMap(true))}
           title="Open the CSV Visual Map in a separate standalone desktop window"
           style={{
             display: 'flex',

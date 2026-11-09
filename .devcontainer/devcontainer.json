@@ -1,0 +1,25 @@
+{
+  "name": "Weekly Chores & Household Hub",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Vite Dev Server",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "npm install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        "typescript.tsdk": "node_modules/typescript/lib"
+      }
+    }
+  },
+  "remoteUser": "node"
+}
+

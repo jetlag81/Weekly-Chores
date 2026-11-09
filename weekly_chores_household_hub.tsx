@@ -1009,7 +1009,7 @@ var MEMBER_COLOR_PALETTES = [{
   bg: "#EEF2FF",
   text: "#4338CA"
 }
-// Indigo
+  // Indigo
 ];
 var PRESET_MEMBER_COLORS = {
   "meghan": {
@@ -4449,47 +4449,42 @@ function App({
           <div className="flex items-center gap-1">
             <button
               onClick={() => setActiveTab("month")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                activeTab === "month" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === "month" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
             >
               <CalendarDays className="w-3.5 h-3.5" />
               <span>Monthly Calendar</span>
             </button>
             <button
               onClick={() => setActiveTab("matrix")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                activeTab === "matrix" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === "matrix" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
               <span>Printable Weekly Schedule</span>
             </button>
             <button
               onClick={() => setActiveTab("tasks")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                activeTab === "tasks" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === "tasks" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
             >
               <ListTodo className="w-3.5 h-3.5" />
               <span>Master Chores ({choreRows.length})</span>
             </button>
             <button
               onClick={() => setActiveTab("stats")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                activeTab === "stats" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === "stats" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
             >
               <Award className="w-3.5 h-3.5" />
               <span>Leaderboard & Stats</span>
             </button>
             <button
               onClick={() => setActiveTab("roster")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                activeTab === "roster"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === "roster"
                   ? "bg-indigo-600 text-white shadow-sm"
                   : "text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100 border border-indigo-200/60"
-              }`}
+                }`}
             >
               <Users className="w-3.5 h-3.5" />
               <span>Household Hub ({familyMembers.length})</span>
@@ -4498,434 +4493,431 @@ function App({
         </div>
       </header>
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6"><div className="no-print bg-white rounded-xl border border-slate-200 p-3 mb-4 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs"><div className="flex flex-wrap items-center gap-3"><div className="flex items-center gap-1.5 font-bold text-slate-800"><Users className="w-4 h-4 text-indigo-600" /><span>Household Roster:</span></div><div className="flex flex-wrap items-center gap-1.5"><span className="text-[10px] font-bold text-amber-700 uppercase bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">Supreme Overlords:</span>{familyMembers.filter(m => m.role === "Supreme Overlord").map(m => <span key={m.id} className="px-2 py-0.5 rounded-full font-semibold text-[11px] border border-amber-300" style={{
-              backgroundColor: m.bg,
-              color: m.text
-            }} title="Supreme Overlord (= Parent \u2022 Included in Daily Chores)">{m.name}{" "}<span className="text-[9px] font-normal opacity-85"></span></span>)}<span className="text-slate-300 mx-1">{"\u2022"}</span><span className="text-[10px] font-bold text-indigo-700 uppercase bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">Minions:</span>{familyMembers.filter(m => m.role === "Minion").map(m => <span key={m.id} className="px-2 py-0.5 rounded-full font-medium text-[11px] border" style={{
-              backgroundColor: m.bg,
-              color: m.text,
-              borderColor: m.type === "biweekly" ? "#F8B4BD" : m.type === "casual" ? "#A6D2ED" : "#E2E8F0"
-            }} title={`${m.name} (${m.residency} Minion = Kid)`}>{m.name}{m.type === "biweekly" ? <span className="opacity-75 text-[9px] ml-0.5 font-bold"></span> : null}{m.type === "casual" ? <span className="opacity-75 text-[9px] ml-0.5 font-bold"></span> : null}</span>)}</div></div><div className="flex items-center gap-2"><div className="flex items-center gap-1.5 bg-amber-50/90 border border-amber-200 text-amber-900 px-2.5 py-1 rounded-lg"><span className="font-bold">Feed the Herd:</span><span>{"\u{1F415} Ellie, Lewis (Dogs)"}</span><span className="text-amber-300">{"\u2022"}</span><span>{"\u{1F408} Casey, Gigi, Sloane, Scoob (Cats)"}</span></div></div></div><div className="no-print bg-white rounded-xl border border-slate-200 p-4 mb-5 shadow-sm flex flex-wrap items-center justify-between gap-4"><div className="flex items-center gap-6"><div><p className="text-xs text-slate-500 font-medium">Month Overview</p><div className="flex items-baseline gap-2 mt-0.5"><span className="text-xl font-bold text-slate-900">{monthStats.totalCompleted}{" / "}{monthStats.totalScheduled}</span><span className="text-xs text-slate-500">completed</span></div></div><div className="hidden sm:block w-36"><div className="flex justify-between text-xs text-slate-600 mb-1 font-medium"><span>Progress</span><span>{monthStats.completionRate}%</span></div><div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden"><div className="bg-emerald-500 h-2 rounded-full transition-all duration-500" style={{
-                width: `${monthStats.completionRate}%`
-              }} /></div></div></div><div className="flex items-center gap-3 text-xs"><div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-800 px-3 py-1.5 rounded-lg"><span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /><span>{"Active Week: "}<strong>{activeSyncWeek}</strong>{" \u2022 "}{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || "Cadence & Mason arrive Sun Oct 18 @ 5 PM"}</span></div><button onClick={() => {
-            const cur = getCurrentWeekMonday();
-            const currentWeek = getWeekDaysForDate(cur.year, cur.month, cur.day);
-            handleSetSyncWeek(currentWeek);
-            handleAutoAssignCurrentWeek();
-            setActiveTab("matrix");
-          }} className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold rounded-lg transition" title={`Sync and distribute chores for current week (${activeSyncWeek})`}>Sync & Distribute Week</button></div></div>{activeTab === "month" && <div className="space-y-4"><div className="grid grid-cols-7 gap-2 text-center">{DAY_STYLES.map((day, idx) => <div key={day.name} className="py-2.5 px-1 rounded-t-lg font-bold text-xs uppercase tracking-wider text-white shadow-sm flex flex-col items-center justify-center" style={{
-            backgroundColor: day.color
-          }}><span>{day.name}</span><span className="text-[10px] font-normal opacity-90 hidden sm:inline">{"Day "}{idx + 1}</span></div>)}</div><div className="space-y-3">{calendarWeeks.map((week, weekIdx) => {
-            const synced = isWeekSyncedToSheet(week);
-            const isCurrentCalendarWeek = week[0].dateKey === currentWeekInfo.dateKey;
-            return <div key={weekIdx} id={synced ? "active-calendar-week" : void 0} className={`bg-white rounded-xl border transition-all ${synced ? "border-rose-400 ring-2 ring-rose-200 shadow-md" : "border-slate-200 shadow-sm hover:border-slate-300"}`}><div className="bg-slate-50/80 px-3 py-1.5 border-b border-slate-100 rounded-t-xl flex items-center justify-between text-xs"><div className="flex items-center gap-2"><span className="font-semibold text-slate-700">{"Week "}{weekIdx + 1}</span><span className="text-slate-400">{"\u2022"}</span><span className="text-slate-500">{week[0].month + 1}/{week[0].day}{" \u2013 "}{week[6].month + 1}/{week[6].day}</span>{isCurrentCalendarWeek && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-300">Current Week</span>}{(() => {
-                    const summary = getWeekBiWeeklySummary(week, biWeeklyNamesString);
-                    if (!summary) return null;
-                    return <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${summary.badgeBg}`}>{summary.text}</span>;
-                  })()}{synced ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full border border-rose-300"><span className="w-1.5 h-1.5 rounded-full bg-rose-600" />Live Synced with Sheet</span> : <button onClick={() => handleSetSyncWeek(week)} className="text-[11px] font-medium text-slate-500 hover:text-indigo-600 hover:underline flex items-center gap-1">Set as Sheet Week</button>}</div><div className="text-[11px] text-slate-500">{week.reduce((acc, d) => {
-                    const count = choreRows.filter(cr => {
-                      var _a2, _b2;
-                      return (_b2 = (_a2 = monthSchedule[d.dateKey]) == null ? void 0 : _a2[cr.index_]) == null ? void 0 : _b2.done;
-                    }).length;
-                    return acc + count;
-                  }, 0)}{" "}chores completed</div></div><div className="grid grid-cols-7 divide-x divide-slate-100">{week.map((dayObj, dayIdx) => {
-                  const {
-                    dateKey,
-                    day,
-                    isCurrentMonth
-                  } = dayObj;
-                  const dayStyle = DAY_STYLES[dayIdx];
-                  const dayChores = choreRows.filter(cr => {
-                    var _a2, _b2, _c2, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w;
-                    const freq = getChoreFreq(cr);
-                    const tLow = (cr.task || ((_a2 = cr.row) == null ? void 0 : _a2[0]) || "").toLowerCase();
-                    if (tLow.includes("deep clean") || tLow.includes("feeding station")) {
-                      const isScheduledDay = dayIdx === 6;
-                      const hasActivity = ((_c2 = (_b2 = monthSchedule[dateKey]) == null ? void 0 : _b2[cr.index_]) == null ? void 0 : _c2.done) || ((_e = (_d = monthSchedule[dateKey]) == null ? void 0 : _d[cr.index_]) == null ? void 0 : _e.who);
-                      if (!isScheduledDay && !hasActivity) return false;
-                    } else if (tLow.includes("recycling")) {
-                      const isScheduledDay = dayIdx === 3 && isCurbsideActiveOnDate("recycling", dayObj.year, dayObj.month, dayObj.day);
-                      const hasActivity = ((_g = (_f = monthSchedule[dateKey]) == null ? void 0 : _f[cr.index_]) == null ? void 0 : _g.done) || ((_i = (_h = monthSchedule[dateKey]) == null ? void 0 : _h[cr.index_]) == null ? void 0 : _i.who);
-                      if (!isScheduledDay && !hasActivity) return false;
-                    } else if (tLow.includes("waste")) {
-                      const isScheduledDay = dayIdx === 3 && isCurbsideActiveOnDate("waste", dayObj.year, dayObj.month, dayObj.day);
-                      const hasActivity = ((_k = (_j = monthSchedule[dateKey]) == null ? void 0 : _j[cr.index_]) == null ? void 0 : _k.done) || ((_m = (_l = monthSchedule[dateKey]) == null ? void 0 : _l[cr.index_]) == null ? void 0 : _m.who);
-                      if (!isScheduledDay && !hasActivity) return false;
-                    } else if (freq.frequency === "weekly") {
-                      const isScheduledDay = dayIdx === freq.dayOfWeek;
-                      const hasActivity = ((_o = (_n = monthSchedule[dateKey]) == null ? void 0 : _n[cr.index_]) == null ? void 0 : _o.done) || ((_q = (_p = monthSchedule[dateKey]) == null ? void 0 : _p[cr.index_]) == null ? void 0 : _q.who);
-                      if (!isScheduledDay && !hasActivity) return false;
-                    } else if (freq.frequency === "biweekly") {
-                      const isScheduledDay = dayIdx === freq.dayOfWeek && isCurbsideActiveOnDate(cr.task || ((_r = cr.row) == null ? void 0 : _r[0]), dayObj.year, dayObj.month, dayObj.day);
-                      const hasActivity = ((_t = (_s = monthSchedule[dateKey]) == null ? void 0 : _s[cr.index_]) == null ? void 0 : _t.done) || ((_v = (_u = monthSchedule[dateKey]) == null ? void 0 : _u[cr.index_]) == null ? void 0 : _v.who);
-                      if (!isScheduledDay && !hasActivity) return false;
-                    }
-                    if (selectedAssigneeFilter === "ALL") return true;
-                    const st = (_w = monthSchedule[dateKey]) == null ? void 0 : _w[cr.index_];
-                    const whoStr = String((st == null ? void 0 : st.who) || "").toLowerCase();
-                    const filterMem = familyMembers.find(m => m.id === selectedAssigneeFilter || m.name === selectedAssigneeFilter);
-                    const filterName = ((filterMem == null ? void 0 : filterMem.name) || selectedAssigneeFilter).toLowerCase();
-                    if (isBedroomChore(cr.row[1])) {
-                      return kidsList.some(k => k.toLowerCase() === filterName);
-                    }
-                    if (!(st == null ? void 0 : st.who)) return false;
-                    if (whoStr === filterName) return true;
-                    if ((whoStr === "all kids" || whoStr === "each child") && kidsList.some(k => k.toLowerCase() === filterName)) {
-                      return true;
-                    }
-                    if ((whoStr === "all non-casual" || whoStr === "all non casual") && filterMem && filterMem.type !== "casual") {
-                      return true;
-                    }
-                    if ((whoStr === "parents" || whoStr === "parents only") && filterMem && String(filterMem.role || "").toLowerCase().includes("parent")) {
-                      return true;
-                    }
-                    const mem = getMember(st.who);
-                    return st.who === selectedAssigneeFilter || (mem == null ? void 0 : mem.id) === selectedAssigneeFilter || (mem == null ? void 0 : mem.name) === selectedAssigneeFilter;
-                  });
-                  const doneCount = dayChores.filter(cr => {
+        backgroundColor: m.bg,
+        color: m.text
+      }} title="Supreme Overlord (= Parent \u2022 Included in Daily Chores)">{m.name}{" "}<span className="text-[9px] font-normal opacity-85"></span></span>)}<span className="text-slate-300 mx-1">{"\u2022"}</span><span className="text-[10px] font-bold text-indigo-700 uppercase bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">Minions:</span>{familyMembers.filter(m => m.role === "Minion").map(m => <span key={m.id} className="px-2 py-0.5 rounded-full font-medium text-[11px] border" style={{
+        backgroundColor: m.bg,
+        color: m.text,
+        borderColor: m.type === "biweekly" ? "#F8B4BD" : m.type === "casual" ? "#A6D2ED" : "#E2E8F0"
+      }} title={`${m.name} (${m.residency} Minion = Kid)`}>{m.name}{m.type === "biweekly" ? <span className="opacity-75 text-[9px] ml-0.5 font-bold"></span> : null}{m.type === "casual" ? <span className="opacity-75 text-[9px] ml-0.5 font-bold"></span> : null}</span>)}</div></div><div className="flex items-center gap-2"><div className="flex items-center gap-1.5 bg-amber-50/90 border border-amber-200 text-amber-900 px-2.5 py-1 rounded-lg"><span className="font-bold">Feed the Herd:</span><span>{"\u{1F415} Ellie, Lewis (Dogs)"}</span><span className="text-amber-300">{"\u2022"}</span><span>{"\u{1F408} Casey, Gigi, Sloane, Scoob (Cats)"}</span></div></div></div><div className="no-print bg-white rounded-xl border border-slate-200 p-4 mb-5 shadow-sm flex flex-wrap items-center justify-between gap-4"><div className="flex items-center gap-6"><div><p className="text-xs text-slate-500 font-medium">Month Overview</p><div className="flex items-baseline gap-2 mt-0.5"><span className="text-xl font-bold text-slate-900">{monthStats.totalCompleted}{" / "}{monthStats.totalScheduled}</span><span className="text-xs text-slate-500">completed</span></div></div><div className="hidden sm:block w-36"><div className="flex justify-between text-xs text-slate-600 mb-1 font-medium"><span>Progress</span><span>{monthStats.completionRate}%</span></div><div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden"><div className="bg-emerald-500 h-2 rounded-full transition-all duration-500" style={{
+        width: `${monthStats.completionRate}%`
+      }} /></div></div></div><div className="flex items-center gap-3 text-xs"><div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-800 px-3 py-1.5 rounded-lg"><span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /><span>{"Active Week: "}<strong>{activeSyncWeek}</strong>{" \u2022 "}{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || "Cadence & Mason arrive Sun Oct 18 @ 5 PM"}</span></div><button onClick={() => {
+        const cur = getCurrentWeekMonday();
+        const currentWeek = getWeekDaysForDate(cur.year, cur.month, cur.day);
+        handleSetSyncWeek(currentWeek);
+        handleAutoAssignCurrentWeek();
+        setActiveTab("matrix");
+      }} className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold rounded-lg transition" title={`Sync and distribute chores for current week (${activeSyncWeek})`}>Sync & Distribute Week</button></div></div>{activeTab === "month" && <div className="space-y-4"><div className="grid grid-cols-7 gap-2 text-center">{DAY_STYLES.map((day, idx) => <div key={day.name} className="py-2.5 px-1 rounded-t-lg font-bold text-xs uppercase tracking-wider text-white shadow-sm flex flex-col items-center justify-center" style={{
+        backgroundColor: day.color
+      }}><span>{day.name}</span><span className="text-[10px] font-normal opacity-90 hidden sm:inline">{"Day "}{idx + 1}</span></div>)}</div><div className="space-y-3">{calendarWeeks.map((week, weekIdx) => {
+        const synced = isWeekSyncedToSheet(week);
+        const isCurrentCalendarWeek = week[0].dateKey === currentWeekInfo.dateKey;
+        return <div key={weekIdx} id={synced ? "active-calendar-week" : void 0} className={`bg-white rounded-xl border transition-all ${synced ? "border-rose-400 ring-2 ring-rose-200 shadow-md" : "border-slate-200 shadow-sm hover:border-slate-300"}`}><div className="bg-slate-50/80 px-3 py-1.5 border-b border-slate-100 rounded-t-xl flex items-center justify-between text-xs"><div className="flex items-center gap-2"><span className="font-semibold text-slate-700">{"Week "}{weekIdx + 1}</span><span className="text-slate-400">{"\u2022"}</span><span className="text-slate-500">{week[0].month + 1}/{week[0].day}{" \u2013 "}{week[6].month + 1}/{week[6].day}</span>{isCurrentCalendarWeek && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-300">Current Week</span>}{(() => {
+          const summary = getWeekBiWeeklySummary(week, biWeeklyNamesString);
+          if (!summary) return null;
+          return <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${summary.badgeBg}`}>{summary.text}</span>;
+        })()}{synced ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full border border-rose-300"><span className="w-1.5 h-1.5 rounded-full bg-rose-600" />Live Synced with Sheet</span> : <button onClick={() => handleSetSyncWeek(week)} className="text-[11px] font-medium text-slate-500 hover:text-indigo-600 hover:underline flex items-center gap-1">Set as Sheet Week</button>}</div><div className="text-[11px] text-slate-500">{week.reduce((acc, d) => {
+          const count = choreRows.filter(cr => {
+            var _a2, _b2;
+            return (_b2 = (_a2 = monthSchedule[d.dateKey]) == null ? void 0 : _a2[cr.index_]) == null ? void 0 : _b2.done;
+          }).length;
+          return acc + count;
+        }, 0)}{" "}chores completed</div></div><div className="grid grid-cols-7 divide-x divide-slate-100">{week.map((dayObj, dayIdx) => {
+          const {
+            dateKey,
+            day,
+            isCurrentMonth
+          } = dayObj;
+          const dayStyle = DAY_STYLES[dayIdx];
+          const dayChores = choreRows.filter(cr => {
+            var _a2, _b2, _c2, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w;
+            const freq = getChoreFreq(cr);
+            const tLow = (cr.task || ((_a2 = cr.row) == null ? void 0 : _a2[0]) || "").toLowerCase();
+            if (tLow.includes("deep clean") || tLow.includes("feeding station")) {
+              const isScheduledDay = dayIdx === 6;
+              const hasActivity = ((_c2 = (_b2 = monthSchedule[dateKey]) == null ? void 0 : _b2[cr.index_]) == null ? void 0 : _c2.done) || ((_e = (_d = monthSchedule[dateKey]) == null ? void 0 : _d[cr.index_]) == null ? void 0 : _e.who);
+              if (!isScheduledDay && !hasActivity) return false;
+            } else if (tLow.includes("recycling")) {
+              const isScheduledDay = dayIdx === 3 && isCurbsideActiveOnDate("recycling", dayObj.year, dayObj.month, dayObj.day);
+              const hasActivity = ((_g = (_f = monthSchedule[dateKey]) == null ? void 0 : _f[cr.index_]) == null ? void 0 : _g.done) || ((_i = (_h = monthSchedule[dateKey]) == null ? void 0 : _h[cr.index_]) == null ? void 0 : _i.who);
+              if (!isScheduledDay && !hasActivity) return false;
+            } else if (tLow.includes("waste")) {
+              const isScheduledDay = dayIdx === 3 && isCurbsideActiveOnDate("waste", dayObj.year, dayObj.month, dayObj.day);
+              const hasActivity = ((_k = (_j = monthSchedule[dateKey]) == null ? void 0 : _j[cr.index_]) == null ? void 0 : _k.done) || ((_m = (_l = monthSchedule[dateKey]) == null ? void 0 : _l[cr.index_]) == null ? void 0 : _m.who);
+              if (!isScheduledDay && !hasActivity) return false;
+            } else if (freq.frequency === "weekly") {
+              const isScheduledDay = dayIdx === freq.dayOfWeek;
+              const hasActivity = ((_o = (_n = monthSchedule[dateKey]) == null ? void 0 : _n[cr.index_]) == null ? void 0 : _o.done) || ((_q = (_p = monthSchedule[dateKey]) == null ? void 0 : _p[cr.index_]) == null ? void 0 : _q.who);
+              if (!isScheduledDay && !hasActivity) return false;
+            } else if (freq.frequency === "biweekly") {
+              const isScheduledDay = dayIdx === freq.dayOfWeek && isCurbsideActiveOnDate(cr.task || ((_r = cr.row) == null ? void 0 : _r[0]), dayObj.year, dayObj.month, dayObj.day);
+              const hasActivity = ((_t = (_s = monthSchedule[dateKey]) == null ? void 0 : _s[cr.index_]) == null ? void 0 : _t.done) || ((_v = (_u = monthSchedule[dateKey]) == null ? void 0 : _u[cr.index_]) == null ? void 0 : _v.who);
+              if (!isScheduledDay && !hasActivity) return false;
+            }
+            if (selectedAssigneeFilter === "ALL") return true;
+            const st = (_w = monthSchedule[dateKey]) == null ? void 0 : _w[cr.index_];
+            const whoStr = String((st == null ? void 0 : st.who) || "").toLowerCase();
+            const filterMem = familyMembers.find(m => m.id === selectedAssigneeFilter || m.name === selectedAssigneeFilter);
+            const filterName = ((filterMem == null ? void 0 : filterMem.name) || selectedAssigneeFilter).toLowerCase();
+            if (isBedroomChore(cr.row[1])) {
+              return kidsList.some(k => k.toLowerCase() === filterName);
+            }
+            if (!(st == null ? void 0 : st.who)) return false;
+            if (whoStr === filterName) return true;
+            if ((whoStr === "all kids" || whoStr === "each child") && kidsList.some(k => k.toLowerCase() === filterName)) {
+              return true;
+            }
+            if ((whoStr === "all non-casual" || whoStr === "all non casual") && filterMem && filterMem.type !== "casual") {
+              return true;
+            }
+            if ((whoStr === "parents" || whoStr === "parents only") && filterMem && String(filterMem.role || "").toLowerCase().includes("parent")) {
+              return true;
+            }
+            const mem = getMember(st.who);
+            return st.who === selectedAssigneeFilter || (mem == null ? void 0 : mem.id) === selectedAssigneeFilter || (mem == null ? void 0 : mem.name) === selectedAssigneeFilter;
+          });
+          const doneCount = dayChores.filter(cr => {
+            var _a2, _b2;
+            return (_b2 = (_a2 = monthSchedule[dateKey]) == null ? void 0 : _a2[cr.index_]) == null ? void 0 : _b2.done;
+          }).length;
+          const isAllDone = dayChores.length > 0 && doneCount === dayChores.length;
+          return <div key={dateKey} className={`min-h-[160px] p-2 flex flex-col justify-between transition-colors ${isCurrentMonth ? "bg-white" : "bg-slate-50/80 border-dashed border-slate-200"}`}><div><div className="flex items-center justify-between mb-1.5"><span className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${isCurrentMonth ? "bg-slate-100 text-slate-800" : "bg-slate-200/70 text-slate-700"}`}>{day}</span><div className="flex items-center gap-1">{dayChores.length > 0 && <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${isAllDone ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>{doneCount}/{dayChores.length}</span>}<button onClick={() => setActiveDayModal(dateKey)} className="p-1 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-100 transition" title="Open day details"><Pen className="w-2.5 h-2.5" /></button></div></div>{(() => {
+            const status = getBiWeeklyStatus(dayObj.year, dayObj.month, dayObj.day);
+            if (status.isArrivalDay) {
+              return <div className="text-[9px] font-semibold text-pink-700 bg-pink-50 border border-pink-200 rounded px-1.5 py-0.5 mb-1.5 flex items-center gap-1 leading-tight shadow-2xs" title="Cadence & Mason arrive today at 5:00 PM for their bi-weekly stay"><span>{"\u{1F3E0} Cadence & Mason arrive 5 PM"}</span></div>;
+            } else if (status.isDepartureDay) {
+              return <div className="text-[9px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mb-1.5 flex items-center gap-1 leading-tight shadow-2xs" title="Cadence & Mason depart today at 5:00 PM"><span>{"\u{1F44B} Cadence & Mason leave 5 PM"}</span></div>;
+            }
+            return null;
+          })()}<div className="space-y-1">{dayChores.slice(0, 3).map(cr => {
+            var _a2, _b2;
+            const status = getChoreStatus(dateKey, cr.index_, cr.task || cr.row[0]);
+            const assignee = getMember(status.who);
+            const freq = getChoreFreq(cr);
+            return <div key={cr.index_} className={`group text-[11px] p-1 rounded-md border flex flex-col gap-1 transition ${status.done ? "bg-emerald-50/70 border-emerald-200 text-slate-500" : freq.frequency === "weekly" ? "bg-purple-50/60 border-purple-200 text-purple-950 shadow-2xs" : "bg-white border-slate-200 hover:border-slate-300 text-slate-800 shadow-2xs"}`}><div className="flex items-center justify-between gap-1 w-full"><div className="flex items-center gap-1 min-w-0 flex-1"><button onClick={() => handleUpdateChore(dateKey, cr.index_, {
+              done: !status.done
+            })} className="shrink-0 text-slate-400 hover:text-emerald-600 focus:outline-none">{status.done ? <SquareCheckBig className="w-3.5 h-3.5 text-emerald-600" /> : <Square className="w-3.5 h-3.5 hover:text-slate-600" />}</button><span className={`truncate text-[10px] font-medium leading-tight ${status.done ? "line-through" : ""}`}>{cr.task || cr.row[0]}</span></div><div className="flex items-center gap-1 shrink-0">{freq.frequency === "weekly" && <span className="text-[8px] font-bold px-1 py-0.2 rounded bg-purple-100 text-purple-700 uppercase" title="Once-a-week task">1x/wk</span>}{getSpecificKidForChore(cr.task || cr.row[0]) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold" style={{
+              backgroundColor: ((_a2 = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _a2.bg) || "#FCE7F3",
+              color: ((_b2 = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _b2.text) || "#BE185D"
+            }}>{getSpecificKidForChore(cr.task || cr.row[0])}</span> : isBedroomChore(cr.task || cr.row[0]) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold bg-pink-100 text-pink-700" title="Each child cleans own bedroom">Own Rooms</span> : status.who ? <span className="shrink-0 text-[9px] px-1 py-0.2 rounded font-semibold" style={{
+              backgroundColor: (assignee == null ? void 0 : assignee.bg) || "#F1F5F9",
+              color: (assignee == null ? void 0 : assignee.text) || "#475569"
+            }} title={String(status.who)}>{String(status.who).slice(0, 2)}</span> : <button onClick={() => setActiveDayModal(dateKey)} className="shrink-0 text-[9px] text-slate-400 hover:text-indigo-600 px-0.5" title="Assign person">+</button>}</div></div>{isBedroomChore(cr.task || cr.row[0]) && !getSpecificKidForChore(cr.task || cr.row[0]) && <div className="pt-0.5 border-t border-purple-200/60 flex flex-wrap gap-1">{getKidsPresentOnDate(dateKey).map(kidName => {
+              var _a3;
+              const isKidDone = !!((_a3 = status.kidsDone) == null ? void 0 : _a3[kidName]);
+              const kidMember = getMember(kidName);
+              return <button key={kidName} type="button" onClick={e => {
+                e.stopPropagation();
+                handleToggleKidBedroom(dateKey, cr.index_, kidName);
+              }} className={`text-[8.5px] px-1 py-0.5 rounded font-semibold flex items-center gap-0.5 border transition ${isKidDone ? "bg-emerald-100 text-emerald-800 border-emerald-300 line-through" : "bg-white/90 text-slate-700 border-slate-300 hover:border-pink-300"}`} title={`Click to toggle ${kidName}'s room`}><span className="w-1.5 h-1.5 rounded-full inline-block" style={{
+                backgroundColor: (kidMember == null ? void 0 : kidMember.color) || "#888"
+              }} /><span>{kidName}</span>{isKidDone ? "\u2713" : ""}</button>;
+            })}</div>}</div>;
+          })}{dayChores.length > 3 && <button onClick={() => setActiveDayModal(dateKey)} className="w-full text-center text-[10px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline pt-0.5">+{dayChores.length - 3}{" more"}</button>}{dayChores.length === 0 && <div className="text-[10px] text-slate-400 italic py-2 text-center">No chores</div>}</div></div><button onClick={() => setActiveDayModal(dateKey)} className="mt-2 w-full py-1 text-[10px] text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded text-center font-semibold transition">Manage Day</button></div>;
+          return (
+            <div
+              key={dateKey}
+              className={`min-h-[160px] p-2 flex flex-col justify-between transition-colors ${isCurrentMonth ? "bg-white" : "bg-slate-50/80 border-dashed border-slate-200"
+                }`}
+            >
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span
+                    className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${isCurrentMonth ? "bg-slate-100 text-slate-800" : "bg-slate-200/70 text-slate-700"
+                      }`}
+                  >
+                    {day}
+                  </span>
+                  {dayChores.length > 0 && (
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                      {dayChores.length} chores
+                    </span>
+                  )}
+                </div>
+                {(() => {
+                  const status = getBiWeeklyStatus(dayObj.year, dayObj.month, dayObj.day);
+                  if (status.isArrivalDay) {
+                    return (
+                      <div
+                        className="text-[9px] font-semibold text-pink-700 bg-pink-50 border border-pink-200 rounded px-1.5 py-0.5 mb-1.5 flex items-center gap-1 leading-tight shadow-2xs"
+                        title="Cadence & Mason arrive today at 5:00 PM for their bi-weekly stay"
+                      >
+                        <span>{"\u{1F3E0} Cadence & Mason arrive 5 PM"}</span>
+                      </div>
+                    );
+                  } else if (status.isDepartureDay) {
+                    return (
+                      <div
+                        className="text-[9px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mb-1.5 flex items-center gap-1 leading-tight shadow-2xs"
+                        title="Cadence & Mason depart today at 5:00 PM"
+                      >
+                        <span>{"\u{1F44B} Cadence & Mason leave 5 PM"}</span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+                <div className="space-y-1">
+                  {dayChores.map(cr => {
                     var _a2, _b2;
-                    return (_b2 = (_a2 = monthSchedule[dateKey]) == null ? void 0 : _a2[cr.index_]) == null ? void 0 : _b2.done;
-                  }).length;
-                  const isAllDone = dayChores.length > 0 && doneCount === dayChores.length;
-                  return <div key={dateKey} className={`min-h-[160px] p-2 flex flex-col justify-between transition-colors ${isCurrentMonth ? "bg-white" : "bg-slate-50/80 border-dashed border-slate-200"}`}><div><div className="flex items-center justify-between mb-1.5"><span className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${isCurrentMonth ? "bg-slate-100 text-slate-800" : "bg-slate-200/70 text-slate-700"}`}>{day}</span><div className="flex items-center gap-1">{dayChores.length > 0 && <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${isAllDone ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>{doneCount}/{dayChores.length}</span>}<button onClick={() => setActiveDayModal(dateKey)} className="p-1 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-100 transition" title="Open day details"><Pen className="w-2.5 h-2.5" /></button></div></div>{(() => {
-                        const status = getBiWeeklyStatus(dayObj.year, dayObj.month, dayObj.day);
-                        if (status.isArrivalDay) {
-                          return <div className="text-[9px] font-semibold text-pink-700 bg-pink-50 border border-pink-200 rounded px-1.5 py-0.5 mb-1.5 flex items-center gap-1 leading-tight shadow-2xs" title="Cadence & Mason arrive today at 5:00 PM for their bi-weekly stay"><span>{"\u{1F3E0} Cadence & Mason arrive 5 PM"}</span></div>;
-                        } else if (status.isDepartureDay) {
-                          return <div className="text-[9px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mb-1.5 flex items-center gap-1 leading-tight shadow-2xs" title="Cadence & Mason depart today at 5:00 PM"><span>{"\u{1F44B} Cadence & Mason leave 5 PM"}</span></div>;
-                        }
-                        return null;
-                      })()}<div className="space-y-1">{dayChores.slice(0, 3).map(cr => {
-                          var _a2, _b2;
-                          const status = getChoreStatus(dateKey, cr.index_, cr.task || cr.row[0]);
-                          const assignee = getMember(status.who);
-                          const freq = getChoreFreq(cr);
-                          return <div key={cr.index_} className={`group text-[11px] p-1 rounded-md border flex flex-col gap-1 transition ${status.done ? "bg-emerald-50/70 border-emerald-200 text-slate-500" : freq.frequency === "weekly" ? "bg-purple-50/60 border-purple-200 text-purple-950 shadow-2xs" : "bg-white border-slate-200 hover:border-slate-300 text-slate-800 shadow-2xs"}`}><div className="flex items-center justify-between gap-1 w-full"><div className="flex items-center gap-1 min-w-0 flex-1"><button onClick={() => handleUpdateChore(dateKey, cr.index_, {
-                                  done: !status.done
-                                })} className="shrink-0 text-slate-400 hover:text-emerald-600 focus:outline-none">{status.done ? <SquareCheckBig className="w-3.5 h-3.5 text-emerald-600" /> : <Square className="w-3.5 h-3.5 hover:text-slate-600" />}</button><span className={`truncate text-[10px] font-medium leading-tight ${status.done ? "line-through" : ""}`}>{cr.task || cr.row[0]}</span></div><div className="flex items-center gap-1 shrink-0">{freq.frequency === "weekly" && <span className="text-[8px] font-bold px-1 py-0.2 rounded bg-purple-100 text-purple-700 uppercase" title="Once-a-week task">1x/wk</span>}{getSpecificKidForChore(cr.task || cr.row[0]) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold" style={{
-                                  backgroundColor: ((_a2 = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _a2.bg) || "#FCE7F3",
-                                  color: ((_b2 = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _b2.text) || "#BE185D"
-                                }}>{getSpecificKidForChore(cr.task || cr.row[0])}</span> : isBedroomChore(cr.task || cr.row[0]) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold bg-pink-100 text-pink-700" title="Each child cleans own bedroom">Own Rooms</span> : status.who ? <span className="shrink-0 text-[9px] px-1 py-0.2 rounded font-semibold" style={{
+                    const status = getChoreStatus(dateKey, cr.index_, cr.task || cr.row[0]);
+                    const assignee = getMember(status.who);
+                    const freq = getChoreFreq(cr);
+                    const rawTaskTitle = cr.task || cr.row[0] || "";
+                    const shortTitle = String(rawTaskTitle).split(/\r?\n/)[0].trim();
+                    return (
+                      <div
+                        key={cr.index_}
+                        className={`text-[11px] p-1 rounded-md border flex flex-col gap-1 ${freq.frequency === "weekly"
+                            ? "bg-purple-50/60 border-purple-200 text-purple-950 shadow-2xs"
+                            : "bg-white border-slate-200 text-slate-800 shadow-2xs"
+                          }`}
+                      >
+                        <div className="flex items-center justify-between gap-1 w-full">
+                          <span className="truncate text-[10px] font-medium leading-tight flex-1 min-w-0" title={rawTaskTitle}>
+                            {shortTitle}
+                          </span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {freq.frequency === "weekly" && (
+                              <span
+                                className="text-[8px] font-bold px-1 py-0.2 rounded bg-purple-100 text-purple-700 uppercase"
+                                title="Once-a-week task"
+                              >
+                                1x/wk
+                              </span>
+                            )}
+                            {getSpecificKidForChore(rawTaskTitle) ? (
+                              <span
+                                className="shrink-0 text-[8.5px] px-1.5 py-0.2 rounded font-bold"
+                                style={{
+                                  backgroundColor:
+                                    ((_a2 = getMember(getSpecificKidForChore(rawTaskTitle))) == null ? void 0 : _a2.bg) || "#FCE7F3",
+                                  color:
+                                    ((_b2 = getMember(getSpecificKidForChore(rawTaskTitle))) == null ? void 0 : _b2.text) || "#BE185D"
+                                }}
+                              >
+                                {getSpecificKidForChore(rawTaskTitle)}
+                              </span>
+                            ) : isBedroomChore(rawTaskTitle) ? (
+                              <span
+                                className="shrink-0 text-[8.5px] px-1.5 py-0.2 rounded font-bold bg-pink-100 text-pink-700"
+                                title="Each child cleans own bedroom"
+                              >
+                                Own Rooms
+                              </span>
+                            ) : status.who ? (
+                              <span
+                                className="shrink-0 text-[9px] px-1.5 py-0.2 rounded font-semibold"
+                                style={{
                                   backgroundColor: (assignee == null ? void 0 : assignee.bg) || "#F1F5F9",
                                   color: (assignee == null ? void 0 : assignee.text) || "#475569"
-                                }} title={String(status.who)}>{String(status.who).slice(0, 2)}</span> : <button onClick={() => setActiveDayModal(dateKey)} className="shrink-0 text-[9px] text-slate-400 hover:text-indigo-600 px-0.5" title="Assign person">+</button>}</div></div>{isBedroomChore(cr.task || cr.row[0]) && !getSpecificKidForChore(cr.task || cr.row[0]) && <div className="pt-0.5 border-t border-purple-200/60 flex flex-wrap gap-1">{getKidsPresentOnDate(dateKey).map(kidName => {
-                                var _a3;
-                                const isKidDone = !!((_a3 = status.kidsDone) == null ? void 0 : _a3[kidName]);
-                                const kidMember = getMember(kidName);
-                                return <button key={kidName} type="button" onClick={e => {
-                                  e.stopPropagation();
-                                  handleToggleKidBedroom(dateKey, cr.index_, kidName);
-                                }} className={`text-[8.5px] px-1 py-0.5 rounded font-semibold flex items-center gap-0.5 border transition ${isKidDone ? "bg-emerald-100 text-emerald-800 border-emerald-300 line-through" : "bg-white/90 text-slate-700 border-slate-300 hover:border-pink-300"}`} title={`Click to toggle ${kidName}'s room`}><span className="w-1.5 h-1.5 rounded-full inline-block" style={{
-                                    backgroundColor: (kidMember == null ? void 0 : kidMember.color) || "#888"
-                                  }} /><span>{kidName}</span>{isKidDone ? "\u2713" : ""}</button>;
-                              })}</div>}</div>;
-                        })}{dayChores.length > 3 && <button onClick={() => setActiveDayModal(dateKey)} className="w-full text-center text-[10px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline pt-0.5">+{dayChores.length - 3}{" more"}</button>}{dayChores.length === 0 && <div className="text-[10px] text-slate-400 italic py-2 text-center">No chores</div>}</div></div><button onClick={() => setActiveDayModal(dateKey)} className="mt-2 w-full py-1 text-[10px] text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded text-center font-semibold transition">Manage Day</button></div>;
-                  return (
-                    <div
-                      key={dateKey}
-                      className={`min-h-[160px] p-2 flex flex-col justify-between transition-colors ${
-                        isCurrentMonth ? "bg-white" : "bg-slate-50/80 border-dashed border-slate-200"
-                      }`}
-                    >
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span
-                            className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${
-                              isCurrentMonth ? "bg-slate-100 text-slate-800" : "bg-slate-200/70 text-slate-700"
-                            }`}
-                          >
-                            {day}
-                          </span>
-                          {dayChores.length > 0 && (
-                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
-                              {dayChores.length} chores
-                            </span>
-                          )}
+                                }}
+                                title={String(status.who)}
+                              >
+                                {String(status.who)}
+                              </span>
+                            ) : (
+                              <span className="shrink-0 text-[8.5px] text-slate-400 italic px-1">Unassigned</span>
+                            )}
+                          </div>
                         </div>
-                        {(() => {
-                          const status = getBiWeeklyStatus(dayObj.year, dayObj.month, dayObj.day);
-                          if (status.isArrivalDay) {
-                            return (
-                              <div
-                                className="text-[9px] font-semibold text-pink-700 bg-pink-50 border border-pink-200 rounded px-1.5 py-0.5 mb-1.5 flex items-center gap-1 leading-tight shadow-2xs"
-                                title="Cadence & Mason arrive today at 5:00 PM for their bi-weekly stay"
-                              >
-                                <span>{"\u{1F3E0} Cadence & Mason arrive 5 PM"}</span>
-                              </div>
-                            );
-                          } else if (status.isDepartureDay) {
-                            return (
-                              <div
-                                className="text-[9px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mb-1.5 flex items-center gap-1 leading-tight shadow-2xs"
-                                title="Cadence & Mason depart today at 5:00 PM"
-                              >
-                                <span>{"\u{1F44B} Cadence & Mason leave 5 PM"}</span>
-                              </div>
-                            );
-                          }
-                          return null;
-                        })()}
-                        <div className="space-y-1">
-                          {dayChores.map(cr => {
-                            var _a2, _b2;
-                            const status = getChoreStatus(dateKey, cr.index_, cr.task || cr.row[0]);
-                            const assignee = getMember(status.who);
-                            const freq = getChoreFreq(cr);
-                            const rawTaskTitle = cr.task || cr.row[0] || "";
-                            const shortTitle = String(rawTaskTitle).split(/\r?\n/)[0].trim();
-                            return (
-                              <div
-                                key={cr.index_}
-                                className={`text-[11px] p-1 rounded-md border flex flex-col gap-1 ${
-                                  freq.frequency === "weekly"
-                                    ? "bg-purple-50/60 border-purple-200 text-purple-950 shadow-2xs"
-                                    : "bg-white border-slate-200 text-slate-800 shadow-2xs"
-                                }`}
-                              >
-                                <div className="flex items-center justify-between gap-1 w-full">
-                                  <span className="truncate text-[10px] font-medium leading-tight flex-1 min-w-0" title={rawTaskTitle}>
-                                    {shortTitle}
-                                  </span>
-                                  <div className="flex items-center gap-1 shrink-0">
-                                    {freq.frequency === "weekly" && (
-                                      <span
-                                        className="text-[8px] font-bold px-1 py-0.2 rounded bg-purple-100 text-purple-700 uppercase"
-                                        title="Once-a-week task"
-                                      >
-                                        1x/wk
-                                      </span>
-                                    )}
-                                    {getSpecificKidForChore(rawTaskTitle) ? (
-                                      <span
-                                        className="shrink-0 text-[8.5px] px-1.5 py-0.2 rounded font-bold"
-                                        style={{
-                                          backgroundColor:
-                                            ((_a2 = getMember(getSpecificKidForChore(rawTaskTitle))) == null ? void 0 : _a2.bg) || "#FCE7F3",
-                                          color:
-                                            ((_b2 = getMember(getSpecificKidForChore(rawTaskTitle))) == null ? void 0 : _b2.text) || "#BE185D"
-                                        }}
-                                      >
-                                        {getSpecificKidForChore(rawTaskTitle)}
-                                      </span>
-                                    ) : isBedroomChore(rawTaskTitle) ? (
-                                      <span
-                                        className="shrink-0 text-[8.5px] px-1.5 py-0.2 rounded font-bold bg-pink-100 text-pink-700"
-                                        title="Each child cleans own bedroom"
-                                      >
-                                        Own Rooms
-                                      </span>
-                                    ) : status.who ? (
-                                      <span
-                                        className="shrink-0 text-[9px] px-1.5 py-0.2 rounded font-semibold"
-                                        style={{
-                                          backgroundColor: (assignee == null ? void 0 : assignee.bg) || "#F1F5F9",
-                                          color: (assignee == null ? void 0 : assignee.text) || "#475569"
-                                        }}
-                                        title={String(status.who)}
-                                      >
-                                        {String(status.who)}
-                                      </span>
-                                    ) : (
-                                      <span className="shrink-0 text-[8.5px] text-slate-400 italic px-1">Unassigned</span>
-                                    )}
-                                  </div>
-                                </div>
-                                {isBedroomChore(rawTaskTitle) && !getSpecificKidForChore(rawTaskTitle) && (
-                                  <div className="pt-0.5 border-t border-purple-200/60 flex flex-wrap gap-1">
-                                    {getKidsPresentOnDate(dateKey).map(kidName => {
-                                      const kidMember = getMember(kidName);
-                                      return (
-                                        <span
-                                          key={kidName}
-                                          className="text-[8.5px] px-1 py-0.5 rounded font-semibold flex items-center gap-0.5 border bg-white/90 text-slate-700 border-slate-200"
-                                        >
-                                          <span
-                                            className="w-1.5 h-1.5 rounded-full inline-block"
-                                            style={{ backgroundColor: (kidMember == null ? void 0 : kidMember.color) || "#888" }}
-                                          />
-                                          <span>{kidName}</span>
-                                        </span>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                          {dayChores.length === 0 && (
-                            <div className="text-[10px] text-slate-400 italic py-2 text-center">No chores</div>
-                          )}
-                        </div>
+                        {isBedroomChore(rawTaskTitle) && !getSpecificKidForChore(rawTaskTitle) && (
+                          <div className="pt-0.5 border-t border-purple-200/60 flex flex-wrap gap-1">
+                            {getKidsPresentOnDate(dateKey).map(kidName => {
+                              const kidMember = getMember(kidName);
+                              return (
+                                <span
+                                  key={kidName}
+                                  className="text-[8.5px] px-1 py-0.5 rounded font-semibold flex items-center gap-0.5 border bg-white/90 text-slate-700 border-slate-200"
+                                >
+                                  <span
+                                    className="w-1.5 h-1.5 rounded-full inline-block"
+                                    style={{ backgroundColor: (kidMember == null ? void 0 : kidMember.color) || "#888" }}
+                                  />
+                                  <span>{kidName}</span>
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  );
-                })}</div></div>;
-          })}</div></div>}{activeTab === "matrix" && <div className="space-y-4"><div id="printable-schedule-card" className="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden"><div className="no-print p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><h2 className="text-base font-bold text-slate-900">Printable Weekly Schedule</h2><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-pink-50 text-pink-700 border border-pink-200 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />{"Active Week: "}{activeSyncWeek}{" \u2022 "}{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || "Cadence & Mason arrive Sun Oct 18 @ 5 PM"}</span></div><p className="text-xs text-slate-500 mt-0.5">{"Single-page Letter Landscape layout matching Weekly Chores Original - Printed.pdf"}</p></div><div className="flex flex-wrap items-center gap-2"><div className="relative"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" /><input type="text" placeholder="Search schedule chores..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div><button onClick={() => {
-                  const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr) || { year: 2026, month: 9, day: 19 };
-                  const weekDays = getWeekDaysForDate(parsedStart.year, parsedStart.month, parsedStart.day);
-                  setMonthSchedule(prev => {
-                    const next = { ...prev };
-                    weekDays.forEach(d => {
-                      next[d.dateKey] = {};
-                    });
-                    return next;
-                  });
-                  setChoreEdits({});
-                  if (printableRangeIndex >= 0 && printableSheet && Array.isArray(printableSheet.data)) {
-                    printableSheet.data.forEach(r => {
-                      if (r.index_ >= 5 && r.index_ <= 9) {
-                        const blankRow = new Array(15).fill(null);
-                        blankRow[0] = r.row[0];
-                        for (let dIdx = 0; dIdx < 7; dIdx++) {
-                          blankRow[1 + dIdx * 2] = "";
-                          blankRow[2 + dIdx * 2] = false;
-                        }
-                        updateItem(printableRangeIndex, r.index_, blankRow);
-                      }
-                    });
-                  }
-                  setNotice("Cleared daily WHO/DONE assignments for a blank printable template!");
-                  setTimeout(() => setNotice(null), 3000);
-                }} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 transition shadow-2xs" title="Clear WHO/DONE cells to print a blank fill-in sheet"><span>Clear Names (Blank Sheet)</span></button><button onClick={handleAutoAssignCurrentWeek} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-amber-50 text-amber-900 border border-amber-300 rounded-lg hover:bg-amber-100 transition shadow-2xs" title="Automatically distribute chores across active members for current week"><Sparkles className="w-3.5 h-3.5 text-amber-600" /><span>Distribute Current Week</span></button><button onClick={() => window.print()} className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition shadow-2xs cursor-pointer" title="Print 1-page Letter Landscape schedule"><span>🖨️ Print Schedule</span></button></div></div><div className="overflow-x-auto"><table id="printable-schedule-table" className="w-full table-fixed border-collapse text-left text-xs" style={{ borderColor: "#C55A11" }}><colgroup><col style={{ width: "21%" }} />{DAY_STYLES.map(d => <React.Fragment key={`col-${d.name}`}><col style={{ width: "7.5%" }} /><col style={{ width: "3.78%" }} /></React.Fragment>)}</colgroup><thead><tr style={{ backgroundColor: "#002060", borderBottom: "3px solid #FFFFFF" }}><th colSpan={15} className="py-2 px-3 text-left text-xl font-bold text-white tracking-tight">Chore Schedule</th></tr><tr><th className="p-0 align-top bg-white" style={{ borderRight: "2px solid #FFFFFF" }}><div className="text-[10px] text-slate-500 font-semibold py-1.5 text-center uppercase tracking-wider bg-white">FOR THE WEEK OF:</div><div className="text-lg font-bold py-1.5 text-center text-white" style={{ backgroundColor: "#002060" }}>{(() => {
-                      const p = parseDateKey(activeSyncWeek || sheetStartDateStr);
-                      return p ? `${p.month + 1}/${p.day}/${p.year}` : activeSyncWeek || sheetStartDateStr || "10/19/2026";
-                    })()}</div></th>{DAY_STYLES.map((d, dayIdx) => {
-                    const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr) || {
-                      year: 2026,
-                      month: 9,
-                      day: 19
-                    };
-                    const colDate = new Date(parsedStart.year, parsedStart.month, parsedStart.day + dayIdx);
-                    const dayNumber = colDate.getDate();
-                    return <th key={d.name} colSpan={2} className="py-1.5 px-1 text-center text-white font-bold align-middle" style={{
-                      backgroundColor: d.color,
-                      borderRight: dayIdx < 6 ? "2px solid #FFFFFF" : "none"
-                    }}><div className="text-xs font-bold uppercase tracking-wider">{d.short.toUpperCase()}</div><div className="text-sm font-bold leading-tight mt-1">{dayNumber}</div></th>;
-                  })}</tr><tr className="bg-white text-[8.5px] font-bold text-slate-900" style={{ borderTop: "2px solid #FFFFFF", borderBottom: "2px solid #C55A11" }}><th className="py-0.5 px-2 text-left uppercase tracking-wider font-extrabold text-[9px]">TASK</th>{DAY_STYLES.map(d => <React.Fragment key={`sub-${d.name}`}><th className="py-0.5 px-1 text-left uppercase font-bold">WHO</th><th className="py-0.5 px-1 text-right uppercase font-bold">DONE</th></React.Fragment>)}</tr></thead><tbody>{printableScheduleItems.filter(item => {
-                  if (searchQuery && !item.isSectionHeader) {
-                    if (!(item.task || "").toLowerCase().includes(searchQuery.toLowerCase())) return false;
-                  }
-                  if (!item.isSectionHeader && isSignOffChore(item.task)) {
-                    return false;
-                  }
-                  return true;
-                }).map((item, idx) => {
-                  var _a2, _b2;
-                  if (item.isSectionHeader) {
-                    if (item.headerType === "daily") {
-                      return <tr key={`header-daily-${item.index_}`} style={{ backgroundColor: "#002060", borderBottom: "1.5px solid #C55A11" }}><td colSpan={15} className="py-1.5 px-3 font-bold text-sm text-white">Daily Tasks</td></tr>;
-                    }
-                    return <tr key={`header-weekly-${item.index_}`} style={{ backgroundColor: "#002060", borderTop: "1.5px solid #002060", borderBottom: "1.5px solid #C55A11" }} className="text-white font-bold"><td className="py-1.5 px-3 text-sm font-bold">Weekly Tasks</td><td colSpan={8} className="py-1.5 px-2.5 text-xs font-bold">Description</td><td colSpan={6} className="py-1.5 px-2.5 text-xs font-bold">Initials / Assigned</td></tr>;
-                  }
-                  const cr = item;
-                  const taskTitle = cr.task || ((_a2 = cr.row) == null ? void 0 : _a2[0]) || "Chore";
-                  const titleLines = String(taskTitle).split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-                  const mainTitle = titleLines[0] || taskTitle;
-                  const subTitle = titleLines.slice(1).join(" ");
-                  const choreFreq = getChoreFreq(cr);
-                  const isSpecialKidChore = getSpecificKidForChore(taskTitle);
-                  const isKidsChecklistTask = isKidsChecklistChore(taskTitle) && !isSpecialKidChore;
-                  const isStreamlined = isStreamlinedWeeklyTask(taskTitle, choreFreq);
-                  const rawDescription = ((_b2 = cr.row) == null ? void 0 : _b2[1]) && (isKidsChecklistTask || isStreamlined) && !familyMembers.some(m => m.name.toLowerCase() === String(cr.row[1]).trim().toLowerCase()) ? String(cr.row[1]).trim() : isLaundryChore(taskTitle) ? "(Each Minion Does Their Own) - Wash, Dry, Fold & Put Away" : isBedroomChore(taskTitle) ? "(Each Minion Does Their Own) - Pick Up Mess / laundry, Organize, Dust & Vacuum" : isCleanBasementChore(taskTitle) ? "- Pick Up, Organize, Dust & Vacuum" : isHerdFeedingStationChore(taskTitle) ? "- Clean & Sanitize Bowls, Vacuum & Wipe Space, Dispose of Waste" : cr.notes || "";
-                  return <tr key={`row-${cr.index_}-${taskTitle}`} className="bg-white hover:bg-slate-50/60 transition-colors" style={{ borderBottom: "1px solid #C55A11" }}><td className="py-1.5 px-2 text-slate-900 bg-white align-middle" style={{ borderLeft: "1px solid #C55A11", borderRight: "1.5px solid #475569" }}><div className="leading-tight text-slate-900 font-semibold text-[11px]">{mainTitle}</div>{subTitle && <div className="text-[9.5px] text-slate-700 font-normal mt-0.5 leading-tight">{subTitle}</div>}</td>{isKidsChecklistTask ? (() => {
-                      const weeklyKidsDone = getWeeklyKidsStatus(cr.index_, taskTitle);
-                      const minionInitials = [
-                        { code: "SG", name: "Sydney" },
-                        { code: "CV", name: "Cadence" },
-                        { code: "MV", name: "Mason" },
-                        { code: "KV", name: "Koda" },
-                        { code: "KG", name: "Keyanna" }
-                      ];
-                      return <React.Fragment><td colSpan={8} className="py-1.5 px-2.5 text-[11px] text-slate-900 font-medium align-middle bg-white" style={{ borderRight: "1.5px solid #475569" }}>{rawDescription}</td><td colSpan={6} className="py-1.5 px-2.5 align-middle bg-white" style={{ borderRight: "1px solid #C55A11" }}><div className="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-900">{minionInitials.map(m => {
-                            const isDone = !!weeklyKidsDone[m.name];
-                            return <button key={m.code} type="button" onClick={() => handleToggleWeeklyKidChore(cr.index_, m.name, taskTitle)} className="inline-flex items-baseline gap-0.5 cursor-pointer hover:text-indigo-700" title={`${m.name} (${m.code}) — Click to toggle`}><span>{m.code}:</span><span className={`inline-block min-w-[26px] text-center border-b border-slate-700 ${isDone ? "text-emerald-700 font-bold" : "text-transparent select-none"}`}>{isDone ? "\u2713" : "____"}</span></button>;
-                          })}</div></td></React.Fragment>;
-                    })() : isStreamlined ? (() => {
-                      const singleStatus = getSingleWeeklyStatus(cr.index_, taskTitle);
-                      const cleanWho = singleStatus.who && !singleStatus.who.startsWith("Who:") && !singleStatus.who.startsWith("Assigned:") ? singleStatus.who : "";
-                      return <React.Fragment><td colSpan={8} className="py-1.5 px-2.5 text-[11px] text-slate-900 font-medium align-middle bg-white" style={{ borderRight: "1.5px solid #475569" }}>{rawDescription}</td><td colSpan={4} className="py-1.5 px-2.5 align-middle bg-white" style={{ borderRight: "1.5px solid #475569" }}><div className="flex items-baseline gap-1.5 text-[11px]"><span className="font-semibold text-slate-900 shrink-0">Who:</span><select value={cleanWho} onChange={e => handleUpdateSingleWeeklyChore(cr.index_, taskTitle, {
-                              who: e.target.value
-                            })} className="flex-1 min-w-0 text-[11px] py-0 px-1 border-b border-slate-700 bg-transparent font-semibold text-slate-900 focus:outline-none cursor-pointer"><option value=""></option><optgroup label="Full-Time Occupants">{familyMembers.filter(m => m.type === "regular").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Bi-Weekly Occupants">{familyMembers.filter(m => m.type === "biweekly").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Casual Assignees">{familyMembers.filter(m => m.type === "casual").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Special Groups"><option value="All Non-Casual">All Non-Casual</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option></optgroup></select></div></td><td colSpan={2} className="py-1.5 px-2 align-middle bg-white text-left" style={{ borderRight: "1px solid #C55A11" }}><button type="button" onClick={() => handleUpdateSingleWeeklyChore(cr.index_, taskTitle, {
-                            done: !singleStatus.done
-                          })} className="inline-flex items-baseline gap-1 font-semibold text-[11px] text-slate-900 cursor-pointer w-full" title="Click to toggle Done"><span>Done:</span><span className={`inline-block flex-1 min-w-[32px] text-center border-b border-slate-700 ${singleStatus.done ? "text-emerald-700 font-bold" : "text-transparent select-none"}`}>{singleStatus.done ? "\u2713" : "______"}</span></button></td></React.Fragment>;
-                    })() : (/* BRANCH C: Standard Daily Chores (Mon-Sun Columns) */
-                    DAY_STYLES.map((d, dayIdx) => {
-                      var _a3, _b3, _c2, _d;
-                      const whoCol = 1 + dayIdx * 2;
-                      const doneCol = 2 + dayIdx * 2;
-                      const parsedStart = parseDateKey(sheetStartDateStr) || {
-                        year: 2026,
-                        month: 9,
-                        day: 19
-                      };
-                      const colDate = new Date(parsedStart.year, parsedStart.month, parsedStart.day + dayIdx);
-                      const colDateKey = formatDateKey(colDate.getFullYear(), colDate.getMonth(), colDate.getDate());
-                      const cellStatus = getChoreStatus(colDateKey, cr.index_, taskTitle);
-                      const editRow = ((_a3 = choreEdits[cr.index_]) == null ? void 0 : _a3.row) || (taskTitle ? (_b3 = choreEdits[taskTitle.toLowerCase().trim()]) == null ? void 0 : _b3.row : null);
-                      const curRowWho = (editRow == null ? void 0 : editRow[whoCol]) !== void 0 ? editRow[whoCol] : (_c2 = cr.row) == null ? void 0 : _c2[whoCol];
-                      const curRowDone = (editRow == null ? void 0 : editRow[doneCol]) !== void 0 ? editRow[doneCol] : (_d = cr.row) == null ? void 0 : _d[doneCol];
-                      const whoVal = curRowWho !== void 0 && curRowWho !== null ? String(curRowWho).trim() : (cellStatus == null ? void 0 : cellStatus.who) ? String(cellStatus.who).trim() : "";
-                      const isDone = curRowDone !== void 0 && curRowDone !== null ? curRowDone === true || String(curRowDone).toLowerCase() === "true" : !!(cellStatus == null ? void 0 : cellStatus.done);
-                      return <React.Fragment key={d.name}><td className="p-1 text-center align-middle bg-white" style={{ borderRight: "1px solid #94A3B8" }}><select value={whoVal} onChange={e => {
-                              handleUpdatePrintableCell(cr.index_, dayIdx, "who", e.target.value, taskTitle);
-                            }} className="w-full text-[11px] py-1 px-0.5 bg-transparent font-semibold text-slate-900 text-center focus:outline-none cursor-pointer"><option value=""></option><optgroup label="Full-Time Occupants">{familyMembers.filter(m => m.type === "regular").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Bi-Weekly Occupants">{familyMembers.filter(m => m.type === "biweekly").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Casual Assignees">{familyMembers.filter(m => m.type === "casual").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Special Groups"><option value="Non-Casual">Non-Casual</option><option value="All Non-Casual">All Non-Casual</option><option value="Each Child">Each Child</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option></optgroup>{whoVal && !familyMembers.some(m => m.name === whoVal) && !["Non-Casual", "All Non-Casual", "Each Child", "All Kids", "Parents"].includes(whoVal) && <option value={whoVal}>{whoVal}</option>}</select></td><td className="p-1 text-center align-middle bg-white" style={{ borderRight: dayIdx < 6 ? "1.5px solid #475569" : "1px solid #C55A11" }}><button type="button" onClick={() => {
-                            handleUpdatePrintableCell(cr.index_, dayIdx, "done", !isDone, taskTitle);
-                          }} className="w-full h-6 flex items-center justify-center rounded hover:bg-slate-100 focus:outline-none cursor-pointer" title={isDone ? "Mark as not done" : "Mark as done"}>{isDone ? <span className="text-emerald-700 font-black text-xs">{"\u2713"}</span> : <span className="text-slate-300 print:hidden text-[10px]">☐</span>}</button></td></React.Fragment>;
-                    }))}</tr>;
-                })}{/* Decorative 7-Day Color Band matching Weekly Chores Original - Printed.pdf */}
-                <tr className="h-14"><td style={{ backgroundColor: "#002060" }} />{DAY_STYLES.map(d => <td key={`band-${d.name}`} colSpan={2} style={{ backgroundColor: d.color }} />)}</tr>
-                {/* Weekly Sign-Off Row matching Weekly Chores Original - Printed.pdf */}
-                <tr className="bg-white text-slate-900" style={{ borderTop: "1px solid #475569", borderBottom: "2.5px solid #C55A11" }}><td className="py-2 px-2.5 font-semibold text-xs text-slate-900 bg-white" style={{ borderLeft: "1px solid #C55A11", borderRight: "1.5px solid #475569" }}>Weekly Sign-Off</td><td colSpan={12} className="py-2 px-3 text-right font-semibold text-xs text-slate-900 bg-white" style={{ borderRight: "1.5px solid #475569" }}>Parent Initials:</td><td colSpan={2} className="py-2 px-2 text-center bg-white" style={{ borderRight: "1px solid #C55A11" }}><button type="button" onClick={handleToggleWeeklySignOff} className="inline-flex items-center justify-center w-full cursor-pointer font-semibold text-xs text-slate-900" title="Click to toggle Parent Sign-Off"><span className={`inline-block min-w-[56px] border-b border-slate-800 ${signOffStatus.done ? "text-emerald-700 font-bold" : "text-transparent select-none"}`}>{signOffStatus.done ? "\u2713 TV / MV" : "_________"}</span></button></td></tr></tbody></table></div></div><div className="no-print grid grid-cols-1 md:grid-cols-3 gap-4 text-xs"><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-indigo-900">HOUSEHOLD ROSTER</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div><strong className="text-slate-900">{"\u2022 Full-Time:"}</strong>{" "}{familyMembers.filter(m => m.type === "regular").map(m => m.name).join(", ") || "Sydney, Thom, Meghan"}</div><div><strong className="text-pink-900">{"\u2022 Bi-Weekly:"}</strong>{" "}{familyMembers.filter(m => m.type === "biweekly").map(m => m.name).join(" & ") || "Cadence & Mason"}</div><div><strong className="text-sky-900">{"\u2022 Casual:"}</strong>{" "}{familyMembers.filter(m => m.type === "casual").map(m => m.name).join(", ") || "Koda, Keyanna"}</div></div></div><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-pink-900">BI-WEEKLY SCHEDULE</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div>{"\u2022 Cadence & Mason: Alternating bi-weekly schedule"}</div><div>{"\u2022 Status this week: Not here \u2022 Arrive Sunday, Oct. 18 @ 5:00 PM"}</div><div>{"\u2022 Transitions: Sundays @ 5:00 PM (alternating bi-weekly from Oct 18)"}</div><div>{"\u2022 Off-weeks (This week): Chores split among full-time roster (Thom, Meghan, Sydney)"}</div><div>{"\u2022 On-weeks (Starts Oct 19): Included in daily chore rotations"}</div></div></div><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-amber-900">{'PET CARE ROUTINE ("FEED THE HERD")'}</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div>{"\u2022 Cats (Litter Crew): Morning & evening feeding, scoop litter box daily"}</div><div>{"\u2022 Family Dog(s): Morning & evening feeding, outdoor routine, fresh water"}</div><div>{"\u2022 Herd Feeding Station: Refill all water bowls daily, wipe station, dispose waste"}</div><div>{"\u2022 Routine: Daily feeding, fresh water & station cleanup"}</div></div></div></div></div>}{activeTab === "tasks" && <div className="max-w-5xl mx-auto space-y-5"><div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm"><div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200"><div><div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs"><ListTodo className="w-4 h-4" /></div><h2 className="text-lg font-bold text-slate-900">Master Chores Template & Registry</h2><span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />Live Backed by Household Hub</span></div><p className="text-xs text-slate-500 mt-1">Central chore configuration defining categories, target days, frequencies, and rotation groups. Changes made here persist directly back to the spreadsheet.</p></div><div className="flex flex-wrap items-center gap-2"><button onClick={() => {
-                setAddRemoveMode("add");
-                setEditingChoreIndex(null);
-                setShowAddRemoveChoreModal(true);
-              }} className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition cursor-pointer" title="Add, edit, or remove master chores"><Plus className="w-4 h-4" /><span>Add / Edit Chore</span></button><button onClick={() => setShowInlineAddForm(prev => !prev)} className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition cursor-pointer" title="Toggle quick inline chore entry form"><span>{showInlineAddForm ? "Hide Quick Add" : "\u26A1 Quick Inline Add"}</span></button><button onClick={() => {
-                var _a2, _b2, _c2, _d;
-                setCombineTargetA(((_a2 = hubMasterChores[2]) == null ? void 0 : _a2.index_) || ((_b2 = choreRows[0]) == null ? void 0 : _b2.index_));
-                setCombineTargetB(((_c2 = hubMasterChores[3]) == null ? void 0 : _c2.index_) || ((_d = choreRows[1]) == null ? void 0 : _d.index_));
-                setCustomCombinedTitle("Dinner Dishes & Kitchen Cleanup (Put away food, load dishwasher, wipe surfaces)");
-                setShowCombineModal(true);
-              }} className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-100 transition"><GitMerge className="w-3.5 h-3.5 text-purple-600" /><span>Combine Chores</span></button><button onClick={handleUpdatePetChoresToRoster} className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg hover:bg-amber-100 transition" title="Update pet chores to reflect Ellie, Lewis, Casey, Gigi, Sloan, and Scoob"><span>{"\u{1F43E} Sync Pet Chores"}</span></button></div></div>{showInlineAddForm && <div className="my-4 p-4 rounded-xl border-2 border-indigo-500 bg-indigo-50/50 shadow-md space-y-3 transition-all animate-fadeIn"><div className="flex items-center justify-between pb-2 border-b border-indigo-200"><div className="font-bold text-sm text-indigo-900 flex items-center gap-1.5"><Plus className="w-4 h-4 text-indigo-600" /><span>Add New Master Chore to Household Hub</span></div><button onClick={() => setShowInlineAddForm(false)} className="text-slate-400 hover:text-slate-700 p-1"><X className="w-4 h-4" /></button></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs"><div className="md:col-span-2"><label className="block font-bold text-slate-700 mb-1">{"Chore Task Description "}<span className="text-rose-500">{"*"}</span></label><input type="text" value={newMasterDraft.task} onChange={e => setNewMasterDraft(prev => ({
-                  ...{
-                    ...prev
-                  },
-                  task: e.target.value
-                }))} onKeyDown={e => {
-                  if (e.key === "Enter" && newMasterDraft.task.trim()) {
-                    handleAddNewMasterChore(newMasterDraft);
-                  }
-                }} placeholder="e.g. Empty dishwasher, sanitize counters, sweep porch..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" autoFocus /></div><div><label className="block font-bold text-slate-700 mb-1">Category</label><select value={newMasterDraft.category} onChange={e => setNewMasterDraft(prev => ({
-                  ...{
-                    ...prev
-                  },
-                  category: e.target.value
-                }))} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">{CHORE_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon}{" "}{c.name}</option>)}</select></div><div><label className="block font-bold text-slate-700 mb-1">Frequency</label><select value={newMasterDraft.frequency} onChange={e => {
-                  const val = e.target.value;
-                  setNewMasterDraft(prev => ({
-                    ...{
-                      ...prev
-                    },
-                    frequency: val,
-                    targetDay: val === "Daily" ? "Mon \u2013 Sun" : val === "Bi-Weekly" ? "Thursday Evening" : "Saturday"
-                  }));
-                }} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="Daily">Daily</option><option value="Once a Week">Once a Week</option><option value="Bi-Weekly">Bi-Weekly</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Target Day(s)</label><input type="text" value={newMasterDraft.targetDay} onChange={e => setNewMasterDraft(prev => ({
-                  ...{
-                    ...prev
-                  },
-                  targetDay: e.target.value
-                }))} placeholder="e.g. Mon \u2013 Sun, Saturday, Thursday Evening..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium" /></div><div><label className="block font-bold text-slate-700 mb-1">Rotation Group</label><select value={newMasterDraft.rotationGroup} onChange={e => setNewMasterDraft(prev => ({
-                  ...{
-                    ...prev
-                  },
-                  rotationGroup: e.target.value
-                }))} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="All Non-Casual">All Non-Casual (Sydney, Cadence, Mason, Thom, Meghan)</option><option value="Kids Rotation">Kids Rotation</option><option value="Parents & Kids">Parents & Kids</option><option value="All Occupants">All Occupants</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option><option value="Full-Time Roster">Full-Time Roster</option>{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</select></div><div className="md:col-span-3"><label className="block font-bold text-slate-700 mb-1">Operational Notes / Routine</label><input type="text" value={newMasterDraft.notes} onChange={e => setNewMasterDraft(prev => ({
-                  ...{
-                    ...prev
-                  },
-                  notes: e.target.value
-                }))} placeholder="Instructions, supplies, details or timing notes..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium" /></div></div><div className="flex justify-end gap-2 pt-2 border-t border-indigo-200"><button type="button" onClick={() => setShowInlineAddForm(false)} className="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition">Cancel</button><button type="button" onClick={() => handleAddNewMasterChore(newMasterDraft)} disabled={!newMasterDraft.task.trim()} className="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm disabled:opacity-40 transition flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /><span>Add Chore to Master List</span></button></div></div>}<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4"><div className="p-3 bg-slate-50 rounded-xl border border-slate-200"><span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Template Chores</span><div className="text-xl font-bold text-slate-900 mt-0.5">{hubMasterChores.length}{" Tasks"}</div><span className="text-[11px] text-slate-500">All registered tasks</span></div><div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200"><span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">Daily Chores</span><div className="text-xl font-bold text-blue-900 mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("daily")).length}{" Tasks"}</div><span className="text-[11px] text-blue-600">Mon – Sun rotation</span></div><div className="p-3 bg-purple-50/70 rounded-xl border border-purple-200"><span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider block">Once a Week</span><div className="text-xl font-bold text-purple-900 mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("weekly") || c.frequency.toLowerCase().includes("once")).length}{" Tasks"}</div><span className="text-[11px] text-purple-600">Saturday & Sunday deep tasks</span></div><div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200"><span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">Bi-Weekly Tasks</span><div className="text-xl font-bold text-amber-900 mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("bi-weekly") || c.frequency.toLowerCase().includes("biweekly")).length}{" Tasks"}</div><span className="text-[11px] text-amber-700">Split Curbside Recycling & Waste</span></div></div><div className="p-3.5 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-950 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs"><div className="flex items-start gap-2.5"><span className="text-lg">{"\u{1F69B}"}</span><div><span className="font-bold text-amber-900 block">Alternating Bi-Weekly Curbside Schedule Active</span><span className="text-[11px] text-amber-800"><strong>Thursday, October 15:</strong>{" Curbside Recycling scheduled & assigned (curb prep for Friday Oct 16)."}<br /><strong>Following Thursday (October 22):</strong>{" Curbside Waste scheduled & assigned (curb prep for Friday Oct 23)."}<br />Tasks alternate bi-weekly every 2 weeks on Thursday evenings.</span></div></div><div className="flex items-center gap-2 self-start md:self-auto shrink-0"><span className="px-2 py-1 rounded-md bg-white border border-amber-300 font-semibold text-[11px] text-amber-900 shadow-2xs">Thu Evening Curb Prep</span><span className="px-2 py-1 rounded-md bg-white border border-amber-300 font-semibold text-[11px] text-amber-900 shadow-2xs">Fri Morning Pickup</span></div></div><div className="mt-4 pt-4 border-t border-slate-200 space-y-3"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div className="relative flex-1 max-w-md"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" /><input type="text" placeholder="Search chores by name, category, group, or notes..." value={masterSearchQuery} onChange={e => setMasterSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500" />{masterSearchQuery && <button onClick={() => setMasterSearchQuery("")} className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"><X className="w-3.5 h-3.5" /></button>}</div><div className="flex items-center gap-1.5 text-xs"><span className="text-slate-500 font-semibold mr-1">Frequency:</span><button onClick={() => setMasterFrequencyFilter("ALL")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "ALL" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>All</button><button onClick={() => setMasterFrequencyFilter("Daily")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Daily" ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-700 hover:bg-blue-100"}`}>Daily</button><button onClick={() => setMasterFrequencyFilter("Once a Week")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Once a Week" ? "bg-purple-600 text-white" : "bg-purple-50 text-purple-700 hover:bg-purple-100"}`}>Weekly</button><button onClick={() => setMasterFrequencyFilter("Bi-Weekly")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Bi-Weekly" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-800 hover:bg-amber-100"}`}>Bi-Weekly</button></div></div><div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs"><span className="text-slate-400 font-semibold mr-1 shrink-0">Category:</span><button onClick={() => setMasterCategoryFilter("ALL")} className={`px-2.5 py-1 rounded-full font-semibold shrink-0 transition ${masterCategoryFilter === "ALL" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>All Categories ({hubMasterChores.length})</button>{CHORE_CATEGORIES.map(cat => {
-                const count = hubMasterChores.filter(c => c.category.toLowerCase() === cat.name.toLowerCase()).length;
-                return <button key={cat.id} onClick={() => setMasterCategoryFilter(cat.name)} className={`px-2.5 py-1 rounded-full font-semibold shrink-0 transition flex items-center gap-1.5 border ${masterCategoryFilter === cat.name ? "ring-2 ring-slate-800 shadow-xs" : "opacity-85 hover:opacity-100"} ${cat.bg} ${cat.text} ${cat.border}`}><span>{cat.icon}</span><span>{cat.name}</span><span className="text-[10px] opacity-75">({count})</span></button>;
-              })}</div></div></div><div className="space-y-3">{filteredMasterChores.map((ch, idx) => {
+                    );
+                  })}
+                  {dayChores.length === 0 && (
+                    <div className="text-[10px] text-slate-400 italic py-2 text-center">No chores</div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}</div></div>;
+      })}</div></div>}{activeTab === "matrix" && <div className="space-y-4"><div id="printable-schedule-card" className="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden"><div className="no-print p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><h2 className="text-base font-bold text-slate-900">Printable Weekly Schedule</h2><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-pink-50 text-pink-700 border border-pink-200 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />{"Active Week: "}{activeSyncWeek}{" \u2022 "}{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || "Cadence & Mason arrive Sun Oct 18 @ 5 PM"}</span></div><p className="text-xs text-slate-500 mt-0.5">{"Single-page Letter Landscape layout matching Weekly Chores Original - Printed.pdf"}</p></div><div className="flex flex-wrap items-center gap-2"><div className="relative"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" /><input type="text" placeholder="Search schedule chores..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div><button onClick={() => {
+        const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr) || { year: 2026, month: 9, day: 19 };
+        const weekDays = getWeekDaysForDate(parsedStart.year, parsedStart.month, parsedStart.day);
+        setMonthSchedule(prev => {
+          const next = { ...prev };
+          weekDays.forEach(d => {
+            next[d.dateKey] = {};
+          });
+          return next;
+        });
+        setChoreEdits({});
+        if (printableRangeIndex >= 0 && printableSheet && Array.isArray(printableSheet.data)) {
+          printableSheet.data.forEach(r => {
+            if (r.index_ >= 5 && r.index_ <= 9) {
+              const blankRow = new Array(15).fill(null);
+              blankRow[0] = r.row[0];
+              for (let dIdx = 0; dIdx < 7; dIdx++) {
+                blankRow[1 + dIdx * 2] = "";
+                blankRow[2 + dIdx * 2] = false;
+              }
+              updateItem(printableRangeIndex, r.index_, blankRow);
+            }
+          });
+        }
+        setNotice("Cleared daily WHO/DONE assignments for a blank printable template!");
+        setTimeout(() => setNotice(null), 3000);
+      }} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 transition shadow-2xs" title="Clear WHO/DONE cells to print a blank fill-in sheet"><span>Clear Names (Blank Sheet)</span></button><button onClick={handleAutoAssignCurrentWeek} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-amber-50 text-amber-900 border border-amber-300 rounded-lg hover:bg-amber-100 transition shadow-2xs" title="Automatically distribute chores across active members for current week"><Sparkles className="w-3.5 h-3.5 text-amber-600" /><span>Distribute Current Week</span></button><button onClick={() => window.print()} className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition shadow-2xs cursor-pointer" title="Print 1-page Letter Landscape schedule"><span>🖨️ Print Schedule</span></button></div></div><div className="overflow-x-auto"><table id="printable-schedule-table" className="w-full table-fixed border-collapse text-left text-xs" style={{ borderColor: "#C55A11" }}><colgroup><col style={{ width: "21%" }} />{DAY_STYLES.map(d => <React.Fragment key={`col-${d.name}`}><col style={{ width: "7.5%" }} /><col style={{ width: "3.78%" }} /></React.Fragment>)}</colgroup><thead><tr style={{ backgroundColor: "#002060", borderBottom: "3px solid #FFFFFF" }}><th colSpan={15} className="py-2 px-3 text-left text-xl font-bold text-white tracking-tight">Chore Schedule</th></tr><tr><th className="p-0 align-top bg-white" style={{ borderRight: "2px solid #FFFFFF" }}><div className="text-[10px] text-slate-500 font-semibold py-1.5 text-center uppercase tracking-wider bg-white">FOR THE WEEK OF:</div><div className="text-lg font-bold py-1.5 text-center text-white" style={{ backgroundColor: "#002060" }}>{(() => {
+        const p = parseDateKey(activeSyncWeek || sheetStartDateStr);
+        return p ? `${p.month + 1}/${p.day}/${p.year}` : activeSyncWeek || sheetStartDateStr || "10/19/2026";
+      })()}</div></th>{DAY_STYLES.map((d, dayIdx) => {
+        const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr) || {
+          year: 2026,
+          month: 9,
+          day: 19
+        };
+        const colDate = new Date(parsedStart.year, parsedStart.month, parsedStart.day + dayIdx);
+        const dayNumber = colDate.getDate();
+        return <th key={d.name} colSpan={2} className="py-1.5 px-1 text-center text-white font-bold align-middle" style={{
+          backgroundColor: d.color,
+          borderRight: dayIdx < 6 ? "2px solid #FFFFFF" : "none"
+        }}><div className="text-xs font-bold uppercase tracking-wider">{d.short.toUpperCase()}</div><div className="text-sm font-bold leading-tight mt-1">{dayNumber}</div></th>;
+      })}</tr><tr className="bg-white text-[8.5px] font-bold text-slate-900" style={{ borderTop: "2px solid #FFFFFF", borderBottom: "2px solid #C55A11" }}><th className="py-0.5 px-2 text-left uppercase tracking-wider font-extrabold text-[9px]">TASK</th>{DAY_STYLES.map(d => <React.Fragment key={`sub-${d.name}`}><th className="py-0.5 px-1 text-left uppercase font-bold">WHO</th><th className="py-0.5 px-1 text-right uppercase font-bold">DONE</th></React.Fragment>)}</tr></thead><tbody>{printableScheduleItems.filter(item => {
+        if (searchQuery && !item.isSectionHeader) {
+          if (!(item.task || "").toLowerCase().includes(searchQuery.toLowerCase())) return false;
+        }
+        if (!item.isSectionHeader && isSignOffChore(item.task)) {
+          return false;
+        }
+        return true;
+      }).map((item, idx) => {
+        var _a2, _b2;
+        if (item.isSectionHeader) {
+          if (item.headerType === "daily") {
+            return <tr key={`header-daily-${item.index_}`} style={{ backgroundColor: "#002060", borderBottom: "1.5px solid #C55A11" }}><td colSpan={15} className="py-1.5 px-3 font-bold text-sm text-white">Daily Tasks</td></tr>;
+          }
+          return <tr key={`header-weekly-${item.index_}`} style={{ backgroundColor: "#002060", borderTop: "1.5px solid #002060", borderBottom: "1.5px solid #C55A11" }} className="text-white font-bold"><td className="py-1.5 px-3 text-sm font-bold">Weekly Tasks</td><td colSpan={8} className="py-1.5 px-2.5 text-xs font-bold">Description</td><td colSpan={6} className="py-1.5 px-2.5 text-xs font-bold">Initials / Assigned</td></tr>;
+        }
+        const cr = item;
+        const taskTitle = cr.task || ((_a2 = cr.row) == null ? void 0 : _a2[0]) || "Chore";
+        const titleLines = String(taskTitle).split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        const mainTitle = titleLines[0] || taskTitle;
+        const subTitle = titleLines.slice(1).join(" ");
+        const choreFreq = getChoreFreq(cr);
+        const isSpecialKidChore = getSpecificKidForChore(taskTitle);
+        const isKidsChecklistTask = isKidsChecklistChore(taskTitle) && !isSpecialKidChore;
+        const isStreamlined = isStreamlinedWeeklyTask(taskTitle, choreFreq);
+        const rawDescription = ((_b2 = cr.row) == null ? void 0 : _b2[1]) && (isKidsChecklistTask || isStreamlined) && !familyMembers.some(m => m.name.toLowerCase() === String(cr.row[1]).trim().toLowerCase()) ? String(cr.row[1]).trim() : isLaundryChore(taskTitle) ? "(Each Minion Does Their Own) - Wash, Dry, Fold & Put Away" : isBedroomChore(taskTitle) ? "(Each Minion Does Their Own) - Pick Up Mess / laundry, Organize, Dust & Vacuum" : isCleanBasementChore(taskTitle) ? "- Pick Up, Organize, Dust & Vacuum" : isHerdFeedingStationChore(taskTitle) ? "- Clean & Sanitize Bowls, Vacuum & Wipe Space, Dispose of Waste" : cr.notes || "";
+        return <tr key={`row-${cr.index_}-${taskTitle}`} className="bg-white hover:bg-slate-50/60 transition-colors" style={{ borderBottom: "1px solid #C55A11" }}><td className="py-1.5 px-2 text-slate-900 bg-white align-middle" style={{ borderLeft: "1px solid #C55A11", borderRight: "1.5px solid #475569" }}><div className="leading-tight text-slate-900 font-semibold text-[11px]">{mainTitle}</div>{subTitle && <div className="text-[9.5px] text-slate-700 font-normal mt-0.5 leading-tight">{subTitle}</div>}</td>{isKidsChecklistTask ? (() => {
+          const weeklyKidsDone = getWeeklyKidsStatus(cr.index_, taskTitle);
+          const minionInitials = [
+            { code: "SG", name: "Sydney" },
+            { code: "CV", name: "Cadence" },
+            { code: "MV", name: "Mason" },
+            { code: "KV", name: "Koda" },
+            { code: "KG", name: "Keyanna" }
+          ];
+          return <React.Fragment><td colSpan={8} className="py-1.5 px-2.5 text-[11px] text-slate-900 font-medium align-middle bg-white" style={{ borderRight: "1.5px solid #475569" }}>{rawDescription}</td><td colSpan={6} className="py-1.5 px-2.5 align-middle bg-white" style={{ borderRight: "1px solid #C55A11" }}><div className="flex items-center justify-between gap-1 text-[11px] font-semibold text-slate-900">{minionInitials.map(m => {
+            const isDone = !!weeklyKidsDone[m.name];
+            return <button key={m.code} type="button" onClick={() => handleToggleWeeklyKidChore(cr.index_, m.name, taskTitle)} className="inline-flex items-baseline gap-0.5 cursor-pointer hover:text-indigo-700" title={`${m.name} (${m.code}) — Click to toggle`}><span>{m.code}:</span><span className={`inline-block min-w-[26px] text-center border-b border-slate-700 ${isDone ? "text-emerald-700 font-bold" : "text-transparent select-none"}`}>{isDone ? "\u2713" : "____"}</span></button>;
+          })}</div></td></React.Fragment>;
+        })() : isStreamlined ? (() => {
+          const singleStatus = getSingleWeeklyStatus(cr.index_, taskTitle);
+          const cleanWho = singleStatus.who && !singleStatus.who.startsWith("Who:") && !singleStatus.who.startsWith("Assigned:") ? singleStatus.who : "";
+          return <React.Fragment><td colSpan={8} className="py-1.5 px-2.5 text-[11px] text-slate-900 font-medium align-middle bg-white" style={{ borderRight: "1.5px solid #475569" }}>{rawDescription}</td><td colSpan={4} className="py-1.5 px-2.5 align-middle bg-white" style={{ borderRight: "1.5px solid #475569" }}><div className="flex items-baseline gap-1.5 text-[11px]"><span className="font-semibold text-slate-900 shrink-0">Who:</span><select value={cleanWho} onChange={e => handleUpdateSingleWeeklyChore(cr.index_, taskTitle, {
+            who: e.target.value
+          })} className="flex-1 min-w-0 text-[11px] py-0 px-1 border-b border-slate-700 bg-transparent font-semibold text-slate-900 focus:outline-none cursor-pointer"><option value=""></option><optgroup label="Full-Time Occupants">{familyMembers.filter(m => m.type === "regular").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Bi-Weekly Occupants">{familyMembers.filter(m => m.type === "biweekly").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Casual Assignees">{familyMembers.filter(m => m.type === "casual").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Special Groups"><option value="All Non-Casual">All Non-Casual</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option></optgroup></select></div></td><td colSpan={2} className="py-1.5 px-2 align-middle bg-white text-left" style={{ borderRight: "1px solid #C55A11" }}><button type="button" onClick={() => handleUpdateSingleWeeklyChore(cr.index_, taskTitle, {
+            done: !singleStatus.done
+          })} className="inline-flex items-baseline gap-1 font-semibold text-[11px] text-slate-900 cursor-pointer w-full" title="Click to toggle Done"><span>Done:</span><span className={`inline-block flex-1 min-w-[32px] text-center border-b border-slate-700 ${singleStatus.done ? "text-emerald-700 font-bold" : "text-transparent select-none"}`}>{singleStatus.done ? "\u2713" : "______"}</span></button></td></React.Fragment>;
+        })() : (/* BRANCH C: Standard Daily Chores (Mon-Sun Columns) */
+          DAY_STYLES.map((d, dayIdx) => {
+            var _a3, _b3, _c2, _d;
+            const whoCol = 1 + dayIdx * 2;
+            const doneCol = 2 + dayIdx * 2;
+            const parsedStart = parseDateKey(sheetStartDateStr) || {
+              year: 2026,
+              month: 9,
+              day: 19
+            };
+            const colDate = new Date(parsedStart.year, parsedStart.month, parsedStart.day + dayIdx);
+            const colDateKey = formatDateKey(colDate.getFullYear(), colDate.getMonth(), colDate.getDate());
+            const cellStatus = getChoreStatus(colDateKey, cr.index_, taskTitle);
+            const editRow = ((_a3 = choreEdits[cr.index_]) == null ? void 0 : _a3.row) || (taskTitle ? (_b3 = choreEdits[taskTitle.toLowerCase().trim()]) == null ? void 0 : _b3.row : null);
+            const curRowWho = (editRow == null ? void 0 : editRow[whoCol]) !== void 0 ? editRow[whoCol] : (_c2 = cr.row) == null ? void 0 : _c2[whoCol];
+            const curRowDone = (editRow == null ? void 0 : editRow[doneCol]) !== void 0 ? editRow[doneCol] : (_d = cr.row) == null ? void 0 : _d[doneCol];
+            const whoVal = curRowWho !== void 0 && curRowWho !== null ? String(curRowWho).trim() : (cellStatus == null ? void 0 : cellStatus.who) ? String(cellStatus.who).trim() : "";
+            const isDone = curRowDone !== void 0 && curRowDone !== null ? curRowDone === true || String(curRowDone).toLowerCase() === "true" : !!(cellStatus == null ? void 0 : cellStatus.done);
+            return <React.Fragment key={d.name}><td className="p-1 text-center align-middle bg-white" style={{ borderRight: "1px solid #94A3B8" }}><select value={whoVal} onChange={e => {
+              handleUpdatePrintableCell(cr.index_, dayIdx, "who", e.target.value, taskTitle);
+            }} className="w-full text-[11px] py-1 px-0.5 bg-transparent font-semibold text-slate-900 text-center focus:outline-none cursor-pointer"><option value=""></option><optgroup label="Full-Time Occupants">{familyMembers.filter(m => m.type === "regular").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Bi-Weekly Occupants">{familyMembers.filter(m => m.type === "biweekly").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Casual Assignees">{familyMembers.filter(m => m.type === "casual").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Special Groups"><option value="Non-Casual">Non-Casual</option><option value="All Non-Casual">All Non-Casual</option><option value="Each Child">Each Child</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option></optgroup>{whoVal && !familyMembers.some(m => m.name === whoVal) && !["Non-Casual", "All Non-Casual", "Each Child", "All Kids", "Parents"].includes(whoVal) && <option value={whoVal}>{whoVal}</option>}</select></td><td className="p-1 text-center align-middle bg-white" style={{ borderRight: dayIdx < 6 ? "1.5px solid #475569" : "1px solid #C55A11" }}><button type="button" onClick={() => {
+              handleUpdatePrintableCell(cr.index_, dayIdx, "done", !isDone, taskTitle);
+            }} className="w-full h-6 flex items-center justify-center rounded hover:bg-slate-100 focus:outline-none cursor-pointer" title={isDone ? "Mark as not done" : "Mark as done"}>{isDone ? <span className="text-emerald-700 font-black text-xs">{"\u2713"}</span> : <span className="text-slate-300 print:hidden text-[10px]">☐</span>}</button></td></React.Fragment>;
+          }))}</tr>;
+      })}{/* Decorative 7-Day Color Band matching Weekly Chores Original - Printed.pdf */}
+          <tr className="h-14"><td style={{ backgroundColor: "#002060" }} />{DAY_STYLES.map(d => <td key={`band-${d.name}`} colSpan={2} style={{ backgroundColor: d.color }} />)}</tr>
+          {/* Weekly Sign-Off Row matching Weekly Chores Original - Printed.pdf */}
+          <tr className="bg-white text-slate-900" style={{ borderTop: "1px solid #475569", borderBottom: "2.5px solid #C55A11" }}><td className="py-2 px-2.5 font-semibold text-xs text-slate-900 bg-white" style={{ borderLeft: "1px solid #C55A11", borderRight: "1.5px solid #475569" }}>Weekly Sign-Off</td><td colSpan={12} className="py-2 px-3 text-right font-semibold text-xs text-slate-900 bg-white" style={{ borderRight: "1.5px solid #475569" }}>Parent Initials:</td><td colSpan={2} className="py-2 px-2 text-center bg-white" style={{ borderRight: "1px solid #C55A11" }}><button type="button" onClick={handleToggleWeeklySignOff} className="inline-flex items-center justify-center w-full cursor-pointer font-semibold text-xs text-slate-900" title="Click to toggle Parent Sign-Off"><span className={`inline-block min-w-[56px] border-b border-slate-800 ${signOffStatus.done ? "text-emerald-700 font-bold" : "text-transparent select-none"}`}>{signOffStatus.done ? "\u2713 TV / MV" : "_________"}</span></button></td></tr></tbody></table></div></div><div className="no-print grid grid-cols-1 md:grid-cols-3 gap-4 text-xs"><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-indigo-900">HOUSEHOLD ROSTER</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div><strong className="text-slate-900">{"\u2022 Full-Time:"}</strong>{" "}{familyMembers.filter(m => m.type === "regular").map(m => m.name).join(", ") || "Sydney, Thom, Meghan"}</div><div><strong className="text-pink-900">{"\u2022 Bi-Weekly:"}</strong>{" "}{familyMembers.filter(m => m.type === "biweekly").map(m => m.name).join(" & ") || "Cadence & Mason"}</div><div><strong className="text-sky-900">{"\u2022 Casual:"}</strong>{" "}{familyMembers.filter(m => m.type === "casual").map(m => m.name).join(", ") || "Koda, Keyanna"}</div></div></div><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-pink-900">BI-WEEKLY SCHEDULE</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div>{"\u2022 Cadence & Mason: Alternating bi-weekly schedule"}</div><div>{"\u2022 Status this week: Not here \u2022 Arrive Sunday, Oct. 18 @ 5:00 PM"}</div><div>{"\u2022 Transitions: Sundays @ 5:00 PM (alternating bi-weekly from Oct 18)"}</div><div>{"\u2022 Off-weeks (This week): Chores split among full-time roster (Thom, Meghan, Sydney)"}</div><div>{"\u2022 On-weeks (Starts Oct 19): Included in daily chore rotations"}</div></div></div><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-amber-900">{'PET CARE ROUTINE ("FEED THE HERD")'}</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div>{"\u2022 Cats (Litter Crew): Morning & evening feeding, scoop litter box daily"}</div><div>{"\u2022 Family Dog(s): Morning & evening feeding, outdoor routine, fresh water"}</div><div>{"\u2022 Herd Feeding Station: Refill all water bowls daily, wipe station, dispose waste"}</div><div>{"\u2022 Routine: Daily feeding, fresh water & station cleanup"}</div></div></div></div></div>}{activeTab === "tasks" && <div className="max-w-5xl mx-auto space-y-5"><div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm"><div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-200"><div><div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs"><ListTodo className="w-4 h-4" /></div><h2 className="text-lg font-bold text-slate-900">Master Chores Template & Registry</h2><span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />Live Backed by Household Hub</span></div><p className="text-xs text-slate-500 mt-1">Central chore configuration defining categories, target days, frequencies, and rotation groups. Changes made here persist directly back to the spreadsheet.</p></div><div className="flex flex-wrap items-center gap-2"><button onClick={() => {
+            setAddRemoveMode("add");
+            setEditingChoreIndex(null);
+            setShowAddRemoveChoreModal(true);
+          }} className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition cursor-pointer" title="Add, edit, or remove master chores"><Plus className="w-4 h-4" /><span>Add / Edit Chore</span></button><button onClick={() => setShowInlineAddForm(prev => !prev)} className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition cursor-pointer" title="Toggle quick inline chore entry form"><span>{showInlineAddForm ? "Hide Quick Add" : "\u26A1 Quick Inline Add"}</span></button><button onClick={() => {
+            var _a2, _b2, _c2, _d;
+            setCombineTargetA(((_a2 = hubMasterChores[2]) == null ? void 0 : _a2.index_) || ((_b2 = choreRows[0]) == null ? void 0 : _b2.index_));
+            setCombineTargetB(((_c2 = hubMasterChores[3]) == null ? void 0 : _c2.index_) || ((_d = choreRows[1]) == null ? void 0 : _d.index_));
+            setCustomCombinedTitle("Dinner Dishes & Kitchen Cleanup (Put away food, load dishwasher, wipe surfaces)");
+            setShowCombineModal(true);
+          }} className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-purple-50 text-purple-700 border border-purple-200 rounded-lg hover:bg-purple-100 transition"><GitMerge className="w-3.5 h-3.5 text-purple-600" /><span>Combine Chores</span></button><button onClick={handleUpdatePetChoresToRoster} className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg hover:bg-amber-100 transition" title="Update pet chores to reflect Ellie, Lewis, Casey, Gigi, Sloan, and Scoob"><span>{"\u{1F43E} Sync Pet Chores"}</span></button></div></div>{showInlineAddForm && <div className="my-4 p-4 rounded-xl border-2 border-indigo-500 bg-indigo-50/50 shadow-md space-y-3 transition-all animate-fadeIn"><div className="flex items-center justify-between pb-2 border-b border-indigo-200"><div className="font-bold text-sm text-indigo-900 flex items-center gap-1.5"><Plus className="w-4 h-4 text-indigo-600" /><span>Add New Master Chore to Household Hub</span></div><button onClick={() => setShowInlineAddForm(false)} className="text-slate-400 hover:text-slate-700 p-1"><X className="w-4 h-4" /></button></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs"><div className="md:col-span-2"><label className="block font-bold text-slate-700 mb-1">{"Chore Task Description "}<span className="text-rose-500">{"*"}</span></label><input type="text" value={newMasterDraft.task} onChange={e => setNewMasterDraft(prev => ({
+            ...{
+              ...prev
+            },
+            task: e.target.value
+          }))} onKeyDown={e => {
+            if (e.key === "Enter" && newMasterDraft.task.trim()) {
+              handleAddNewMasterChore(newMasterDraft);
+            }
+          }} placeholder="e.g. Empty dishwasher, sanitize counters, sweep porch..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" autoFocus /></div><div><label className="block font-bold text-slate-700 mb-1">Category</label><select value={newMasterDraft.category} onChange={e => setNewMasterDraft(prev => ({
+            ...{
+              ...prev
+            },
+            category: e.target.value
+          }))} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">{CHORE_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon}{" "}{c.name}</option>)}</select></div><div><label className="block font-bold text-slate-700 mb-1">Frequency</label><select value={newMasterDraft.frequency} onChange={e => {
+            const val = e.target.value;
+            setNewMasterDraft(prev => ({
+              ...{
+                ...prev
+              },
+              frequency: val,
+              targetDay: val === "Daily" ? "Mon \u2013 Sun" : val === "Bi-Weekly" ? "Thursday Evening" : "Saturday"
+            }));
+          }} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="Daily">Daily</option><option value="Once a Week">Once a Week</option><option value="Bi-Weekly">Bi-Weekly</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Target Day(s)</label><input type="text" value={newMasterDraft.targetDay} onChange={e => setNewMasterDraft(prev => ({
+            ...{
+              ...prev
+            },
+            targetDay: e.target.value
+          }))} placeholder="e.g. Mon \u2013 Sun, Saturday, Thursday Evening..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium" /></div><div><label className="block font-bold text-slate-700 mb-1">Rotation Group</label><select value={newMasterDraft.rotationGroup} onChange={e => setNewMasterDraft(prev => ({
+            ...{
+              ...prev
+            },
+            rotationGroup: e.target.value
+          }))} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="All Non-Casual">All Non-Casual (Sydney, Cadence, Mason, Thom, Meghan)</option><option value="Kids Rotation">Kids Rotation</option><option value="Parents & Kids">Parents & Kids</option><option value="All Occupants">All Occupants</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option><option value="Full-Time Roster">Full-Time Roster</option>{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</select></div><div className="md:col-span-3"><label className="block font-bold text-slate-700 mb-1">Operational Notes / Routine</label><input type="text" value={newMasterDraft.notes} onChange={e => setNewMasterDraft(prev => ({
+            ...{
+              ...prev
+            },
+            notes: e.target.value
+          }))} placeholder="Instructions, supplies, details or timing notes..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium" /></div></div><div className="flex justify-end gap-2 pt-2 border-t border-indigo-200"><button type="button" onClick={() => setShowInlineAddForm(false)} className="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition">Cancel</button><button type="button" onClick={() => handleAddNewMasterChore(newMasterDraft)} disabled={!newMasterDraft.task.trim()} className="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm disabled:opacity-40 transition flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /><span>Add Chore to Master List</span></button></div></div>}<div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4"><div className="p-3 bg-slate-50 rounded-xl border border-slate-200"><span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Template Chores</span><div className="text-xl font-bold text-slate-900 mt-0.5">{hubMasterChores.length}{" Tasks"}</div><span className="text-[11px] text-slate-500">All registered tasks</span></div><div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200"><span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">Daily Chores</span><div className="text-xl font-bold text-blue-900 mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("daily")).length}{" Tasks"}</div><span className="text-[11px] text-blue-600">Mon – Sun rotation</span></div><div className="p-3 bg-purple-50/70 rounded-xl border border-purple-200"><span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider block">Once a Week</span><div className="text-xl font-bold text-purple-900 mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("weekly") || c.frequency.toLowerCase().includes("once")).length}{" Tasks"}</div><span className="text-[11px] text-purple-600">Saturday & Sunday deep tasks</span></div><div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200"><span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">Bi-Weekly Tasks</span><div className="text-xl font-bold text-amber-900 mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("bi-weekly") || c.frequency.toLowerCase().includes("biweekly")).length}{" Tasks"}</div><span className="text-[11px] text-amber-700">Split Curbside Recycling & Waste</span></div></div><div className="p-3.5 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-950 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-2xs"><div className="flex items-start gap-2.5"><span className="text-lg">{"\u{1F69B}"}</span><div><span className="font-bold text-amber-900 block">Alternating Bi-Weekly Curbside Schedule Active</span><span className="text-[11px] text-amber-800"><strong>Thursday, October 15:</strong>{" Curbside Recycling scheduled & assigned (curb prep for Friday Oct 16)."}<br /><strong>Following Thursday (October 22):</strong>{" Curbside Waste scheduled & assigned (curb prep for Friday Oct 23)."}<br />Tasks alternate bi-weekly every 2 weeks on Thursday evenings.</span></div></div><div className="flex items-center gap-2 self-start md:self-auto shrink-0"><span className="px-2 py-1 rounded-md bg-white border border-amber-300 font-semibold text-[11px] text-amber-900 shadow-2xs">Thu Evening Curb Prep</span><span className="px-2 py-1 rounded-md bg-white border border-amber-300 font-semibold text-[11px] text-amber-900 shadow-2xs">Fri Morning Pickup</span></div></div><div className="mt-4 pt-4 border-t border-slate-200 space-y-3"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div className="relative flex-1 max-w-md"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" /><input type="text" placeholder="Search chores by name, category, group, or notes..." value={masterSearchQuery} onChange={e => setMasterSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500" />{masterSearchQuery && <button onClick={() => setMasterSearchQuery("")} className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"><X className="w-3.5 h-3.5" /></button>}</div><div className="flex items-center gap-1.5 text-xs"><span className="text-slate-500 font-semibold mr-1">Frequency:</span><button onClick={() => setMasterFrequencyFilter("ALL")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "ALL" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>All</button><button onClick={() => setMasterFrequencyFilter("Daily")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Daily" ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-700 hover:bg-blue-100"}`}>Daily</button><button onClick={() => setMasterFrequencyFilter("Once a Week")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Once a Week" ? "bg-purple-600 text-white" : "bg-purple-50 text-purple-700 hover:bg-purple-100"}`}>Weekly</button><button onClick={() => setMasterFrequencyFilter("Bi-Weekly")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Bi-Weekly" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-800 hover:bg-amber-100"}`}>Bi-Weekly</button></div></div><div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs"><span className="text-slate-400 font-semibold mr-1 shrink-0">Category:</span><button onClick={() => setMasterCategoryFilter("ALL")} className={`px-2.5 py-1 rounded-full font-semibold shrink-0 transition ${masterCategoryFilter === "ALL" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>All Categories ({hubMasterChores.length})</button>{CHORE_CATEGORIES.map(cat => {
+            const count = hubMasterChores.filter(c => c.category.toLowerCase() === cat.name.toLowerCase()).length;
+            return <button key={cat.id} onClick={() => setMasterCategoryFilter(cat.name)} className={`px-2.5 py-1 rounded-full font-semibold shrink-0 transition flex items-center gap-1.5 border ${masterCategoryFilter === cat.name ? "ring-2 ring-slate-800 shadow-xs" : "opacity-85 hover:opacity-100"} ${cat.bg} ${cat.text} ${cat.border}`}><span>{cat.icon}</span><span>{cat.name}</span><span className="text-[10px] opacity-75">({count})</span></button>;
+          })}</div></div></div><div className="space-y-3">{filteredMasterChores.map((ch, idx) => {
             var _a2;
             const isEditing = editingMasterIndex === ch.index_;
             const catConfig = CHORE_CATEGORIES.find(c => c.name.toLowerCase() === ch.category.toLowerCase()) || CHORE_CATEGORIES[3];
@@ -4933,96 +4925,96 @@ function App({
             const isCurbsideRecycling = ch.task.toLowerCase().includes("recycling");
             const isCurbsideWaste = ch.task.toLowerCase().includes("waste");
             return <div key={`${ch.index_ || ch.task}-${idx}`} className={`bg-white rounded-xl border transition-all ${isEditing ? "border-indigo-400 ring-2 ring-indigo-100 shadow-md p-4" : "border-slate-200 hover:border-slate-300 shadow-xs p-4"}`}>{!isEditing ? <div className="flex flex-col md:flex-row md:items-start justify-between gap-3 text-xs"><div className="flex items-start gap-3 flex-1 min-w-0"><span className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center shrink-0 mt-0.5 text-[11px]">{idx + 1}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="font-bold text-sm text-slate-900 leading-snug">{ch.task}</h3><span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${catConfig.bg} ${catConfig.text} ${catConfig.border}`}><span>{catConfig.icon}</span><span>{ch.category}</span></span><span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border ${isBiWeekly ? "bg-amber-50 text-amber-800 border-amber-200" : ch.frequency.toLowerCase().includes("daily") ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-purple-50 text-purple-700 border-purple-200"}`}>{ch.frequency}</span></div><div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-600"><div className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-slate-400" /><span className="font-medium text-slate-500">Target Day:</span><span className="font-bold text-slate-800 px-1.5 py-0.5 rounded bg-slate-100">{ch.targetDay}</span></div><div className="flex items-center gap-1"><Users className="w-3.5 h-3.5 text-slate-400" /><span className="font-medium text-slate-500">Rotation Group:</span><span className={`font-semibold px-1.5 py-0.5 rounded border ${ch.rotationGroup === "All Non-Casual" ? "bg-purple-100 text-purple-900 border-purple-300 font-bold" : "text-indigo-700 bg-indigo-50 border-indigo-100"}`} title={ch.rotationGroup === "All Non-Casual" ? "Covers Sydney, Cadence, Mason, Thom, and Meghan (excludes casuals Koda and Keyanna; no other group is equivalent)" : void 0}>{ch.rotationGroup}{ch.rotationGroup === "All Non-Casual" && <span className="ml-1 text-[9px] font-normal text-purple-700 hidden sm:inline">(5 non-casual)</span>}</span></div></div>{ch.notes && <p className="mt-2 text-[11px] text-slate-600 bg-slate-50/80 p-2 rounded-lg border border-slate-100 leading-relaxed"><span className="font-semibold text-slate-700">Instructions:</span>{" "}{ch.notes}</p>}{(isCurbsideRecycling || isCurbsideWaste) && <div className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-semibold text-amber-900 bg-amber-50/90 border border-amber-200 px-2 py-1 rounded-md"><span>{"\u2139\uFE0F"}</span><span>{isCurbsideRecycling ? "Alternating Friday pickup starts Oct 16. Curb task set for preceding Thursday evening." : "Alternating Friday pickup starts Oct 23. Curb task set for preceding Thursday evening."}</span></div>}</div></div><div className="flex items-center gap-1.5 shrink-0 self-end md:self-start pt-2 md:pt-0"><button type="button" onClick={() => {
-                    setEditingMasterIndex(ch.index_);
-                    setMasterInlineDraft({
-                      ...ch
-                    });
-                  }} className="px-2.5 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg flex items-center gap-1 transition" title="Edit chore details"><Pen className="w-3.5 h-3.5" /><span>Edit</span></button><button type="button" onClick={() => handleMoveChore(ch, "up")} disabled={idx === 0} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-20 rounded transition cursor-pointer" title="Move chore up"><ArrowUp className="w-4 h-4" /></button><button type="button" onClick={() => handleMoveChore(ch, "down")} disabled={idx === filteredMasterChores.length - 1} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-20 rounded transition cursor-pointer" title="Move chore down"><ArrowDown className="w-4 h-4" /></button><button type="button" onClick={() => handleDeleteMasterChore(ch.index_, ch.task)} className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded transition" title={`Remove "${ch.task}"`}><Trash2 className="w-3.5 h-3.5" /></button></div></div> : /* INLINE EDIT MODE: DIRECT COMPREHENSIVE EDITOR */<div className="space-y-3 text-xs"><div className="flex items-center justify-between pb-2 border-b border-indigo-200"><span className="font-bold text-indigo-900 flex items-center gap-1.5"><Pen className="w-3.5 h-3.5 text-indigo-600" /><span>Editing #{idx + 1}{": "}{ch.task}</span></span><span className="text-[10px] font-semibold text-slate-400">{"Sheet Row Index: "}{ch.index_}</span></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3"><div className="md:col-span-2"><label className="block font-bold text-slate-700 mb-1">{"Task Title "}<span className="text-rose-500">{"*"}</span></label><input type="text" value={(masterInlineDraft == null ? void 0 : masterInlineDraft.task) || ""} onChange={e => setMasterInlineDraft(prev => ({
-                      ...{
-                        ...prev
-                      },
-                      task: e.target.value
-                    }))} className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div><div><label className="block font-bold text-slate-700 mb-1">Category</label><select value={(masterInlineDraft == null ? void 0 : masterInlineDraft.category) || "Household"} onChange={e => setMasterInlineDraft(prev => ({
-                      ...{
-                        ...prev
-                      },
-                      category: e.target.value
-                    }))} className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">{CHORE_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon}{" "}{c.name}</option>)}</select></div><div><label className="block font-bold text-slate-700 mb-1">Frequency</label><select value={(masterInlineDraft == null ? void 0 : masterInlineDraft.frequency) || "Daily"} onChange={e => {
-                      const val = e.target.value;
-                      setMasterInlineDraft(prev => ({
-                        ...{
-                          ...prev
-                        },
-                        frequency: val,
-                        targetDay: val === "Daily" ? "Mon \u2013 Sun" : val === "Bi-Weekly" ? "Thursday Evening" : prev.targetDay
-                      }));
-                    }} className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="Daily">Daily</option><option value="Once a Week">Once a Week</option><option value="Bi-Weekly">Bi-Weekly</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Target Day(s)</label><input type="text" value={(masterInlineDraft == null ? void 0 : masterInlineDraft.targetDay) || ""} onChange={e => setMasterInlineDraft(prev => ({
-                      ...{
-                        ...prev
-                      },
-                      targetDay: e.target.value
-                    }))} placeholder="e.g. Mon \u2013 Sun, Saturday, Thursday Evening..." className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div><div><label className="block font-bold text-slate-700 mb-1">Rotation Group</label><select value={(masterInlineDraft == null ? void 0 : masterInlineDraft.rotationGroup) || "All Non-Casual"} onChange={e => setMasterInlineDraft(prev => ({
-                      ...{
-                        ...prev
-                      },
-                      rotationGroup: e.target.value
-                    }))} className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="All Non-Casual">All Non-Casual (Sydney, Cadence, Mason, Thom, Meghan)</option><option value="Kids Rotation">Kids Rotation</option><option value="Parents & Kids">Parents & Kids</option><option value="All Occupants">All Occupants</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option><option value="Full-Time Roster">Full-Time Roster</option>{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</select><p className="text-[10px] text-slate-500 mt-1 leading-snug">{"\u{1F4A1} "}<strong>All Non-Casual:</strong>{" Covers Sydney, Cadence, Mason, Thom, and Meghan (excludes casuals Koda & Keyanna). "}<em>No equivalent currently exists among existing groups</em>.</p></div><div className="md:col-span-3"><label className="block font-bold text-slate-700 mb-1">Operational Notes</label><input type="text" value={(masterInlineDraft == null ? void 0 : masterInlineDraft.notes) || ""} onChange={e => setMasterInlineDraft(prev => ({
-                      ...{
-                        ...prev
-                      },
-                      notes: e.target.value
-                    }))} placeholder="Operational details, supplies or timing notes..." className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div></div><div className="flex items-center justify-between pt-2 border-t border-indigo-200"><button type="button" onClick={() => handleDeleteMasterChore(ch.index_, ch.task)} className="px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-1 transition"><Trash2 className="w-3.5 h-3.5" /><span>Remove Chore</span></button><div className="flex items-center gap-2"><button type="button" onClick={() => {
-                      setEditingMasterIndex(null);
-                      setMasterInlineDraft(null);
-                    }} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition">Cancel</button><button type="button" onClick={() => handleUpdateMasterChore(ch.index_, masterInlineDraft)} disabled={!((_a2 = masterInlineDraft == null ? void 0 : masterInlineDraft.task) == null ? void 0 : _a2.trim())} className="px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-xs transition disabled:opacity-40">Save Changes</button></div></div></div>}</div>;
+              setEditingMasterIndex(ch.index_);
+              setMasterInlineDraft({
+                ...ch
+              });
+            }} className="px-2.5 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg flex items-center gap-1 transition" title="Edit chore details"><Pen className="w-3.5 h-3.5" /><span>Edit</span></button><button type="button" onClick={() => handleMoveChore(ch, "up")} disabled={idx === 0} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-20 rounded transition cursor-pointer" title="Move chore up"><ArrowUp className="w-4 h-4" /></button><button type="button" onClick={() => handleMoveChore(ch, "down")} disabled={idx === filteredMasterChores.length - 1} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-20 rounded transition cursor-pointer" title="Move chore down"><ArrowDown className="w-4 h-4" /></button><button type="button" onClick={() => handleDeleteMasterChore(ch.index_, ch.task)} className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded transition" title={`Remove "${ch.task}"`}><Trash2 className="w-3.5 h-3.5" /></button></div></div> : /* INLINE EDIT MODE: DIRECT COMPREHENSIVE EDITOR */ <div className="space-y-3 text-xs"><div className="flex items-center justify-between pb-2 border-b border-indigo-200"><span className="font-bold text-indigo-900 flex items-center gap-1.5"><Pen className="w-3.5 h-3.5 text-indigo-600" /><span>Editing #{idx + 1}{": "}{ch.task}</span></span><span className="text-[10px] font-semibold text-slate-400">{"Sheet Row Index: "}{ch.index_}</span></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3"><div className="md:col-span-2"><label className="block font-bold text-slate-700 mb-1">{"Task Title "}<span className="text-rose-500">{"*"}</span></label><input type="text" value={(masterInlineDraft == null ? void 0 : masterInlineDraft.task) || ""} onChange={e => setMasterInlineDraft(prev => ({
+              ...{
+                ...prev
+              },
+              task: e.target.value
+            }))} className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div><div><label className="block font-bold text-slate-700 mb-1">Category</label><select value={(masterInlineDraft == null ? void 0 : masterInlineDraft.category) || "Household"} onChange={e => setMasterInlineDraft(prev => ({
+              ...{
+                ...prev
+              },
+              category: e.target.value
+            }))} className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">{CHORE_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon}{" "}{c.name}</option>)}</select></div><div><label className="block font-bold text-slate-700 mb-1">Frequency</label><select value={(masterInlineDraft == null ? void 0 : masterInlineDraft.frequency) || "Daily"} onChange={e => {
+              const val = e.target.value;
+              setMasterInlineDraft(prev => ({
+                ...{
+                  ...prev
+                },
+                frequency: val,
+                targetDay: val === "Daily" ? "Mon \u2013 Sun" : val === "Bi-Weekly" ? "Thursday Evening" : prev.targetDay
+              }));
+            }} className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="Daily">Daily</option><option value="Once a Week">Once a Week</option><option value="Bi-Weekly">Bi-Weekly</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Target Day(s)</label><input type="text" value={(masterInlineDraft == null ? void 0 : masterInlineDraft.targetDay) || ""} onChange={e => setMasterInlineDraft(prev => ({
+              ...{
+                ...prev
+              },
+              targetDay: e.target.value
+            }))} placeholder="e.g. Mon \u2013 Sun, Saturday, Thursday Evening..." className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div><div><label className="block font-bold text-slate-700 mb-1">Rotation Group</label><select value={(masterInlineDraft == null ? void 0 : masterInlineDraft.rotationGroup) || "All Non-Casual"} onChange={e => setMasterInlineDraft(prev => ({
+              ...{
+                ...prev
+              },
+              rotationGroup: e.target.value
+            }))} className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="All Non-Casual">All Non-Casual (Sydney, Cadence, Mason, Thom, Meghan)</option><option value="Kids Rotation">Kids Rotation</option><option value="Parents & Kids">Parents & Kids</option><option value="All Occupants">All Occupants</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option><option value="Full-Time Roster">Full-Time Roster</option>{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</select><p className="text-[10px] text-slate-500 mt-1 leading-snug">{"\u{1F4A1} "}<strong>All Non-Casual:</strong>{" Covers Sydney, Cadence, Mason, Thom, and Meghan (excludes casuals Koda & Keyanna). "}<em>No equivalent currently exists among existing groups</em>.</p></div><div className="md:col-span-3"><label className="block font-bold text-slate-700 mb-1">Operational Notes</label><input type="text" value={(masterInlineDraft == null ? void 0 : masterInlineDraft.notes) || ""} onChange={e => setMasterInlineDraft(prev => ({
+              ...{
+                ...prev
+              },
+              notes: e.target.value
+            }))} placeholder="Operational details, supplies or timing notes..." className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div></div><div className="flex items-center justify-between pt-2 border-t border-indigo-200"><button type="button" onClick={() => handleDeleteMasterChore(ch.index_, ch.task)} className="px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-1 transition"><Trash2 className="w-3.5 h-3.5" /><span>Remove Chore</span></button><div className="flex items-center gap-2"><button type="button" onClick={() => {
+              setEditingMasterIndex(null);
+              setMasterInlineDraft(null);
+            }} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition">Cancel</button><button type="button" onClick={() => handleUpdateMasterChore(ch.index_, masterInlineDraft)} disabled={!((_a2 = masterInlineDraft == null ? void 0 : masterInlineDraft.task) == null ? void 0 : _a2.trim())} className="px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-xs transition disabled:opacity-40">Save Changes</button></div></div></div>}</div>;
           })}{hubMasterChores.length === 0 && <div className="p-8 text-center bg-white rounded-xl border border-slate-200 text-slate-500"><ListTodo className="w-8 h-8 text-slate-300 mx-auto mb-2" /><p className="font-semibold">No chores found in Master Template</p><button onClick={() => setShowInlineAddForm(true)} className="mt-3 text-xs font-bold px-3 py-1.5 bg-indigo-600 text-white rounded-lg">Add First Chore</button></div>}</div></div>}{activeTab === "stats" && <div className="max-w-4xl mx-auto space-y-6"><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Scheduled Chores</span><Calendar className="w-4 h-4 text-slate-400" /></div><div className="text-2xl font-bold text-slate-900 mt-2">{monthStats.totalScheduled}</div><p className="text-xs text-slate-500 mt-1">{"Total across "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</p></div><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Completed Chores</span><CircleCheck className="w-4 h-4 text-emerald-500" /></div><div className="text-2xl font-bold text-emerald-600 mt-2">{monthStats.totalCompleted}</div><p className="text-xs text-slate-500 mt-1">{monthStats.completionRate}% completion rate</p></div><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Active Tasks</span><ListTodo className="w-4 h-4 text-indigo-500" /></div><div className="text-2xl font-bold text-indigo-600 mt-2">{choreRows.length}</div><p className="text-xs text-slate-500 mt-1">Daily & weekly routines</p></div><div className="bg-gradient-to-br from-amber-50 to-orange-50/70 p-4 rounded-xl border border-amber-300 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-bold text-amber-900">Current Top Performer</span><Crown className="w-4 h-4 text-amber-600" /></div><div className="text-xl font-black text-amber-950 mt-2 truncate">{topPerformer ? topPerformer.name : "TBD"}</div><p className="text-xs text-amber-800 mt-1 truncate">{topPerformer ? `${topPerformer.done} chores finished` : "Track chores to rank"}</p></div></div><div className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 rounded-2xl text-white p-5 shadow-md"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-white/20"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 shadow-inner"><Trophy className="w-6 h-6 text-amber-200" /></div><div><div className="flex items-center gap-2"><span className="text-xs font-extrabold uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full">Monthly Incentive Prize</span><span className="text-xs opacity-90">{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</span></div><h3 className="text-base font-extrabold mt-0.5">Top Performer Reward & Recognition</h3></div></div><div className="flex items-center gap-2"><button onClick={() => {
-                setIsEditingIncentive(prev => !prev);
-                setIncentiveDraft(monthlyIncentive);
-              }} className="text-xs font-bold px-3 py-1.5 bg-white text-amber-900 hover:bg-amber-50 rounded-lg shadow-sm transition flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-amber-700" /><span>{isEditingIncentive ? "Cancel Edit" : "Customize Incentive"}</span></button></div></div>{!isEditingIncentive ? <div className="pt-3 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"><div className="space-y-1"><div className="text-amber-100 font-medium">Incentive for Highest Monthly Chore Completions:</div><div className="text-sm font-black text-white flex items-center gap-2"><Gift className="w-4 h-4 text-amber-200 shrink-0" /><span>{monthlyIncentive}</span></div></div>{topPerformer && <div className="bg-white/15 px-3 py-2 rounded-xl backdrop-blur-xs flex items-center gap-2.5 self-start md:self-auto border border-white/20"><Crown className="w-4 h-4 text-amber-200 shrink-0" /><div><div className="text-[10px] text-amber-100 uppercase tracking-wider font-bold">Leading Candidate</div><div className="font-extrabold text-xs text-white">{topPerformer.name}{" ("}{topPerformer.done}{" finished \u2022 "}{topPerformer.pct}%)</div></div></div>}</div> : <div className="pt-3 space-y-3 text-xs bg-black/15 p-3 rounded-xl mt-3 border border-white/20"><label className="block font-bold text-white mb-1">Set Monthly Reward / Incentive Prize for the Top Performer:</label><div className="flex gap-2"><input type="text" value={incentiveDraft} onChange={e => setIncentiveDraft(e.target.value)} placeholder="e.g. $15 Allowance Bonus, Pizza Night Pick, 1-Day Chore Pass..." className="flex-1 p-2 bg-white text-slate-900 font-semibold rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-300" /><button onClick={() => {
-                if (incentiveDraft.trim()) {
-                  setMonthlyIncentive(incentiveDraft.trim());
-                  setIsEditingIncentive(false);
-                  setNotice(`Updated Monthly Incentive: "${incentiveDraft.trim()}"`);
-                  setTimeout(() => setNotice(null), 3e3);
-                }
-              }} className="px-4 py-2 bg-white text-amber-900 font-extrabold rounded-lg hover:bg-amber-50 transition">Save Prize</button></div><div className="flex flex-wrap items-center gap-1.5 text-[11px] pt-1"><span className="opacity-80">Quick ideas:</span><button onClick={() => setIncentiveDraft("$15 Allowance Bonus & Pizza Night Pick")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">{"$15 + Pizza Night"}</button><button onClick={() => setIncentiveDraft("1-Day Chore Exemption Pass & Movie Pick")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">1-Day Chore Pass</button><button onClick={() => setIncentiveDraft("$20 Gift Card & Weekend Treat")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">{"$20 Gift Card"}</button><button onClick={() => setIncentiveDraft("Family Ice Cream Outing of Their Choice")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">Ice Cream Outing</button></div></div>}</div><div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-200"><div><div className="flex items-center gap-2"><h3 className="text-base font-bold text-slate-900">Family Members Completion</h3><span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Unified Roster ({rankedMembers.length}{" Members)"}</span></div><p className="text-xs text-slate-500 mt-0.5">{"Monthly Total Tracker ranked by total chores completed for "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}. All household members are displayed together in a single unified leaderboard.</p></div><div className="flex items-center gap-2 text-xs text-slate-500"><Award className="w-4 h-4 text-amber-500" /><span className="font-semibold text-slate-700">Ranked by Monthly Completions</span></div></div><div className="space-y-3">{rankedMembers.map((m, idx) => {
-              const isFirst = idx === 0 && m.done > 0;
-              const isSecond = idx === 1 && m.done > 0;
-              const isThird = idx === 2 && m.done > 0;
-              return <div key={m.id} className={`p-3.5 rounded-xl border transition-all ${isFirst ? "border-amber-400 bg-amber-50/40 ring-1 ring-amber-300 shadow-sm" : "border-slate-200 bg-slate-50/40 hover:bg-white hover:border-slate-300"}`}><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5"><div className="flex items-center gap-3"><div className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${isFirst ? "bg-amber-500 text-white shadow-xs" : isSecond ? "bg-slate-300 text-slate-800" : isThird ? "bg-amber-700/80 text-white" : "bg-slate-100 text-slate-500"}`}>{isFirst ? <Crown className="w-4 h-4" /> : `#${idx + 1}`}</div><div className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full shrink-0" style={{
-                        backgroundColor: m.color
-                      }} /><span className="font-bold text-sm text-slate-900">{m.name}</span>{m.role && <span className="text-xs text-slate-500 font-normal">({m.role}{" = "}{m.role === "Supreme Overlord" ? "Parent" : "Kid"})</span>}<span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${m.type === "biweekly" ? "bg-pink-50 text-pink-700 border-pink-200" : m.type === "casual" ? "bg-sky-50 text-sky-700 border-sky-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}>{m.residency}</span>{isFirst && <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs"><span>{"\u{1F3C6}"}</span><span>{"Top Performer \u2022 Incentive Winner"}</span></span>}</div></div><div className="flex items-center gap-3 self-end sm:self-auto text-xs"><div className="text-right"><span className="font-extrabold text-sm text-slate-900">{m.done}</span><span className="text-slate-500">{" / "}{m.total}{" completed"}</span></div><span className={`font-black text-xs px-2 py-0.5 rounded-md ${m.pct >= 80 ? "bg-emerald-100 text-emerald-800" : m.pct >= 50 ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-600"}`}>{m.pct}%</span></div></div><div className="w-full bg-slate-200/80 rounded-full h-2.5 overflow-hidden"><div className="h-2.5 rounded-full transition-all duration-500" style={{
-                    width: `${m.pct}%`,
-                    backgroundColor: isFirst ? "#D97706" : m.color
-                  }} /></div>{isFirst && <div className="mt-2 pt-2 border-t border-amber-200/60 flex items-center justify-between text-[11px] text-amber-900 font-medium"><div className="flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-amber-700 shrink-0" /><span>{"Qualifying Reward: "}<strong>{monthlyIncentive}</strong></span></div><span className="font-bold text-amber-700">{"Rank #1 in "}{MONTH_NAMES[selectedMonth]}</span></div>}</div>;
-            })}</div></div><div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 shadow-sm"><h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-2 flex items-center gap-1.5"><span>{"\u{1F43E} House Pets Overview"}</span></h4><div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">{HOUSE_PETS.map(pet => <div key={pet.name} className="bg-white p-2.5 rounded-lg border border-amber-100 flex items-center gap-2"><span className="text-base">{pet.icon}</span><div><div className="font-bold text-slate-800">{pet.name}</div><div className="text-[10px] text-slate-500">{pet.kind}</div></div></div>)}</div></div></div>}{activeTab === "roster" && <div className="max-w-5xl mx-auto space-y-6"><div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200"><div><div className="flex items-center gap-2"><h2 className="text-lg font-bold text-slate-900">Household Hub & Master Directory</h2><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Linked: Household Hub (Background Data)</span></div><p className="text-xs text-slate-500 mt-0.5">Centralized household administration: Family member roster & occupancy, pet care routines, and chore allocation master files.</p></div><div className="flex items-center gap-2"><span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 font-semibold rounded-lg border border-slate-200">{"Active Week: "}<strong>{hubScheduleConfig.activeWeekStart}</strong></span><span className="text-xs px-2.5 py-1 bg-pink-50 text-pink-700 font-semibold rounded-lg border border-pink-200">{"Custody: "}<strong>{hubScheduleConfig.custodyRotation}</strong></span></div></div><div className="my-5 p-4 rounded-xl bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/50 border border-indigo-200 shadow-2xs space-y-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-indigo-600" /><h3 className="text-xs font-bold uppercase tracking-wider text-indigo-950">Household Hub Rules & Parameter Analysis</h3></div><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">Live Analytical Summary</span></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs"><div className="p-3 bg-white/90 rounded-lg border border-indigo-100 shadow-2xs space-y-1"><span className="font-bold text-indigo-900 flex items-center gap-1.5"><span>{"\u{1F451}"}</span>{" Overseer Supreme (Parent) & Minions (Kids)"}</span><p className="text-[11px] text-slate-600 leading-relaxed"><strong>Thom & Meghan</strong>{" are humorously designated "}<em>Overseer Supreme</em>{" (= Parent) and actively share daily chores. "}<strong>Sunday Supper Rule:</strong>{" On Sundays, "}<em>Make Supper: Plan Ahead!</em>{" is always assigned exclusively to the parents, alternating between Thom and Meghan. They also conduct the Sunday "}<strong>Weekly Sign-Off & Inspection</strong>.</p></div><div className="p-3 bg-white/90 rounded-lg border border-pink-100 shadow-2xs space-y-1"><span className="font-bold text-pink-900 flex items-center gap-1.5"><span>{"\u{1F3E0}"}</span>{" Custody Rotation: Kids Week"}</span><p className="text-[11px] text-slate-600 leading-relaxed">{"For active week "}<strong>{hubScheduleConfig.activeWeekStart}</strong>{", "}<strong>Cadence & Mason</strong>{" are away and arrive on "}<strong>Sunday, Oct. 18th at 5:00 PM</strong>, alternating bi-weekly from then on. Current week chores are distributed among the full-time roster (Thom, Meghan, Sydney).</p></div><div className="p-3 bg-white/90 rounded-lg border border-amber-100 shadow-2xs space-y-1"><span className="font-bold text-amber-900 flex items-center gap-1.5"><span>{"\u{1F69B}"}</span>{" Alternating Curbside Schedule"}</span><p className="text-[11px] text-slate-600 leading-relaxed">{"Curbside tasks alternate bi-weekly on Thursday evenings for the "}<strong>Non-Casual</strong>{" group: "}<strong>Thursday, Oct 15</strong>{" is "}<em>Recycling</em>, the following Thursday (<strong>Oct 22</strong>{") is "}<em>Waste</em>, alternating continuously every 2 weeks.</p></div></div></div><div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4"><div className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl"><div className="text-[10px] font-bold text-purple-900 uppercase tracking-wider">Full-Time Occupants</div><div className="text-lg font-extrabold text-purple-950 mt-0.5">{familyMembers.filter(m => m.type === "regular").length}{" Members"}</div><div className="text-[11px] text-purple-700 truncate mt-0.5">{familyMembers.filter(m => m.type === "regular").map(m => m.name).join(", ")}</div></div><div className="p-3 bg-pink-50/70 border border-pink-200 rounded-xl"><div className="text-[10px] font-bold text-pink-900 uppercase tracking-wider">Bi-Weekly Occupants</div><div className="text-lg font-extrabold text-pink-950 mt-0.5">{familyMembers.filter(m => m.type === "biweekly").length}{" Members"}</div><div className="text-[11px] text-pink-700 truncate mt-0.5">{familyMembers.filter(m => m.type === "biweekly").map(m => m.name).join(" & ")}{" (Kids Week)"}</div></div><div className="p-3 bg-sky-50/70 border border-sky-200 rounded-xl"><div className="text-[10px] font-bold text-sky-900 uppercase tracking-wider">Casual Assignees</div><div className="text-lg font-extrabold text-sky-950 mt-0.5">{familyMembers.filter(m => m.type === "casual").length}{" Members"}</div><div className="text-[11px] text-sky-700 truncate mt-0.5">{familyMembers.filter(m => m.type === "casual").map(m => m.name).join(", ")}{" (Manual Add)"}</div></div><div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl"><div className="text-[10px] font-bold text-amber-900 uppercase tracking-wider">Feed the Herd</div><div className="text-lg font-extrabold text-amber-950 mt-0.5">{rosterPets.length}{" Pets"}</div><div className="text-[11px] text-amber-800 truncate mt-0.5">{rosterPets.map(p => p.name).join(", ")}</div></div></div><div className="space-y-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Users className="w-4 h-4 text-indigo-600" /><h3 className="text-sm font-bold text-slate-900">Household Members</h3><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">{"Rows 5\u201311 \u2022 Linked Data"}</span></div><span className="text-xs text-slate-500">{familyMembers.length}{" Registered Occupants"}</span></div><div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs"><table className="w-full text-left text-xs"><thead className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3">Name</th><th className="p-3">Role</th><th className="p-3">Occupancy</th><th className="p-3">Special Rotation Groups</th><th className="p-3 text-center">Active Status</th></tr></thead><tbody className="divide-y divide-slate-200">{familyMembers.map(member => <tr key={member.index_} className="hover:bg-slate-50/70 transition"><td className="p-3 font-semibold text-slate-800"><div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full shrink-0" style={{
-                          backgroundColor: member.color
-                        }} /><span className="font-bold text-slate-900">{member.name}</span></div></td><td className="p-3"><span className={`px-2 py-0.5 rounded font-bold text-[11px] flex items-center gap-1 w-fit ${member.role === "Supreme Overlord" ? "bg-amber-100 text-amber-900 border border-amber-300" : "bg-indigo-50 text-indigo-800 border border-indigo-200"}`}><span>{member.role}</span><span className="text-[9px] font-normal opacity-75">({member.role === "Supreme Overlord" ? "Parent" : "Kid"})</span></span></td><td className="p-3"><span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${member.type === "biweekly" ? "bg-pink-50 text-pink-700 border border-pink-200" : member.type === "casual" ? "bg-sky-50 text-sky-700 border border-sky-200" : "bg-slate-100 text-slate-700 border border-slate-200"}`}>{member.residency}</span></td><td className="p-3 text-slate-700 font-medium">{member.specialGroups || "All"}</td><td className="p-3 text-center">{member.active ? <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><CircleCheck className="w-3.5 h-3.5 text-emerald-600" />Active</span> : <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200"><Circle className="w-3.5 h-3.5 text-slate-400" />Inactive</span>}</td></tr>)}</tbody></table></div></div><div className="mt-8 pt-5 border-t border-slate-200 space-y-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Layers className="w-4 h-4 text-purple-600" /><h3 className="text-sm font-bold text-slate-900">Occupancy Categories & Rules</h3><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">Rows 14–17</span></div></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">{hubOccupancyCategories.map(cat => <div key={cat.type} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2 shadow-2xs"><div className="flex items-center justify-between"><span className="font-bold text-sm text-slate-900">{cat.type}</span><span className="text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Active</span></div><div className="text-[11px] font-semibold text-indigo-700">{cat.description}</div><p className="text-[11px] text-slate-600 leading-snug"><strong>Rule:</strong>{" "}{cat.rules}</p></div>)}</div></div><div className="mt-8 pt-5 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-5 text-xs"><div className="space-y-3"><div className="flex items-center justify-between"><h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><Users className="w-4 h-4 text-indigo-600" /><span>Special Rotation Groups</span></h3><span className="text-[10px] text-slate-500 font-semibold">Rows 20–25</span></div><div className="space-y-2">{hubSpecialGroups.map(grp => <div key={grp.name} className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><div className="flex items-center justify-between"><span className="font-bold text-slate-900">{grp.name}</span><span className="text-[10px] text-slate-400 font-medium">Group</span></div><div className="text-[11px] text-slate-600 mt-1 leading-snug">{grp.members}</div></div>)}</div></div><div className="space-y-3"><div className="flex items-center justify-between"><h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><Settings2 className="w-4 h-4 text-purple-600" /><span>Schedule Configurations</span></h3><span className="text-[10px] text-slate-500 font-semibold">Rows 18–21</span></div><div className="space-y-2"><div className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><span className="font-bold text-slate-900 block">Active Week Start Date</span><div className="text-sm font-extrabold text-indigo-600 mt-0.5">{hubScheduleConfig.activeWeekStart}</div><span className="text-[10px] text-slate-500">Scope: Printable Weekly Schedule</span></div><div className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><span className="font-bold text-slate-900 block">Custody Schedule Rotation</span><div className="text-sm font-extrabold text-pink-600 mt-0.5">{hubScheduleConfig.custodyRotation}</div><span className="text-[10px] text-slate-500">{"Bi-Weekly Schedule \u2022 Members: "}{hubScheduleConfig.custodyMembers}</span></div><div className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><span className="font-bold text-slate-900 block">Waste / Recycling Schedule Rotation</span><div className="text-xs font-semibold text-slate-700 mt-0.5">{hubScheduleConfig.wasteRotation}</div><span className="text-[10px] text-slate-500">{"Alternating weeks \u2022 Members: "}{hubScheduleConfig.wasteMembers}</span></div></div></div></div><div className="mt-8 pt-5 border-t border-slate-200 space-y-3"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2"><div><h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><ListTodo className="w-4 h-4 text-indigo-600" /><span>Master Chore Registry & Allocation Rules</span><span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">{hubMasterChores.length}{" Tasks \u2022 Rows 5\u201315 (Cols 6\u201310)"}</span></h3></div><div className="relative"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" /><input type="text" placeholder="Search chores or rules..." value={hubChoreSearch} onChange={e => setHubChoreSearch(e.target.value)} className="pl-8 pr-2.5 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500 w-48" /></div></div><div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs"><table className="w-full text-left text-xs"><thead className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3">Chore</th><th className="p-3">Member / Group</th><th className="p-3">Frequency</th><th className="p-3">Suggested Days</th><th className="p-3">Details / Notes</th></tr></thead><tbody className="divide-y divide-slate-200">{hubMasterChores.filter(ch => hubChoreSearch ? ch.task.toLowerCase().includes(hubChoreSearch.toLowerCase()) || ch.rotationGroup.toLowerCase().includes(hubChoreSearch.toLowerCase()) || ch.notes.toLowerCase().includes(hubChoreSearch.toLowerCase()) : true).map((ch, idx) => <tr key={`${ch.index_}-${idx}`} className="hover:bg-slate-50/70 transition"><td className="p-3 font-bold text-slate-900 min-w-[200px]">{ch.task}</td><td className="p-3"><span className={`px-2 py-0.5 rounded text-[11px] font-bold ${ch.rotationGroup === "Parents" ? "bg-amber-100 text-amber-900 border border-amber-300" : ch.rotationGroup === "Kids" ? "bg-pink-100 text-pink-900 border border-pink-300" : "bg-indigo-50 text-indigo-800 border border-indigo-200"}`}>{ch.rotationGroup}</span></td><td className="p-3 font-semibold text-slate-800">{ch.frequency}</td><td className="p-3 text-slate-700 font-medium">{ch.targetDay}</td><td className="p-3 text-slate-600 leading-snug min-w-[250px]">{ch.notes || "\u2014"}</td></tr>)}</tbody></table></div></div><div className="mt-8 pt-5 border-t border-slate-200 space-y-3"><div className="flex items-center justify-between"><h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><span>{'\u{1F43E} Pet Care Profiles & Feeding Routines ("Feed the Herd")'}</span><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">{rosterPets.length}{" Profiles \u2022 Rows 28\u201333"}</span></h3></div><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">{rosterPets.map(pet => <div key={pet.index_} className="p-3.5 bg-amber-50/40 border border-amber-200 rounded-xl space-y-2 shadow-2xs"><div className="flex items-center justify-between"><div className="flex items-center gap-1.5"><span className="text-lg">{pet.icon}</span><span className="font-bold text-sm text-slate-900">{pet.name}</span></div><span className="text-[10px] px-2 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300">{pet.type}</span></div><div><span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">Routine:</span><div className="text-xs text-slate-800 font-semibold">{pet.routine}</div></div><div><span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">Care Responsibilities:</span><p className="text-xs text-slate-700 leading-snug mt-0.5">{pet.care}</p></div></div>)}</div></div></div></div>}</main>{activeDayModal && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"><div className="p-4 bg-slate-900 text-white flex items-center justify-between"><div><span className="text-xs uppercase tracking-wider text-slate-400 font-semibold">Day Schedule</span><h3 className="text-base font-bold">{(() => {
-                const parsed = parseDateKey(activeDayModal);
-                if (!parsed) return activeDayModal;
-                const d = new Date(parsed.year, parsed.month, parsed.day);
-                return d.toLocaleDateString(void 0, {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric"
-                });
-              })()}</h3></div><button onClick={() => setActiveDayModal(null)} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"><X className="w-5 h-5" /></button></div><div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs"><span className="text-slate-600 font-medium">{choreRows.filter(cr => {
-              var _a2, _b2;
-              return (_b2 = (_a2 = monthSchedule[activeDayModal]) == null ? void 0 : _a2[cr.index_]) == null ? void 0 : _b2.done;
-            }).length}{" of"}{" "}{choreRows.length}{" completed"}</span><div className="flex gap-2"><button onClick={() => {
-              choreRows.forEach(cr => {
-                handleUpdateChore(activeDayModal, cr.index_, {
-                  done: true
-                });
+            setIsEditingIncentive(prev => !prev);
+            setIncentiveDraft(monthlyIncentive);
+          }} className="text-xs font-bold px-3 py-1.5 bg-white text-amber-900 hover:bg-amber-50 rounded-lg shadow-sm transition flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-amber-700" /><span>{isEditingIncentive ? "Cancel Edit" : "Customize Incentive"}</span></button></div></div>{!isEditingIncentive ? <div className="pt-3 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"><div className="space-y-1"><div className="text-amber-100 font-medium">Incentive for Highest Monthly Chore Completions:</div><div className="text-sm font-black text-white flex items-center gap-2"><Gift className="w-4 h-4 text-amber-200 shrink-0" /><span>{monthlyIncentive}</span></div></div>{topPerformer && <div className="bg-white/15 px-3 py-2 rounded-xl backdrop-blur-xs flex items-center gap-2.5 self-start md:self-auto border border-white/20"><Crown className="w-4 h-4 text-amber-200 shrink-0" /><div><div className="text-[10px] text-amber-100 uppercase tracking-wider font-bold">Leading Candidate</div><div className="font-extrabold text-xs text-white">{topPerformer.name}{" ("}{topPerformer.done}{" finished \u2022 "}{topPerformer.pct}%)</div></div></div>}</div> : <div className="pt-3 space-y-3 text-xs bg-black/15 p-3 rounded-xl mt-3 border border-white/20"><label className="block font-bold text-white mb-1">Set Monthly Reward / Incentive Prize for the Top Performer:</label><div className="flex gap-2"><input type="text" value={incentiveDraft} onChange={e => setIncentiveDraft(e.target.value)} placeholder="e.g. $15 Allowance Bonus, Pizza Night Pick, 1-Day Chore Pass..." className="flex-1 p-2 bg-white text-slate-900 font-semibold rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-300" /><button onClick={() => {
+            if (incentiveDraft.trim()) {
+              setMonthlyIncentive(incentiveDraft.trim());
+              setIsEditingIncentive(false);
+              setNotice(`Updated Monthly Incentive: "${incentiveDraft.trim()}"`);
+              setTimeout(() => setNotice(null), 3e3);
+            }
+          }} className="px-4 py-2 bg-white text-amber-900 font-extrabold rounded-lg hover:bg-amber-50 transition">Save Prize</button></div><div className="flex flex-wrap items-center gap-1.5 text-[11px] pt-1"><span className="opacity-80">Quick ideas:</span><button onClick={() => setIncentiveDraft("$15 Allowance Bonus & Pizza Night Pick")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">{"$15 + Pizza Night"}</button><button onClick={() => setIncentiveDraft("1-Day Chore Exemption Pass & Movie Pick")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">1-Day Chore Pass</button><button onClick={() => setIncentiveDraft("$20 Gift Card & Weekend Treat")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">{"$20 Gift Card"}</button><button onClick={() => setIncentiveDraft("Family Ice Cream Outing of Their Choice")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">Ice Cream Outing</button></div></div>}</div><div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-200"><div><div className="flex items-center gap-2"><h3 className="text-base font-bold text-slate-900">Family Members Completion</h3><span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Unified Roster ({rankedMembers.length}{" Members)"}</span></div><p className="text-xs text-slate-500 mt-0.5">{"Monthly Total Tracker ranked by total chores completed for "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}. All household members are displayed together in a single unified leaderboard.</p></div><div className="flex items-center gap-2 text-xs text-slate-500"><Award className="w-4 h-4 text-amber-500" /><span className="font-semibold text-slate-700">Ranked by Monthly Completions</span></div></div><div className="space-y-3">{rankedMembers.map((m, idx) => {
+            const isFirst = idx === 0 && m.done > 0;
+            const isSecond = idx === 1 && m.done > 0;
+            const isThird = idx === 2 && m.done > 0;
+            return <div key={m.id} className={`p-3.5 rounded-xl border transition-all ${isFirst ? "border-amber-400 bg-amber-50/40 ring-1 ring-amber-300 shadow-sm" : "border-slate-200 bg-slate-50/40 hover:bg-white hover:border-slate-300"}`}><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5"><div className="flex items-center gap-3"><div className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${isFirst ? "bg-amber-500 text-white shadow-xs" : isSecond ? "bg-slate-300 text-slate-800" : isThird ? "bg-amber-700/80 text-white" : "bg-slate-100 text-slate-500"}`}>{isFirst ? <Crown className="w-4 h-4" /> : `#${idx + 1}`}</div><div className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full shrink-0" style={{
+              backgroundColor: m.color
+            }} /><span className="font-bold text-sm text-slate-900">{m.name}</span>{m.role && <span className="text-xs text-slate-500 font-normal">({m.role}{" = "}{m.role === "Supreme Overlord" ? "Parent" : "Kid"})</span>}<span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${m.type === "biweekly" ? "bg-pink-50 text-pink-700 border-pink-200" : m.type === "casual" ? "bg-sky-50 text-sky-700 border-sky-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}>{m.residency}</span>{isFirst && <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs"><span>{"\u{1F3C6}"}</span><span>{"Top Performer \u2022 Incentive Winner"}</span></span>}</div></div><div className="flex items-center gap-3 self-end sm:self-auto text-xs"><div className="text-right"><span className="font-extrabold text-sm text-slate-900">{m.done}</span><span className="text-slate-500">{" / "}{m.total}{" completed"}</span></div><span className={`font-black text-xs px-2 py-0.5 rounded-md ${m.pct >= 80 ? "bg-emerald-100 text-emerald-800" : m.pct >= 50 ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-600"}`}>{m.pct}%</span></div></div><div className="w-full bg-slate-200/80 rounded-full h-2.5 overflow-hidden"><div className="h-2.5 rounded-full transition-all duration-500" style={{
+              width: `${m.pct}%`,
+              backgroundColor: isFirst ? "#D97706" : m.color
+            }} /></div>{isFirst && <div className="mt-2 pt-2 border-t border-amber-200/60 flex items-center justify-between text-[11px] text-amber-900 font-medium"><div className="flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-amber-700 shrink-0" /><span>{"Qualifying Reward: "}<strong>{monthlyIncentive}</strong></span></div><span className="font-bold text-amber-700">{"Rank #1 in "}{MONTH_NAMES[selectedMonth]}</span></div>}</div>;
+          })}</div></div><div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 shadow-sm"><h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-2 flex items-center gap-1.5"><span>{"\u{1F43E} House Pets Overview"}</span></h4><div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">{HOUSE_PETS.map(pet => <div key={pet.name} className="bg-white p-2.5 rounded-lg border border-amber-100 flex items-center gap-2"><span className="text-base">{pet.icon}</span><div><div className="font-bold text-slate-800">{pet.name}</div><div className="text-[10px] text-slate-500">{pet.kind}</div></div></div>)}</div></div></div>}{activeTab === "roster" && <div className="max-w-5xl mx-auto space-y-6"><div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200"><div><div className="flex items-center gap-2"><h2 className="text-lg font-bold text-slate-900">Household Hub & Master Directory</h2><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Linked: Household Hub (Background Data)</span></div><p className="text-xs text-slate-500 mt-0.5">Centralized household administration: Family member roster & occupancy, pet care routines, and chore allocation master files.</p></div><div className="flex items-center gap-2"><span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 font-semibold rounded-lg border border-slate-200">{"Active Week: "}<strong>{hubScheduleConfig.activeWeekStart}</strong></span><span className="text-xs px-2.5 py-1 bg-pink-50 text-pink-700 font-semibold rounded-lg border border-pink-200">{"Custody: "}<strong>{hubScheduleConfig.custodyRotation}</strong></span></div></div><div className="my-5 p-4 rounded-xl bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/50 border border-indigo-200 shadow-2xs space-y-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-indigo-600" /><h3 className="text-xs font-bold uppercase tracking-wider text-indigo-950">Household Hub Rules & Parameter Analysis</h3></div><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">Live Analytical Summary</span></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs"><div className="p-3 bg-white/90 rounded-lg border border-indigo-100 shadow-2xs space-y-1"><span className="font-bold text-indigo-900 flex items-center gap-1.5"><span>{"\u{1F451}"}</span>{"Supreme Overlord (Parent) & Minions (Kids)"}</span><p className="text-[11px] text-slate-600 leading-relaxed"><strong>Thom & Meghan</strong>{" are humorously designated "}<em>Overseer Supreme</em>{" (= Parent) and actively share daily chores. "}<strong>Sunday Supper Rule:</strong>{" On Sundays, "}<em>Make Supper: Plan Ahead!</em>{" is always assigned exclusively to the parents, alternating between Thom and Meghan. They also conduct the Sunday "}<strong>Weekly Sign-Off & Inspection</strong>.</p></div><div className="p-3 bg-white/90 rounded-lg border border-pink-100 shadow-2xs space-y-1"><span className="font-bold text-pink-900 flex items-center gap-1.5"><span>{"\u{1F3E0}"}</span>{" Custody Rotation: Kids Week"}</span><p className="text-[11px] text-slate-600 leading-relaxed">{"For active week "}<strong>{hubScheduleConfig.activeWeekStart}</strong>{", "}<strong>Cadence & Mason</strong>{" are away and arrive on "}<strong>Sunday, Oct. 18th at 5:00 PM</strong>, alternating bi-weekly from then on. Current week chores are distributed among the full-time roster (Thom, Meghan, Sydney).</p></div><div className="p-3 bg-white/90 rounded-lg border border-amber-100 shadow-2xs space-y-1"><span className="font-bold text-amber-900 flex items-center gap-1.5"><span>{"\u{1F69B}"}</span>{" Alternating Curbside Schedule"}</span><p className="text-[11px] text-slate-600 leading-relaxed">{"Curbside tasks alternate bi-weekly on Thursday evenings for the "}<strong>Non-Casual</strong>{" group: "}<strong>Thursday, Oct 15</strong>{" is "}<em>Recycling</em>, the following Thursday (<strong>Oct 22</strong>{") is "}<em>Waste</em>, alternating continuously every 2 weeks.</p></div></div></div><div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4"><div className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl"><div className="text-[10px] font-bold text-purple-900 uppercase tracking-wider">Full-Time Occupants</div><div className="text-lg font-extrabold text-purple-950 mt-0.5">{familyMembers.filter(m => m.type === "regular").length}{" Members"}</div><div className="text-[11px] text-purple-700 truncate mt-0.5">{familyMembers.filter(m => m.type === "regular").map(m => m.name).join(", ")}</div></div><div className="p-3 bg-pink-50/70 border border-pink-200 rounded-xl"><div className="text-[10px] font-bold text-pink-900 uppercase tracking-wider">Bi-Weekly Occupants</div><div className="text-lg font-extrabold text-pink-950 mt-0.5">{familyMembers.filter(m => m.type === "biweekly").length}{" Members"}</div><div className="text-[11px] text-pink-700 truncate mt-0.5">{familyMembers.filter(m => m.type === "biweekly").map(m => m.name).join(" & ")}{" (Kids Week)"}</div></div><div className="p-3 bg-sky-50/70 border border-sky-200 rounded-xl"><div className="text-[10px] font-bold text-sky-900 uppercase tracking-wider">Casual Assignees</div><div className="text-lg font-extrabold text-sky-950 mt-0.5">{familyMembers.filter(m => m.type === "casual").length}{" Members"}</div><div className="text-[11px] text-sky-700 truncate mt-0.5">{familyMembers.filter(m => m.type === "casual").map(m => m.name).join(", ")}{" (Manual Add)"}</div></div><div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl"><div className="text-[10px] font-bold text-amber-900 uppercase tracking-wider">Feed the Herd</div><div className="text-lg font-extrabold text-amber-950 mt-0.5">{rosterPets.length}{" Pets"}</div><div className="text-[11px] text-amber-800 truncate mt-0.5">{rosterPets.map(p => p.name).join(", ")}</div></div></div><div className="space-y-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Users className="w-4 h-4 text-indigo-600" /><h3 className="text-sm font-bold text-slate-900">Household Members</h3><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">{"Rows 5\u201311 \u2022 Linked Data"}</span></div><span className="text-xs text-slate-500">{familyMembers.length}{" Registered Occupants"}</span></div><div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs"><table className="w-full text-left text-xs"><thead className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3">Name</th><th className="p-3">Role</th><th className="p-3">Occupancy</th><th className="p-3">Special Rotation Groups</th><th className="p-3 text-center">Active Status</th></tr></thead><tbody className="divide-y divide-slate-200">{familyMembers.map(member => <tr key={member.index_} className="hover:bg-slate-50/70 transition"><td className="p-3 font-semibold text-slate-800"><div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full shrink-0" style={{
+            backgroundColor: member.color
+          }} /><span className="font-bold text-slate-900">{member.name}</span></div></td><td className="p-3"><span className={`px-2 py-0.5 rounded font-bold text-[11px] flex items-center gap-1 w-fit ${member.role === "Supreme Overlord" ? "bg-amber-100 text-amber-900 border border-amber-300" : "bg-indigo-50 text-indigo-800 border border-indigo-200"}`}><span>{member.role}</span><span className="text-[9px] font-normal opacity-75">({member.role === "Supreme Overlord" ? "Parent" : "Kid"})</span></span></td><td className="p-3"><span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${member.type === "biweekly" ? "bg-pink-50 text-pink-700 border border-pink-200" : member.type === "casual" ? "bg-sky-50 text-sky-700 border border-sky-200" : "bg-slate-100 text-slate-700 border border-slate-200"}`}>{member.residency}</span></td><td className="p-3 text-slate-700 font-medium">{member.specialGroups || "All"}</td><td className="p-3 text-center">{member.active ? <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><CircleCheck className="w-3.5 h-3.5 text-emerald-600" />Active</span> : <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200"><Circle className="w-3.5 h-3.5 text-slate-400" />Inactive</span>}</td></tr>)}</tbody></table></div></div><div className="mt-8 pt-5 border-t border-slate-200 space-y-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Layers className="w-4 h-4 text-purple-600" /><h3 className="text-sm font-bold text-slate-900">Occupancy Categories & Rules</h3><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">Rows 14–17</span></div></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">{hubOccupancyCategories.map(cat => <div key={cat.type} className="p-3.5 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2 shadow-2xs"><div className="flex items-center justify-between"><span className="font-bold text-sm text-slate-900">{cat.type}</span><span className="text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">Active</span></div><div className="text-[11px] font-semibold text-indigo-700">{cat.description}</div><p className="text-[11px] text-slate-600 leading-snug"><strong>Rule:</strong>{" "}{cat.rules}</p></div>)}</div></div><div className="mt-8 pt-5 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-5 text-xs"><div className="space-y-3"><div className="flex items-center justify-between"><h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><Users className="w-4 h-4 text-indigo-600" /><span>Special Rotation Groups</span></h3><span className="text-[10px] text-slate-500 font-semibold">Rows 20–25</span></div><div className="space-y-2">{hubSpecialGroups.map(grp => <div key={grp.name} className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><div className="flex items-center justify-between"><span className="font-bold text-slate-900">{grp.name}</span><span className="text-[10px] text-slate-400 font-medium">Group</span></div><div className="text-[11px] text-slate-600 mt-1 leading-snug">{grp.members}</div></div>)}</div></div><div className="space-y-3"><div className="flex items-center justify-between"><h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><Settings2 className="w-4 h-4 text-purple-600" /><span>Schedule Configurations</span></h3><span className="text-[10px] text-slate-500 font-semibold">Rows 18–21</span></div><div className="space-y-2"><div className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><span className="font-bold text-slate-900 block">Active Week Start Date</span><div className="text-sm font-extrabold text-indigo-600 mt-0.5">{hubScheduleConfig.activeWeekStart}</div><span className="text-[10px] text-slate-500">Scope: Printable Weekly Schedule</span></div><div className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><span className="font-bold text-slate-900 block">Custody Schedule Rotation</span><div className="text-sm font-extrabold text-pink-600 mt-0.5">{hubScheduleConfig.custodyRotation}</div><span className="text-[10px] text-slate-500">{"Bi-Weekly Schedule \u2022 Members: "}{hubScheduleConfig.custodyMembers}</span></div><div className="p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"><span className="font-bold text-slate-900 block">Waste / Recycling Schedule Rotation</span><div className="text-xs font-semibold text-slate-700 mt-0.5">{hubScheduleConfig.wasteRotation}</div><span className="text-[10px] text-slate-500">{"Alternating weeks \u2022 Members: "}{hubScheduleConfig.wasteMembers}</span></div></div></div></div><div className="mt-8 pt-5 border-t border-slate-200 space-y-3"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2"><div><h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><ListTodo className="w-4 h-4 text-indigo-600" /><span>Master Chore Registry & Allocation Rules</span><span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">{hubMasterChores.length}{" Tasks \u2022 Rows 5\u201315 (Cols 6\u201310)"}</span></h3></div><div className="relative"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" /><input type="text" placeholder="Search chores or rules..." value={hubChoreSearch} onChange={e => setHubChoreSearch(e.target.value)} className="pl-8 pr-2.5 py-1 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500 w-48" /></div></div><div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs"><table className="w-full text-left text-xs"><thead className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3">Chore</th><th className="p-3">Member / Group</th><th className="p-3">Frequency</th><th className="p-3">Suggested Days</th><th className="p-3">Details / Notes</th></tr></thead><tbody className="divide-y divide-slate-200">{hubMasterChores.filter(ch => hubChoreSearch ? ch.task.toLowerCase().includes(hubChoreSearch.toLowerCase()) || ch.rotationGroup.toLowerCase().includes(hubChoreSearch.toLowerCase()) || ch.notes.toLowerCase().includes(hubChoreSearch.toLowerCase()) : true).map((ch, idx) => <tr key={`${ch.index_}-${idx}`} className="hover:bg-slate-50/70 transition"><td className="p-3 font-bold text-slate-900 min-w-[200px]">{ch.task}</td><td className="p-3"><span className={`px-2 py-0.5 rounded text-[11px] font-bold ${ch.rotationGroup === "Parents" ? "bg-amber-100 text-amber-900 border border-amber-300" : ch.rotationGroup === "Kids" ? "bg-pink-100 text-pink-900 border border-pink-300" : "bg-indigo-50 text-indigo-800 border border-indigo-200"}`}>{ch.rotationGroup}</span></td><td className="p-3 font-semibold text-slate-800">{ch.frequency}</td><td className="p-3 text-slate-700 font-medium">{ch.targetDay}</td><td className="p-3 text-slate-600 leading-snug min-w-[250px]">{ch.notes || "\u2014"}</td></tr>)}</tbody></table></div></div><div className="mt-8 pt-5 border-t border-slate-200 space-y-3"><div className="flex items-center justify-between"><h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><span>{'\u{1F43E} Pet Care Profiles & Feeding Routines ("Feed the Herd")'}</span><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">{rosterPets.length}{" Profiles \u2022 Rows 28\u201333"}</span></h3></div><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">{rosterPets.map(pet => <div key={pet.index_} className="p-3.5 bg-amber-50/40 border border-amber-200 rounded-xl space-y-2 shadow-2xs"><div className="flex items-center justify-between"><div className="flex items-center gap-1.5"><span className="text-lg">{pet.icon}</span><span className="font-bold text-sm text-slate-900">{pet.name}</span></div><span className="text-[10px] px-2 py-0.5 rounded font-bold bg-amber-100 text-amber-800 border border-amber-300">{pet.type}</span></div><div><span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">Routine:</span><div className="text-xs text-slate-800 font-semibold">{pet.routine}</div></div><div><span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">Care Responsibilities:</span><p className="text-xs text-slate-700 leading-snug mt-0.5">{pet.care}</p></div></div>)}</div></div></div></div>}</main>{activeDayModal && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"><div className="p-4 bg-slate-900 text-white flex items-center justify-between"><div><span className="text-xs uppercase tracking-wider text-slate-400 font-semibold">Day Schedule</span><h3 className="text-base font-bold">{(() => {
+            const parsed = parseDateKey(activeDayModal);
+            if (!parsed) return activeDayModal;
+            const d = new Date(parsed.year, parsed.month, parsed.day);
+            return d.toLocaleDateString(void 0, {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+              year: "numeric"
+            });
+          })()}</h3></div><button onClick={() => setActiveDayModal(null)} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"><X className="w-5 h-5" /></button></div><div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs"><span className="text-slate-600 font-medium">{choreRows.filter(cr => {
+            var _a2, _b2;
+            return (_b2 = (_a2 = monthSchedule[activeDayModal]) == null ? void 0 : _a2[cr.index_]) == null ? void 0 : _b2.done;
+          }).length}{" of"}{" "}{choreRows.length}{" completed"}</span><div className="flex gap-2"><button onClick={() => {
+            choreRows.forEach(cr => {
+              handleUpdateChore(activeDayModal, cr.index_, {
+                done: true
               });
-            }} className="px-2 py-1 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded font-medium transition">Mark All Done</button><button onClick={() => {
-              choreRows.forEach(cr => {
-                handleUpdateChore(activeDayModal, cr.index_, {
-                  done: false
-                });
+            });
+          }} className="px-2 py-1 bg-emerald-100 text-emerald-800 hover:bg-emerald-200 rounded font-medium transition">Mark All Done</button><button onClick={() => {
+            choreRows.forEach(cr => {
+              handleUpdateChore(activeDayModal, cr.index_, {
+                done: false
               });
-            }} className="px-2 py-1 bg-slate-200 text-slate-700 hover:bg-slate-300 rounded font-medium transition">Reset All</button></div></div><div className="p-4 overflow-y-auto space-y-2 flex-1">{choreRows.map(cr => {
+            });
+          }} className="px-2 py-1 bg-slate-200 text-slate-700 hover:bg-slate-300 rounded font-medium transition">Reset All</button></div></div><div className="p-4 overflow-y-auto space-y-2 flex-1">{choreRows.map(cr => {
             var _a2, _b2, _c2, _d, _e;
             const status = getChoreStatus(activeDayModal, cr.index_);
             const freq = getChoreFreq(cr);
@@ -5046,90 +5038,90 @@ function App({
               return false;
             })();
             return <div key={cr.index_} className={`p-2.5 rounded-xl border flex flex-col gap-2 transition ${status.done ? "bg-emerald-50/60 border-emerald-200" : freq.frequency === "weekly" && isScheduledForToday ? "bg-purple-50/60 border-purple-200" : "bg-white border-slate-200 hover:border-slate-300"}`}><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2.5 flex-1 min-w-0"><button onClick={() => handleUpdateChore(activeDayModal, cr.index_, {
-                    done: !status.done
-                  })} className="text-slate-400 hover:text-emerald-600 focus:outline-none">{status.done ? <SquareCheckBig className="w-5 h-5 text-emerald-600" /> : <Square className="w-5 h-5" />}</button><div className="flex items-center gap-1.5 min-w-0"><span className={`text-xs font-semibold truncate ${status.done ? "line-through text-slate-500" : "text-slate-800"}`}>{cr.task || cr.row[0]}</span>{freq.frequency === "weekly" && <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${isScheduledForToday ? "bg-purple-100 text-purple-700 border border-purple-200" : "bg-slate-100 text-slate-500"}`}>{isScheduledForToday ? "1x/wk (Today)" : `1x/wk (${(_b2 = DAY_STYLES[freq.dayOfWeek]) == null ? void 0 : _b2.short})`}</span>}</div></div>{getSpecificKidForChore(cr.task || cr.row[0]) ? <div className="text-[11px] font-bold px-2 py-1 rounded border shrink-0" style={{
-                  backgroundColor: ((_c2 = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _c2.bg) || "#FCE7F3",
-                  color: ((_d = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _d.text) || "#BE185D",
-                  borderColor: (((_e = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _e.color) || "#ec4899") + "50"
-                }}>{getSpecificKidForChore(cr.task || cr.row[0])}</div> : isBedroomChore(cr.task || cr.row[0]) ? <div className="text-[11px] font-bold px-2 py-1 rounded bg-pink-100 text-pink-700 border border-pink-200 shrink-0">Each Child</div> : <select value={status.who} onChange={e => handleUpdateChore(activeDayModal, cr.index_, {
-                  who: e.target.value
-                })} className="text-xs p-1.5 rounded-lg bg-white border border-slate-300 font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 shrink-0 shadow-2xs" style={{
-                  color: status.who ? "#0f172a" : "#334155"
-                }}><option value="" style={{
-                    color: "#64748b",
-                    backgroundColor: "#FFFFFF"
-                  }}>Unassigned</option><optgroup label="Full-Time Occupants" style={{
-                    color: "#0f172a",
-                    backgroundColor: "#F1F5F9",
-                    fontWeight: "bold"
-                  }}>{familyMembers.filter(m => m.type === "regular").map(m => <option key={m.id} value={m.name} style={{
-                      color: "#0f172a",
-                      backgroundColor: "#FFFFFF",
-                      fontWeight: "600"
-                    }}>{m.name}{m.role ? ` (${m.role})` : ""}</option>)}</optgroup><optgroup label="Bi-Weekly Occupants" style={{
-                    color: "#0f172a",
-                    backgroundColor: "#F1F5F9",
-                    fontWeight: "bold"
-                  }}>{familyMembers.filter(m => m.type === "biweekly").map(m => {
-                      const parsed2 = parseDateKey(activeDayModal);
-                      const bw = parsed2 ? getBiWeeklyStatus(parsed2.year, parsed2.month, parsed2.day) : null;
-                      const note = (bw == null ? void 0 : bw.isArrivalDay) ? " (Arrives 5 PM)" : (bw == null ? void 0 : bw.isDepartureDay) ? " (Leaves 5 PM)" : (bw == null ? void 0 : bw.isPresent) ? " (Here)" : " (Away)";
-                      return <option key={m.id} value={m.name} style={{
-                        color: "#0f172a",
-                        backgroundColor: "#FFFFFF",
-                        fontWeight: "600"
-                      }}>{m.name}{note}</option>;
-                    })}</optgroup><optgroup label="Casual Assignees (Lesser Scale)" style={{
-                    color: "#0f172a",
-                    backgroundColor: "#F1F5F9",
-                    fontWeight: "bold"
-                  }}>{familyMembers.filter(m => m.type === "casual").map(m => <option key={m.id} value={m.name} style={{
-                      color: "#0f172a",
-                      backgroundColor: "#FFFFFF",
-                      fontWeight: "600"
-                    }}>{m.name}</option>)}</optgroup><optgroup label="Special Groups" style={{
-                    color: "#0f172a",
-                    backgroundColor: "#F1F5F9",
-                    fontWeight: "bold"
-                  }}><option value="All Non-Casual" style={{
-                      color: "#4338CA",
-                      backgroundColor: "#FFFFFF",
-                      fontWeight: "bold"
-                    }}>All Non-Casual</option><option value="Each Child" style={{
-                      color: "#0f172a",
-                      backgroundColor: "#FFFFFF",
-                      fontWeight: "600"
-                    }}>Each Child</option><option value="All Kids" style={{
-                      color: "#0f172a",
-                      backgroundColor: "#FFFFFF",
-                      fontWeight: "600"
-                    }}>All Kids</option><option value="Thom / Meghan" style={{
-                      color: "#0f172a",
-                      backgroundColor: "#FFFFFF",
-                      fontWeight: "600"
-                    }}>Thom / Meghan</option><option value="Parents" style={{
-                      color: "#0f172a",
-                      backgroundColor: "#FFFFFF",
-                      fontWeight: "600"
-                    }}>Parents</option></optgroup>{status.who && !familyMembers.some(m => m.name === status.who) && !["All Non-Casual", "Each Child", "All Kids", "Thom / Meghan", "Parents"].includes(status.who) && <option value={status.who} style={{
-                    color: "#0f172a",
-                    backgroundColor: "#FFFFFF",
-                    fontWeight: "600"
-                  }}>{status.who}</option>}</select>}</div>{isBedroomChore(cr.task || cr.row[0]) && !getSpecificKidForChore(cr.task || cr.row[0]) && <div className="bg-pink-50/70 border border-pink-200 rounded-lg p-2 mt-1"><div className="text-[11px] font-bold text-pink-900 mb-1.5 flex items-center justify-between"><span>Individual Bedrooms to Clean:</span><span className="text-[10px] text-pink-600 font-normal">Each child cleans own space</span></div><div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">{getKidsPresentOnDate(activeDayModal).map(kidName => {
-                    var _a3;
-                    const isKidDone = !!((_a3 = status.kidsDone) == null ? void 0 : _a3[kidName]);
-                    const kidMember = getMember(kidName);
-                    return <button key={kidName} type="button" onClick={() => handleToggleKidBedroom(activeDayModal, cr.index_, kidName)} className={`p-1.5 rounded-lg border text-left text-xs flex items-center justify-between transition ${isKidDone ? "bg-emerald-100/80 border-emerald-300 text-emerald-900 line-through" : "bg-white border-pink-200 text-slate-800 hover:bg-pink-50"}`}><div className="flex items-center gap-1.5 truncate"><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{
-                          backgroundColor: (kidMember == null ? void 0 : kidMember.color) || "#ec4899"
-                        }} /><span className="font-semibold truncate">{kidName}'s Room</span></div><span className="font-bold ml-1">{isKidDone ? "\u2713" : "\u25CB"}</span></button>;
-                  })}</div></div>}</div>;
+              done: !status.done
+            })} className="text-slate-400 hover:text-emerald-600 focus:outline-none">{status.done ? <SquareCheckBig className="w-5 h-5 text-emerald-600" /> : <Square className="w-5 h-5" />}</button><div className="flex items-center gap-1.5 min-w-0"><span className={`text-xs font-semibold truncate ${status.done ? "line-through text-slate-500" : "text-slate-800"}`}>{cr.task || cr.row[0]}</span>{freq.frequency === "weekly" && <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${isScheduledForToday ? "bg-purple-100 text-purple-700 border border-purple-200" : "bg-slate-100 text-slate-500"}`}>{isScheduledForToday ? "1x/wk (Today)" : `1x/wk (${(_b2 = DAY_STYLES[freq.dayOfWeek]) == null ? void 0 : _b2.short})`}</span>}</div></div>{getSpecificKidForChore(cr.task || cr.row[0]) ? <div className="text-[11px] font-bold px-2 py-1 rounded border shrink-0" style={{
+              backgroundColor: ((_c2 = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _c2.bg) || "#FCE7F3",
+              color: ((_d = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _d.text) || "#BE185D",
+              borderColor: (((_e = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _e.color) || "#ec4899") + "50"
+            }}>{getSpecificKidForChore(cr.task || cr.row[0])}</div> : isBedroomChore(cr.task || cr.row[0]) ? <div className="text-[11px] font-bold px-2 py-1 rounded bg-pink-100 text-pink-700 border border-pink-200 shrink-0">Each Child</div> : <select value={status.who} onChange={e => handleUpdateChore(activeDayModal, cr.index_, {
+              who: e.target.value
+            })} className="text-xs p-1.5 rounded-lg bg-white border border-slate-300 font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 shrink-0 shadow-2xs" style={{
+              color: status.who ? "#0f172a" : "#334155"
+            }}><option value="" style={{
+              color: "#64748b",
+              backgroundColor: "#FFFFFF"
+            }}>Unassigned</option><optgroup label="Full-Time Occupants" style={{
+              color: "#0f172a",
+              backgroundColor: "#F1F5F9",
+              fontWeight: "bold"
+            }}>{familyMembers.filter(m => m.type === "regular").map(m => <option key={m.id} value={m.name} style={{
+              color: "#0f172a",
+              backgroundColor: "#FFFFFF",
+              fontWeight: "600"
+            }}>{m.name}{m.role ? ` (${m.role})` : ""}</option>)}</optgroup><optgroup label="Bi-Weekly Occupants" style={{
+              color: "#0f172a",
+              backgroundColor: "#F1F5F9",
+              fontWeight: "bold"
+            }}>{familyMembers.filter(m => m.type === "biweekly").map(m => {
+              const parsed2 = parseDateKey(activeDayModal);
+              const bw = parsed2 ? getBiWeeklyStatus(parsed2.year, parsed2.month, parsed2.day) : null;
+              const note = (bw == null ? void 0 : bw.isArrivalDay) ? " (Arrives 5 PM)" : (bw == null ? void 0 : bw.isDepartureDay) ? " (Leaves 5 PM)" : (bw == null ? void 0 : bw.isPresent) ? " (Here)" : " (Away)";
+              return <option key={m.id} value={m.name} style={{
+                color: "#0f172a",
+                backgroundColor: "#FFFFFF",
+                fontWeight: "600"
+              }}>{m.name}{note}</option>;
+            })}</optgroup><optgroup label="Casual Assignees (Lesser Scale)" style={{
+              color: "#0f172a",
+              backgroundColor: "#F1F5F9",
+              fontWeight: "bold"
+            }}>{familyMembers.filter(m => m.type === "casual").map(m => <option key={m.id} value={m.name} style={{
+              color: "#0f172a",
+              backgroundColor: "#FFFFFF",
+              fontWeight: "600"
+            }}>{m.name}</option>)}</optgroup><optgroup label="Special Groups" style={{
+              color: "#0f172a",
+              backgroundColor: "#F1F5F9",
+              fontWeight: "bold"
+            }}><option value="All Non-Casual" style={{
+              color: "#4338CA",
+              backgroundColor: "#FFFFFF",
+              fontWeight: "bold"
+            }}>All Non-Casual</option><option value="Each Child" style={{
+              color: "#0f172a",
+              backgroundColor: "#FFFFFF",
+              fontWeight: "600"
+            }}>Each Child</option><option value="All Kids" style={{
+              color: "#0f172a",
+              backgroundColor: "#FFFFFF",
+              fontWeight: "600"
+            }}>All Kids</option><option value="Thom / Meghan" style={{
+              color: "#0f172a",
+              backgroundColor: "#FFFFFF",
+              fontWeight: "600"
+            }}>Thom / Meghan</option><option value="Parents" style={{
+              color: "#0f172a",
+              backgroundColor: "#FFFFFF",
+              fontWeight: "600"
+            }}>Parents</option></optgroup>{status.who && !familyMembers.some(m => m.name === status.who) && !["All Non-Casual", "Each Child", "All Kids", "Thom / Meghan", "Parents"].includes(status.who) && <option value={status.who} style={{
+              color: "#0f172a",
+              backgroundColor: "#FFFFFF",
+              fontWeight: "600"
+            }}>{status.who}</option>}</select>}</div>{isBedroomChore(cr.task || cr.row[0]) && !getSpecificKidForChore(cr.task || cr.row[0]) && <div className="bg-pink-50/70 border border-pink-200 rounded-lg p-2 mt-1"><div className="text-[11px] font-bold text-pink-900 mb-1.5 flex items-center justify-between"><span>Individual Bedrooms to Clean:</span><span className="text-[10px] text-pink-600 font-normal">Each child cleans own space</span></div><div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">{getKidsPresentOnDate(activeDayModal).map(kidName => {
+              var _a3;
+              const isKidDone = !!((_a3 = status.kidsDone) == null ? void 0 : _a3[kidName]);
+              const kidMember = getMember(kidName);
+              return <button key={kidName} type="button" onClick={() => handleToggleKidBedroom(activeDayModal, cr.index_, kidName)} className={`p-1.5 rounded-lg border text-left text-xs flex items-center justify-between transition ${isKidDone ? "bg-emerald-100/80 border-emerald-300 text-emerald-900 line-through" : "bg-white border-pink-200 text-slate-800 hover:bg-pink-50"}`}><div className="flex items-center gap-1.5 truncate"><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{
+                backgroundColor: (kidMember == null ? void 0 : kidMember.color) || "#ec4899"
+              }} /><span className="font-semibold truncate">{kidName}'s Room</span></div><span className="font-bold ml-1">{isKidDone ? "\u2713" : "\u25CB"}</span></button>;
+            })}</div></div>}</div>;
           })}</div><div className="p-3 bg-slate-50 border-t border-slate-200 flex justify-end"><button onClick={() => setActiveDayModal(null)} className="px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg hover:bg-slate-800 transition">Done</button></div></div></div>}{showAutoAssignModal && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden"><div className="p-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white flex items-center justify-between"><div className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-amber-200" /><h3 className="text-base font-bold">Auto-Assign Monthly Template</h3></div><button onClick={() => setShowAutoAssignModal(false)} className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-black/10 transition"><X className="w-5 h-5" /></button></div><div className="p-5 space-y-4 text-xs"><p className="text-slate-600">Distribute daily tasks evenly across household occupants so{" "}<strong>everyone has a chore on each day</strong>{" instead of one person handling all tasks, for"}{" "}<strong>{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</strong>.</p><div><label className="font-bold text-slate-800 block mb-1.5">Full-Time Occupants (Included in Daily Chore Distribution):</label><div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">{familyMembers.filter(m => m.type === "regular").map(m => <label key={m.id} className="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer"><input type="checkbox" defaultChecked id={`assignee-${m.id}`} className="rounded text-indigo-600 focus:ring-indigo-500" /><span className="w-3 h-3 rounded-full" style={{
-                  backgroundColor: m.color
-                }} /><span className="font-medium text-slate-800">{m.name}</span>{m.role && <span className="text-[10px] text-slate-500">({m.role === "Overseer Supreme" ? "Parent" : "Kid"})</span>}</label>)}</div><div className="flex items-center justify-between mb-1.5"><label className="font-bold text-pink-800 block">Bi-Weekly Occupants (Active During Stay Weeks Only):</label><span className="text-[10px] font-semibold text-pink-600 bg-pink-50 border border-pink-200 px-1.5 py-0.5 rounded">{"Back Sunday, Oct. 18 @ 5:00 PM"}</span></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">{familyMembers.filter(m => m.type === "biweekly").map(m => <label key={m.id} className="flex items-center gap-2 p-2 rounded-lg border border-pink-200 bg-pink-50/40 hover:bg-pink-50 cursor-pointer"><input type="checkbox" defaultChecked id={`assignee-${m.id}`} className="rounded text-pink-600 focus:ring-pink-500" /><span className="w-3 h-3 rounded-full" style={{
-                  backgroundColor: m.color
-                }} /><span className="font-medium text-slate-800">{m.name}</span><span className="text-[10px] text-pink-700 bg-pink-100 px-1 rounded font-semibold">Bi-weekly only</span></label>)}</div><div className="p-3 bg-sky-50/60 border border-sky-200 rounded-xl mb-3"><div className="flex items-center justify-between mb-1"><span className="font-bold text-sky-900 text-xs">Casual Members (Manual Add-Ins Only):</span><span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-sky-100 text-sky-800 border border-sky-300">Excluded from Auto-Assign</span></div><div className="flex flex-wrap items-center gap-2 mt-1.5">{familyMembers.filter(m => m.type === "casual").map(m => <span key={m.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-white border border-sky-200 text-sky-900 shadow-2xs"><span className="w-2 h-2 rounded-full" style={{
-                    backgroundColor: m.color
-                  }} /><span>{m.name}</span></span>)}</div><p className="text-[11px] text-sky-700 mt-2 leading-relaxed">{'Casual members are kept out of automated rotations and remain available in the "WHO" dropdowns for manual assignment anytime they are present.'}</p></div></div><div className="bg-pink-50 border border-pink-200 rounded-lg p-3 text-pink-900 flex items-start gap-2"><Info className="w-4 h-4 shrink-0 text-pink-600 mt-0.5" /><span><strong>Daily Distribution:</strong>{" Each day's tasks are handed out so all available family members (including Thom & Meghan as Overseer Supreme = Parent) share the daily chores evenly. "}{biWeeklyNamesString}{" are included during stay weeks and skipped on away weeks."}</span></div></div><div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2"><button onClick={() => setShowAutoAssignModal(false)} className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition">Cancel</button><button onClick={() => {
+            backgroundColor: m.color
+          }} /><span className="font-medium text-slate-800">{m.name}</span>{m.role && <span className="text-[10px] text-slate-500">({m.role === "Overseer Supreme" ? "Parent" : "Kid"})</span>}</label>)}</div><div className="flex items-center justify-between mb-1.5"><label className="font-bold text-pink-800 block">Bi-Weekly Occupants (Active During Stay Weeks Only):</label><span className="text-[10px] font-semibold text-pink-600 bg-pink-50 border border-pink-200 px-1.5 py-0.5 rounded">{"Back Sunday, Oct. 18 @ 5:00 PM"}</span></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">{familyMembers.filter(m => m.type === "biweekly").map(m => <label key={m.id} className="flex items-center gap-2 p-2 rounded-lg border border-pink-200 bg-pink-50/40 hover:bg-pink-50 cursor-pointer"><input type="checkbox" defaultChecked id={`assignee-${m.id}`} className="rounded text-pink-600 focus:ring-pink-500" /><span className="w-3 h-3 rounded-full" style={{
+            backgroundColor: m.color
+          }} /><span className="font-medium text-slate-800">{m.name}</span><span className="text-[10px] text-pink-700 bg-pink-100 px-1 rounded font-semibold">Bi-weekly only</span></label>)}</div><div className="p-3 bg-sky-50/60 border border-sky-200 rounded-xl mb-3"><div className="flex items-center justify-between mb-1"><span className="font-bold text-sky-900 text-xs">Casual Members (Manual Add-Ins Only):</span><span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-sky-100 text-sky-800 border border-sky-300">Excluded from Auto-Assign</span></div><div className="flex flex-wrap items-center gap-2 mt-1.5">{familyMembers.filter(m => m.type === "casual").map(m => <span key={m.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-white border border-sky-200 text-sky-900 shadow-2xs"><span className="w-2 h-2 rounded-full" style={{
+            backgroundColor: m.color
+          }} /><span>{m.name}</span></span>)}</div><p className="text-[11px] text-sky-700 mt-2 leading-relaxed">{'Casual members are kept out of automated rotations and remain available in the "WHO" dropdowns for manual assignment anytime they are present.'}</p></div></div><div className="bg-pink-50 border border-pink-200 rounded-lg p-3 text-pink-900 flex items-start gap-2"><Info className="w-4 h-4 shrink-0 text-pink-600 mt-0.5" /><span><strong>Daily Distribution:</strong>{" Each day's tasks are handed out so all available family members (including Thom & Meghan as Overseer Supreme = Parent) share the daily chores evenly. "}{biWeeklyNamesString}{" are included during stay weeks and skipped on away weeks."}</span></div></div><div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2"><button onClick={() => setShowAutoAssignModal(false)} className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition">Cancel</button><button onClick={() => {
             const regSelected = familyMembers.filter(m => {
               var _a2;
               return m.type === "regular" && ((_a2 = document.getElementById(`assignee-${m.id}`)) == null ? void 0 : _a2.checked);
@@ -5148,88 +5140,88 @@ function App({
             setAddRemoveMode("add");
             setEditingChoreIndex(null);
           }} className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition ${addRemoveMode === "add" ? "bg-white text-indigo-700 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}><Plus className="w-3.5 h-3.5" /><span>+ Add New Chore</span></button><button type="button" onClick={() => setAddRemoveMode("edit")} className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition ${addRemoveMode === "edit" ? "bg-white text-indigo-700 shadow-xs" : "text-slate-600 hover:text-slate-900"}`}><Pen className="w-3.5 h-3.5" /><span>{"\u270F\uFE0F Edit Chore ("}{choreRows.length})</span></button></div>{addRemoveMode === "add" && <div className="p-5 space-y-4 overflow-y-auto flex-1"><div><label className="block text-xs font-bold text-slate-700 mb-1">{"Chore / Task Description "}<span className="text-rose-500">{"*"}</span></label><input type="text" id="new-chore-title-input" placeholder="e.g. Clean oven, sweep patio, sanitize counters..." autoFocus onKeyDown={e => {
-              if (e.key === "Enter") {
-                const freqEl = document.getElementById("new-chore-frequency");
-                const dayEl = document.getElementById("new-chore-day");
-                const whoEl = document.getElementById("new-chore-who");
-                handleAddNewChore(e.currentTarget.value, {
-                  frequency: freqEl ? freqEl.value : "daily",
-                  dayOfWeek: dayEl ? Number(dayEl.value) : 5,
-                  defaultWho: whoEl ? whoEl.value : ""
-                });
-              }
-            }} className="w-full text-sm p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800" /></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs"><div><label className="block font-bold text-slate-700 mb-1">Frequency</label><select id="new-chore-frequency" defaultValue="daily" onChange={e => {
-                const dayContainer = document.getElementById("day-select-container");
-                if (dayContainer) {
-                  dayContainer.style.display = e.target.value === "weekly" ? "block" : "none";
-                }
-              }} className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="daily">Daily (Every Day)</option><option value="weekly">Once a Week</option><option value="biweekly">Bi-Weekly (Curbside schedule)</option></select></div><div id="day-select-container" style={{
-              display: "none"
-            }}><label className="block font-bold text-slate-700 mb-1">Target Day</label><select id="new-chore-day" defaultValue="5" className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500">{DAY_STYLES.map((d, i) => <option key={d.name} value={i}>{"Every "}{d.name}</option>)}</select></div></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs"><div><label className="block font-bold text-slate-700 mb-1">Category</label><select id="new-chore-category" defaultValue="Household" className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="Household">Household</option><option value="Kitchen">Kitchen</option><option value="Pet Care">Pet Care</option><option value="Bedrooms">Bedrooms</option><option value="Common Areas">Common Areas</option><option value="Administration">Administration</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Default Rotation Group</label><select id="new-chore-who" defaultValue="All Non-Casual" className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="All Non-Casual">All Non-Casual (Sydney, Cadence, Mason, Thom, Meghan)</option><option value="">Rotating / Unassigned</option><option value="Kids Rotation">Kids Rotation</option><option value="All Kids">All Kids (Shared)</option><option value="Each Child">Each Child (Own Space)</option><option value="Full-Time Roster">Full-Time Roster</option><option value="Parents">Parents Only</option><option value="All Occupants">All Occupants</option>{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</select><p className="text-[10px] text-slate-500 mt-1 leading-snug">{"\u{1F4A1} "}<strong>All Non-Casual:</strong>{" Covers Sydney, Cadence, Mason, Thom, and Meghan (excludes casuals Koda & Keyanna; no other existing group is equivalent)."}</p></div></div><div className="bg-slate-50 border border-slate-200 p-3 rounded-lg text-xs text-slate-600 flex items-start gap-2"><Info className="w-4 h-4 shrink-0 text-indigo-600 mt-0.5" /><span>Adding this chore appends a row to the master schedule and synchronizes across all weekly calendar views and the Household Hub directory.</span></div></div>}{(addRemoveMode === "edit" || addRemoveMode === "remove") && <div className="p-5 space-y-4 overflow-y-auto flex-1">{editingChoreIndex !== null ? /* SUB-VIEW A: DETAILED CHORE EDITOR WITH IN-LINE REMOVE */<div className="space-y-4 text-xs"><div className="flex items-center justify-between pb-2 border-b border-slate-200"><button type="button" onClick={() => setEditingChoreIndex(null)} className="flex items-center gap-1 font-semibold text-indigo-600 hover:text-indigo-800 transition"><ChevronLeft className="w-4 h-4" /><span>Back to All Chores</span></button><span className="text-[11px] font-bold text-slate-400 uppercase">Editing Item #{choreRows.findIndex(r => r.index_ === editingChoreIndex) + 1}</span></div><div><label className="block font-bold text-slate-700 mb-1">{"Chore Title / Description "}<span className="text-rose-500">{"*"}</span></label><input type="text" value={editChoreTitle} onChange={e => setEditChoreTitle(e.target.value)} className="w-full text-sm p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 font-semibold" placeholder="Chore task title..." autoFocus /></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label className="block font-bold text-slate-700 mb-1">Frequency</label><select value={editChoreFreq} onChange={e => setEditChoreFreq(e.target.value)} className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="daily">Daily (Every Day)</option><option value="weekly">Once a Week</option><option value="biweekly">Bi-Weekly</option></select></div>{editChoreFreq === "weekly" ? <div><label className="block font-bold text-slate-700 mb-1">Target Day</label><select value={editChoreDay} onChange={e => setEditChoreDay(Number(e.target.value))} className="w-full p-2 rounded-lg border border-purple-300 bg-purple-50 font-semibold text-purple-900 focus:ring-1 focus:ring-purple-500">{DAY_STYLES.map((d, i) => <option key={d.name} value={i}>{"Every "}{d.name}</option>)}</select></div> : <div><label className="block font-bold text-slate-700 mb-1">Rotation Group</label><select value={editChoreRotationGroup} onChange={e => setEditChoreRotationGroup(e.target.value)} className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="All Non-Casual">All Non-Casual (Sydney, Cadence, Mason, Thom, Meghan)</option><option value="Kids Rotation">Kids Rotation</option><option value="Parents & Kids">Parents & Kids</option><option value="All Occupants">All Occupants</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option><option value="Full-Time Roster">Full-Time Roster</option>{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</select></div>}</div>{editChoreFreq === "weekly" && <div><label className="block font-bold text-slate-700 mb-1">Rotation Group</label><select value={editChoreRotationGroup} onChange={e => setEditChoreRotationGroup(e.target.value)} className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="All Non-Casual">All Non-Casual (Sydney, Cadence, Mason, Thom, Meghan)</option><option value="Kids Rotation">Kids Rotation</option><option value="Parents & Kids">Parents & Kids</option><option value="All Occupants">All Occupants</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option><option value="Full-Time Roster">Full-Time Roster</option>{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</select></div>}<div className="p-2.5 bg-indigo-50/70 border border-indigo-200 rounded-lg text-[11px] text-indigo-950 flex items-start gap-2"><Info className="w-4 h-4 shrink-0 text-indigo-600 mt-0.5" /><span><strong>Rotation Group Clarification:</strong>{" "}<em>All Non-Casual</em>{" covers Sydney, Cadence, Mason, Thom, and Meghan, while excluding casual members Koda and Keyanna. "}<strong>No equivalent currently exists among the other groups</strong>{" (Full-Time Roster excludes Cadence & Mason; Kids Rotation and All Kids exclude Thom & Meghan; All Occupants includes casual members)."}</span></div><div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between"><span className="font-semibold text-slate-700">List Order Position:</span><div className="flex items-center gap-1.5"><button type="button" onClick={() => handleMoveChore(editingChoreIndex, "up")} className="px-2.5 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-md hover:bg-slate-100 flex items-center gap-1 transition text-slate-700"><ArrowUp className="w-3.5 h-3.5" />{" Move Up"}</button><button type="button" onClick={() => handleMoveChore(editingChoreIndex, "down")} className="px-2.5 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-md hover:bg-slate-100 flex items-center gap-1 transition text-slate-700"><ArrowDown className="w-3.5 h-3.5" />{" Move Down"}</button></div></div><div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between"><div><div className="font-bold text-rose-900">Remove This Chore</div><div className="text-[11px] text-rose-700">Delete this chore from the schedule and spreadsheet</div></div><button type="button" onClick={() => {
-                handleDeleteChore(editingChoreIndex, editChoreTitle);
-                setEditingChoreIndex(null);
-              }} className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-lg shadow-2xs flex items-center gap-1.5 transition"><Trash2 className="w-3.5 h-3.5" /><span>Remove Chore</span></button></div></div> : /* SUB-VIEW B: MASTER CHORES LIST FOR EDITING & REMOVAL */<div className="space-y-3"><div className="flex items-center justify-between gap-2"><div className="relative flex-1"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" /><input type="text" placeholder="Search or filter chores to edit or remove..." value={removeSearchQuery} onChange={e => setRemoveSearchQuery(e.target.value)} className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500" /></div><button type="button" onClick={() => {
-                if (selectedRemoveIndices.length === choreRows.length) {
-                  setSelectedRemoveIndices([]);
-                } else {
-                  setSelectedRemoveIndices(choreRows.map(r => r.index_));
-                }
-              }} className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 whitespace-nowrap">{selectedRemoveIndices.length === choreRows.length ? "Deselect All" : "Select All"}</button></div>{selectedRemoveIndices.length > 0 && <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg flex items-center justify-between text-xs"><span className="font-bold text-rose-800">{selectedRemoveIndices.length}{" chore(s) selected"}</span><button type="button" onClick={handleBatchDeleteChores} className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-md shadow-xs transition flex items-center gap-1"><Trash2 className="w-3.5 h-3.5" /><span>Remove Selected</span></button></div>}<div className="divide-y divide-slate-100 border border-slate-200 rounded-xl max-h-64 overflow-y-auto">{choreRows.filter(cr => removeSearchQuery ? (cr.task || cr.row[0] || "").toLowerCase().includes(removeSearchQuery.toLowerCase()) : true).map((cr, idx) => {
-                var _a2;
-                const isSelected = selectedRemoveIndices.includes(cr.index_);
-                const freq = getChoreFreq(cr);
-                const choreLabel = cr.task || cr.row[0] || "Chore";
-                return <div key={cr.index_} className="p-2.5 flex items-center justify-between gap-3 hover:bg-slate-50 transition text-xs"><div className="flex items-center gap-2.5 flex-1 min-w-0"><input type="checkbox" checked={isSelected} onChange={() => {
-                      setSelectedRemoveIndices(prev => isSelected ? prev.filter(i => i !== cr.index_) : [...prev, cr.index_]);
-                    }} className="rounded text-rose-600 focus:ring-rose-500" title="Select for batch removal" /><div className="min-w-0 flex-1"><span className="font-semibold text-slate-800 truncate block">{idx + 1}{". "}{choreLabel}</span><div className="flex items-center gap-1.5 mt-0.5"><span className="text-[10px] text-slate-500">{freq.frequency === "weekly" ? `Once a week (${(_a2 = DAY_STYLES[freq.dayOfWeek]) == null ? void 0 : _a2.name})` : "Daily task"}</span></div></div></div><div className="flex items-center gap-1 shrink-0"><button type="button" onClick={() => handleStartEditChore(cr)} className="px-2.5 py-1 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg flex items-center gap-1 transition" title="Edit chore details"><Pen className="w-3.5 h-3.5" /><span>Edit</span></button><button type="button" onClick={() => handleDeleteChore(cr.index_, choreLabel)} className="p-1.5 text-rose-500 hover:text-white hover:bg-rose-600 rounded-lg transition" title={`Remove "${choreLabel}"`}><Trash2 className="w-3.5 h-3.5" /></button></div></div>;
-              })}</div></div>}</div>}<div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between"><span className="text-[11px] text-slate-500 font-medium">{choreRows.length}{" active master chores"}</span><div className="flex gap-2"><button type="button" onClick={() => {
-              setShowAddRemoveChoreModal(false);
-              setShowNewChoreModal(false);
-              setSelectedRemoveIndices([]);
-              setEditingChoreIndex(null);
-            }} className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition">Close</button>{addRemoveMode === "add" ? <button type="button" onClick={() => {
-              const titleInput = document.getElementById("new-chore-title-input");
+            if (e.key === "Enter") {
               const freqEl = document.getElementById("new-chore-frequency");
               const dayEl = document.getElementById("new-chore-day");
               const whoEl = document.getElementById("new-chore-who");
-              const catEl = document.getElementById("new-chore-category");
-              if (titleInput && titleInput.value.trim()) {
-                handleAddNewChore(titleInput.value, {
-                  frequency: freqEl ? freqEl.value : "daily",
-                  dayOfWeek: dayEl ? Number(dayEl.value) : 5,
-                  defaultWho: whoEl ? whoEl.value : "All Non-Casual",
-                  category: catEl ? catEl.value : "Household"
-                });
-              }
-            }} className="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition">Add Chore</button> : editingChoreIndex !== null ? <button type="button" onClick={handleSaveChoreEdit} className="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition">Save Changes</button> : selectedRemoveIndices.length > 0 && <button type="button" onClick={handleBatchDeleteChores} className="px-4 py-2 text-xs font-bold bg-rose-600 text-white rounded-lg hover:bg-rose-700 shadow-sm transition">Remove Selected ({selectedRemoveIndices.length})</button>}</div></div></div></div>}{showCombineModal && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden"><div className="p-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-between"><div className="flex items-center gap-2"><GitMerge className="w-5 h-5 text-purple-200" /><h3 className="text-base font-bold">Combine Chores</h3></div><button onClick={() => setShowCombineModal(false)} className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-black/10 transition"><X className="w-5 h-5" /></button></div><div className="p-5 space-y-4 text-xs"><p className="text-slate-600">Merge two chores into a single consolidated task. Assigned family members and completed checkmarks will be combined together seamlessly.</p><div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Suggested Combinations:</label><div className="grid grid-cols-1 sm:grid-cols-2 gap-2"><button type="button" onClick={() => {
-                if (choreRows[4] && choreRows[5]) {
-                  setCombineTargetA(choreRows[4].index_);
-                  setCombineTargetB(choreRows[5].index_);
-                  setCustomCombinedTitle("Dinner Dishes & Kitchen Cleanup (Put away food, load dishwasher, wipe surfaces)");
-                }
-              }} className="p-2 text-left rounded-lg border border-purple-200 bg-purple-50/60 hover:bg-purple-100 transition"><div className="font-bold text-purple-900 flex items-center gap-1"><Sparkles className="w-3 h-3 text-purple-600" /><span>Chores #5 & #6 (Dinner)</span></div><div className="text-[10px] text-purple-700 truncate mt-0.5">Dinner Dishes + Put away food</div></button><button type="button" onClick={() => {
-                if (choreRows[0] && choreRows[1]) {
-                  setCombineTargetA(choreRows[0].index_);
-                  setCombineTargetB(choreRows[1].index_);
-                  setCustomCombinedTitle("Tidy bedroom & vacuum floors, bring laundry downstairs");
-                }
-              }} className="p-2 text-left rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 transition"><div className="font-bold text-slate-800 flex items-center gap-1"><Sparkles className="w-3 h-3 text-slate-500" /><span>Rows 5 & 6 (Bedroom)</span></div><div className="text-[10px] text-slate-600 truncate mt-0.5">Tidy up bedroom + Vacuum floors</div></button></div></div><div><label className="block font-bold text-slate-700 mb-1">Primary Chore (Retains Position):</label><select value={combineTargetA != null ? combineTargetA : ""} onChange={e => {
-              const val = Number(e.target.value);
-              setCombineTargetA(val);
-              const choreA = choreRows.find(r => r.index_ === val);
-              const choreB = choreRows.find(r => r.index_ === combineTargetB);
-              if (choreA && choreB) {
-                setCustomCombinedTitle(`${choreA.row[1]} & ${choreB.row[1]}`);
-              }
-            }} className="w-full text-xs p-2 rounded-lg border border-slate-300 font-medium text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-purple-500">{choreRows.map((cr, idx) => <option key={cr.index_} value={cr.index_}>#{idx + 1}{": "}{cr.row[1]}</option>)}</select></div><div><label className="block font-bold text-slate-700 mb-1">Chore to Merge In & Remove:</label><select value={combineTargetB != null ? combineTargetB : ""} onChange={e => {
-              const val = Number(e.target.value);
-              setCombineTargetB(val);
-              const choreA = choreRows.find(r => r.index_ === combineTargetA);
-              const choreB = choreRows.find(r => r.index_ === val);
-              if (choreA && choreB) {
-                setCustomCombinedTitle(`${choreA.row[1]} & ${choreB.row[1]}`);
-              }
-            }} className="w-full text-xs p-2 rounded-lg border border-slate-300 font-medium text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-purple-500">{choreRows.map((cr, idx) => <option key={cr.index_} value={cr.index_} disabled={cr.index_ === combineTargetA}>#{idx + 1}{": "}{cr.row[1]}{" "}{cr.index_ === combineTargetA ? "(Cannot merge into itself)" : ""}</option>)}</select></div><div><label className="block font-bold text-slate-700 mb-1">New Combined Chore Title:</label><input type="text" value={customCombinedTitle} onChange={e => setCustomCombinedTitle(e.target.value)} placeholder="Enter name for the combined chore..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-900 font-medium" /></div><div className="bg-purple-50 border border-purple-200 rounded-lg p-2.5 text-purple-900 text-[11px] flex items-start gap-2"><Info className="w-4 h-4 shrink-0 text-purple-600 mt-0.5" /><span>The combined chore replaces the primary item in the spreadsheet. All schedule completions and assignments from both chores will be safely preserved.</span></div></div><div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2"><button onClick={() => setShowCombineModal(false)} className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition">Cancel</button><button onClick={() => {
+              handleAddNewChore(e.currentTarget.value, {
+                frequency: freqEl ? freqEl.value : "daily",
+                dayOfWeek: dayEl ? Number(dayEl.value) : 5,
+                defaultWho: whoEl ? whoEl.value : ""
+              });
+            }
+          }} className="w-full text-sm p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800" /></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs"><div><label className="block font-bold text-slate-700 mb-1">Frequency</label><select id="new-chore-frequency" defaultValue="daily" onChange={e => {
+            const dayContainer = document.getElementById("day-select-container");
+            if (dayContainer) {
+              dayContainer.style.display = e.target.value === "weekly" ? "block" : "none";
+            }
+          }} className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="daily">Daily (Every Day)</option><option value="weekly">Once a Week</option><option value="biweekly">Bi-Weekly (Curbside schedule)</option></select></div><div id="day-select-container" style={{
+            display: "none"
+          }}><label className="block font-bold text-slate-700 mb-1">Target Day</label><select id="new-chore-day" defaultValue="5" className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500">{DAY_STYLES.map((d, i) => <option key={d.name} value={i}>{"Every "}{d.name}</option>)}</select></div></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs"><div><label className="block font-bold text-slate-700 mb-1">Category</label><select id="new-chore-category" defaultValue="Household" className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="Household">Household</option><option value="Kitchen">Kitchen</option><option value="Pet Care">Pet Care</option><option value="Bedrooms">Bedrooms</option><option value="Common Areas">Common Areas</option><option value="Administration">Administration</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Default Rotation Group</label><select id="new-chore-who" defaultValue="All Non-Casual" className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="All Non-Casual">All Non-Casual (Sydney, Cadence, Mason, Thom, Meghan)</option><option value="">Rotating / Unassigned</option><option value="Kids Rotation">Kids Rotation</option><option value="All Kids">All Kids (Shared)</option><option value="Each Child">Each Child (Own Space)</option><option value="Full-Time Roster">Full-Time Roster</option><option value="Parents">Parents Only</option><option value="All Occupants">All Occupants</option>{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</select><p className="text-[10px] text-slate-500 mt-1 leading-snug">{"\u{1F4A1} "}<strong>All Non-Casual:</strong>{" Covers Sydney, Cadence, Mason, Thom, and Meghan (excludes casuals Koda & Keyanna; no other existing group is equivalent)."}</p></div></div><div className="bg-slate-50 border border-slate-200 p-3 rounded-lg text-xs text-slate-600 flex items-start gap-2"><Info className="w-4 h-4 shrink-0 text-indigo-600 mt-0.5" /><span>Adding this chore appends a row to the master schedule and synchronizes across all weekly calendar views and the Household Hub directory.</span></div></div>}{(addRemoveMode === "edit" || addRemoveMode === "remove") && <div className="p-5 space-y-4 overflow-y-auto flex-1">{editingChoreIndex !== null ? /* SUB-VIEW A: DETAILED CHORE EDITOR WITH IN-LINE REMOVE */ <div className="space-y-4 text-xs"><div className="flex items-center justify-between pb-2 border-b border-slate-200"><button type="button" onClick={() => setEditingChoreIndex(null)} className="flex items-center gap-1 font-semibold text-indigo-600 hover:text-indigo-800 transition"><ChevronLeft className="w-4 h-4" /><span>Back to All Chores</span></button><span className="text-[11px] font-bold text-slate-400 uppercase">Editing Item #{choreRows.findIndex(r => r.index_ === editingChoreIndex) + 1}</span></div><div><label className="block font-bold text-slate-700 mb-1">{"Chore Title / Description "}<span className="text-rose-500">{"*"}</span></label><input type="text" value={editChoreTitle} onChange={e => setEditChoreTitle(e.target.value)} className="w-full text-sm p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 font-semibold" placeholder="Chore task title..." autoFocus /></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label className="block font-bold text-slate-700 mb-1">Frequency</label><select value={editChoreFreq} onChange={e => setEditChoreFreq(e.target.value)} className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="daily">Daily (Every Day)</option><option value="weekly">Once a Week</option><option value="biweekly">Bi-Weekly</option></select></div>{editChoreFreq === "weekly" ? <div><label className="block font-bold text-slate-700 mb-1">Target Day</label><select value={editChoreDay} onChange={e => setEditChoreDay(Number(e.target.value))} className="w-full p-2 rounded-lg border border-purple-300 bg-purple-50 font-semibold text-purple-900 focus:ring-1 focus:ring-purple-500">{DAY_STYLES.map((d, i) => <option key={d.name} value={i}>{"Every "}{d.name}</option>)}</select></div> : <div><label className="block font-bold text-slate-700 mb-1">Rotation Group</label><select value={editChoreRotationGroup} onChange={e => setEditChoreRotationGroup(e.target.value)} className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="All Non-Casual">All Non-Casual (Sydney, Cadence, Mason, Thom, Meghan)</option><option value="Kids Rotation">Kids Rotation</option><option value="Parents & Kids">Parents & Kids</option><option value="All Occupants">All Occupants</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option><option value="Full-Time Roster">Full-Time Roster</option>{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</select></div>}</div>{editChoreFreq === "weekly" && <div><label className="block font-bold text-slate-700 mb-1">Rotation Group</label><select value={editChoreRotationGroup} onChange={e => setEditChoreRotationGroup(e.target.value)} className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="All Non-Casual">All Non-Casual (Sydney, Cadence, Mason, Thom, Meghan)</option><option value="Kids Rotation">Kids Rotation</option><option value="Parents & Kids">Parents & Kids</option><option value="All Occupants">All Occupants</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option><option value="Full-Time Roster">Full-Time Roster</option>{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</select></div>}<div className="p-2.5 bg-indigo-50/70 border border-indigo-200 rounded-lg text-[11px] text-indigo-950 flex items-start gap-2"><Info className="w-4 h-4 shrink-0 text-indigo-600 mt-0.5" /><span><strong>Rotation Group Clarification:</strong>{" "}<em>All Non-Casual</em>{" covers Sydney, Cadence, Mason, Thom, and Meghan, while excluding casual members Koda and Keyanna. "}<strong>No equivalent currently exists among the other groups</strong>{" (Full-Time Roster excludes Cadence & Mason; Kids Rotation and All Kids exclude Thom & Meghan; All Occupants includes casual members)."}</span></div><div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between"><span className="font-semibold text-slate-700">List Order Position:</span><div className="flex items-center gap-1.5"><button type="button" onClick={() => handleMoveChore(editingChoreIndex, "up")} className="px-2.5 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-md hover:bg-slate-100 flex items-center gap-1 transition text-slate-700"><ArrowUp className="w-3.5 h-3.5" />{" Move Up"}</button><button type="button" onClick={() => handleMoveChore(editingChoreIndex, "down")} className="px-2.5 py-1 text-xs font-semibold bg-white border border-slate-200 rounded-md hover:bg-slate-100 flex items-center gap-1 transition text-slate-700"><ArrowDown className="w-3.5 h-3.5" />{" Move Down"}</button></div></div><div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between"><div><div className="font-bold text-rose-900">Remove This Chore</div><div className="text-[11px] text-rose-700">Delete this chore from the schedule and spreadsheet</div></div><button type="button" onClick={() => {
+            handleDeleteChore(editingChoreIndex, editChoreTitle);
+            setEditingChoreIndex(null);
+          }} className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-lg shadow-2xs flex items-center gap-1.5 transition"><Trash2 className="w-3.5 h-3.5" /><span>Remove Chore</span></button></div></div> : /* SUB-VIEW B: MASTER CHORES LIST FOR EDITING & REMOVAL */ <div className="space-y-3"><div className="flex items-center justify-between gap-2"><div className="relative flex-1"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" /><input type="text" placeholder="Search or filter chores to edit or remove..." value={removeSearchQuery} onChange={e => setRemoveSearchQuery(e.target.value)} className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500" /></div><button type="button" onClick={() => {
+            if (selectedRemoveIndices.length === choreRows.length) {
+              setSelectedRemoveIndices([]);
+            } else {
+              setSelectedRemoveIndices(choreRows.map(r => r.index_));
+            }
+          }} className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 whitespace-nowrap">{selectedRemoveIndices.length === choreRows.length ? "Deselect All" : "Select All"}</button></div>{selectedRemoveIndices.length > 0 && <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg flex items-center justify-between text-xs"><span className="font-bold text-rose-800">{selectedRemoveIndices.length}{" chore(s) selected"}</span><button type="button" onClick={handleBatchDeleteChores} className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-md shadow-xs transition flex items-center gap-1"><Trash2 className="w-3.5 h-3.5" /><span>Remove Selected</span></button></div>}<div className="divide-y divide-slate-100 border border-slate-200 rounded-xl max-h-64 overflow-y-auto">{choreRows.filter(cr => removeSearchQuery ? (cr.task || cr.row[0] || "").toLowerCase().includes(removeSearchQuery.toLowerCase()) : true).map((cr, idx) => {
+            var _a2;
+            const isSelected = selectedRemoveIndices.includes(cr.index_);
+            const freq = getChoreFreq(cr);
+            const choreLabel = cr.task || cr.row[0] || "Chore";
+            return <div key={cr.index_} className="p-2.5 flex items-center justify-between gap-3 hover:bg-slate-50 transition text-xs"><div className="flex items-center gap-2.5 flex-1 min-w-0"><input type="checkbox" checked={isSelected} onChange={() => {
+              setSelectedRemoveIndices(prev => isSelected ? prev.filter(i => i !== cr.index_) : [...prev, cr.index_]);
+            }} className="rounded text-rose-600 focus:ring-rose-500" title="Select for batch removal" /><div className="min-w-0 flex-1"><span className="font-semibold text-slate-800 truncate block">{idx + 1}{". "}{choreLabel}</span><div className="flex items-center gap-1.5 mt-0.5"><span className="text-[10px] text-slate-500">{freq.frequency === "weekly" ? `Once a week (${(_a2 = DAY_STYLES[freq.dayOfWeek]) == null ? void 0 : _a2.name})` : "Daily task"}</span></div></div></div><div className="flex items-center gap-1 shrink-0"><button type="button" onClick={() => handleStartEditChore(cr)} className="px-2.5 py-1 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg flex items-center gap-1 transition" title="Edit chore details"><Pen className="w-3.5 h-3.5" /><span>Edit</span></button><button type="button" onClick={() => handleDeleteChore(cr.index_, choreLabel)} className="p-1.5 text-rose-500 hover:text-white hover:bg-rose-600 rounded-lg transition" title={`Remove "${choreLabel}"`}><Trash2 className="w-3.5 h-3.5" /></button></div></div>;
+          })}</div></div>}</div>}<div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between"><span className="text-[11px] text-slate-500 font-medium">{choreRows.length}{" active master chores"}</span><div className="flex gap-2"><button type="button" onClick={() => {
+            setShowAddRemoveChoreModal(false);
+            setShowNewChoreModal(false);
+            setSelectedRemoveIndices([]);
+            setEditingChoreIndex(null);
+          }} className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition">Close</button>{addRemoveMode === "add" ? <button type="button" onClick={() => {
+            const titleInput = document.getElementById("new-chore-title-input");
+            const freqEl = document.getElementById("new-chore-frequency");
+            const dayEl = document.getElementById("new-chore-day");
+            const whoEl = document.getElementById("new-chore-who");
+            const catEl = document.getElementById("new-chore-category");
+            if (titleInput && titleInput.value.trim()) {
+              handleAddNewChore(titleInput.value, {
+                frequency: freqEl ? freqEl.value : "daily",
+                dayOfWeek: dayEl ? Number(dayEl.value) : 5,
+                defaultWho: whoEl ? whoEl.value : "All Non-Casual",
+                category: catEl ? catEl.value : "Household"
+              });
+            }
+          }} className="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition">Add Chore</button> : editingChoreIndex !== null ? <button type="button" onClick={handleSaveChoreEdit} className="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition">Save Changes</button> : selectedRemoveIndices.length > 0 && <button type="button" onClick={handleBatchDeleteChores} className="px-4 py-2 text-xs font-bold bg-rose-600 text-white rounded-lg hover:bg-rose-700 shadow-sm transition">Remove Selected ({selectedRemoveIndices.length})</button>}</div></div></div></div>}{showCombineModal && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden"><div className="p-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-between"><div className="flex items-center gap-2"><GitMerge className="w-5 h-5 text-purple-200" /><h3 className="text-base font-bold">Combine Chores</h3></div><button onClick={() => setShowCombineModal(false)} className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-black/10 transition"><X className="w-5 h-5" /></button></div><div className="p-5 space-y-4 text-xs"><p className="text-slate-600">Merge two chores into a single consolidated task. Assigned family members and completed checkmarks will be combined together seamlessly.</p><div><label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Suggested Combinations:</label><div className="grid grid-cols-1 sm:grid-cols-2 gap-2"><button type="button" onClick={() => {
+            if (choreRows[4] && choreRows[5]) {
+              setCombineTargetA(choreRows[4].index_);
+              setCombineTargetB(choreRows[5].index_);
+              setCustomCombinedTitle("Dinner Dishes & Kitchen Cleanup (Put away food, load dishwasher, wipe surfaces)");
+            }
+          }} className="p-2 text-left rounded-lg border border-purple-200 bg-purple-50/60 hover:bg-purple-100 transition"><div className="font-bold text-purple-900 flex items-center gap-1"><Sparkles className="w-3 h-3 text-purple-600" /><span>Chores #5 & #6 (Dinner)</span></div><div className="text-[10px] text-purple-700 truncate mt-0.5">Dinner Dishes + Put away food</div></button><button type="button" onClick={() => {
+            if (choreRows[0] && choreRows[1]) {
+              setCombineTargetA(choreRows[0].index_);
+              setCombineTargetB(choreRows[1].index_);
+              setCustomCombinedTitle("Tidy bedroom & vacuum floors, bring laundry downstairs");
+            }
+          }} className="p-2 text-left rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 transition"><div className="font-bold text-slate-800 flex items-center gap-1"><Sparkles className="w-3 h-3 text-slate-500" /><span>Rows 5 & 6 (Bedroom)</span></div><div className="text-[10px] text-slate-600 truncate mt-0.5">Tidy up bedroom + Vacuum floors</div></button></div></div><div><label className="block font-bold text-slate-700 mb-1">Primary Chore (Retains Position):</label><select value={combineTargetA != null ? combineTargetA : ""} onChange={e => {
+            const val = Number(e.target.value);
+            setCombineTargetA(val);
+            const choreA = choreRows.find(r => r.index_ === val);
+            const choreB = choreRows.find(r => r.index_ === combineTargetB);
+            if (choreA && choreB) {
+              setCustomCombinedTitle(`${choreA.row[1]} & ${choreB.row[1]}`);
+            }
+          }} className="w-full text-xs p-2 rounded-lg border border-slate-300 font-medium text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-purple-500">{choreRows.map((cr, idx) => <option key={cr.index_} value={cr.index_}>#{idx + 1}{": "}{cr.row[1]}</option>)}</select></div><div><label className="block font-bold text-slate-700 mb-1">Chore to Merge In & Remove:</label><select value={combineTargetB != null ? combineTargetB : ""} onChange={e => {
+            const val = Number(e.target.value);
+            setCombineTargetB(val);
+            const choreA = choreRows.find(r => r.index_ === combineTargetA);
+            const choreB = choreRows.find(r => r.index_ === val);
+            if (choreA && choreB) {
+              setCustomCombinedTitle(`${choreA.row[1]} & ${choreB.row[1]}`);
+            }
+          }} className="w-full text-xs p-2 rounded-lg border border-slate-300 font-medium text-slate-800 bg-white focus:outline-none focus:ring-1 focus:ring-purple-500">{choreRows.map((cr, idx) => <option key={cr.index_} value={cr.index_} disabled={cr.index_ === combineTargetA}>#{idx + 1}{": "}{cr.row[1]}{" "}{cr.index_ === combineTargetA ? "(Cannot merge into itself)" : ""}</option>)}</select></div><div><label className="block font-bold text-slate-700 mb-1">New Combined Chore Title:</label><input type="text" value={customCombinedTitle} onChange={e => setCustomCombinedTitle(e.target.value)} placeholder="Enter name for the combined chore..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-purple-500 text-slate-900 font-medium" /></div><div className="bg-purple-50 border border-purple-200 rounded-lg p-2.5 text-purple-900 text-[11px] flex items-start gap-2"><Info className="w-4 h-4 shrink-0 text-purple-600 mt-0.5" /><span>The combined chore replaces the primary item in the spreadsheet. All schedule completions and assignments from both chores will be safely preserved.</span></div></div><div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2"><button onClick={() => setShowCombineModal(false)} className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition">Cancel</button><button onClick={() => {
             if (combineTargetA !== null && combineTargetB !== null && combineTargetA !== combineTargetB) {
               handleCombineChores(combineTargetA, combineTargetB, customCombinedTitle);
             }
@@ -5242,73 +5234,73 @@ function App({
               handleAddRosterMember(nameInput.value, roleInput ? roleInput.value : "", resInput ? resInput.value : "Full-Time", schedInput ? schedInput.value : "");
             }
           }} className="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition">Add to Household Roster</button></div></div></div>}{showAddPetModal && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden"><div className="p-4 bg-amber-600 text-white flex items-center justify-between"><div className="flex items-center gap-2"><span className="text-xl">{"\u{1F43E}"}</span><h3 className="text-base font-bold">Add Pet Care Profile</h3></div><button onClick={() => setShowAddPetModal(false)} className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-black/10 transition"><X className="w-5 h-5" /></button></div><div className="p-5 space-y-3.5 text-xs"><div><label className="block font-bold text-slate-700 mb-1">{"Pet Name "}<span className="text-rose-500">{"*"}</span></label><input type="text" value={newPetDraft.name} onChange={e => setNewPetDraft(prev => ({
+            ...{
+              ...prev
+            },
+            name: e.target.value
+          }))} placeholder="e.g. Buster, Milo..." autoFocus className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800" /></div><div><label className="block font-bold text-slate-700 mb-1">Type / Breed</label><select value={newPetDraft.type} onChange={e => setNewPetDraft(prev => ({
+            ...{
+              ...prev
+            },
+            type: e.target.value
+          }))} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800 bg-white"><option value="Dog">{"Dog \u{1F415}"}</option><option value="Cat">{"Cat \u{1F408}"}</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Feeding Routine</label><input type="text" value={newPetDraft.routine} onChange={e => setNewPetDraft(prev => ({
+            ...{
+              ...prev
+            },
+            routine: e.target.value
+          }))} placeholder="e.g. Morning & Evening, Twice daily..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800" /></div><div><label className="block font-bold text-slate-700 mb-1">Care Responsibilities</label><textarea rows={2} value={newPetDraft.care} onChange={e => setNewPetDraft(prev => ({
+            ...{
+              ...prev
+            },
+            care: e.target.value
+          }))} placeholder="e.g. Feed breakfast & supper, outdoor routine, fresh water bowls..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800 resize-none leading-snug" /></div><div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-amber-900 text-[11px] flex items-start gap-2"><Info className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" /><span>Adding this pet writes directly into the Pet Care Profiles section of the 'Household Hub' spreadsheet tab.</span></div></div><div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2"><button onClick={() => setShowAddPetModal(false)} className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition">Cancel</button><button onClick={() => handleAddRosterPet(newPetDraft.name, newPetDraft.type, newPetDraft.routine, newPetDraft.care)} disabled={!newPetDraft.name.trim()} className="px-4 py-2 text-xs font-bold bg-amber-600 text-white rounded-lg hover:bg-amber-700 shadow-sm transition disabled:opacity-40">Save Pet to Household Hub</button></div></div></div>}{editingPrintableChore && <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"><div className="p-4 bg-slate-900 text-white flex items-center justify-between"><div className="flex items-center gap-2.5"><div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-xs"><Pen className="w-4 h-4" /></div><div><h3 className="text-base font-bold">Edit Chore Details</h3><p className="text-[11px] text-slate-400">Update chore name, cadence, rotation group, or notes</p></div></div><button onClick={() => setEditingPrintableChore(null)} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"><X className="w-5 h-5" /></button></div><div className="p-5 space-y-4 overflow-y-auto flex-1 text-xs"><div><label className="block font-bold text-slate-800 mb-1">{"Chore Task Description "}<span className="text-rose-500">{"*"}</span></label><input type="text" value={editingPrintableChore.task} onChange={e => setEditingPrintableChore(prev => ({
+            ...{
+              ...prev
+            },
+            task: e.target.value
+          }))} placeholder="Chore task description..." className="w-full text-sm p-2.5 rounded-lg border border-slate-300 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" autoFocus /></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label className="block font-bold text-slate-700 mb-1">Category</label><select value={editingPrintableChore.category || "Household"} onChange={e => setEditingPrintableChore(prev => ({
+            ...{
+              ...prev
+            },
+            category: e.target.value
+          }))} className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500">{CHORE_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon}{" "}{c.name}</option>)}</select></div><div><label className="block font-bold text-slate-700 mb-1">Frequency</label><select value={editingPrintableChore.frequency || "Daily"} onChange={e => {
+            const val = e.target.value;
+            setEditingPrintableChore(prev => ({
               ...{
                 ...prev
               },
-              name: e.target.value
-            }))} placeholder="e.g. Buster, Milo..." autoFocus className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800" /></div><div><label className="block font-bold text-slate-700 mb-1">Type / Breed</label><select value={newPetDraft.type} onChange={e => setNewPetDraft(prev => ({
-              ...{
-                ...prev
-              },
-              type: e.target.value
-            }))} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800 bg-white"><option value="Dog">{"Dog \u{1F415}"}</option><option value="Cat">{"Cat \u{1F408}"}</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Feeding Routine</label><input type="text" value={newPetDraft.routine} onChange={e => setNewPetDraft(prev => ({
-              ...{
-                ...prev
-              },
-              routine: e.target.value
-            }))} placeholder="e.g. Morning & Evening, Twice daily..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800" /></div><div><label className="block font-bold text-slate-700 mb-1">Care Responsibilities</label><textarea rows={2} value={newPetDraft.care} onChange={e => setNewPetDraft(prev => ({
-              ...{
-                ...prev
-              },
-              care: e.target.value
-            }))} placeholder="e.g. Feed breakfast & supper, outdoor routine, fresh water bowls..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800 resize-none leading-snug" /></div><div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-amber-900 text-[11px] flex items-start gap-2"><Info className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" /><span>Adding this pet writes directly into the Pet Care Profiles section of the 'Household Hub' spreadsheet tab.</span></div></div><div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2"><button onClick={() => setShowAddPetModal(false)} className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition">Cancel</button><button onClick={() => handleAddRosterPet(newPetDraft.name, newPetDraft.type, newPetDraft.routine, newPetDraft.care)} disabled={!newPetDraft.name.trim()} className="px-4 py-2 text-xs font-bold bg-amber-600 text-white rounded-lg hover:bg-amber-700 shadow-sm transition disabled:opacity-40">Save Pet to Household Hub</button></div></div></div>}{editingPrintableChore && <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"><div className="p-4 bg-slate-900 text-white flex items-center justify-between"><div className="flex items-center gap-2.5"><div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-xs"><Pen className="w-4 h-4" /></div><div><h3 className="text-base font-bold">Edit Chore Details</h3><p className="text-[11px] text-slate-400">Update chore name, cadence, rotation group, or notes</p></div></div><button onClick={() => setEditingPrintableChore(null)} className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"><X className="w-5 h-5" /></button></div><div className="p-5 space-y-4 overflow-y-auto flex-1 text-xs"><div><label className="block font-bold text-slate-800 mb-1">{"Chore Task Description "}<span className="text-rose-500">{"*"}</span></label><input type="text" value={editingPrintableChore.task} onChange={e => setEditingPrintableChore(prev => ({
-              ...{
-                ...prev
-              },
-              task: e.target.value
-            }))} placeholder="Chore task description..." className="w-full text-sm p-2.5 rounded-lg border border-slate-300 font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" autoFocus /></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label className="block font-bold text-slate-700 mb-1">Category</label><select value={editingPrintableChore.category || "Household"} onChange={e => setEditingPrintableChore(prev => ({
-                ...{
-                  ...prev
-                },
-                category: e.target.value
-              }))} className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500">{CHORE_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon}{" "}{c.name}</option>)}</select></div><div><label className="block font-bold text-slate-700 mb-1">Frequency</label><select value={editingPrintableChore.frequency || "Daily"} onChange={e => {
-                const val = e.target.value;
-                setEditingPrintableChore(prev => ({
-                  ...{
-                    ...prev
-                  },
-                  frequency: val,
-                  targetDay: val === "Daily" ? "Mon \u2013 Sun" : val === "Bi-Weekly" ? "Thursday Evening" : "Saturday"
-                }));
-              }} className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="Daily">Daily</option><option value="Once a Week">Once a Week</option><option value="Bi-Weekly">Bi-Weekly</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Target Day</label><input type="text" value={editingPrintableChore.targetDay || "Mon \u2013 Sun"} onChange={e => setEditingPrintableChore(prev => ({
-                ...{
-                  ...prev
-                },
-                targetDay: e.target.value
-              }))} placeholder="e.g. Mon \u2013 Sun, Saturday, Sunday, Thursday Evening..." className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500" /></div><div><label className="block font-bold text-slate-700 mb-1">Rotation Group</label><select value={editingPrintableChore.rotationGroup || "All Non-Casual"} onChange={e => setEditingPrintableChore(prev => ({
-                ...{
-                  ...prev
-                },
-                rotationGroup: e.target.value
-              }))} className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="All Non-Casual">All Non-Casual (Sydney, Cadence, Mason, Thom, Meghan)</option><option value="Kids Rotation">Kids Rotation</option><option value="Parents & Kids">Parents & Kids</option><option value="All Occupants">All Occupants</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option><option value="Each Child">Each Child (Own Space)</option><option value="Full-Time Roster">Full-Time Roster</option>{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</select></div></div><div><label className="block font-bold text-slate-700 mb-1">Operational Notes / Routine</label><textarea rows={2} value={editingPrintableChore.notes || ""} onChange={e => setEditingPrintableChore(prev => ({
-              ...{
-                ...prev
-              },
-              notes: e.target.value
-            }))} placeholder="Operational details, supplies, or instructions..." className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500 resize-none leading-snug" /></div><div className="pt-2 border-t border-slate-100 flex items-center justify-between"><div><div className="font-bold text-rose-900 text-xs">Delete this chore</div><div className="text-[10px] text-slate-500">Remove from Printable Weekly Schedule</div></div><button type="button" onClick={() => {
-              handleDeletePrintableChore(editingPrintableChore.index_, editingPrintableChore.task);
-            }} className="px-3 py-1.5 text-xs font-bold text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 rounded-lg flex items-center gap-1.5 transition"><Trash2 className="w-3.5 h-3.5" /><span>Delete Chore</span></button></div></div><div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between"><span className="text-[11px] text-slate-400 font-medium">Real-time schedule update</span><div className="flex gap-2"><button type="button" onClick={() => setEditingPrintableChore(null)} className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancel</button><button type="button" onClick={() => {
-              handleSavePrintableChoreEdit(editingPrintableChore.index_, {
-                task: editingPrintableChore.task,
-                oldTask: editingPrintableChore.originalTask || editingPrintableChore.task,
-                category: editingPrintableChore.category,
-                frequency: editingPrintableChore.frequency,
-                targetDay: editingPrintableChore.targetDay,
-                rotationGroup: editingPrintableChore.rotationGroup,
-                notes: editingPrintableChore.notes,
-                dayOfWeek: editingPrintableChore.dayOfWeek
-              });
-            }} disabled={!((_c = editingPrintableChore.task) == null ? void 0 : _c.trim())} className="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition disabled:opacity-40">Save Changes</button></div></div></div></div>}{deletingChoreTarget && <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-slate-200 overflow-hidden"><div className="p-4 bg-rose-600 text-white flex items-center justify-between"><div className="flex items-center gap-2"><Trash2 className="w-5 h-5 text-rose-200" /><h3 className="text-base font-bold">Delete Chore</h3></div><button onClick={() => setDeletingChoreTarget(null)} className="p-1 rounded-lg text-rose-200 hover:text-white hover:bg-black/10 transition"><X className="w-5 h-5" /></button></div><div className="p-5 text-xs text-slate-700 space-y-3"><p>{"Are you sure you want to remove "}<strong className="text-slate-900 font-bold">{'"'}{deletingChoreTarget.task}{'"'}</strong>{" from the Printable Weekly Schedule?"}</p><div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-[11px] text-rose-900 leading-relaxed">This will delete the chore and clear its scheduled assignments for this week. This update takes effect immediately.</div></div><div className="p-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2 text-xs"><button type="button" onClick={() => setDeletingChoreTarget(null)} className="px-3 py-1.5 font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancel</button><button type="button" onClick={() => {
+              frequency: val,
+              targetDay: val === "Daily" ? "Mon \u2013 Sun" : val === "Bi-Weekly" ? "Thursday Evening" : "Saturday"
+            }));
+          }} className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="Daily">Daily</option><option value="Once a Week">Once a Week</option><option value="Bi-Weekly">Bi-Weekly</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Target Day</label><input type="text" value={editingPrintableChore.targetDay || "Mon \u2013 Sun"} onChange={e => setEditingPrintableChore(prev => ({
+            ...{
+              ...prev
+            },
+            targetDay: e.target.value
+          }))} placeholder="e.g. Mon \u2013 Sun, Saturday, Sunday, Thursday Evening..." className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500" /></div><div><label className="block font-bold text-slate-700 mb-1">Rotation Group</label><select value={editingPrintableChore.rotationGroup || "All Non-Casual"} onChange={e => setEditingPrintableChore(prev => ({
+            ...{
+              ...prev
+            },
+            rotationGroup: e.target.value
+          }))} className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500"><option value="All Non-Casual">All Non-Casual (Sydney, Cadence, Mason, Thom, Meghan)</option><option value="Kids Rotation">Kids Rotation</option><option value="Parents & Kids">Parents & Kids</option><option value="All Occupants">All Occupants</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option><option value="Each Child">Each Child (Own Space)</option><option value="Full-Time Roster">Full-Time Roster</option>{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</select></div></div><div><label className="block font-bold text-slate-700 mb-1">Operational Notes / Routine</label><textarea rows={2} value={editingPrintableChore.notes || ""} onChange={e => setEditingPrintableChore(prev => ({
+            ...{
+              ...prev
+            },
+            notes: e.target.value
+          }))} placeholder="Operational details, supplies, or instructions..." className="w-full p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-indigo-500 resize-none leading-snug" /></div><div className="pt-2 border-t border-slate-100 flex items-center justify-between"><div><div className="font-bold text-rose-900 text-xs">Delete this chore</div><div className="text-[10px] text-slate-500">Remove from Printable Weekly Schedule</div></div><button type="button" onClick={() => {
+            handleDeletePrintableChore(editingPrintableChore.index_, editingPrintableChore.task);
+          }} className="px-3 py-1.5 text-xs font-bold text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 rounded-lg flex items-center gap-1.5 transition"><Trash2 className="w-3.5 h-3.5" /><span>Delete Chore</span></button></div></div><div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between"><span className="text-[11px] text-slate-400 font-medium">Real-time schedule update</span><div className="flex gap-2"><button type="button" onClick={() => setEditingPrintableChore(null)} className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancel</button><button type="button" onClick={() => {
+            handleSavePrintableChoreEdit(editingPrintableChore.index_, {
+              task: editingPrintableChore.task,
+              oldTask: editingPrintableChore.originalTask || editingPrintableChore.task,
+              category: editingPrintableChore.category,
+              frequency: editingPrintableChore.frequency,
+              targetDay: editingPrintableChore.targetDay,
+              rotationGroup: editingPrintableChore.rotationGroup,
+              notes: editingPrintableChore.notes,
+              dayOfWeek: editingPrintableChore.dayOfWeek
+            });
+          }} disabled={!((_c = editingPrintableChore.task) == null ? void 0 : _c.trim())} className="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition disabled:opacity-40">Save Changes</button></div></div></div></div>}{deletingChoreTarget && <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-slate-200 overflow-hidden"><div className="p-4 bg-rose-600 text-white flex items-center justify-between"><div className="flex items-center gap-2"><Trash2 className="w-5 h-5 text-rose-200" /><h3 className="text-base font-bold">Delete Chore</h3></div><button onClick={() => setDeletingChoreTarget(null)} className="p-1 rounded-lg text-rose-200 hover:text-white hover:bg-black/10 transition"><X className="w-5 h-5" /></button></div><div className="p-5 text-xs text-slate-700 space-y-3"><p>{"Are you sure you want to remove "}<strong className="text-slate-900 font-bold">{'"'}{deletingChoreTarget.task}{'"'}</strong>{" from the Printable Weekly Schedule?"}</p><div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-[11px] text-rose-900 leading-relaxed">This will delete the chore and clear its scheduled assignments for this week. This update takes effect immediately.</div></div><div className="p-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2 text-xs"><button type="button" onClick={() => setDeletingChoreTarget(null)} className="px-3 py-1.5 font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancel</button><button type="button" onClick={() => {
             handleDeletePrintableChore(deletingChoreTarget.index_, deletingChoreTarget.task);
           }} className="px-4 py-1.5 font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-sm transition">Delete Chore</button></div></div></div>}</div>
   );

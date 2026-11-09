@@ -1830,9 +1830,9 @@ function App({
     const rRows = rosterSheet.data || [];
     const cats = [];
     rRows.forEach(r => {
-      if (!r.row || r.index_ < 14 || r.index_ > 18) return;
+      if (!r.row || r.index_ < 14 || r.index_ > 17) return;
       const col0 = String(r.row[0] || "").trim();
-      if (!col0 || col0.toLowerCase() === "type" || col0.toLowerCase().includes("occupancy")) return;
+      if (!col0 || col0.toLowerCase() === "type" || col0.toLowerCase().includes("occupancy") || col0.toLowerCase().includes("special rotation")) return;
       cats.push({
         type: col0,
         description: String(r.row[1] || "").trim(),

@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import AppWrapper, { INITIAL_SHEET_DATA } from './weekly_chores_household_hub';

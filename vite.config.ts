@@ -208,6 +208,13 @@ export default defineConfig({
       },
     },
   ],
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+    alias: {
+      react: path.resolve(process.cwd(), 'node_modules/react'),
+      'react-dom': path.resolve(process.cwd(), 'node_modules/react-dom'),
+    },
+  },
   server: {
     port: 5173,
     strictPort: false,

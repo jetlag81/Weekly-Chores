@@ -4,12 +4,16 @@
     {
       "label": "vite: dev",
       "type": "shell",
-      "command": "npm.cmd run dev",
+      "command": "powershell -NoProfile -Command \"try { $null = Invoke-WebRequest -Uri 'http://localhost:5173' -UseBasicParsing -TimeoutSec 1; Write-Host 'VITE ready'; Write-Host '  Local:   http://localhost:5173/'; while ($true) { Start-Sleep -Seconds 3600 } } catch { npm.cmd run dev }\"",
       "isBackground": true,
       "problemMatcher": {
         "owner": "vite",
         "pattern": {
-          "regexp": "^(.*)$"
+          "regexp": "^ERROR\\s+(.*):(\\d+):(\\d+)\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 4
         },
         "background": {
           "activeOnStart": true,

@@ -6,6 +6,7 @@ import {
   Award,
   Calendar,
   CalendarDays,
+  Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,

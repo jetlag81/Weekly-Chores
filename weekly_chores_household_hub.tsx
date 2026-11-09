@@ -1531,6 +1531,17 @@ function getWeekDaysForDate(year, month, day) {
   }
   return weekDays;
 }
+function getCurrentWeekMonday() {
+  const now = new Date();
+  const mon = getMondayOfDate(now.getFullYear(), now.getMonth(), now.getDate());
+  return {
+    ...mon,
+    todayYear: now.getFullYear(),
+    todayMonth: now.getMonth(),
+    todayDay: now.getDate(),
+    dateKey: formatDateKey(mon.year, mon.month, mon.day)
+  };
+}
 function generateWeekAssignments(startDateStr, choresList = DEFAULT_MASTER_CHORES) {
   const parsedStart = parseDateKey(startDateStr) || {
     year: 2026,
@@ -2470,10 +2481,11 @@ function App({
       };
     });
   }, [printableScheduleItems, hubMasterChores]);
+  const currentWeekInfo = useMemo(() => getCurrentWeekMonday(), []);
   const [activeTab, setActiveTab] = useState("matrix");
-  const [selectedYear, setSelectedYear] = useState(() => initialDateObj.year);
-  const [selectedMonth, setSelectedMonth] = useState(() => initialDateObj.month);
-  const [activeSyncWeek, setActiveSyncWeek] = useState(() => sheetStartDateStr);
+  const [selectedYear, setSelectedYear] = useState(() => currentWeekInfo.todayYear);
+  const [selectedMonth, setSelectedMonth] = useState(() => currentWeekInfo.todayMonth);
+  const [activeSyncWeek, setActiveSyncWeek] = useState(() => currentWeekInfo.dateKey);
   const [selectedAssigneeFilter, setSelectedAssigneeFilter] = useState("ALL");
   const [activeDayModal, setActiveDayModal] = useState(null);
   const [showAutoAssignModal, setShowAutoAssignModal] = useState(false);
@@ -2539,11 +2551,6 @@ function App({
     routine: "Morning & Evening",
     care: ""
   });
-  useEffect(() => {
-    if (sheetStartDateStr && sheetStartDateStr !== "2024-07-15") {
-      setActiveSyncWeek(sheetStartDateStr);
-    }
-  }, [sheetStartDateStr]);
   useEffect(() => {
     if ((printableSheet == null ? void 0 : printableSheet.data) || (hubSheet == null ? void 0 : hubSheet.data)) {
       setCustomMasterChores(prev => prev.filter(cmc => {
@@ -2625,10 +2632,10 @@ function App({
       const name = String(d.name || "").toLowerCase();
       return (name.includes("printable") || name.includes("weekly") && name.includes("schedule")) && !name.includes("hub");
     })) == null ? void 0 : _a2.data) || ((_b2 = data == null ? void 0 : data[0]) == null ? void 0 : _b2.data) || [];
-    return extractWeekFromSheet(rawPrintable, "2026-10-12");
+    return extractWeekFromSheet(rawPrintable, getCurrentWeekMonday().dateKey);
   });
   const handleAutoAssignCurrentWeek = () => {
-    const targetStartDate = activeSyncWeek || "2026-10-12";
+    const targetStartDate = activeSyncWeek || getCurrentWeekMonday().dateKey;
     const newSchedule = generateWeekAssignments(targetStartDate, choreRows);
     setMonthSchedule(prev => ({
       ...{
@@ -4351,9 +4358,25 @@ function App({
     }
   };
   const handleCurrentMonth = () => {
-    setSelectedYear(2026);
-    setSelectedMonth(9);
+    const cur = getCurrentWeekMonday();
+    setSelectedYear(cur.todayYear);
+    setSelectedMonth(cur.todayMonth);
+    setActiveSyncWeek(cur.dateKey);
   };
+  useEffect(() => {
+    if (activeTab === "month") {
+      const cur = getCurrentWeekMonday();
+      setSelectedYear(cur.todayYear);
+      setSelectedMonth(cur.todayMonth);
+      setActiveSyncWeek(cur.dateKey);
+      setTimeout(() => {
+        const el = document.getElementById("active-calendar-week");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 50);
+    }
+  }, [activeTab]);
   const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
@@ -4484,15 +4507,17 @@ function App({
             }} title={`${m.name} (${m.residency} Minion = Kid)`}>{m.name}{m.type === "biweekly" ? <span className="opacity-75 text-[9px] ml-0.5 font-bold"></span> : null}{m.type === "casual" ? <span className="opacity-75 text-[9px] ml-0.5 font-bold"></span> : null}</span>)}</div></div><div className="flex items-center gap-2"><div className="flex items-center gap-1.5 bg-amber-50/90 border border-amber-200 text-amber-900 px-2.5 py-1 rounded-lg"><span className="font-bold">Feed the Herd:</span><span>{"\u{1F415} Ellie, Lewis (Dogs)"}</span><span className="text-amber-300">{"\u2022"}</span><span>{"\u{1F408} Casey, Gigi, Sloane, Scoob (Cats)"}</span></div></div></div><div className="no-print bg-white rounded-xl border border-slate-200 p-4 mb-5 shadow-sm flex flex-wrap items-center justify-between gap-4"><div className="flex items-center gap-6"><div><p className="text-xs text-slate-500 font-medium">Month Overview</p><div className="flex items-baseline gap-2 mt-0.5"><span className="text-xl font-bold text-slate-900">{monthStats.totalCompleted}{" / "}{monthStats.totalScheduled}</span><span className="text-xs text-slate-500">completed</span></div></div><div className="hidden sm:block w-36"><div className="flex justify-between text-xs text-slate-600 mb-1 font-medium"><span>Progress</span><span>{monthStats.completionRate}%</span></div><div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden"><div className="bg-emerald-500 h-2 rounded-full transition-all duration-500" style={{
                 width: `${monthStats.completionRate}%`
               }} /></div></div></div><div className="flex items-center gap-3 text-xs"><div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-800 px-3 py-1.5 rounded-lg"><span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /><span>{"Active Week: "}<strong>{activeSyncWeek}</strong>{" \u2022 "}{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || "Cadence & Mason arrive Sun Oct 18 @ 5 PM"}</span></div><button onClick={() => {
-            const currentWeek = getWeekDaysForDate(2026, 9, 12);
+            const cur = getCurrentWeekMonday();
+            const currentWeek = getWeekDaysForDate(cur.year, cur.month, cur.day);
             handleSetSyncWeek(currentWeek);
             handleAutoAssignCurrentWeek();
             setActiveTab("matrix");
-          }} className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold rounded-lg transition" title="Sync and distribute chores for current week (Oct 12 \u2013 Oct 18, 2026)">Sync & Distribute Week</button></div></div>{activeTab === "month" && <div className="space-y-4"><div className="grid grid-cols-7 gap-2 text-center">{DAY_STYLES.map((day, idx) => <div key={day.name} className="py-2.5 px-1 rounded-t-lg font-bold text-xs uppercase tracking-wider text-white shadow-sm flex flex-col items-center justify-center" style={{
+          }} className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold rounded-lg transition" title={`Sync and distribute chores for current week (${activeSyncWeek})`}>Sync & Distribute Week</button></div></div>{activeTab === "month" && <div className="space-y-4"><div className="grid grid-cols-7 gap-2 text-center">{DAY_STYLES.map((day, idx) => <div key={day.name} className="py-2.5 px-1 rounded-t-lg font-bold text-xs uppercase tracking-wider text-white shadow-sm flex flex-col items-center justify-center" style={{
             backgroundColor: day.color
           }}><span>{day.name}</span><span className="text-[10px] font-normal opacity-90 hidden sm:inline">{"Day "}{idx + 1}</span></div>)}</div><div className="space-y-3">{calendarWeeks.map((week, weekIdx) => {
             const synced = isWeekSyncedToSheet(week);
-            return <div key={weekIdx} className={`bg-white rounded-xl border transition-all ${synced ? "border-rose-400 ring-2 ring-rose-200 shadow-md" : "border-slate-200 shadow-sm hover:border-slate-300"}`}><div className="bg-slate-50/80 px-3 py-1.5 border-b border-slate-100 rounded-t-xl flex items-center justify-between text-xs"><div className="flex items-center gap-2"><span className="font-semibold text-slate-700">{"Week "}{weekIdx + 1}</span><span className="text-slate-400">{"\u2022"}</span><span className="text-slate-500">{week[0].month + 1}/{week[0].day}{" \u2013 "}{week[6].month + 1}/{week[6].day}</span>{(() => {
+            const isCurrentCalendarWeek = week[0].dateKey === currentWeekInfo.dateKey;
+            return <div key={weekIdx} id={synced ? "active-calendar-week" : void 0} className={`bg-white rounded-xl border transition-all ${synced ? "border-rose-400 ring-2 ring-rose-200 shadow-md" : "border-slate-200 shadow-sm hover:border-slate-300"}`}><div className="bg-slate-50/80 px-3 py-1.5 border-b border-slate-100 rounded-t-xl flex items-center justify-between text-xs"><div className="flex items-center gap-2"><span className="font-semibold text-slate-700">{"Week "}{weekIdx + 1}</span><span className="text-slate-400">{"\u2022"}</span><span className="text-slate-500">{week[0].month + 1}/{week[0].day}{" \u2013 "}{week[6].month + 1}/{week[6].day}</span>{isCurrentCalendarWeek && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-300">Current Week</span>}{(() => {
                     const summary = getWeekBiWeeklySummary(week, biWeeklyNamesString);
                     if (!summary) return null;
                     return <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${summary.badgeBg}`}>{summary.text}</span>;
@@ -4735,7 +4760,7 @@ function App({
                   );
                 })}</div></div>;
           })}</div></div>}{activeTab === "matrix" && <div className="space-y-4"><div id="printable-schedule-card" className="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden"><div className="no-print p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><h2 className="text-base font-bold text-slate-900">Printable Weekly Schedule</h2><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-pink-50 text-pink-700 border border-pink-200 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />{"Active Week: "}{activeSyncWeek}{" \u2022 "}{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || "Cadence & Mason arrive Sun Oct 18 @ 5 PM"}</span></div><p className="text-xs text-slate-500 mt-0.5">{"Single-page Letter Landscape layout matching Weekly Chores Original - Printed.pdf"}</p></div><div className="flex flex-wrap items-center gap-2"><div className="relative"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" /><input type="text" placeholder="Search schedule chores..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div><button onClick={() => {
-                  const parsedStart = parseDateKey(sheetStartDateStr) || { year: 2026, month: 9, day: 19 };
+                  const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr) || { year: 2026, month: 9, day: 19 };
                   const weekDays = getWeekDaysForDate(parsedStart.year, parsedStart.month, parsedStart.day);
                   setMonthSchedule(prev => {
                     const next = { ...prev };
@@ -4761,10 +4786,10 @@ function App({
                   setNotice("Cleared daily WHO/DONE assignments for a blank printable template!");
                   setTimeout(() => setNotice(null), 3000);
                 }} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 transition shadow-2xs" title="Clear WHO/DONE cells to print a blank fill-in sheet"><span>Clear Names (Blank Sheet)</span></button><button onClick={handleAutoAssignCurrentWeek} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-amber-50 text-amber-900 border border-amber-300 rounded-lg hover:bg-amber-100 transition shadow-2xs" title="Automatically distribute chores across active members for current week"><Sparkles className="w-3.5 h-3.5 text-amber-600" /><span>Distribute Current Week</span></button><button onClick={() => window.print()} className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition shadow-2xs cursor-pointer" title="Print 1-page Letter Landscape schedule"><span>🖨️ Print Schedule</span></button></div></div><div className="overflow-x-auto"><table id="printable-schedule-table" className="w-full table-fixed border-collapse text-left text-xs" style={{ borderColor: "#C55A11" }}><colgroup><col style={{ width: "21%" }} />{DAY_STYLES.map(d => <React.Fragment key={`col-${d.name}`}><col style={{ width: "7.5%" }} /><col style={{ width: "3.78%" }} /></React.Fragment>)}</colgroup><thead><tr style={{ backgroundColor: "#002060", borderBottom: "3px solid #FFFFFF" }}><th colSpan={15} className="py-2 px-3 text-left text-xl font-bold text-white tracking-tight">Chore Schedule</th></tr><tr><th className="p-0 align-top bg-white" style={{ borderRight: "2px solid #FFFFFF" }}><div className="text-[10px] text-slate-500 font-semibold py-1.5 text-center uppercase tracking-wider bg-white">FOR THE WEEK OF:</div><div className="text-lg font-bold py-1.5 text-center text-white" style={{ backgroundColor: "#002060" }}>{(() => {
-                      const p = parseDateKey(sheetStartDateStr);
-                      return p ? `${p.month + 1}/${p.day}/${p.year}` : sheetStartDateStr || "10/19/2026";
+                      const p = parseDateKey(activeSyncWeek || sheetStartDateStr);
+                      return p ? `${p.month + 1}/${p.day}/${p.year}` : activeSyncWeek || sheetStartDateStr || "10/19/2026";
                     })()}</div></th>{DAY_STYLES.map((d, dayIdx) => {
-                    const parsedStart = parseDateKey(sheetStartDateStr) || {
+                    const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr) || {
                       year: 2026,
                       month: 9,
                       day: 19

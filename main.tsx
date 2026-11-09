@@ -189,13 +189,23 @@ interface SnippetLine {
 }
 
 function openFileInVsCode(file: string, line: number, col = 1, onToast?: (msg: string) => void) {
+  const triggerUriFallback = () => {
+    const a = document.createElement('a');
+    a.href = `antigravity-ide://file/c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/${encodeURIComponent(file)}:${line}:${col}`;
+    a.click();
+  };
   fetch(
     `/__open-in-vscode?file=${encodeURIComponent(file)}&line=${line}&col=${col}`
-  ).catch(() => {
-    const a = document.createElement('a');
-    a.href = `vscode://file/c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/${encodeURIComponent(file)}:${line}:${col}`;
-    a.click();
-  });
+  )
+    .then((r) => r.json())
+    .then((data) => {
+      if (!data || !data.ok) {
+        triggerUriFallback();
+      }
+    })
+    .catch(() => {
+      triggerUriFallback();
+    });
   if (onToast) {
     onToast(`Opened ${file}:${line}`);
   }

@@ -165,18 +165,44 @@ export default defineConfig({
           const fullPath = path.resolve(process.cwd(), file);
           const target = `${fullPath}:${line}:${col}`;
 
-          const cleanEnv = { ...process.env };
-          delete cleanEnv.ELECTRON_RUN_AS_NODE;
-
+          const agyDir =
+            process.env.VSCODE_CWD ||
+            'C:\\Users\\thomv\\AppData\\Local\\Programs\\Antigravity IDE';
+          const agyExe = path.join(agyDir, 'Antigravity IDE.exe');
+          const agyCli = path.join(agyDir, 'resources', 'app', 'out', 'cli.js');
           const codeExe = 'C:\\Users\\thomv\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe';
-          if (fs.existsSync(codeExe)) {
+
+          if (fs.existsSync(agyExe) && fs.existsSync(agyCli)) {
+            const agyEnv = { ...process.env, ELECTRON_RUN_AS_NODE: '1' };
+            delete agyEnv.VSCODE_DEV;
+            const child = spawn(agyExe, [agyCli, '-r', '-g', target], {
+              env: agyEnv,
+              stdio: 'ignore',
+            });
+            let responded = false;
+            const finish = (ok: boolean) => {
+              if (responded) return;
+              responded = true;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ ok, target }));
+            };
+            child.on('error', () => finish(false));
+            child.on('close', (code) => finish(code === 0));
+            setTimeout(() => finish(true), 1500);
+            return;
+          } else if (fs.existsSync(codeExe)) {
+            const cleanEnv = { ...process.env };
+            delete cleanEnv.ELECTRON_RUN_AS_NODE;
             const child = spawn(codeExe, ['-r', '-g', target], {
               env: cleanEnv,
               detached: true,
               stdio: 'ignore',
             });
+            child.on('error', () => {});
             child.unref();
           } else {
+            const cleanEnv = { ...process.env };
+            delete cleanEnv.ELECTRON_RUN_AS_NODE;
             exec(`code.cmd -r -g "${target}"`, { env: cleanEnv });
           }
 

@@ -107,7 +107,7 @@
         {
           "index_": 5,
           "row": [
-            "Empty the Litter Box \n(Morning & Evening)",
+            "Empty the Litter Box (Morning & Evening)",
             "Meghan",
             false,
             "Sydney",
@@ -127,7 +127,7 @@
         {
           "index_": 6,
           "row": [
-            "Feed the Herd \n(Breakfast & Supper)",
+            "Feed the Herd (Breakfast & Supper)",
             "Sydney",
             false,
             "Sydney",
@@ -615,7 +615,7 @@
             true,
             null,
             "Walk Dogs: Ellie & Lewis",
-            "",
+            "Non-Casual",
             "Daily",
             "Mon – Sun",
             "Walk Ellie & Lewis",
@@ -880,6 +880,6 @@
       ]
     }
   ],
-  "savedAt": "2026-11-10T21:38:15.211Z",
+  "savedAt": "2026-11-10T21:41:22.926Z",
   "version": "5.0"
 }

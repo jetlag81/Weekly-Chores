@@ -305,7 +305,7 @@ export const INITIAL_SHEET_DATA = [
         "index_": 13,
         "row": [
           "Clean Up Basement",
-          "Pick Up, Organize, Dust & Vacuum",
+          "Pick Up Mess; Dust Surfaces; Vacuum Floors & Litter Box Area",
           null,
           null,
           null,
@@ -325,7 +325,7 @@ export const INITIAL_SHEET_DATA = [
         "index_": 14,
         "row": [
           "Herd Feeding Station Deep Clean",
-          "Clean & Sanitize Bowls, Vacuum & Wipe Space, Dispose of Waste",
+          "Wash & Sanitize Bowls; Vacuum Feeding Mat",
           null,
           null,
           null,
@@ -2345,8 +2345,12 @@ function App({
       });
 
       const isDaily = isChoreDaily(c.task, c.frequency);
-      let rowData = existingRow?.row;
-      if (!rowData) {
+      let rowData = existingRow?.row ? [...existingRow.row] : null;
+      if (rowData) {
+        if (!isDaily && c.notes && String(c.notes).trim()) {
+          rowData[1] = String(c.notes).trim();
+        }
+      } else {
         if (isDaily) {
           rowData = [c.task, "", false, "", false, "", false, "", false, "", false, "", false, "", false];
         } else if (isKidsChecklistChore(c.task)) {
@@ -3847,10 +3851,13 @@ function App({
       setChoreOrderOverrides(prev => prev ? prev.map(k => k === oldNorm ? newNorm : k) : null);
     }
     const pRowIdx = getPrintableRowIndex(oldTitle);
-    if (printableRangeIndex >= 0 && "task" in patch && pRowIdx !== void 0 && pRowIdx !== null) {
+    if (printableRangeIndex >= 0 && pRowIdx !== void 0 && pRowIdx !== null) {
       const updateP = new Array(15).fill(void 0);
-      updateP[0] = patch.task;
-      updateItem(printableRangeIndex, pRowIdx, updateP);
+      if ("task" in patch) updateP[0] = patch.task;
+      if ("notes" in patch) updateP[1] = patch.notes;
+      if ("task" in patch || "notes" in patch) {
+        updateItem(printableRangeIndex, pRowIdx, updateP);
+      }
     }
     if (patch.frequency || patch.targetDay) {
       const taskName = patch.task || oldTitle || "";
@@ -3986,6 +3993,7 @@ function App({
     if (printableRangeIndex >= 0 && pRowIdx !== void 0 && pRowIdx !== null) {
       const updateRow = new Array(15).fill(void 0);
       updateRow[0] = cleanTitle;
+      if (editData.notes !== void 0) updateRow[1] = editData.notes;
       updateItem(printableRangeIndex, pRowIdx, updateRow);
     }
     const hRowIdx = getHubRowIndex(oldTitle, choreIndex);
@@ -5097,7 +5105,23 @@ function App({
         const isSpecialKidChore = getSpecificKidForChore(taskTitle);
         const isKidsChecklistTask = isKidsChecklistChore(taskTitle) && !isSpecialKidChore;
         const isStreamlined = isStreamlinedWeeklyTask(taskTitle, choreFreq);
-        const rawDescription = ((_b2 = cr.row) == null ? void 0 : _b2[1]) && (isKidsChecklistTask || isStreamlined) && !familyMembers.some(m => m.name.toLowerCase() === String(cr.row[1]).trim().toLowerCase()) ? String(cr.row[1]).trim() : isLaundryChore(taskTitle) ? "(Each Minion Does Their Own) - Wash, Dry, Fold & Put Away" : isBedroomChore(taskTitle) ? "(Each Minion Does Their Own) - Pick Up Mess / laundry, Organize, Dust & Vacuum" : isCleanBasementChore(taskTitle) ? "- Pick Up, Organize, Dust & Vacuum" : isHerdFeedingStationChore(taskTitle) ? "- Clean & Sanitize Bowls, Vacuum & Wipe Space, Dispose of Waste" : taskTitle.toLowerCase().includes("recycling") ? "- Roll recycling bin to curb Thursday evening for Friday pickup (Bi-Weekly)" : taskTitle.toLowerCase().includes("waste") ? "- Roll waste bin to curb Thursday evening for Friday pickup (Bi-Weekly)" : cr.notes || "";
+        const rawDescription = (cr.notes && String(cr.notes).trim())
+          ? String(cr.notes).trim()
+          : ((_b2 = cr.row) == null ? void 0 : _b2[1]) && (isKidsChecklistTask || isStreamlined) && !familyMembers.some(m => m.name.toLowerCase() === String(cr.row[1]).trim().toLowerCase())
+            ? String(cr.row[1]).trim()
+            : isLaundryChore(taskTitle)
+              ? "(Each Minion Does Their Own) - Wash, Dry, Fold & Put Away"
+              : isBedroomChore(taskTitle)
+                ? "(Each Minion Does Their Own) - Pick Up Mess / laundry, Organize, Dust & Vacuum"
+                : isCleanBasementChore(taskTitle)
+                  ? "- Pick Up, Organize, Dust & Vacuum"
+                  : isHerdFeedingStationChore(taskTitle)
+                    ? "- Clean & Sanitize Bowls, Vacuum & Wipe Space, Dispose of Waste"
+                    : taskTitle.toLowerCase().includes("recycling")
+                      ? "- Roll recycling bin to curb Thursday evening for Friday pickup (Bi-Weekly)"
+                      : taskTitle.toLowerCase().includes("waste")
+                        ? "- Roll waste bin to curb Thursday evening for Friday pickup (Bi-Weekly)"
+                        : "";
         return <tr key={`row-${cr.index_}-${taskTitle}`} className="bg-white hover:bg-slate-50/60 transition-colors" style={{ borderBottom: "1px solid #C55A11" }}><td className="py-1.5 px-2 text-slate-900 bg-white align-middle" style={{ borderLeft: "1px solid #C55A11", borderRight: "1.5px solid #475569" }}><div className="leading-tight text-slate-900 font-semibold text-[11px]">{mainTitle}</div>{subTitle && <div className="text-[9.5px] text-slate-700 font-normal mt-0.5 leading-tight">{subTitle}</div>}</td>{isKidsChecklistTask ? (() => {
           const weeklyKidsDone = getWeeklyKidsStatus(cr.index_, taskTitle);
           const minionInitials = [

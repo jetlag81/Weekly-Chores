@@ -208,19 +208,19 @@
           "index_": 10,
           "row": [
             "Weekly Tasks",
-            "Sydney",
+            "Description",
             null,
-            "Thom",
             null,
-            "Meghan",
             null,
-            "Sydney",
             null,
-            "Thom",
             null,
-            "Meghan",
             null,
-            "Thom",
+            null,
+            "Initials / Assigned",
+            null,
+            null,
+            null,
+            null,
             null
           ]
         },
@@ -235,9 +235,9 @@
             "",
             false,
             "",
-            null,
+            false,
             "",
-            null,
+            false,
             "Sydney",
             false,
             "",
@@ -255,9 +255,9 @@
             "",
             false,
             "",
-            null,
+            false,
             "",
-            null,
+            false,
             "Sydney",
             false,
             "",
@@ -267,19 +267,19 @@
         {
           "index_": 13,
           "row": [
-            "Clean Basement",
-            "Pick Up, Organize, Dust & Vacuum",
-            null,
+            "Clean Up Basement",
+            "Pick Up Mess; Dust Surfaces; Vacuum Floors & Litter Box Area",
+            false,
             "",
-            null,
+            false,
             "",
-            null,
+            false,
             "",
-            null,
+            false,
             "",
-            null,
-            "",
-            null,
+            false,
+            "Sydney",
+            false,
             "Meghan",
             false
           ]
@@ -287,8 +287,8 @@
         {
           "index_": 14,
           "row": [
-            "Clean Upstairs",
-            "Non-Casual",
+            "Herd Feeding Station Deep Clean",
+            "Wash & Sanitize Bowls; Vacuum Feeding Mat",
             false,
             "",
             false,
@@ -307,19 +307,39 @@
         {
           "index_": 15,
           "row": [
-            "Pet Station Deep Clean",
-            "Clean & Sanitize Bowls, Vacuum & Wipe Space, Dispose of Waste",
-            null,
+            "Curbside Recycling",
+            "Roll recycling bin to curb Thursday evening for Friday pickup (Bi-Weekly)",
+            false,
             "",
-            null,
+            false,
             "",
-            null,
+            false,
+            "Thom",
+            false,
             "",
-            null,
+            false,
             "",
-            null,
+            false,
             "",
+            false
+          ]
+        },
+        {
+          "index_": 16,
+          "row": [
             null,
+            "Sydney",
+            false,
+            "Thom",
+            false,
+            "Meghan",
+            false,
+            "Sydney",
+            false,
+            "Thom",
+            false,
+            "Meghan",
+            false,
             "Thom",
             false
           ]
@@ -329,38 +349,18 @@
           "row": [
             "Weekly Sign-Off",
             "",
-            null,
+            false,
             "",
-            null,
+            false,
             "",
-            null,
+            false,
             "",
-            null,
+            false,
             "",
-            null,
+            false,
             "",
-            null,
+            false,
             "Thom",
-            false
-          ]
-        },
-        {
-          "index_": 19,
-          "row": [
-            "Curbside Recycling",
-            "Roll recycling bin to curb Thursday evening for Friday pickup (Bi-Weekly)",
-            null,
-            "",
-            null,
-            "",
-            null,
-            "Thom",
-            null,
-            "",
-            null,
-            "",
-            null,
-            "",
             false
           ]
         }
@@ -532,12 +532,12 @@
             "All",
             true,
             null,
-            "Walk Dogs: Ellie & Lewis",
-            "Non-Casual",
-            "Daily",
-            "Mon – Sun",
-            "Walk Ellie & Lewis",
-            "Pet Care"
+            "Tidy Bedrooms / Personal Spaces",
+            "Kids",
+            "Once a Week",
+            "Saturday",
+            "Pick up mess & laundry, dust surfaces, vacuum floors (each individual kid is responsible for their own space)",
+            null
           ]
         },
         {
@@ -549,11 +549,11 @@
             "All",
             true,
             null,
-            "Tidy Bedrooms / Personal Spaces",
-            "Kids",
+            "Laundry",
+            "All",
             "Once a Week",
             "Saturday",
-            "Pick up mess & laundry, dust surfaces, vacuum floors (each individual kid is responsible for their own space)",
+            "Wash, dry, fold & put away (each kid responsible for their own items)",
             null
           ]
         },
@@ -566,11 +566,11 @@
             null,
             null,
             null,
-            "Laundry",
-            "All",
+            "Clean Basement (Pick Up, Dust, Vacuum)",
+            "Non-Casual",
             "Once a Week",
-            "Saturday",
-            "Wash, dry, fold & put away (each kid responsible for their own items)",
+            "Sunday",
+            "Pick up mess & laundry, dust surfaces, vacuum floors",
             null
           ]
         },
@@ -583,12 +583,12 @@
             null,
             null,
             null,
-            "Clean Basement",
-            "Non-Casual",
+            "Herd Feeding Station Deep Clean",
+            "All",
             "Once a Week",
             "Sunday",
-            "Pick Up Mess; Dust Surfaces; Vacuum Floors & Litter Box Area",
-            "Household"
+            "Wash & sanitize pet bowls, vacuum feeding mat",
+            null
           ]
         },
         {
@@ -600,11 +600,11 @@
             null,
             "Active Status",
             null,
-            "Clean Upstairs",
+            "Curbside Recycling",
             "Non-Casual",
-            "Once a Week",
-            "Sunday",
-            "Dust Surfaces; Vacuum Floors",
+            "Bi-Weekly",
+            "Thursday Evening",
+            "Roll recycling bin to curb Thursday evening for Friday pickup (alternating weeks)",
             "Household"
           ]
         },
@@ -617,12 +617,12 @@
             null,
             true,
             null,
-            "Pet Station Deep Clean",
-            "All",
-            "Once a Week",
-            "Sunday",
-            "Wash & Sanitize Bowls; Vacuum Feeding Mat",
-            "Pet Care"
+            "Curbside Waste",
+            "Non-Casual",
+            "Bi-Weekly",
+            "Thursday Evening",
+            "Roll waste bin to curb Thursday evening for Friday pickup (Bi-Weekly)",
+            "Household"
           ]
         },
         {
@@ -634,33 +634,16 @@
             null,
             true,
             null,
-            "Curbside Recycling",
+            "Walk Dogs: Ellie & Lewis",
             "Non-Casual",
-            "Bi-Weekly",
-            "Thursday Evening",
-            "Roll recycling bin to curb Thursday evening for Friday pickup (Bi-Weekly)",
-            "Household"
+            "Daily",
+            "Mon – Sun",
+            "Walk Ellie & Lewis",
+            "Pet Care"
           ]
         },
         {
           "index_": 17,
-          "row": [
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            "Curbside Waste",
-            "Non-Casual",
-            "Bi-Weekly",
-            "Thursday Evening",
-            "Roll waste bin to curb Thursday evening for Friday pickup (Bi-Weekly)",
-            "Household"
-          ]
-        },
-        {
-          "index_": 18,
           "row": [
             "Casual",
             "Periodic Residency",
@@ -677,7 +660,7 @@
           ]
         },
         {
-          "index_": 19,
+          "index_": 18,
           "row": [
             "SPECIAL ROTATION GROUPS",
             null,
@@ -686,7 +669,7 @@
             null,
             null,
             "Active Week Start Date",
-            "2026-10-19",
+            "2026-11-09",
             "Printable Weekly Schedule",
             null,
             null,
@@ -694,7 +677,7 @@
           ]
         },
         {
-          "index_": 20,
+          "index_": 19,
           "row": [
             "Name",
             "Members",
@@ -711,7 +694,7 @@
           ]
         },
         {
-          "index_": 21,
+          "index_": 20,
           "row": [
             "All",
             "Thom, Meghan, Sydney, Cadence, Mason, Koda, Keyanna",
@@ -728,7 +711,7 @@
           ]
         },
         {
-          "index_": 22,
+          "index_": 21,
           "row": [
             "Kids",
             "Sydney, Cadence, Mason",
@@ -745,7 +728,7 @@
           ]
         },
         {
-          "index_": 23,
+          "index_": 22,
           "row": [
             "Parents",
             "Thom, Meghan",
@@ -762,7 +745,7 @@
           ]
         },
         {
-          "index_": 24,
+          "index_": 23,
           "row": [
             "Non-Casual",
             "Thom, Meghan, Sydney, Cadence, Mason",
@@ -779,7 +762,7 @@
           ]
         },
         {
-          "index_": 27,
+          "index_": 26,
           "row": [
             "Pet Name",
             "Dog / Cat",
@@ -796,7 +779,7 @@
           ]
         },
         {
-          "index_": 28,
+          "index_": 27,
           "row": [
             "Ellie",
             "Dog",
@@ -813,7 +796,7 @@
           ]
         },
         {
-          "index_": 29,
+          "index_": 28,
           "row": [
             "Lewis",
             "Dog",
@@ -830,7 +813,7 @@
           ]
         },
         {
-          "index_": 30,
+          "index_": 29,
           "row": [
             "Casey",
             "Cat",
@@ -847,7 +830,7 @@
           ]
         },
         {
-          "index_": 31,
+          "index_": 30,
           "row": [
             "Gigi",
             "Cat",
@@ -864,7 +847,7 @@
           ]
         },
         {
-          "index_": 32,
+          "index_": 31,
           "row": [
             "Sloane",
             "Cat",
@@ -881,7 +864,7 @@
           ]
         },
         {
-          "index_": 33,
+          "index_": 32,
           "row": [
             "Scoob",
             "Cat",
@@ -898,7 +881,7 @@
           ]
         },
         {
-          "index_": 35,
+          "index_": 34,
           "row": [
             null,
             null,
@@ -917,6 +900,6 @@
       ]
     }
   ],
-  "savedAt": "2026-11-10T03:45:45.285Z",
+  "savedAt": "2026-11-10T04:03:55.162Z",
   "version": "5.0"
 }

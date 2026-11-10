@@ -1591,6 +1591,8 @@ function generateWeekAssignments(startDateStr, choresList = DEFAULT_MASTER_CHORE
   const fullTimeRoster = ["Thom", "Meghan", "Sydney"];
   const allNonCasual = ["Thom", "Meghan", "Sydney", "Cadence", "Mason"];
   const scheduleMap = {};
+  const weekNum = Math.floor(parsedStart.day / 7);
+
   weekDays.forEach((dayObj, dayIdx) => {
     const dKey = dayObj.dateKey;
     scheduleMap[dKey] = {};
@@ -1627,25 +1629,31 @@ function generateWeekAssignments(startDateStr, choresList = DEFAULT_MASTER_CHORE
       let assignedWho = "";
       if (!isScheduled) {
         assignedWho = "";
-      } else if (isBedroomChore(taskTitle)) {
-        assignedWho = areKidsInResidence ? "Each Child" : "Sydney";
+      } else if (isKidsChecklistChore(taskTitle)) {
+        // Tidy Bedrooms and Laundry Tasks are individual minion checklists: DO NOT auto-assign to a single person!
+        assignedWho = "";
       } else if (dayIdx === 6 && tLower.includes("supper")) {
         assignedWho = getSundaySupperAssignee(dayObj.year, dayObj.month, dayObj.day, parents);
       } else if (tLower.includes("sign-off") || tLower.includes("inspection")) {
         assignedWho = parents[dayIdx % parents.length];
       } else if (tLower.includes("basement")) {
-        assignedWho = kids[(dayStartOffset + 1) % kids.length];
-      } else if (tLower.includes("laundry")) {
-        assignedWho = kids[dayStartOffset % kids.length];
+        assignedWho = kids[(weekNum + 1) % kids.length];
       } else if (isDeepClean) {
-        assignedWho = dailyRotation[(dayStartOffset + 1) % dailyRotation.length];
+        assignedWho = dailyRotation[(weekNum + 2) % dailyRotation.length];
       } else if (tLower.includes("recycling")) {
-        assignedWho = dailyRotation[(dayStartOffset + 3) % dailyRotation.length];
+        assignedWho = dailyRotation[(weekNum + 3) % dailyRotation.length];
       } else if (tLower.includes("waste")) {
-        assignedWho = dailyRotation[(dayStartOffset + 2) % dailyRotation.length];
+        assignedWho = dailyRotation[(weekNum + 4) % dailyRotation.length];
       } else {
-        assignedWho = dailyRotation[(dayStartOffset + dailyCounter) % dailyRotation.length];
-        dailyCounter++;
+        const groupLower = String(cr.rotationGroup || "").toLowerCase();
+        if (groupLower.includes("parent")) {
+          assignedWho = parents[(dayStartOffset + dailyCounter) % parents.length];
+        } else if (groupLower.includes("kid")) {
+          assignedWho = kids[(dayStartOffset + dailyCounter) % kids.length];
+        } else {
+          assignedWho = dailyRotation[(dayStartOffset + dailyCounter) % dailyRotation.length];
+          dailyCounter++;
+        }
       }
       const choreKey = cr.index_ !== void 0 ? cr.index_ : 5 + choreIdx;
       const entry = {
@@ -2875,24 +2883,33 @@ function App({
   const handleAutoAssignCurrentWeek = () => {
     const targetStartDate = activeSyncWeek || getCurrentWeekMonday().dateKey;
     const newSchedule = generateWeekAssignments(targetStartDate, choreRows);
-    setMonthSchedule(prev => ({
-      ...{
-        ...prev
-      },
-      ...newSchedule
-    }));
+    const parsedStart = parseDateKey(targetStartDate) || {
+      year: 2026,
+      month: 9,
+      day: 12
+    };
+    const targetWeekDays = getWeekDaysForDate(parsedStart.year, parsedStart.month, parsedStart.day);
+    const editsPatch = {};
+
     if (printableRangeIndex >= 0) {
-      const parsedStart = parseDateKey(targetStartDate) || {
-        year: 2026,
-        month: 9,
-        day: 12
-      };
       choreRows.forEach(cr => {
         var _a2, _b2, _c2, _d, _e, _f;
-        const pRow = findPrintableRow(cr.task, cr.index_);
+        const taskTitle = cr.task || ((_a2 = cr.row) == null ? void 0 : _a2[0]) || "";
+        const pRow = findPrintableRow(taskTitle, cr.index_);
         if (!pRow) return;
+
+        // Skip Tidy Bedrooms and Laundry Tasks (they are personal minion checklists, not single-person tasks)
+        if (isKidsChecklistChore(taskTitle)) {
+          return;
+        }
+
+        const choreFreq = getChoreFreq(cr);
+        const isStreamlined = isStreamlinedWeeklyTask(taskTitle, choreFreq);
+
         const rowUpdates = new Array(15).fill(void 0);
         let hasChanges = false;
+        let weeklyAssignedWho = "";
+
         for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
           const d = new Date(parsedStart.year, parsedStart.month, parsedStart.day + dayOffset);
           const dKey = formatDateKey(d.getFullYear(), d.getMonth(), d.getDate());
@@ -2901,14 +2918,64 @@ function App({
             const whoCol = 1 + dayOffset * 2;
             rowUpdates[whoCol] = assignedWho;
             hasChanges = true;
+            if (isStreamlined && !weeklyAssignedWho) {
+              weeklyAssignedWho = assignedWho;
+            }
           }
         }
+
+        if (isStreamlined && weeklyAssignedWho) {
+          rowUpdates[9] = `Who: ${weeklyAssignedWho}`;
+          hasChanges = true;
+
+          editsPatch[cr.index_] = {
+            ...(choreEdits[cr.index_] || {}),
+            who: weeklyAssignedWho,
+            rotationGroup: weeklyAssignedWho
+          };
+          if (taskTitle) {
+            editsPatch[taskTitle.toLowerCase().trim()] = {
+              ...(choreEdits[taskTitle.toLowerCase().trim()] || {}),
+              who: weeklyAssignedWho,
+              rotationGroup: weeklyAssignedWho
+            };
+          }
+
+          // Propagate weekly assignment across all days of this week in newSchedule so getSingleWeeklyStatus finds it immediately
+          targetWeekDays.forEach(dObj => {
+            if (newSchedule[dObj.dateKey]) {
+              const prevEntry = newSchedule[dObj.dateKey][cr.index_] || { done: false, kidsDone: {} };
+              const updatedEntry = { ...prevEntry, who: weeklyAssignedWho };
+              newSchedule[dObj.dateKey][cr.index_] = updatedEntry;
+              if (taskTitle) {
+                newSchedule[dObj.dateKey][taskTitle] = updatedEntry;
+                newSchedule[dObj.dateKey][taskTitle.toLowerCase().trim()] = updatedEntry;
+              }
+            }
+          });
+        }
+
         if (hasChanges) {
           updateItem(printableRangeIndex, pRow.index_, rowUpdates);
         }
       });
     }
-    setNotice(`Distributed & assigned all scheduled chores for week of ${targetStartDate} across Thom, Meghan, Sydney, Cadence, and Mason (Sunday Supper assigned to parents)!`);
+
+    setMonthSchedule(prev => ({
+      ...{
+        ...prev
+      },
+      ...newSchedule
+    }));
+
+    if (Object.keys(editsPatch).length > 0) {
+      setChoreEdits(prev => ({
+        ...prev,
+        ...editsPatch
+      }));
+    }
+
+    setNotice(`Distributed daily & weekly scheduled chores for week of ${targetStartDate} across active household members (Tidy Bedrooms & Laundry remain individual checklists)!`);
     setTimeout(() => setNotice(null), 4500);
   };
   const activeWeekDays = useMemo(() => {
@@ -4272,6 +4339,11 @@ function App({
       ...monthSchedule
     };
     let dayStartOffset = 0;
+    let weeklyKidCounter = 0;
+    let weeklyCleanerCounter = 0;
+    let weeklyCurbsideCounter = 0;
+    const editsPatch = {};
+
     calendarWeeks.forEach(week => {
       week.forEach(dayObj => {
         if (!dayObj.isCurrentMonth) return;
@@ -4327,14 +4399,18 @@ function App({
           const taskTitle = cr.task || ((_a2 = cr.row) == null ? void 0 : _a2[0]) || "";
           const groupLower = String(cr.rotationGroup || "").toLowerCase();
           const tLower = taskTitle.toLowerCase();
-          if (isBedroomChore(taskTitle)) {
+
+          // 1. Tidy Bedrooms and Laundry Tasks: Excluded from auto-assign (multi-kid personal checklists)
+          if (isKidsChecklistChore(taskTitle)) {
             updated[dKey][cr.index_] = {
-              who: areKidsInResidence ? "Each Child" : "Sydney",
+              who: "",
               done: current.done,
               kidsDone: current.kidsDone || {}
             };
             return;
           }
+
+          // 2. Sunday Supper: Parent rule
           if (dayObj.dayOfWeekIndex === 6 && tLower.includes("supper")) {
             const overseers = familyMembers.filter(m => m.role === "Overseer Supreme" || String(m.role || "").toLowerCase().includes("parent")).map(m => m.name);
             const parentList = overseers.length > 0 ? overseers : ["Thom", "Meghan"];
@@ -4346,6 +4422,49 @@ function App({
             };
             return;
           }
+
+          // 3. Weekly tasks: Clean Basement (Kids), Feeding Station Deep Clean (Active Workers), Curbside (Active Workers), Sign-Off (Parents)
+          if (tLower.includes("basement")) {
+            const kidPool = kidsWorkers.length > 0 ? kidsWorkers : (areKidsInResidence ? ["Sydney", "Cadence", "Mason"] : ["Sydney"]);
+            const assignee = kidPool.length > 0 ? kidPool[weeklyKidCounter % kidPool.length] : "Sydney";
+            updated[dKey][cr.index_] = {
+              who: assignee,
+              done: current.done,
+              kidsDone: current.kidsDone || {}
+            };
+            weeklyKidCounter++;
+            return;
+          }
+          if (tLower.includes("deep clean") || tLower.includes("feeding station")) {
+            const assignee = activeWorkers[weeklyCleanerCounter % activeWorkers.length];
+            updated[dKey][cr.index_] = {
+              who: assignee,
+              done: current.done,
+              kidsDone: current.kidsDone || {}
+            };
+            weeklyCleanerCounter++;
+            return;
+          }
+          if (tLower.includes("recycling") || tLower.includes("waste")) {
+            const assignee = activeWorkers[weeklyCurbsideCounter % activeWorkers.length];
+            updated[dKey][cr.index_] = {
+              who: assignee,
+              done: current.done,
+              kidsDone: current.kidsDone || {}
+            };
+            weeklyCurbsideCounter++;
+            return;
+          }
+          if (tLower.includes("sign-off") || tLower.includes("inspection")) {
+            updated[dKey][cr.index_] = {
+              who: "Parents",
+              done: current.done,
+              kidsDone: current.kidsDone || {}
+            };
+            return;
+          }
+
+          // 4. Daily tasks & general chores
           if (groupLower === "parents" || groupLower.includes("parent") && !groupLower.includes("kid") && !groupLower.includes("non-casual") && !groupLower.includes("all")) {
             const overseers = familyMembers.filter(m => m.role === "Overseer Supreme" || String(m.role || "").toLowerCase().includes("parent")).map(m => m.name);
             const parentAssignee = overseers.length > 0 ? overseers[(dayStartOffset + choreAssignCounter) % overseers.length] : "Thom";
@@ -4378,31 +4497,92 @@ function App({
         dayStartOffset = (dayStartOffset + 1) % dayMembers.length;
       });
     });
+
     setMonthSchedule(updated);
+
     if (printableRangeIndex >= 0) {
       calendarWeeks.forEach(week => {
         if (isWeekSyncedToSheet(week)) {
           choreRows.forEach(cr => {
             var _a2;
+            const taskTitle = cr.task || ((_a2 = cr.row) == null ? void 0 : _a2[0]) || "";
+            // Skip Tidy Bedrooms and Laundry Tasks
+            if (isKidsChecklistChore(taskTitle)) {
+              return;
+            }
+            const pRow = findPrintableRow(taskTitle, cr.index_);
+            if (!pRow) return;
+
+            const choreFreq = getChoreFreq(cr);
+            const isStreamlined = isStreamlinedWeeklyTask(taskTitle, choreFreq);
+
             const rowUpdates = new Array(15).fill(void 0);
             let hasChanges = false;
+            let weeklyAssignedWho = "";
+
             for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
               const d = week[dayOffset];
               if (d && ((_a2 = updated[d.dateKey]) == null ? void 0 : _a2[cr.index_])) {
-                const whoCol = 1 + dayOffset * 2;
-                rowUpdates[whoCol] = updated[d.dateKey][cr.index_].who || "";
-                hasChanges = true;
+                const assignedWho = updated[d.dateKey][cr.index_].who || "";
+                if (assignedWho) {
+                  const whoCol = 1 + dayOffset * 2;
+                  rowUpdates[whoCol] = assignedWho;
+                  hasChanges = true;
+                  if (isStreamlined && !weeklyAssignedWho) {
+                    weeklyAssignedWho = assignedWho;
+                  }
+                }
               }
             }
+
+            if (isStreamlined && weeklyAssignedWho) {
+              rowUpdates[9] = `Who: ${weeklyAssignedWho}`;
+              hasChanges = true;
+
+              editsPatch[cr.index_] = {
+                ...(choreEdits[cr.index_] || {}),
+                who: weeklyAssignedWho,
+                rotationGroup: weeklyAssignedWho
+              };
+              if (taskTitle) {
+                editsPatch[taskTitle.toLowerCase().trim()] = {
+                  ...(choreEdits[taskTitle.toLowerCase().trim()] || {}),
+                  who: weeklyAssignedWho,
+                  rotationGroup: weeklyAssignedWho
+                };
+              }
+
+              // Propagate weekly assignment across all days of this week in updated
+              week.forEach(dObj => {
+                if (dObj && updated[dObj.dateKey]) {
+                  const prevEntry = updated[dObj.dateKey][cr.index_] || { done: false, kidsDone: {} };
+                  const updatedEntry = { ...prevEntry, who: weeklyAssignedWho };
+                  updated[dObj.dateKey][cr.index_] = updatedEntry;
+                  if (taskTitle) {
+                    updated[dObj.dateKey][taskTitle] = updatedEntry;
+                    updated[dObj.dateKey][taskTitle.toLowerCase().trim()] = updatedEntry;
+                  }
+                }
+              });
+            }
+
             if (hasChanges) {
-              updateItem(printableRangeIndex, cr.index_, rowUpdates);
+              updateItem(printableRangeIndex, pRow.index_, rowUpdates);
             }
           });
         }
       });
     }
+
+    if (Object.keys(editsPatch).length > 0) {
+      setChoreEdits(prev => ({
+        ...prev,
+        ...editsPatch
+      }));
+    }
+
     setShowAutoAssignModal(false);
-    setNotice(`Auto-assigned & populated Printable Weekly Schedule for ${MONTH_NAMES[selectedMonth]} ${selectedYear}!`);
+    setNotice(`Auto-assigned daily & weekly tasks for ${MONTH_NAMES[selectedMonth]} ${selectedYear}! (Tidy Bedrooms & Laundry remain individual checklists)`);
     setTimeout(() => setNotice(null), 4500);
   };
   const handleUpdatePetChoresToRoster = () => {
@@ -5068,10 +5248,15 @@ function App({
                 blankRow[2 + dIdx * 2] = false;
               }
               updateItem(printableRangeIndex, r.index_, blankRow);
+            } else if (r.index_ >= 13 && r.index_ <= 15) {
+              const blankWeekly = new Array(15).fill(void 0);
+              blankWeekly[9] = "Who: _____________________";
+              blankWeekly[14] = false;
+              updateItem(printableRangeIndex, r.index_, blankWeekly);
             }
           });
         }
-        setNotice("Cleared daily WHO/DONE assignments for a blank printable template!");
+        setNotice("Cleared daily & weekly WHO/DONE assignments for a blank printable template!");
         setTimeout(() => setNotice(null), 3000);
       }} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 transition shadow-2xs" title="Clear WHO/DONE cells to print a blank fill-in sheet"><span>Clear Names (Blank Sheet)</span></button><button onClick={handleAutoAssignCurrentWeek} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-amber-50 text-amber-900 border border-amber-300 rounded-lg hover:bg-amber-100 transition shadow-2xs" title="Automatically distribute chores across active members for current week"><Sparkles className="w-3.5 h-3.5 text-amber-600" /><span>Distribute Current Week</span></button><button onClick={() => window.print()} className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition shadow-2xs cursor-pointer" title="Print 1-page Letter Landscape schedule"><span>🖨️ Print Schedule</span></button></div></div><div className="overflow-x-auto"><table id="printable-schedule-table" className="w-full table-fixed border-collapse text-left text-xs" style={{ borderColor: "#C55A11" }}><colgroup><col style={{ width: "21%" }} />{DAY_STYLES.map(d => <React.Fragment key={`col-${d.name}`}><col style={{ width: "7.5%" }} /><col style={{ width: "3.78%" }} /></React.Fragment>)}</colgroup><thead><tr style={{ backgroundColor: "#002060", borderBottom: "3px solid #FFFFFF" }}><th colSpan={15} className="py-2 px-3 text-left text-xl font-bold text-white tracking-tight">Chore Schedule</th></tr><tr><th className="p-0 align-top bg-white" style={{ borderRight: "2px solid #FFFFFF" }}><div className="text-[10px] text-slate-500 font-semibold py-1.5 text-center uppercase tracking-wider bg-white">FOR THE WEEK OF:</div><div className="text-lg font-bold py-1.5 text-center text-white" style={{ backgroundColor: "#002060" }}>{(() => {
         const p = parseDateKey(activeSyncWeek || sheetStartDateStr);
@@ -5538,13 +5723,13 @@ function App({
                 backgroundColor: (kidMember == null ? void 0 : kidMember.color) || "#ec4899"
               }} /><span className="font-semibold truncate">{kidName}'s Room</span></div><span className="font-bold ml-1">{isKidDone ? "\u2713" : "\u25CB"}</span></button>;
             })}</div></div>}</div>;
-          })}</div><div className="p-3 bg-slate-50 border-t border-slate-200 flex justify-end"><button onClick={() => setActiveDayModal(null)} className="px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg hover:bg-slate-800 transition">Done</button></div></div></div>}{showAutoAssignModal && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden"><div className="p-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white flex items-center justify-between"><div className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-amber-200" /><h3 className="text-base font-bold">Auto-Assign Monthly Template</h3></div><button onClick={() => setShowAutoAssignModal(false)} className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-black/10 transition"><X className="w-5 h-5" /></button></div><div className="p-5 space-y-4 text-xs"><p className="text-slate-600">Distribute daily tasks evenly across household occupants so{" "}<strong>everyone has a chore on each day</strong>{" instead of one person handling all tasks, for"}{" "}<strong>{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</strong>.</p><div><label className="font-bold text-slate-800 block mb-1.5">Full-Time Occupants (Included in Daily Chore Distribution):</label><div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">{familyMembers.filter(m => m.type === "regular").map(m => <label key={m.id} className="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer"><input type="checkbox" defaultChecked id={`assignee-${m.id}`} className="rounded text-indigo-600 focus:ring-indigo-500" /><span className="w-3 h-3 rounded-full" style={{
+          })}</div><div className="p-3 bg-slate-50 border-t border-slate-200 flex justify-end"><button onClick={() => setActiveDayModal(null)} className="px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg hover:bg-slate-800 transition">Done</button></div></div></div>}{showAutoAssignModal && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden"><div className="p-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white flex items-center justify-between"><div className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-amber-200" /><h3 className="text-base font-bold">Auto-Assign Schedule</h3></div><button onClick={() => setShowAutoAssignModal(false)} className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-black/10 transition"><X className="w-5 h-5" /></button></div><div className="p-5 space-y-4 text-xs"><p className="text-slate-600">Distribute daily tasks and weekly routines (Clean Basement, Feeding Station Deep Clean, Curbside Waste & Recycling) evenly across household occupants for <strong>{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</strong>.<br /><span className="text-[11px] text-slate-500 italic mt-1 inline-block">Note: Tidy Bedrooms and Laundry Tasks remain individual minion checklists where each child does their own.</span></p><div><label className="font-bold text-slate-800 block mb-1.5">Full-Time Occupants (Included in Chore Distribution):</label><div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">{familyMembers.filter(m => m.type === "regular").map(m => <label key={m.id} className="flex items-center gap-2 p-2 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer"><input type="checkbox" defaultChecked id={`assignee-${m.id}`} className="rounded text-indigo-600 focus:ring-indigo-500" /><span className="w-3 h-3 rounded-full" style={{
             backgroundColor: m.color
           }} /><span className="font-medium text-slate-800">{m.name}</span>{m.role && <span className="text-[10px] text-slate-500">({m.role === "Overseer Supreme" ? "Parent" : "Kid"})</span>}</label>)}</div><div className="flex items-center justify-between mb-1.5"><label className="font-bold text-pink-800 block">Bi-Weekly Occupants (Active During Stay Weeks Only):</label><span className="text-[10px] font-semibold text-pink-600 bg-pink-50 border border-pink-200 px-1.5 py-0.5 rounded">{"Back Sunday, Oct. 18 @ 5:00 PM"}</span></div><div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">{familyMembers.filter(m => m.type === "biweekly").map(m => <label key={m.id} className="flex items-center gap-2 p-2 rounded-lg border border-pink-200 bg-pink-50/40 hover:bg-pink-50 cursor-pointer"><input type="checkbox" defaultChecked id={`assignee-${m.id}`} className="rounded text-pink-600 focus:ring-pink-500" /><span className="w-3 h-3 rounded-full" style={{
             backgroundColor: m.color
           }} /><span className="font-medium text-slate-800">{m.name}</span><span className="text-[10px] text-pink-700 bg-pink-100 px-1 rounded font-semibold">Bi-weekly only</span></label>)}</div><div className="p-3 bg-sky-50/60 border border-sky-200 rounded-xl mb-3"><div className="flex items-center justify-between mb-1"><span className="font-bold text-sky-900 text-xs">Casual Members (Manual Add-Ins Only):</span><span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-sky-100 text-sky-800 border border-sky-300">Excluded from Auto-Assign</span></div><div className="flex flex-wrap items-center gap-2 mt-1.5">{familyMembers.filter(m => m.type === "casual").map(m => <span key={m.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-white border border-sky-200 text-sky-900 shadow-2xs"><span className="w-2 h-2 rounded-full" style={{
             backgroundColor: m.color
-          }} /><span>{m.name}</span></span>)}</div><p className="text-[11px] text-sky-700 mt-2 leading-relaxed">{'Casual members are kept out of automated rotations and remain available in the "WHO" dropdowns for manual assignment anytime they are present.'}</p></div></div><div className="bg-pink-50 border border-pink-200 rounded-lg p-3 text-pink-900 flex items-start gap-2"><Info className="w-4 h-4 shrink-0 text-pink-600 mt-0.5" /><span><strong>Daily Distribution:</strong>{" Each day's tasks are handed out so all available family members (including Thom & Meghan as Overseer Supreme = Parent) share the daily chores evenly. "}{biWeeklyNamesString}{" are included during stay weeks and skipped on away weeks."}</span></div></div><div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2"><button onClick={() => setShowAutoAssignModal(false)} className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition">Cancel</button><button onClick={() => {
+          }} /><span>{m.name}</span></span>)}</div><p className="text-[11px] text-sky-700 mt-2 leading-relaxed">{'Casual members are kept out of automated rotations and remain available in the "WHO" dropdowns for manual assignment anytime they are present.'}</p></div></div><div className="bg-pink-50 border border-pink-200 rounded-lg p-3 text-pink-900 flex items-start gap-2"><Info className="w-4 h-4 shrink-0 text-pink-600 mt-0.5" /><span><strong>Daily & Weekly Distribution:</strong>{" Tasks are handed out so all available family members share the daily and weekly chores evenly. "}{biWeeklyNamesString}{" are included during stay weeks and skipped on away weeks. Tidy Bedrooms and Laundry Tasks remain individual checklists."}</span></div></div><div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-2"><button onClick={() => setShowAutoAssignModal(false)} className="px-3 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition">Cancel</button><button onClick={() => {
             const regSelected = familyMembers.filter(m => {
               var _a2;
               return m.type === "regular" && ((_a2 = document.getElementById(`assignee-${m.id}`)) == null ? void 0 : _a2.checked);
@@ -5554,7 +5739,7 @@ function App({
               return m.type === "biweekly" && ((_a2 = document.getElementById(`assignee-${m.id}`)) == null ? void 0 : _a2.checked);
             }).map(m => m.name);
             handleAutoAssignMonth(regSelected, bwSelected);
-          }} className="px-4 py-2 text-xs font-bold bg-amber-600 text-white rounded-lg hover:bg-amber-700 shadow-sm transition">Distribute Daily Chores</button></div></div></div>}{(showAddRemoveChoreModal || showNewChoreModal) && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"><div className="p-4 bg-slate-900 text-white flex items-center justify-between"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white"><ListTodo className="w-4 h-4" /></div><div><h3 className="text-base font-bold">Add / Edit Master Chores</h3><p className="text-[11px] text-slate-400">Add new tasks, edit existing chores, or remove from the schedule</p></div></div><button onClick={() => {
+          }} className="px-4 py-2 text-xs font-bold bg-amber-600 text-white rounded-lg hover:bg-amber-700 shadow-sm transition">Distribute Daily & Weekly Chores</button></div></div></div>}{(showAddRemoveChoreModal || showNewChoreModal) && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"><div className="p-4 bg-slate-900 text-white flex items-center justify-between"><div className="flex items-center gap-3"><div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white"><ListTodo className="w-4 h-4" /></div><div><h3 className="text-base font-bold">Add / Edit Master Chores</h3><p className="text-[11px] text-slate-400">Add new tasks, edit existing chores, or remove from the schedule</p></div></div><button onClick={() => {
             setShowAddRemoveChoreModal(false);
             setShowNewChoreModal(false);
             setSelectedRemoveIndices([]);

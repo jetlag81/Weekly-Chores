@@ -276,11 +276,11 @@
             false,
             "",
             false,
-            "",
+            "Who: Pick Up Mess; Dust Surfaces; Vacuum Floors & Litter Box Area",
             false,
             "Sydney",
             false,
-            "Meghan",
+            "Sydney",
             false
           ]
         },
@@ -296,7 +296,7 @@
             false,
             "",
             false,
-            "",
+            "Who: Wash & Sanitize Bowls; Vacuum Feeding Mat",
             false,
             "",
             false,
@@ -314,9 +314,9 @@
             false,
             "",
             false,
-            "Thom",
+            "Meghan",
             false,
-            "",
+            "Who: Roll recycling bin to curb Thursday evening for Friday pickup (Bi-Weekly)",
             false,
             "",
             false,
@@ -360,7 +360,7 @@
             false,
             "",
             false,
-            "Thom",
+            "Parents",
             false
           ]
         }
@@ -900,6 +900,6 @@
       ]
     }
   ],
-  "savedAt": "2026-11-10T04:04:21.990Z",
+  "savedAt": "2026-11-10T04:26:35.501Z",
   "version": "5.0"
 }

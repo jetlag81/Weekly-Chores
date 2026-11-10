@@ -1478,7 +1478,7 @@ function getInitialChoreFrequency(taskName) {
       dayOfWeek: 6
     };
   }
-  if (lower.includes("tidy bedroom") || lower.includes("clean basement") || lower.includes("laundry")) {
+  if (lower.includes("tidy bedroom") || lower.includes("personal spaces") || lower.includes("basement") || lower.includes("laundry")) {
     return {
       frequency: "weekly",
       dayOfWeek: 5
@@ -1593,6 +1593,17 @@ function generateWeekAssignments(startDateStr, choresList = DEFAULT_MASTER_CHORE
   const scheduleMap = {};
   const weekNum = Math.floor(parsedStart.day / 7);
 
+  const thu = weekDays[3] || weekDays[0];
+  const thuBwStatus = getBiWeeklyStatus(thu.year, thu.month, thu.day);
+  const areKidsInResidenceThisWeek = thuBwStatus.isFullStay || thuBwStatus.isDepartureDay;
+  const availableKidsThisWeek = areKidsInResidenceThisWeek ? allKids : fullTimeKids;
+  const availableWorkersThisWeek = areKidsInResidenceThisWeek ? allNonCasual : fullTimeRoster;
+
+  const basementWorker = availableKidsThisWeek[(weekNum + 1) % availableKidsThisWeek.length];
+  const deepCleanWorker = availableWorkersThisWeek[(weekNum + 2) % availableWorkersThisWeek.length];
+  const recyclingWorker = availableWorkersThisWeek[(weekNum + 3) % availableWorkersThisWeek.length];
+  const wasteWorker = availableWorkersThisWeek[(weekNum + 4) % availableWorkersThisWeek.length];
+
   weekDays.forEach((dayObj, dayIdx) => {
     const dKey = dayObj.dateKey;
     scheduleMap[dKey] = {};
@@ -1611,12 +1622,16 @@ function generateWeekAssignments(startDateStr, choresList = DEFAULT_MASTER_CHORE
       const isDeepClean = tLower.includes("deep clean") || tLower.includes("feeding station");
       const isRecycling = tLower.includes("recycling");
       const isWaste = tLower.includes("waste");
+      const isBasement = tLower.includes("basement");
+
       if (isDeepClean) {
         isScheduled = dayIdx === 6;
       } else if (isRecycling) {
         isScheduled = dayIdx === 3 && isCurbsideActiveOnDate("recycling", dayObj.year, dayObj.month, dayObj.day);
       } else if (isWaste) {
         isScheduled = dayIdx === 3 && isCurbsideActiveOnDate("waste", dayObj.year, dayObj.month, dayObj.day);
+      } else if (isBasement) {
+        isScheduled = dayIdx === 5;
       } else if (freq.frequency === "daily" || ((_b = cr.frequency) == null ? void 0 : _b.toLowerCase().includes("daily")) && !((_c = cr.frequency) == null ? void 0 : _c.toLowerCase().includes("once"))) {
         isScheduled = true;
       } else if (freq.frequency === "biweekly" || ((_d = cr.frequency) == null ? void 0 : _d.toLowerCase().includes("bi"))) {
@@ -1626,6 +1641,7 @@ function generateWeekAssignments(startDateStr, choresList = DEFAULT_MASTER_CHORE
         const scheduledDay = targetDayLower.includes("sunday") ? 6 : targetDayLower.includes("thursday") ? 3 : 5;
         isScheduled = dayIdx === scheduledDay;
       }
+
       let assignedWho = "";
       if (!isScheduled) {
         assignedWho = "";
@@ -1636,14 +1652,14 @@ function generateWeekAssignments(startDateStr, choresList = DEFAULT_MASTER_CHORE
         assignedWho = getSundaySupperAssignee(dayObj.year, dayObj.month, dayObj.day, parents);
       } else if (tLower.includes("sign-off") || tLower.includes("inspection")) {
         assignedWho = parents[dayIdx % parents.length];
-      } else if (tLower.includes("basement")) {
-        assignedWho = kids[(weekNum + 1) % kids.length];
+      } else if (isBasement) {
+        assignedWho = basementWorker;
       } else if (isDeepClean) {
-        assignedWho = dailyRotation[(weekNum + 2) % dailyRotation.length];
-      } else if (tLower.includes("recycling")) {
-        assignedWho = dailyRotation[(weekNum + 3) % dailyRotation.length];
-      } else if (tLower.includes("waste")) {
-        assignedWho = dailyRotation[(weekNum + 4) % dailyRotation.length];
+        assignedWho = deepCleanWorker;
+      } else if (isRecycling) {
+        assignedWho = recyclingWorker;
+      } else if (isWaste) {
+        assignedWho = wasteWorker;
       } else {
         const groupLower = String(cr.rotationGroup || "").toLowerCase();
         if (groupLower.includes("parent")) {
@@ -1668,6 +1684,10 @@ function generateWeekAssignments(startDateStr, choresList = DEFAULT_MASTER_CHORE
       if (taskTitle) {
         scheduleMap[dKey][taskTitle] = entry;
         scheduleMap[dKey][tLower] = entry;
+        const cKey = getChoreCanonicalKey(taskTitle);
+        if (cKey) {
+          scheduleMap[dKey][cKey] = entry;
+        }
       }
     });
   });
@@ -2833,6 +2853,12 @@ function App({
         dayOfWeek: 6
       };
     }
+    if (titleLower.includes("basement")) {
+      return {
+        frequency: "weekly",
+        dayOfWeek: 5
+      };
+    }
     const cKey = getChoreCanonicalKey(title);
     const hubMatch = hubMasterChores.find(h => (cKey && getChoreCanonicalKey(h.task) === cKey) || normalizeTaskName(h.task) === normalizeTaskName(title) || h.task.toLowerCase() === title.toLowerCase());
     if (hubMatch) {
@@ -3300,50 +3326,86 @@ function App({
   const getSingleWeeklyStatus = (choreIndex, taskTitle) => {
     let who = "";
     let done = false;
-    const cr = choreRows.find(r => {
-      var _a2;
-      return r.index_ === choreIndex || taskTitle && String(r.task || ((_a2 = r.row) == null ? void 0 : _a2[0]) || "").toLowerCase().trim() === String(taskTitle).toLowerCase().trim();
-    });
-    if (cr && cr.row) {
-      const isValidWhoString = val => {
-        if (!val) return false;
-        const s = String(val).trim();
-        if (!s || s.startsWith("-") || s.startsWith("(") || s.startsWith("SG:") || s.startsWith("Done:") || s.startsWith("Parent Initials") || s.startsWith("___") || /^Who:\s*_+$/i.test(s)) {
-          return false;
-        }
-        return true;
-      };
-      const tLower = String(taskTitle || cr.task || "").toLowerCase();
-      if (tLower.includes("basement") || tLower.includes("feeding station") || tLower.includes("deep clean") || tLower.includes("sign-off") || tLower.includes("curbside") || tLower.includes("recycling") || tLower.includes("waste")) {
-        if (cr.row[14] === true || String(cr.row[14]).toLowerCase() === "true") done = true;
-        const col9Text = String(cr.row[9] || "").replace(/^Who:\s*/i, "").trim();
-        const col1Text = String(cr.row[1] || "").trim();
-        const candidateText = isValidWhoString(col9Text) ? col9Text : isValidWhoString(col1Text) ? col1Text : "";
-        if (candidateText) {
-          const matchWho = familyMembers.find(m => candidateText.toLowerCase().includes(m.name.toLowerCase()));
-          if (matchWho) who = matchWho.name;
-          else if (candidateText.toLowerCase().includes("parents")) who = "Parents";
-          else who = candidateText;
-        }
+    const tLower = String(taskTitle || "").toLowerCase().trim();
+    const cKey = getChoreCanonicalKey(taskTitle);
+
+    const isMemberOrSpecialGroup = (val) => {
+      if (!val) return false;
+      const s = String(val).replace(/^Who:\s*/i, "").replace(/^Assigned:\s*/i, "").trim();
+      if (!s || s.startsWith("-") || s.startsWith("(") || s.startsWith("SG:") || s.startsWith("Done:") || s.startsWith("Parent Initials") || s.startsWith("___") || /^_+$/.test(s)) {
+        return false;
       }
-      for (let dayIdx = 6; dayIdx >= 0; dayIdx--) {
-        const w = cr.row[1 + dayIdx * 2];
-        const d = cr.row[2 + dayIdx * 2];
-        if (isValidWhoString(w) && !who) who = String(w).replace(/^Who:\s*/i, "").trim();
-        if ((d === true || String(d).toLowerCase() === "true") && !done) done = true;
-      }
+      const sLow = s.toLowerCase();
+      if (familyMembers.some(m => m.name.toLowerCase() === sLow)) return true;
+      if (sLow === "parents" || sLow === "all kids" || sLow === "all non-casual" || sLow === "each child" || sLow.includes("meghan") || sLow.includes("thom")) return true;
+      return false;
+    };
+
+    const getCanonicalMemberName = (val) => {
+      if (!val) return "";
+      const s = String(val).replace(/^Who:\s*/i, "").replace(/^Assigned:\s*/i, "").trim();
+      const match = familyMembers.find(m => m.name.toLowerCase() === s.toLowerCase());
+      if (match) return match.name;
+      if (s.toLowerCase().includes("parents")) return "Parents";
+      if (s.toLowerCase().includes("all kids")) return "All Kids";
+      if (s.toLowerCase().includes("all non-casual")) return "All Non-Casual";
+      return s;
+    };
+
+    // 1. Check choreEdits first (immediate state / patch)
+    const edit = choreEdits[choreIndex] || (tLower ? choreEdits[tLower] : null) || (cKey ? choreEdits[cKey] : null);
+    if (edit && edit.who && isMemberOrSpecialGroup(edit.who)) {
+      who = getCanonicalMemberName(edit.who);
     }
-    if (activeWeekDays && activeWeekDays.length > 0) {
+    if (edit && edit.done !== undefined) {
+      done = !!edit.done;
+    }
+
+    // 2. Check activeWeekDays in monthSchedule (populated by Auto-Assign)
+    if (!who && activeWeekDays && activeWeekDays.length > 0) {
       for (let i = activeWeekDays.length - 1; i >= 0; i--) {
         const d = activeWeekDays[i];
         const s = getChoreStatus(d.dateKey, choreIndex, taskTitle);
-        if (s.who && !who) who = s.who;
+        if (s.who && isMemberOrSpecialGroup(s.who)) {
+          who = getCanonicalMemberName(s.who);
+          break;
+        }
         if (s.done) done = true;
       }
     }
+
+    // 3. Check underlying sheet row (Sheet 0 column 9 = "Who: Name" or designated day columns)
+    const cr = choreRows.find(r => {
+      var _a2;
+      return r.index_ === choreIndex || taskTitle && String(r.task || ((_a2 = r.row) == null ? void 0 : _a2[0]) || "").toLowerCase().trim() === tLower;
+    });
+    if (cr && cr.row) {
+      if (cr.row[14] === true || String(cr.row[14]).toLowerCase() === "true") {
+        done = true;
+      }
+      if (!who) {
+        // Col 9 is the designated Who cell for weekly tasks in Sheet 0
+        const col9Text = String(cr.row[9] || "").replace(/^Who:\s*/i, "").trim();
+        if (isMemberOrSpecialGroup(col9Text)) {
+          who = getCanonicalMemberName(col9Text);
+        } else {
+          // Check day columns [13, 11, 7, 5, 3] — NEVER column 1 which is Description!
+          for (const colIdx of [13, 11, 7, 5, 3]) {
+            const val = String(cr.row[colIdx] || "").replace(/^Who:\s*/i, "").trim();
+            if (isMemberOrSpecialGroup(val)) {
+              who = getCanonicalMemberName(val);
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    // 4. Bi-weekly custody check: if Cadence or Mason are assigned on an off-week, clear it
     if (!isBiWeeklyHereThisWeek && (who === "Cadence" || who === "Mason")) {
       who = "";
     }
+
     return {
       who,
       done
@@ -4370,6 +4432,9 @@ function App({
           if (tLow.includes("waste")) {
             return dayObj.dayOfWeekIndex === 3 && isCurbsideActiveOnDate("waste", dayObj.year, dayObj.month, dayObj.day);
           }
+          if (tLow.includes("basement")) {
+            return dayObj.dayOfWeekIndex === 5;
+          }
           if (freq.frequency === "biweekly") {
             return dayObj.dayOfWeekIndex === freq.dayOfWeek && isCurbsideActiveOnDate(taskT, dayObj.year, dayObj.month, dayObj.day);
           }
@@ -4748,6 +4813,8 @@ function App({
             isScheduledDay = day.dayOfWeekIndex === 3 && isCurbsideActiveOnDate("recycling", day.year, day.month, day.day);
           } else if (tLow.includes("waste")) {
             isScheduledDay = day.dayOfWeekIndex === 3 && isCurbsideActiveOnDate("waste", day.year, day.month, day.day);
+          } else if (tLow.includes("basement")) {
+            isScheduledDay = day.dayOfWeekIndex === 5;
           } else if (freq.frequency === "daily") {
             isScheduledDay = true;
           } else if (freq.frequency === "weekly") {
@@ -5021,6 +5088,10 @@ function App({
               const isScheduledDay = dayIdx === 3 && isCurbsideActiveOnDate("waste", dayObj.year, dayObj.month, dayObj.day);
               const hasActivity = ((_k = (_j = monthSchedule[dateKey]) == null ? void 0 : _j[cr.index_]) == null ? void 0 : _k.done) || ((_m = (_l = monthSchedule[dateKey]) == null ? void 0 : _l[cr.index_]) == null ? void 0 : _m.who);
               if (!isScheduledDay && !hasActivity) return false;
+            } else if (tLow.includes("basement")) {
+              const isScheduledDay = dayIdx === 5;
+              const hasActivity = ((_o = (_n = monthSchedule[dateKey]) == null ? void 0 : _n[cr.index_]) == null ? void 0 : _o.done) || ((_q = (_p = monthSchedule[dateKey]) == null ? void 0 : _q[cr.index_]) == null ? void 0 : _q.who);
+              if (!isScheduledDay && !hasActivity) return false;
             } else if (freq.frequency === "weekly") {
               const isScheduledDay = dayIdx === freq.dayOfWeek;
               const hasActivity = ((_o = (_n = monthSchedule[dateKey]) == null ? void 0 : _n[cr.index_]) == null ? void 0 : _o.done) || ((_q = (_p = monthSchedule[dateKey]) == null ? void 0 : _p[cr.index_]) == null ? void 0 : _q.who);
@@ -5090,142 +5161,6 @@ function App({
               }} /><span>{kidName}</span>{isKidDone ? "\u2713" : ""}</button>;
             })}</div>}</div>;
           })}{dayChores.length > 3 && <button onClick={() => setActiveDayModal(dateKey)} className="w-full text-center text-[10px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline pt-0.5">+{dayChores.length - 3}{" more"}</button>}{dayChores.length === 0 && <div className="text-[10px] text-slate-400 italic py-2 text-center">No chores</div>}</div></div><button onClick={() => setActiveDayModal(dateKey)} className="mt-2 w-full py-1 text-[10px] text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded text-center font-semibold transition">Manage Day</button></div>;
-          return (
-            <div
-              key={dateKey}
-              className={`min-h-[160px] p-2 flex flex-col justify-between transition-colors ${isCurrentMonth ? "bg-white" : "bg-slate-50/80 border-dashed border-slate-200"
-                }`}
-            >
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span
-                    className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${isCurrentMonth ? "bg-slate-100 text-slate-800" : "bg-slate-200/70 text-slate-700"
-                      }`}
-                  >
-                    {day}
-                  </span>
-                  {dayChores.length > 0 && (
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
-                      {dayChores.length} chores
-                    </span>
-                  )}
-                </div>
-                {(() => {
-                  const status = getBiWeeklyStatus(dayObj.year, dayObj.month, dayObj.day);
-                  if (status.isArrivalDay) {
-                    return (
-                      <div
-                        className="text-[9px] font-semibold text-pink-700 bg-pink-50 border border-pink-200 rounded px-1.5 py-0.5 mb-1.5 flex items-center gap-1 leading-tight shadow-2xs"
-                        title="Cadence & Mason arrive today at 5:00 PM for their bi-weekly stay"
-                      >
-                        <span>{"\u{1F3E0} Cadence & Mason arrive 5 PM"}</span>
-                      </div>
-                    );
-                  } else if (status.isDepartureDay) {
-                    return (
-                      <div
-                        className="text-[9px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mb-1.5 flex items-center gap-1 leading-tight shadow-2xs"
-                        title="Cadence & Mason depart today at 5:00 PM"
-                      >
-                        <span>{"\u{1F44B} Cadence & Mason leave 5 PM"}</span>
-                      </div>
-                    );
-                  }
-                  return null;
-                })()}
-                <div className="space-y-1">
-                  {dayChores.map(cr => {
-                    var _a2, _b2;
-                    const status = getChoreStatus(dateKey, cr.index_, cr.task || cr.row[0]);
-                    const assignee = getMember(status.who);
-                    const freq = getChoreFreq(cr);
-                    const rawTaskTitle = cr.task || cr.row[0] || "";
-                    const shortTitle = String(rawTaskTitle).split(/\r?\n/)[0].trim();
-                    return (
-                      <div
-                        key={cr.index_}
-                        className={`text-[11px] p-1 rounded-md border flex flex-col gap-1 ${freq.frequency === "weekly"
-                          ? "bg-purple-50/60 border-purple-200 text-purple-950 shadow-2xs"
-                          : "bg-white border-slate-200 text-slate-800 shadow-2xs"
-                          }`}
-                      >
-                        <div className="flex items-center justify-between gap-1 w-full">
-                          <span className="truncate text-[10px] font-medium leading-tight flex-1 min-w-0" title={rawTaskTitle}>
-                            {shortTitle}
-                          </span>
-                          <div className="flex items-center gap-1 shrink-0">
-                            {freq.frequency === "weekly" && (
-                              <span
-                                className="text-[8px] font-bold px-1 py-0.2 rounded bg-purple-100 text-purple-700 uppercase"
-                                title="Once-a-week task"
-                              >
-                                1x/wk
-                              </span>
-                            )}
-                            {getSpecificKidForChore(rawTaskTitle) ? (
-                              <span
-                                className="shrink-0 text-[8.5px] px-1.5 py-0.2 rounded font-bold"
-                                style={{
-                                  backgroundColor:
-                                    ((_a2 = getMember(getSpecificKidForChore(rawTaskTitle))) == null ? void 0 : _a2.bg) || "#FCE7F3",
-                                  color:
-                                    ((_b2 = getMember(getSpecificKidForChore(rawTaskTitle))) == null ? void 0 : _b2.text) || "#BE185D"
-                                }}
-                              >
-                                {getSpecificKidForChore(rawTaskTitle)}
-                              </span>
-                            ) : isBedroomChore(rawTaskTitle) ? (
-                              <span
-                                className="shrink-0 text-[8.5px] px-1.5 py-0.2 rounded font-bold bg-pink-100 text-pink-700"
-                                title="Each child cleans own bedroom"
-                              >
-                                Own Rooms
-                              </span>
-                            ) : status.who ? (
-                              <span
-                                className="shrink-0 text-[9px] px-1.5 py-0.2 rounded font-semibold"
-                                style={{
-                                  backgroundColor: (assignee == null ? void 0 : assignee.bg) || "#F1F5F9",
-                                  color: (assignee == null ? void 0 : assignee.text) || "#475569"
-                                }}
-                                title={String(status.who)}
-                              >
-                                {String(status.who)}
-                              </span>
-                            ) : (
-                              <span className="shrink-0 text-[8.5px] text-slate-400 italic px-1">Unassigned</span>
-                            )}
-                          </div>
-                        </div>
-                        {isBedroomChore(rawTaskTitle) && !getSpecificKidForChore(rawTaskTitle) && (
-                          <div className="pt-0.5 border-t border-purple-200/60 flex flex-wrap gap-1">
-                            {getKidsPresentOnDate(dateKey).map(kidName => {
-                              const kidMember = getMember(kidName);
-                              return (
-                                <span
-                                  key={kidName}
-                                  className="text-[8.5px] px-1 py-0.5 rounded font-semibold flex items-center gap-0.5 border bg-white/90 text-slate-700 border-slate-200"
-                                >
-                                  <span
-                                    className="w-1.5 h-1.5 rounded-full inline-block"
-                                    style={{ backgroundColor: (kidMember == null ? void 0 : kidMember.color) || "#888" }}
-                                  />
-                                  <span>{kidName}</span>
-                                </span>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                  {dayChores.length === 0 && (
-                    <div className="text-[10px] text-slate-400 italic py-2 text-center">No chores</div>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
         })}</div></div>;
       })}</div></div>}{activeTab === "matrix" && <div className="space-y-4"><div id="printable-schedule-card" className="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden"><div className="no-print p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><h2 className="text-base font-bold text-slate-900">Weekly Schedule</h2><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-pink-50 text-pink-700 border border-pink-200 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />{"Active Week: "}{activeSyncWeek}{" \u2022 "}{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || "Cadence & Mason arrive Sun Oct 18 @ 5 PM"}</span></div><p className="text-xs text-slate-500 mt-0.5">{"Single-page Letter Landscape Layout - Printed.pdf"}</p></div><div className="flex flex-wrap items-center gap-2"><div className="relative"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" /><input type="text" placeholder="Search schedule chores..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div><button onClick={() => {
         const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr) || { year: 2026, month: 9, day: 19 };

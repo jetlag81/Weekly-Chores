@@ -42,7 +42,7 @@ interface MinionDashboardProps {
   onExitMinionMode: () => void;
   formatDateKey: (year: number, month: number, day: number) => string;
   activeSyncWeek?: string;
-  getChoreStatus?: (dateKey: string, choreIndex: number, taskTitle?: string) => { who: string; done: boolean; kidsDone?: Record<string, boolean> };
+  getChoreStatus?: (dateKey: string, choreIndex: number, taskTitle?: string) => { who: string; done: boolean; kidsDone?: Record<string, boolean>; hasExplicitRecord?: boolean };
 }
 
 export const MinionDashboard: React.FC<MinionDashboardProps> = ({
@@ -136,7 +136,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
       // Safe multi-key lookup: NEVER use idx!
       const statusFromProp = getChoreStatus ? getChoreStatus(activeDateKey, chore.index_, chore.task) : null;
-      const choreStatus = (statusFromProp && (statusFromProp.who || statusFromProp.done))
+      const choreStatus = (statusFromProp && (statusFromProp.hasExplicitRecord || statusFromProp.who || statusFromProp.done))
         ? statusFromProp
         : (cKey ? dayChores[cKey] : null) ||
           dayChores[chore.index_] ||

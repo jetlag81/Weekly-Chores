@@ -1849,6 +1849,15 @@ function App({
                 if (msg.taskTitle) nextEdits[msg.taskTitle.toLowerCase().trim()] = updatedObj;
                 return nextEdits;
               });
+
+              // Keep printableSheet in sync with incoming broadcasts so extracted sheet data stays accurate
+              const pRow = findPrintableRow(msg.taskTitle, msg.choreIndex);
+              if (printableRangeIndex >= 0 && pRow) {
+                const updateArray = new Array(15).fill(void 0);
+                if ("who" in msg.patch) updateArray[whoCol] = msg.patch.who;
+                if ("done" in msg.patch) updateArray[doneCol] = msg.patch.done;
+                updateItem(printableRangeIndex, pRow.index_, updateArray);
+              }
             }
           }
         }
@@ -3204,12 +3213,15 @@ function App({
         ...prev
       };
       Object.keys(fromSheet).forEach(dKey => {
-        next[dKey] = {
-          ...{
-            ...(next[dKey] || {})
-          },
-          ...fromSheet[dKey]
-        };
+        const curDay = prev[dKey] || {};
+        // fromSheet provides the sheet baseline; preserve curDay modifications so live user edits are never wiped!
+        const mergedDay = { ...fromSheet[dKey] };
+        Object.keys(curDay).forEach(k => {
+          if (curDay[k] !== undefined && curDay[k] !== null) {
+            mergedDay[k] = curDay[k];
+          }
+        });
+        next[dKey] = mergedDay;
       });
       return next;
     });
@@ -3274,28 +3286,61 @@ function App({
   };
   const getChoreStatus = (dateKey, choreIndex, choreTitle) => {
     const dayData = monthSchedule[dateKey];
-    if (!dayData) return {
-      who: "",
-      done: false,
-      kidsDone: {}
-    };
     const cKey = choreTitle ? getChoreCanonicalKey(choreTitle) : "";
     const norm = choreTitle ? normalizeTaskName(choreTitle) : "";
-    const s = (cKey ? dayData[cKey] : null) ||
+    const s = dayData ? (
+      (cKey ? dayData[cKey] : null) ||
       dayData[choreIndex] ||
       (choreTitle ? dayData[choreTitle] : null) ||
       (choreTitle ? dayData[choreTitle.toLowerCase()] : null) ||
       (choreTitle ? dayData[choreTitle.toLowerCase().trim()] : null) ||
-      (norm ? dayData[norm] : null);
-    if (!s) return {
-      who: "",
-      done: false,
-      kidsDone: {}
-    };
+      (norm ? dayData[norm] : null)
+    ) : null;
+
+    if (s && (s.done !== undefined || s.who !== undefined || (s.kidsDone && Object.keys(s.kidsDone).length > 0))) {
+      return {
+        who: s.who !== void 0 && s.who !== null ? String(s.who) : "",
+        done: s.done !== undefined ? !!s.done : undefined,
+        kidsDone: s.kidsDone || {},
+        hasExplicitRecord: true
+      };
+    }
+
+    // Fallback: resolve from sheet row or choreEdits for this date column
+    let fallbackWho = "";
+    let fallbackDone = undefined;
+    let foundInSheet = false;
+    const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr);
+    const parsedTarget = parseDateKey(dateKey);
+    if (parsedStart && parsedTarget) {
+      const startDateObj = new Date(parsedStart.year, parsedStart.month, parsedStart.day, 12, 0, 0);
+      const targetDateObj = new Date(parsedTarget.year, parsedTarget.month, parsedTarget.day, 12, 0, 0);
+      const diffDays = Math.round((targetDateObj.getTime() - startDateObj.getTime()) / (1e3 * 60 * 60 * 24));
+      if (diffDays >= 0 && diffDays < 7) {
+        const whoCol = 1 + diffDays * 2;
+        const doneCol = 2 + diffDays * 2;
+        const edit = choreEdits[choreIndex] || (cKey ? choreEdits[cKey] : null) || (norm ? choreEdits[norm] : null);
+        const cr = choreRows.find(r => r.index_ === choreIndex || (cKey && getChoreCanonicalKey(r.task) === cKey) || (norm && normalizeTaskName(r.task) === norm));
+        const row = (edit == null ? void 0 : edit.row) || (cr == null ? void 0 : cr.row);
+        if (row) {
+          foundInSheet = true;
+          if (row[whoCol] !== undefined && row[whoCol] !== null) {
+            const rawW = String(row[whoCol]).trim();
+            const isDesc = rawW.startsWith("-") || rawW.startsWith("(") || rawW.startsWith("SG:") || rawW.startsWith("Done:") || rawW.startsWith("Parent Initials") || rawW.startsWith("___") || /^Who:\s*_+$/i.test(rawW);
+            fallbackWho = isDesc ? "" : rawW.replace(/^Who:\s*/i, "").trim();
+          }
+          if (row[doneCol] !== undefined && row[doneCol] !== null) {
+            fallbackDone = row[doneCol] === true || String(row[doneCol]).toLowerCase() === "true";
+          }
+        }
+      }
+    }
+
     return {
-      who: s.who !== void 0 && s.who !== null ? String(s.who) : "",
-      done: !!s.done,
-      kidsDone: s.kidsDone || {}
+      who: fallbackWho,
+      done: fallbackDone !== undefined ? fallbackDone : false,
+      kidsDone: {},
+      hasExplicitRecord: foundInSheet
     };
   };
   const getKidsPresentOnDate = dateKey => {
@@ -5663,11 +5708,11 @@ function App({
               : curRowWho !== void 0 && curRowWho !== null
                 ? String(curRowWho).trim()
                 : "";
-            const isDone = (cellStatus && cellStatus.done !== undefined)
+            const isDone = (cellStatus && cellStatus.hasExplicitRecord)
               ? !!cellStatus.done
               : curRowDone !== void 0 && curRowDone !== null
                 ? curRowDone === true || String(curRowDone).toLowerCase() === "true"
-                : false;
+                : (cellStatus ? !!cellStatus.done : false);
             return <React.Fragment key={d.name}><td className="p-1 text-center align-middle bg-white" style={{ borderRight: "1px solid #94A3B8" }}><select value={whoVal} onChange={e => {
               handleUpdatePrintableCell(cr.index_, dayIdx, "who", e.target.value, taskTitle);
             }} className="w-full text-[11px] py-1 px-0.5 bg-transparent font-semibold text-slate-900 text-center focus:outline-none cursor-pointer"><option value=""></option><optgroup label="Full-Time Occupants">{familyMembers.filter(m => m.type === "regular").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Bi-Weekly Occupants">{familyMembers.filter(m => m.type === "biweekly").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Casual Assignees">{familyMembers.filter(m => m.type === "casual").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Special Groups"><option value="Non-Casual">Non-Casual</option><option value="All Non-Casual">All Non-Casual</option><option value="Each Child">Each Child</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option></optgroup>{whoVal && !familyMembers.some(m => m.name === whoVal) && !["Non-Casual", "All Non-Casual", "Each Child", "All Kids", "Parents"].includes(whoVal) && <option value={whoVal}>{whoVal}</option>}</select></td><td className="p-1 text-center align-middle bg-white" style={{ borderRight: dayIdx < 6 ? "1.5px solid #475569" : "1px solid #C55A11" }}><button type="button" onClick={() => {

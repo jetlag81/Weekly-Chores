@@ -111,10 +111,21 @@ export function getStoredDeviceSession(): DeviceSession {
   if (typeof window === "undefined") {
     return { role: "admin", householdId: "household_family_hub", deviceId: "node_device" };
   }
+  // Check sessionStorage first to isolate tab/window roles during testing
+  const sessionRaw = sessionStorage.getItem(STORAGE_KEY_DEVICE_SESSION);
+  if (sessionRaw) {
+    try {
+      return JSON.parse(sessionRaw);
+    } catch {
+      // fallback
+    }
+  }
   const raw = localStorage.getItem(STORAGE_KEY_DEVICE_SESSION);
   if (raw) {
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      sessionStorage.setItem(STORAGE_KEY_DEVICE_SESSION, JSON.stringify(parsed));
+      return parsed;
     } catch {
       // fallback
     }
@@ -126,14 +137,18 @@ export function getStoredDeviceSession(): DeviceSession {
     deviceId: newDeviceId,
     parentPin: "1234"
   };
+  sessionStorage.setItem(STORAGE_KEY_DEVICE_SESSION, JSON.stringify(defaultSession));
   localStorage.setItem(STORAGE_KEY_DEVICE_SESSION, JSON.stringify(defaultSession));
   return defaultSession;
 }
 
 export function saveDeviceSession(session: DeviceSession) {
   if (typeof window === "undefined") return;
+  // Save to both sessionStorage (tab-specific) and localStorage (device persistence)
+  sessionStorage.setItem(STORAGE_KEY_DEVICE_SESSION, JSON.stringify(session));
   localStorage.setItem(STORAGE_KEY_DEVICE_SESSION, JSON.stringify(session));
-  broadcastLocalUpdate({ type: "SESSION_CHANGED", session });
+  // Note: We intentionally do NOT broadcast SESSION_CHANGED to other windows,
+  // allowing side-by-side Parent Hub & Kid Minion testing without window conflicts!
 }
 
 export function getStoredFirebaseConfig(): FirebaseConfig | null {
@@ -312,18 +327,7 @@ export async function createKidInvite(kidName: string, householdId: string): Pro
     claimed: false
   };
 
-  // 1. Try Firebase Firestore
-  const { db } = initFirebase();
-  if (db) {
-    try {
-      const ref = doc(db, "households", householdId, "invites", code);
-      await setDoc(ref, invite);
-    } catch (e) {
-      console.warn("Firestore invite save fallback to local:", e);
-    }
-  }
-
-  // 2. Always persist to localStorage for instant local pairing
+  // 1. ALWAYS persist to localStorage FIRST for instant local pairing (0ms)
   try {
     const raw = localStorage.getItem(STORAGE_KEY_LOCAL_INVITES);
     const invites: HouseholdInvite[] = raw ? JSON.parse(raw) : [];
@@ -332,6 +336,16 @@ export async function createKidInvite(kidName: string, householdId: string): Pro
     broadcastLocalUpdate({ type: "INVITE_CREATED", invite });
   } catch (err) {
     console.error("Local invite save error:", err);
+  }
+
+  // 2. Background non-blocking sync to Firebase Firestore (with 2.5s timeout)
+  const { db } = initFirebase();
+  if (db) {
+    const ref = doc(db, "households", householdId, "invites", code);
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2500));
+    Promise.race([setDoc(ref, invite), timeoutPromise]).catch(e => {
+      console.warn("Firestore invite background sync skipped or timed out:", e);
+    });
   }
 
   return invite;
@@ -343,44 +357,47 @@ export async function redeemKidInvite(
 ): Promise<{ success: boolean; invite?: HouseholdInvite; error?: string }> {
   const cleanCode = code.trim().toUpperCase();
 
-  // 1. Check Firestore
+  // 1. Check local invites FIRST (instant, zero network latency)
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_LOCAL_INVITES);
+    const invites: HouseholdInvite[] = raw ? JSON.parse(raw) : [];
+    const found = invites.find(i => i.code.toUpperCase() === cleanCode);
+    if (found) {
+      if (found.claimed) {
+        return { success: false, error: "This invite code has already been claimed." };
+      }
+      found.claimed = true;
+      found.claimedByDeviceId = deviceId;
+      localStorage.setItem(STORAGE_KEY_LOCAL_INVITES, JSON.stringify(invites));
+      broadcastLocalUpdate({ type: "INVITE_CLAIMED", code: cleanCode, deviceId });
+      return { success: true, invite: found };
+    }
+  } catch (err) {
+    console.warn("Local invite lookup warning:", err);
+  }
+
+  // 2. Check Firestore with a 3-second timeout if not in local cache
   const { db } = initFirebase();
   if (db) {
     try {
       const session = getStoredDeviceSession();
       const ref = doc(db, "households", session.householdId, "invites", cleanCode);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
+      const timeoutPromise = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000));
+      const snap = await Promise.race([getDoc(ref), timeoutPromise]);
+      if (snap && snap.exists()) {
         const inv = snap.data() as HouseholdInvite;
         if (inv.claimed) {
           return { success: false, error: "This invite code has already been claimed." };
         }
-        await updateDoc(ref, { claimed: true, claimedByDeviceId: deviceId });
+        updateDoc(ref, { claimed: true, claimedByDeviceId: deviceId }).catch(() => {});
         return { success: true, invite: inv };
       }
     } catch (e) {
-      console.warn("Firestore invite redeem fallback to local:", e);
+      console.warn("Firestore invite redeem fallback/timeout:", e);
     }
   }
 
-  // 2. Check local invites
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_LOCAL_INVITES);
-    const invites: HouseholdInvite[] = raw ? JSON.parse(raw) : [];
-    const found = invites.find(i => i.code.toUpperCase() === cleanCode);
-    if (!found) {
-      return { success: false, error: "Invalid invite code. Please check with your parents for a valid code." };
-    }
-    if (found.claimed) {
-      return { success: false, error: "This invite code has already been claimed." };
-    }
-    found.claimed = true;
-    found.claimedByDeviceId = deviceId;
-    localStorage.setItem(STORAGE_KEY_LOCAL_INVITES, JSON.stringify(invites));
-    return { success: true, invite: found };
-  } catch {
-    return { success: false, error: "Unable to process invite code." };
-  }
+  return { success: false, error: "Invalid invite code. Please check with your parents for a valid code." };
 }
 
 export function broadcastLocalUpdate(data: unknown) {
@@ -391,6 +408,80 @@ export function broadcastLocalUpdate(data: unknown) {
       // Ignore broadcast errors
     }
   }
+}
+
+// Inspect all locally generated or claimed invites
+export function getLocalInvites(): HouseholdInvite[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_LOCAL_INVITES);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+// Unpair a single kid and remove their pairing tokens/invites
+export function unpairKid(kidName: string) {
+  if (typeof window === "undefined") return;
+  const cleanName = kidName.trim().toLowerCase();
+
+  // 1. Remove from local invites list
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_LOCAL_INVITES);
+    if (raw) {
+      let invites: HouseholdInvite[] = JSON.parse(raw);
+      invites = invites.filter(i => i.kidName.trim().toLowerCase() !== cleanName);
+      localStorage.setItem(STORAGE_KEY_LOCAL_INVITES, JSON.stringify(invites));
+    }
+  } catch (err) {
+    console.error("Failed to unpair kid locally:", err);
+  }
+
+  // 2. If the current device session belongs to this kid, reset it back to admin
+  try {
+    const currentSession = getStoredDeviceSession();
+    if (currentSession.role === "kid" && currentSession.kidName?.trim().toLowerCase() === cleanName) {
+      saveDeviceSession({
+        role: "admin",
+        householdId: currentSession.householdId || "household_family_hub",
+        deviceId: currentSession.deviceId,
+        parentPin: "1234"
+      });
+    }
+  } catch {}
+
+  // 3. Notify all listeners
+  broadcastLocalUpdate({ type: "KID_UNPAIRED", kidName });
+}
+
+// Reset all device pairings across the household
+export function resetAllDevicePairings() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(STORAGE_KEY_LOCAL_INVITES);
+  const session = getStoredDeviceSession();
+  saveDeviceSession({
+    role: "admin",
+    householdId: "household_family_hub",
+    deviceId: session.deviceId,
+    parentPin: "1234"
+  });
+  broadcastLocalUpdate({ type: "ALL_DEVICES_RESET" });
+}
+
+// Reset all Firebase credentials and revert to pure local mode
+export function clearAllFirebaseData() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(STORAGE_KEY_FIREBASE_CONFIG);
+  localStorage.removeItem(STORAGE_KEY_LOCAL_INVITES);
+  if (firebaseApp) {
+    try {
+      deleteApp(firebaseApp);
+    } catch {}
+  }
+  firebaseApp = null;
+  firestoreDb = null;
+  broadcastLocalUpdate({ type: "FIREBASE_DISCONNECTED" });
 }
 
 export function subscribeToRealtimeSync(

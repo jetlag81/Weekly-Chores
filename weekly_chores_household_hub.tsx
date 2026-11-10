@@ -1812,18 +1812,51 @@ function App({
       if (msg.type === "CHORE_UPDATED") {
         setMonthSchedule(prev => {
           const currentDay = prev[msg.dateKey] || {};
-          const currentChore = currentDay[msg.choreIndex] || { who: "", done: false };
+          const currentChore = currentDay[msg.choreIndex] || (msg.normKey ? currentDay[msg.normKey] : null) || { who: "", done: false };
           const updated = { ...currentChore, ...msg.patch };
+          const nextDay = {
+            ...currentDay,
+            [msg.choreIndex]: updated
+          };
+          if (msg.taskTitle) nextDay[msg.taskTitle] = updated;
+          if (msg.normKey) nextDay[msg.normKey] = updated;
           return {
             ...prev,
-            [msg.dateKey]: {
-              ...currentDay,
-              [msg.choreIndex]: updated
-            }
+            [msg.dateKey]: nextDay
           };
         });
-      } else if (msg.type === "SESSION_CHANGED") {
-        if (msg.session) setDeviceSession(msg.session);
+      } else if (msg.type === "WEEKLY_KID_CHORE_UPDATED") {
+        setMonthSchedule(prev => {
+          const next = { ...prev };
+          (msg.activeWeekDays || []).forEach((dKey: string) => {
+            const curDay = next[dKey] || {};
+            const curChore = curDay[msg.choreIndex] || { who: "", done: false, kidsDone: {} };
+            const updated = {
+              ...curChore,
+              who: msg.whoLabel,
+              done: msg.anyDone,
+              kidsDone: msg.updatedKids
+            };
+            next[dKey] = {
+              ...curDay,
+              [msg.choreIndex]: updated
+            };
+            if (msg.taskTitle) {
+              next[dKey][msg.taskTitle] = updated;
+              next[dKey][msg.taskTitle.toLowerCase()] = updated;
+            }
+          });
+          return next;
+        });
+      } else if (msg.type === "KID_UNPAIRED") {
+        setDeviceSession((prev: any) => {
+          if (prev.role === "kid" && prev.kidName?.toLowerCase() === msg.kidName?.toLowerCase()) {
+            return { role: "admin", householdId: prev.householdId || "household_family_hub", deviceId: prev.deviceId, parentPin: "1234" };
+          }
+          return prev;
+        });
+      } else if (msg.type === "ALL_DEVICES_RESET") {
+        setDeviceSession((prev: any) => ({ role: "admin", householdId: "household_family_hub", deviceId: prev.deviceId, parentPin: "1234" }));
       }
     });
     return unsub;
@@ -3253,6 +3286,7 @@ function App({
       if (s.kidsDone) {
         Object.keys(s.kidsDone).forEach(k => {
           if (s.kidsDone[k]) result[k] = true;
+          else if (s.kidsDone[k] === false) result[k] = false;
         });
       }
       if (s.who === "All Kids" && s.done) {
@@ -3336,6 +3370,23 @@ function App({
       }
       updateItem(printableRangeIndex, pRowIdx, updateRow);
     }
+    broadcastLocalUpdate({
+      type: "WEEKLY_KID_CHORE_UPDATED",
+      choreIndex,
+      kidName,
+      taskTitle,
+      newKidState,
+      updatedKids,
+      activeWeekDays: activeWeekDays.map(d => d.dateKey),
+      whoLabel,
+      anyDone
+    });
+    syncChoreToFirestore(
+      (deviceSession == null ? void 0 : deviceSession.householdId) || "household_family_hub",
+      activeWeekDays[0]?.dateKey || "weekly",
+      choreIndex,
+      { kidsDone: updatedKids, who: whoLabel, done: anyDone }
+    );
   };
   const handleSetAllKidsWeeklyChore = (choreIndex, taskTitle, allDoneState) => {
     const currentStatus = getWeeklyKidsStatus(choreIndex, taskTitle);
@@ -3390,6 +3441,23 @@ function App({
       updateRow[14] = allDoneState;
       updateItem(printableRangeIndex, pRowIdx, updateRow);
     }
+    broadcastLocalUpdate({
+      type: "WEEKLY_KID_CHORE_UPDATED",
+      choreIndex,
+      kidName,
+      taskTitle,
+      newKidState,
+      updatedKids,
+      activeWeekDays: activeWeekDays.map(d => d.dateKey),
+      whoLabel,
+      anyDone
+    });
+    syncChoreToFirestore(
+      (deviceSession == null ? void 0 : deviceSession.householdId) || "household_family_hub",
+      activeWeekDays[0]?.dateKey || "weekly",
+      choreIndex,
+      { kidsDone: updatedKids, who: whoLabel, done: anyDone }
+    );
   };
   const getSingleWeeklyStatus = (choreIndex, taskTitle) => {
     let who = "";
@@ -3698,7 +3766,9 @@ function App({
       type: "CHORE_UPDATED",
       dateKey,
       choreIndex,
-      patch
+      patch,
+      taskTitle: choreTask,
+      normKey: norm
     });
     syncChoreToFirestore(
       (deviceSession == null ? void 0 : deviceSession.householdId) || "household_family_hub",
@@ -5029,6 +5099,7 @@ function App({
         onToggleWeeklyKidChore={handleToggleWeeklyKidChore}
         getWeeklyKidsStatus={getWeeklyKidsStatus}
         formatDateKey={formatDateKey}
+        activeSyncWeek={activeSyncWeek}
         onExitMinionMode={() => {
           const adminSession = { role: "admin", householdId: deviceSession.householdId || "household_family_hub", deviceId: deviceSession.deviceId || "local_dev", parentPin: "1234" };
           saveDeviceSession(adminSession);
@@ -5473,8 +5544,16 @@ function App({
             const editRow = ((_a3 = choreEdits[cr.index_]) == null ? void 0 : _a3.row) || (taskTitle ? (_b3 = choreEdits[taskTitle.toLowerCase().trim()]) == null ? void 0 : _b3.row : null);
             const curRowWho = (editRow == null ? void 0 : editRow[whoCol]) !== void 0 ? editRow[whoCol] : (_c2 = cr.row) == null ? void 0 : _c2[whoCol];
             const curRowDone = (editRow == null ? void 0 : editRow[doneCol]) !== void 0 ? editRow[doneCol] : (_d = cr.row) == null ? void 0 : _d[doneCol];
-            const whoVal = curRowWho !== void 0 && curRowWho !== null ? String(curRowWho).trim() : (cellStatus == null ? void 0 : cellStatus.who) ? String(cellStatus.who).trim() : "";
-            const isDone = curRowDone !== void 0 && curRowDone !== null ? curRowDone === true || String(curRowDone).toLowerCase() === "true" : !!(cellStatus == null ? void 0 : cellStatus.done);
+            const whoVal = (cellStatus && cellStatus.who !== undefined && cellStatus.who !== "")
+              ? String(cellStatus.who).trim()
+              : curRowWho !== void 0 && curRowWho !== null
+                ? String(curRowWho).trim()
+                : "";
+            const isDone = (cellStatus && cellStatus.done !== undefined)
+              ? !!cellStatus.done
+              : curRowDone !== void 0 && curRowDone !== null
+                ? curRowDone === true || String(curRowDone).toLowerCase() === "true"
+                : false;
             return <React.Fragment key={d.name}><td className="p-1 text-center align-middle bg-white" style={{ borderRight: "1px solid #94A3B8" }}><select value={whoVal} onChange={e => {
               handleUpdatePrintableCell(cr.index_, dayIdx, "who", e.target.value, taskTitle);
             }} className="w-full text-[11px] py-1 px-0.5 bg-transparent font-semibold text-slate-900 text-center focus:outline-none cursor-pointer"><option value=""></option><optgroup label="Full-Time Occupants">{familyMembers.filter(m => m.type === "regular").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Bi-Weekly Occupants">{familyMembers.filter(m => m.type === "biweekly").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Casual Assignees">{familyMembers.filter(m => m.type === "casual").map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup><optgroup label="Special Groups"><option value="Non-Casual">Non-Casual</option><option value="All Non-Casual">All Non-Casual</option><option value="Each Child">Each Child</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option></optgroup>{whoVal && !familyMembers.some(m => m.name === whoVal) && !["Non-Casual", "All Non-Casual", "Each Child", "All Kids", "Parents"].includes(whoVal) && <option value={whoVal}>{whoVal}</option>}</select></td><td className="p-1 text-center align-middle bg-white" style={{ borderRight: dayIdx < 6 ? "1.5px solid #475569" : "1px solid #C55A11" }}><button type="button" onClick={() => {

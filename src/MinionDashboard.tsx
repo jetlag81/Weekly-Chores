@@ -23,6 +23,7 @@ import {
   playChoreCompletionSound,
   saveDeviceSession,
   broadcastLocalUpdate,
+  unpairKid,
   type DeviceSession
 } from "./firebaseSync";
 
@@ -39,6 +40,7 @@ interface MinionDashboardProps {
   getWeeklyKidsStatus: (choreIndex: number, taskTitle: string) => Record<string, boolean>;
   onExitMinionMode: () => void;
   formatDateKey: (year: number, month: number, day: number) => string;
+  activeSyncWeek?: string;
 }
 
 export const MinionDashboard: React.FC<MinionDashboardProps> = ({
@@ -53,7 +55,8 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   onToggleWeeklyKidChore,
   getWeeklyKidsStatus,
   onExitMinionMode,
-  formatDateKey
+  formatDateKey,
+  activeSyncWeek
 }) => {
   const currentKid = familyMembers.find(
     m => m.name.toLowerCase() === kidName.toLowerCase()
@@ -65,10 +68,15 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     text: "#4338CA"
   };
 
-  // Date selection (default to today)
+  // Date selection (default to activeSyncWeek start, e.g. Monday of the active schedule)
   const [activeDate, setActiveDate] = useState(() => {
+    if (activeSyncWeek) {
+      const parts = activeSyncWeek.split("-").map(Number);
+      if (parts.length === 3) {
+        return new Date(parts[0], parts[1] - 1, parts[2]);
+      }
+    }
     const now = new Date();
-    // Default to the current month/year passed or fallback
     return new Date(selectedYear, selectedMonth, now.getDate() <= 31 ? now.getDate() : 19);
   });
 
@@ -500,15 +508,33 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowExitPinModal(false)}
-                  className="py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
+                  className="py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition"
+                  className="py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition cursor-pointer"
                 >
                   Unlock
+                </button>
+              </div>
+
+              <div className="pt-2 border-t border-slate-100 text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (pinInput === "1234" || pinInput === "0000") {
+                      unpairKid(currentKid.name);
+                      setShowExitPinModal(false);
+                      onExitMinionMode();
+                    } else {
+                      setPinError("Enter Parent PIN (1234) first to unpair");
+                    }
+                  }}
+                  className="w-full py-1.5 text-[11px] font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                >
+                  Unpair This Device ({currentKid.name})
                 </button>
               </div>
             </form>

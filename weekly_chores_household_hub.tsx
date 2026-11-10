@@ -52,6 +52,8 @@ import { MinionDashboard } from "./src/MinionDashboard";
 import { InviteModal } from "./src/InviteModal";
 import { KidPairingScreen } from "./src/KidPairingScreen";
 import { FirebaseSettingsModal } from "./src/FirebaseSettingsModal";
+import { InstallPwaModal } from "./src/InstallPwaModal";
+import { isStandalone } from "./src/pwaManager";
 import { getChoreCanonicalKey, normalizeTaskName } from "./src/choreUtils";
 import {
   speakParentHouseholdSummary,
@@ -1770,6 +1772,7 @@ function App({
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showPairingScreen, setShowPairingScreen] = useState(false);
   const [showFirebaseModal, setShowFirebaseModal] = useState(false);
+  const [showPwaModal, setShowPwaModal] = useState(false);
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
 
   useEffect(() => {
@@ -5488,6 +5491,17 @@ function App({
               <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
               <span>Invite Kid Device</span>
             </button>
+            {!isStandalone() && (
+              <button
+                type="button"
+                onClick={() => setShowPwaModal(true)}
+                className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-gradient-to-r from-purple-50 to-indigo-50 text-indigo-900 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition cursor-pointer shadow-2xs"
+                title="Install Weekly Chores Hub to your Home Screen or Desktop"
+              >
+                <Download className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Install App</span>
+              </button>
+            )}
             {isSpeechSupported() && (
               <button
                 type="button"
@@ -6500,6 +6514,9 @@ function App({
             setTimeout(() => setNotice(null), 3500);
           }}
         />
+      )}
+      {showPwaModal && (
+        <InstallPwaModal onClose={() => setShowPwaModal(false)} />
       )}
     </div>
   );

@@ -24,8 +24,12 @@ import {
   Target,
   Medal,
   Award,
-  Users
+  Users,
+  Smartphone,
+  Download
 } from "lucide-react";
+import { isStandalone, subscribeInstallable } from "./pwaManager";
+import { InstallPwaModal } from "./InstallPwaModal";
 import {
   playChoreCompletionSound,
   saveDeviceSession,
@@ -120,6 +124,8 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   });
 
   const [showExitPinModal, setShowExitPinModal] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
+  const [canInstallPwa, setCanInstallPwa] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
@@ -127,6 +133,10 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
   useEffect(() => {
     return subscribeSpeechState(speaking => setIsSpeakingAudio(speaking));
+  }, []);
+
+  useEffect(() => {
+    return subscribeInstallable(can => setCanInstallPwa(can));
   }, []);
 
   const activeDateKey = formatDateKey(
@@ -384,6 +394,18 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                   ))}
                 </select>
               </div>
+            )}
+
+            {!isStandalone() && (
+              <button
+                type="button"
+                onClick={() => setShowInstallModal(true)}
+                className="py-1.5 px-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white transition flex items-center gap-1.5 text-xs font-black cursor-pointer shadow-xs"
+                title="Install app to your home screen"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-indigo-100" />
+                <span>Install</span>
+              </button>
             )}
 
             {/* Parent Lock / Exit Button */}
@@ -1013,6 +1035,10 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             </form>
           </div>
         </div>
+      )}
+
+      {showInstallModal && (
+        <InstallPwaModal onClose={() => setShowInstallModal(false)} />
       )}
     </div>
   );

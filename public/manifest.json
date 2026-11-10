@@ -1,19 +1,27 @@
 {
+  "id": "/",
   "name": "Weekly Chores & Household Hub",
   "short_name": "Chores Hub",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "orientation": "any",
+  "orientation": "portrait-primary",
   "background_color": "#002060",
   "theme_color": "#002060",
   "description": "Multi-user family chore management, daily routines, and kid incentive rewards",
+  "categories": ["productivity", "lifestyle", "utilities"],
   "icons": [
     {
       "src": "/icon.svg",
       "sizes": "192x192 512x512",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }
-

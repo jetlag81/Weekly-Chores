@@ -1,7 +1,7 @@
 // Kid Device Pairing & Welcome Screen
 
-import React, { useState } from "react";
-import { Sparkles, ArrowRight, Shield, Smartphone, AlertCircle, HeartHandshake } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Sparkles, ArrowRight, Shield, Smartphone, AlertCircle, HeartHandshake, QrCode } from "lucide-react";
 import { redeemKidInvite, saveDeviceSession, getStoredDeviceSession, type DeviceSession } from "./firebaseSync";
 
 interface KidPairingScreenProps {
@@ -16,6 +16,35 @@ export const KidPairingScreen: React.FC<KidPairingScreenProps> = ({
   const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("join") || params.get("code") || params.get("invite");
+    if (code) {
+      const cleanCode = code.toUpperCase().trim();
+      setInviteCode(cleanCode);
+      const currentSession = getStoredDeviceSession();
+      setLoading(true);
+      redeemKidInvite(cleanCode, currentSession.deviceId).then(res => {
+        if (res.success && res.invite) {
+          const newSession: DeviceSession = {
+            role: "kid",
+            householdId: res.invite.householdId,
+            kidName: res.invite.kidName,
+            deviceId: currentSession.deviceId,
+            parentPin: "1234"
+          };
+          saveDeviceSession(newSession);
+          onPairedSuccess(newSession);
+        } else {
+          setError(res.error || "Invite code expired or invalid. Please check with your parent.");
+        }
+      }).finally(() => {
+        setLoading(false);
+      });
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

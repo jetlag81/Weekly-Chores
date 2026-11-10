@@ -24,6 +24,7 @@ import {
 import {
   playChoreCompletionSound,
   saveDeviceSession,
+  getStoredDeviceSession,
   broadcastLocalUpdate,
   unpairKid,
   type DeviceSession
@@ -51,6 +52,7 @@ interface MinionDashboardProps {
   onToggleWeeklyKidChore: (choreIndex: number, kidName: string, taskTitle: string) => void;
   getWeeklyKidsStatus: (choreIndex: number, taskTitle: string) => Record<string, boolean>;
   onExitMinionMode: () => void;
+  onKidSwitched?: (kidName: string) => void;
   formatDateKey: (year: number, month: number, day: number) => string;
   activeSyncWeek?: string;
   getChoreStatus?: (dateKey: string, choreIndex: number, taskTitle?: string) => { who: string; done: boolean; kidsDone?: Record<string, boolean>; hasExplicitRecord?: boolean };
@@ -68,10 +70,17 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   onToggleWeeklyKidChore,
   getWeeklyKidsStatus,
   onExitMinionMode,
+  onKidSwitched,
   formatDateKey,
   activeSyncWeek,
   getChoreStatus
 }) => {
+  const kidMembers = React.useMemo(() => {
+    return familyMembers.filter(
+      m => m.active !== false && m.role !== "Supreme Overlord" && m.role !== "Overseer Supreme"
+    );
+  }, [familyMembers]);
+
   const currentKid = familyMembers.find(
     m => m.name.toLowerCase() === kidName.toLowerCase()
   ) || {
@@ -291,20 +300,49 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             </div>
           </div>
 
-          {/* Parent Lock / Exit Button */}
-          <button
-            type="button"
-            onClick={() => {
-              setPinInput("");
-              setPinError("");
-              setShowExitPinModal(true);
-            }}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition flex items-center gap-1 text-xs font-semibold"
-            title="Parent Admin Unlock"
-          >
-            <Lock className="w-4 h-4 text-slate-500" />
-            <span className="hidden sm:inline">Parent Mode</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {kidMembers.length > 1 && (
+              <div className="relative">
+                <select
+                  value={currentKid.name}
+                  onChange={e => {
+                    const targetName = e.target.value;
+                    const cur = getStoredDeviceSession();
+                    const updatedSession: DeviceSession = {
+                      ...cur,
+                      role: "kid",
+                      kidName: targetName
+                    };
+                    saveDeviceSession(updatedSession);
+                    onKidSwitched?.(targetName);
+                  }}
+                  className="text-xs font-bold py-1.5 px-2 bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-xl cursor-pointer hover:bg-indigo-100 focus:outline-none shadow-2xs"
+                  title="Switch active minion dashboard"
+                >
+                  {kidMembers.map(m => (
+                    <option key={m.id || m.name} value={m.name}>
+                      Minion: {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Parent Lock / Exit Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setPinInput("");
+                setPinError("");
+                setShowExitPinModal(true);
+              }}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition flex items-center gap-1 text-xs font-semibold cursor-pointer shadow-2xs"
+              title="Parent Admin Unlock (PIN: 1234)"
+            >
+              <Lock className="w-4 h-4 text-slate-500" />
+              <span className="hidden sm:inline">Parent Mode</span>
+            </button>
+          </div>
         </div>
       </header>
 

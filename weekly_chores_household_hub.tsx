@@ -45,6 +45,7 @@ import {
   syncChoreToFirestore,
   subscribeToFirestoreSchedule,
   getStoredFirebaseConfig,
+  redeemKidInvite,
   type DeviceSession
 } from "./src/firebaseSync";
 import { MinionDashboard } from "./src/MinionDashboard";
@@ -1773,6 +1774,64 @@ function App({
 
   useEffect(() => {
     return subscribeSpeechState(speaking => setIsSpeakingAudio(speaking));
+  }, []);
+
+  // Handle URL query parameters for instant pairing or kid switching: ?join=CODE, ?kid=NAME, ?mode=parent
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const joinCode = params.get("join") || params.get("code") || params.get("invite");
+    const kidParam = params.get("kid") || params.get("minion");
+    const modeParam = params.get("mode");
+
+    if (joinCode) {
+      const cur = getStoredDeviceSession();
+      redeemKidInvite(joinCode.toUpperCase().trim(), cur.deviceId).then(res => {
+        if (res.success && res.invite) {
+          const newSession: DeviceSession = {
+            role: "kid",
+            householdId: res.invite.householdId,
+            kidName: res.invite.kidName,
+            deviceId: cur.deviceId,
+            parentPin: "1234"
+          };
+          saveDeviceSession(newSession);
+          setDeviceSession(newSession);
+          setShowPairingScreen(false);
+          setNotice(`🎉 Connected to ${res.invite.kidName}'s Minion Mode!`);
+          setTimeout(() => setNotice(null), 4000);
+        }
+      });
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    } else if (kidParam) {
+      const cur = getStoredDeviceSession();
+      const newSession: DeviceSession = {
+        role: "kid",
+        householdId: cur.householdId || "household_family_hub",
+        kidName: kidParam,
+        deviceId: cur.deviceId,
+        parentPin: "1234"
+      };
+      saveDeviceSession(newSession);
+      setDeviceSession(newSession);
+      setShowPairingScreen(false);
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    } else if (modeParam === "parent" || modeParam === "admin") {
+      const cur = getStoredDeviceSession();
+      const newSession: DeviceSession = {
+        role: "admin",
+        householdId: cur.householdId || "household_family_hub",
+        deviceId: cur.deviceId,
+        parentPin: "1234"
+      };
+      saveDeviceSession(newSession);
+      setDeviceSession(newSession);
+      setShowPairingScreen(false);
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+    }
   }, []);
 
   // Real-time Firestore Cloud subscription across physically separate devices
@@ -5273,6 +5332,9 @@ function App({
         formatDateKey={formatDateKey}
         activeSyncWeek={activeSyncWeek}
         getChoreStatus={getChoreStatus}
+        onKidSwitched={(kName) => {
+          setDeviceSession(prev => ({ ...prev, role: "kid", kidName: kName }));
+        }}
         onExitMinionMode={() => {
           const adminSession = { role: "admin", householdId: deviceSession.householdId || "household_family_hub", deviceId: deviceSession.deviceId || "local_dev", parentPin: "1234" };
           saveDeviceSession(adminSession);

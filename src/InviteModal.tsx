@@ -12,7 +12,9 @@ import {
   Trash2,
   RefreshCw,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  QrCode,
+  Link as LinkIcon
 } from "lucide-react";
 import {
   createKidInvite,
@@ -21,6 +23,7 @@ import {
   resetAllDevicePairings,
   type HouseholdInvite
 } from "./firebaseSync";
+import { QRCodeDisplay } from "./QRCodeDisplay";
 
 interface InviteModalProps {
   householdId: string;
@@ -43,6 +46,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
   const [selectedKidName, setSelectedKidName] = useState(() => kidMembers[0]?.name || "Sydney");
   const [createdInvite, setCreatedInvite] = useState<HouseholdInvite | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [loading, setLoading] = useState(false);
   const [invitesList, setInvitesList] = useState<HouseholdInvite[]>(() => getLocalInvites());
   const [notice, setNotice] = useState<string | null>(null);
@@ -57,6 +61,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
       const inv = await createKidInvite(selectedKidName, householdId);
       setCreatedInvite(inv);
       setCopied(false);
+      setCopiedLink(false);
       refreshInvites();
     } finally {
       setLoading(false);
@@ -68,6 +73,22 @@ export const InviteModal: React.FC<InviteModalProps> = ({
     navigator.clipboard.writeText(createdInvite.code);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  };
+
+  const getInviteUrl = (code: string) => {
+    if (typeof window === "undefined") return `http://localhost:5173/?join=${code}`;
+    const host = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+      ? "192.168.0.8:5173"
+      : window.location.host;
+    return `${window.location.protocol}//${host}/?join=${code}`;
+  };
+
+  const handleCopyLink = () => {
+    if (!createdInvite) return;
+    const url = getInviteUrl(createdInvite.code);
+    navigator.clipboard.writeText(url);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
   };
 
   const handleUnpairKid = (kName: string) => {
@@ -209,36 +230,63 @@ export const InviteModal: React.FC<InviteModalProps> = ({
             ) : (
               <div className="space-y-4 text-center">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
                     Ready for {createdInvite.kidName}
                   </span>
-                  <p className="text-xs text-slate-500">
-                    Have <strong>{createdInvite.kidName}</strong> open the app on their phone or tablet and enter:
+                  <p className="text-xs text-slate-600">
+                    Scan the QR code with <strong>{createdInvite.kidName}&apos;s</strong> tablet or phone camera, or enter the code:
                   </p>
                 </div>
 
-                {/* 6-Character Code Display */}
-                <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border-2 border-indigo-200 text-center space-y-2">
-                  <div className="text-[10px] uppercase tracking-wider font-extrabold text-indigo-900">
-                    Household Invite Code
+                {/* QR Code and Quick Connect Card */}
+                <div className="p-4 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50 rounded-2xl border-2 border-indigo-200 text-center space-y-3 shadow-2xs">
+                  {/* QR Code */}
+                  <div className="flex flex-col items-center justify-center gap-1.5">
+                    <QRCodeDisplay value={getInviteUrl(createdInvite.code)} size={160} />
+                    <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider flex items-center gap-1 mt-1">
+                      <QrCode className="w-3.5 h-3.5" />
+                      <span>Scan to Join Minion Mode Instantly</span>
+                    </span>
                   </div>
-                  <div className="font-mono text-3xl font-black text-indigo-950 tracking-widest select-all">
-                    {createdInvite.code}
+
+                  {/* 6-Character Code Display */}
+                  <div className="pt-2 border-t border-indigo-100 space-y-1.5">
+                    <div className="text-[10px] uppercase tracking-wider font-extrabold text-slate-500">
+                      Or Enter Pairing Code:
+                    </div>
+                    <div className="font-mono text-3xl font-black text-indigo-950 tracking-widest select-all">
+                      {createdInvite.code}
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleCopyCode}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 bg-white text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-50 shadow-2xs transition cursor-pointer"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copied ? "Copied!" : "Copy Code"}</span>
-                  </button>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleCopyCode}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-50 shadow-2xs transition cursor-pointer"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copied ? "Copied Code!" : "Copy Code"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCopyLink}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-indigo-50 text-indigo-800 border border-indigo-300 rounded-lg hover:bg-indigo-100 shadow-2xs transition cursor-pointer"
+                    >
+                      {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <LinkIcon className="w-3.5 h-3.5" />}
+                      <span>{copiedLink ? "Copied Link!" : "Copy Direct Link"}</span>
+                    </button>
+                  </div>
+
+                  <div className="text-[10px] text-slate-400 font-mono truncate px-2" title={getInviteUrl(createdInvite.code)}>
+                    {getInviteUrl(createdInvite.code)}
+                  </div>
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-600 text-[11px] leading-relaxed text-left space-y-1">
-                  <div><strong>Step 1:</strong> Open the app on {createdInvite.kidName}&apos;s device (or in a new browser window).</div>
-                  <div><strong>Step 2:</strong> Tap <em>&quot;Join With Kid Invite Code&quot;</em>.</div>
-                  <div><strong>Step 3:</strong> Enter <strong>{createdInvite.code}</strong>. They land directly in Minion Mode!</div>
+                  <div><strong>Tip 1:</strong> Point any phone or tablet camera at the QR code above — it opens directly into {createdInvite.kidName}&apos;s Minion Mode!</div>
+                  <div><strong>Tip 2:</strong> When connecting over home Wi-Fi, visit: <code className="bg-slate-200 px-1 py-0.5 rounded text-indigo-900 font-semibold">{getInviteUrl(createdInvite.code)}</code></div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 pt-2">

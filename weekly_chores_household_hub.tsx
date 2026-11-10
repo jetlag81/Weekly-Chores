@@ -5073,40 +5073,40 @@ function App({
           } = dayObj;
           const dayStyle = DAY_STYLES[dayIdx];
           const dayChores = choreRows.filter(cr => {
-            var _a2, _b2, _c2, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w;
             const freq = getChoreFreq(cr);
-            const tLow = (cr.task || ((_a2 = cr.row) == null ? void 0 : _a2[0]) || "").toLowerCase();
+            const taskTitle = cr.task || cr.row?.[0] || "";
+            const tLow = taskTitle.toLowerCase();
             if (tLow.includes("deep clean") || tLow.includes("feeding station")) {
               const isScheduledDay = dayIdx === 6;
-              const hasActivity = ((_c2 = (_b2 = monthSchedule[dateKey]) == null ? void 0 : _b2[cr.index_]) == null ? void 0 : _c2.done) || ((_e = (_d = monthSchedule[dateKey]) == null ? void 0 : _d[cr.index_]) == null ? void 0 : _e.who);
+              const hasActivity = monthSchedule[dateKey]?.[cr.index_]?.done || monthSchedule[dateKey]?.[cr.index_]?.who;
               if (!isScheduledDay && !hasActivity) return false;
             } else if (tLow.includes("recycling")) {
               const isScheduledDay = dayIdx === 3 && isCurbsideActiveOnDate("recycling", dayObj.year, dayObj.month, dayObj.day);
-              const hasActivity = ((_g = (_f = monthSchedule[dateKey]) == null ? void 0 : _f[cr.index_]) == null ? void 0 : _g.done) || ((_i = (_h = monthSchedule[dateKey]) == null ? void 0 : _h[cr.index_]) == null ? void 0 : _i.who);
+              const hasActivity = monthSchedule[dateKey]?.[cr.index_]?.done || monthSchedule[dateKey]?.[cr.index_]?.who;
               if (!isScheduledDay && !hasActivity) return false;
             } else if (tLow.includes("waste")) {
               const isScheduledDay = dayIdx === 3 && isCurbsideActiveOnDate("waste", dayObj.year, dayObj.month, dayObj.day);
-              const hasActivity = ((_k = (_j = monthSchedule[dateKey]) == null ? void 0 : _j[cr.index_]) == null ? void 0 : _k.done) || ((_m = (_l = monthSchedule[dateKey]) == null ? void 0 : _l[cr.index_]) == null ? void 0 : _m.who);
+              const hasActivity = monthSchedule[dateKey]?.[cr.index_]?.done || monthSchedule[dateKey]?.[cr.index_]?.who;
               if (!isScheduledDay && !hasActivity) return false;
             } else if (tLow.includes("basement")) {
               const isScheduledDay = dayIdx === 5;
-              const hasActivity = ((_o = (_n = monthSchedule[dateKey]) == null ? void 0 : _n[cr.index_]) == null ? void 0 : _o.done) || ((_q = (_p = monthSchedule[dateKey]) == null ? void 0 : _q[cr.index_]) == null ? void 0 : _q.who);
+              const hasActivity = monthSchedule[dateKey]?.[cr.index_]?.done || monthSchedule[dateKey]?.[cr.index_]?.who;
               if (!isScheduledDay && !hasActivity) return false;
             } else if (freq.frequency === "weekly") {
               const isScheduledDay = dayIdx === freq.dayOfWeek;
-              const hasActivity = ((_o = (_n = monthSchedule[dateKey]) == null ? void 0 : _n[cr.index_]) == null ? void 0 : _o.done) || ((_q = (_p = monthSchedule[dateKey]) == null ? void 0 : _p[cr.index_]) == null ? void 0 : _q.who);
+              const hasActivity = monthSchedule[dateKey]?.[cr.index_]?.done || monthSchedule[dateKey]?.[cr.index_]?.who;
               if (!isScheduledDay && !hasActivity) return false;
             } else if (freq.frequency === "biweekly") {
-              const isScheduledDay = dayIdx === freq.dayOfWeek && isCurbsideActiveOnDate(cr.task || ((_r = cr.row) == null ? void 0 : _r[0]), dayObj.year, dayObj.month, dayObj.day);
-              const hasActivity = ((_t = (_s = monthSchedule[dateKey]) == null ? void 0 : _s[cr.index_]) == null ? void 0 : _t.done) || ((_v = (_u = monthSchedule[dateKey]) == null ? void 0 : _u[cr.index_]) == null ? void 0 : _v.who);
+              const isScheduledDay = dayIdx === freq.dayOfWeek && isCurbsideActiveOnDate(taskTitle, dayObj.year, dayObj.month, dayObj.day);
+              const hasActivity = monthSchedule[dateKey]?.[cr.index_]?.done || monthSchedule[dateKey]?.[cr.index_]?.who;
               if (!isScheduledDay && !hasActivity) return false;
             }
             if (selectedAssigneeFilter === "ALL") return true;
-            const st = (_w = monthSchedule[dateKey]) == null ? void 0 : _w[cr.index_];
+            const st = monthSchedule[dateKey]?.[cr.index_];
             const whoStr = String((st == null ? void 0 : st.who) || "").toLowerCase();
             const filterMem = familyMembers.find(m => m.id === selectedAssigneeFilter || m.name === selectedAssigneeFilter);
             const filterName = ((filterMem == null ? void 0 : filterMem.name) || selectedAssigneeFilter).toLowerCase();
-            if (isBedroomChore(cr.row[1])) {
+            if (isBedroomChore(tLow)) {
               return kidsList.some(k => k.toLowerCase() === filterName);
             }
             if (!(st == null ? void 0 : st.who)) return false;
@@ -5138,18 +5138,19 @@ function App({
             return null;
           })()}<div className="space-y-1">{dayChores.slice(0, 3).map(cr => {
             var _a2, _b2;
-            const status = getChoreStatus(dateKey, cr.index_, cr.task || cr.row[0]);
+            const choreTitle = cr.task || cr.row?.[0] || "";
+            const status = getChoreStatus(dateKey, cr.index_, choreTitle);
             const assignee = getMember(status.who);
             const freq = getChoreFreq(cr);
             return <div key={cr.index_} className={`group text-[11px] p-1 rounded-md border flex flex-col gap-1 transition ${status.done ? "bg-emerald-50/70 border-emerald-200 text-slate-500" : freq.frequency === "weekly" ? "bg-purple-50/60 border-purple-200 text-purple-950 shadow-2xs" : "bg-white border-slate-200 hover:border-slate-300 text-slate-800 shadow-2xs"}`}><div className="flex items-center justify-between gap-1 w-full"><div className="flex items-center gap-1 min-w-0 flex-1"><button onClick={() => handleUpdateChore(dateKey, cr.index_, {
               done: !status.done
-            })} className="shrink-0 text-slate-400 hover:text-emerald-600 focus:outline-none">{status.done ? <SquareCheckBig className="w-3.5 h-3.5 text-emerald-600" /> : <Square className="w-3.5 h-3.5 hover:text-slate-600" />}</button><span className={`truncate text-[10px] font-medium leading-tight ${status.done ? "line-through" : ""}`}>{cr.task || cr.row[0]}</span></div><div className="flex items-center gap-1 shrink-0">{freq.frequency === "weekly" && <span className="text-[8px] font-bold px-1 py-0.2 rounded bg-purple-100 text-purple-700 uppercase" title="Once-a-week task">1x/wk</span>}{getSpecificKidForChore(cr.task || cr.row[0]) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold" style={{
-              backgroundColor: ((_a2 = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _a2.bg) || "#FCE7F3",
-              color: ((_b2 = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _b2.text) || "#BE185D"
-            }}>{getSpecificKidForChore(cr.task || cr.row[0])}</span> : isBedroomChore(cr.task || cr.row[0]) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold bg-pink-100 text-pink-700" title="Each child cleans own bedroom">Own Rooms</span> : status.who ? <span className="shrink-0 text-[9px] px-1 py-0.2 rounded font-semibold" style={{
+            })} className="shrink-0 text-slate-400 hover:text-emerald-600 focus:outline-none">{status.done ? <SquareCheckBig className="w-3.5 h-3.5 text-emerald-600" /> : <Square className="w-3.5 h-3.5 hover:text-slate-600" />}</button><span className={`truncate text-[10px] font-medium leading-tight ${status.done ? "line-through" : ""}`}>{choreTitle}</span></div><div className="flex items-center gap-1 shrink-0">{freq.frequency === "weekly" && <span className="text-[8px] font-bold px-1 py-0.2 rounded bg-purple-100 text-purple-700 uppercase" title="Once-a-week task">1x/wk</span>}{getSpecificKidForChore(choreTitle) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold" style={{
+              backgroundColor: ((_a2 = getMember(getSpecificKidForChore(choreTitle))) == null ? void 0 : _a2.bg) || "#FCE7F3",
+              color: ((_b2 = getMember(getSpecificKidForChore(choreTitle))) == null ? void 0 : _b2.text) || "#BE185D"
+            }}>{getSpecificKidForChore(choreTitle)}</span> : isBedroomChore(choreTitle) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold bg-pink-100 text-pink-700" title="Each child cleans own bedroom">Own Rooms</span> : status.who ? <span className="shrink-0 text-[9px] px-1 py-0.2 rounded font-semibold" style={{
               backgroundColor: (assignee == null ? void 0 : assignee.bg) || "#F1F5F9",
               color: (assignee == null ? void 0 : assignee.text) || "#475569"
-            }} title={String(status.who)}>{String(status.who).slice(0, 2)}</span> : <button onClick={() => setActiveDayModal(dateKey)} className="shrink-0 text-[9px] text-slate-400 hover:text-indigo-600 px-0.5" title="Assign person">+</button>}</div></div>{isBedroomChore(cr.task || cr.row[0]) && !getSpecificKidForChore(cr.task || cr.row[0]) && <div className="pt-0.5 border-t border-purple-200/60 flex flex-wrap gap-1">{getKidsPresentOnDate(dateKey).map(kidName => {
+            }} title={String(status.who)}>{String(status.who).slice(0, 2)}</span> : <button onClick={() => setActiveDayModal(dateKey)} className="shrink-0 text-[9px] text-slate-400 hover:text-indigo-600 px-0.5" title="Assign person">+</button>}</div></div>{isBedroomChore(choreTitle) && !getSpecificKidForChore(choreTitle) && <div className="pt-0.5 border-t border-purple-200/60 flex flex-wrap gap-1">{getKidsPresentOnDate(dateKey).map(kidName => {
               var _a3;
               const isKidDone = !!((_a3 = status.kidsDone) == null ? void 0 : _a3[kidName]);
               const kidMember = getMember(kidName);
@@ -5876,24 +5877,37 @@ var ErrorBoundary = class extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      hasError: false
+      hasError: false,
+      error: null
     };
   }
   static getDerivedStateFromError(error) {
     return {
-      hasError: true
+      hasError: true,
+      error
     };
   }
   componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
     window.parent.postMessage({
       type: "ERROR",
       payload: {
-        error: error ? error.toString() : "Unknown rendering error"
+        error: error ? error.toString() : "Unknown rendering error",
+        stack: error ? error.stack : ""
       }
     }, "*");
   }
   render() {
-    if (this.state.hasError) return <p>Something went wrong.</p>;
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 m-4 bg-red-50 border border-red-300 rounded-xl text-red-900 font-mono text-xs">
+          <h2 className="text-base font-bold text-red-700 mb-2">Something went wrong</h2>
+          <p className="font-semibold mb-2">{this.state.error ? String(this.state.error.message || this.state.error) : "Unknown Error"}</p>
+          <pre className="overflow-auto max-h-60 p-2 bg-red-100 rounded text-[11px] whitespace-pre-wrap">{this.state.error?.stack || ""}</pre>
+          <button onClick={() => this.setState({ hasError: false, error: null })} className="mt-3 px-3 py-1.5 bg-red-700 text-white rounded font-sans font-bold hover:bg-red-800">Retry</button>
+        </div>
+      );
+    }
     return this.props.children;
   }
 };

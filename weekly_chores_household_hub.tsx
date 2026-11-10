@@ -479,11 +479,11 @@ export const INITIAL_SHEET_DATA = [
           true,
           null,
           "Empty Dishwasher",
-          "All Non-Casual",
+          "Non-Casual",
           "Daily",
           "Mon – Sun",
           "Put away clean dishes, Load any dirty dishes",
-          null
+          "Kitchen"
         ]
       },
       {
@@ -598,11 +598,11 @@ export const INITIAL_SHEET_DATA = [
           "Active Status",
           null,
           "Curbside Recycling",
-          "Thom",
+          "Non-Casual",
           "Bi-Weekly",
-          "Thursday Evening (required)",
+          "Thursday Evening",
           "Roll recycling bin to curb Thursday evening for Friday pickup (alternating weeks)",
-          null
+          "Household"
         ]
       },
       {
@@ -617,9 +617,9 @@ export const INITIAL_SHEET_DATA = [
           "Curbside Waste",
           "Non-Casual",
           "Bi-Weekly",
-          "Thursday Evening (required)",
+          "Thursday Evening",
           "Roll waste bin to curb Thursday evening for Friday pickup (alternating weeks)",
-          null
+          "Household"
         ]
       },
       {
@@ -631,12 +631,12 @@ export const INITIAL_SHEET_DATA = [
           null,
           true,
           null,
-          null,
-          null,
-          null,
-          null,
-          null,
-          null
+          "Walk Dogs: Ellie & Lewis (Morning & Evening walk)",
+          "Non-Casual",
+          "Daily",
+          "Mon – Sun",
+          "Morning & evening walk for Ellie & Lewis",
+          "Pet Care"
         ]
       },
       {
@@ -878,23 +878,6 @@ export const INITIAL_SHEET_DATA = [
         ]
       },
       {
-        "index_": 33,
-        "row": [
-          null,
-          null,
-          null,
-          null,
-          false,
-          null,
-          "Weekly Sign-Off & Inspection",
-          "Parents",
-          "Once a Week",
-          "Sunday",
-          "Rigorously review completed tasks, administer severe punishments if not done satisfactorily, sign off if work is acceptible",
-          null
-        ]
-      },
-      {
         "index_": 34,
         "row": [
           null,
@@ -904,7 +887,7 @@ export const INITIAL_SHEET_DATA = [
           false,
           null,
           "Empty Dishwasher",
-          "All Non-Casual",
+          "Non-Casual",
           "Daily",
           "Mon – Sun",
           null,
@@ -2141,7 +2124,7 @@ function App({
       const tLower = taskVal.toLowerCase();
       const norm = normalizeTaskName(taskVal);
       const cKey = getChoreCanonicalKey(taskVal);
-      if (tLower === "chore" || tLower === "parameter" || tLower.includes("schedule configuration") || tLower.includes("active week") || tLower.includes("waste / recycling") || tLower.includes("custody schedule") || tLower.includes("pet care profile") || tLower.includes("special rotation") || tLower.includes("occupancy categories") || tLower.includes("household member")) {
+      if (tLower === "chore" || tLower === "parameter" || tLower.includes("schedule configuration") || tLower.includes("active week") || tLower.includes("waste / recycling") || tLower.includes("custody schedule") || tLower.includes("pet care profile") || tLower.includes("special rotation") || tLower.includes("occupancy categories") || tLower.includes("household member") || isSignOffChore(taskVal) || cKey === "weekly_sign_off") {
         return;
       }
       if (seenCanonicalKeys.has(cKey) || seenNames.has(norm)) {
@@ -2156,9 +2139,21 @@ function App({
       const col10 = String(r.row[10] || "").trim();
       const col11 = String(r.row[11] || "").trim();
       const isCol7Category = CHORE_CATEGORIES.some(c => c.name.toLowerCase() === col7.toLowerCase());
-      const rotationGroup = isCol7Category ? col10 || "All Non-Casual" : col7 || "All Non-Casual";
-      const frequency = col8 || (cKey.includes("curbside") ? "Bi-Weekly" : cKey.includes("deep_clean") || cKey.includes("sign_off") || cKey.includes("bedroom") || cKey.includes("laundry") || cKey.includes("basement") ? "Once a Week" : "Daily");
-      const targetDay = col9 === "N/A" || !col9 ? frequency === "Daily" ? "Mon \u2013 Sun" : "Saturday" : col9;
+      const rawGroup = isCol7Category ? col10 || "Non-Casual" : col7 || "Non-Casual";
+      const normalizeRotationGroup = (grp: string) => {
+        const gLow = String(grp || "").trim().toLowerCase();
+        if (!gLow || gLow === "all non-casual" || gLow === "non-casual" || gLow === "parents & kids" || gLow === "full-time roster") return "Non-Casual";
+        if (gLow === "kids" || gLow === "kids rotation" || gLow === "all kids") return "Kids";
+        if (gLow === "parents") return "Parents";
+        if (gLow === "all" || gLow === "all occupants") return "All";
+        return String(grp).trim();
+      };
+      const rotationGroup = normalizeRotationGroup(rawGroup);
+      const rawFreq = col8 || (cKey.includes("curbside") ? "Bi-Weekly" : cKey.includes("deep_clean") || cKey.includes("sign_off") || cKey.includes("bedroom") || cKey.includes("laundry") || cKey.includes("basement") ? "Once a Week" : "Daily");
+      const freqLower = rawFreq.toLowerCase();
+      const frequency = freqLower.includes("bi") ? "Bi-Weekly" : freqLower.includes("once") || freqLower.includes("weekly") ? "Once a Week" : "Daily";
+      const rawTarget = col9 === "N/A" || !col9 ? frequency === "Daily" ? "Mon \u2013 Sun" : frequency === "Bi-Weekly" ? "Thursday Evening" : "Saturday" : col9;
+      const targetDay = rawTarget.replace(/\s*\(required\)/i, "").trim() || "Mon \u2013 Sun";
       const notes = isCol7Category ? col11 : col10;
       let category = isCol7Category ? col7 : col11 && CHORE_CATEGORIES.some(c => c.name.toLowerCase() === col11.toLowerCase()) ? col11 : "Household";
       if (!isCol7Category && category === "Household") {
@@ -2192,9 +2187,10 @@ function App({
       printableSheet.data.forEach(pr => {
         if (pr.index_ < 4 || !pr.row || !pr.row[0]) return;
         const pTask = String(pr.row[0]).trim();
+        const pLower = pTask.toLowerCase();
         const pNorm = normalizeTaskName(pTask);
         const pKey = getChoreCanonicalKey(pTask);
-        if (!pNorm || pNorm === "daily tasks" || pNorm === "weekly tasks" || pNorm.includes("section") || pNorm.includes("once a week") || pNorm.includes("bedroom checklist") || pNorm.includes("pet care routine") || pNorm.startsWith("\u2022") || seenCanonicalKeys.has(pKey) || seenNames.has(pNorm) || deletedChoreKeys.has(pNorm) || deletedChoreKeys.has(pKey) || deletedChoreKeys.has(String(pr.index_))) {
+        if (!pNorm || pNorm === "daily tasks" || pNorm === "weekly tasks" || pNorm.includes("section") || pNorm.includes("once a week") || pNorm.includes("bedroom checklist") || pNorm.includes("pet care routine") || pNorm.startsWith("\u2022") || isSignOffChore(pTask) || pKey === "weekly_sign_off" || seenCanonicalKeys.has(pKey) || seenNames.has(pNorm) || deletedChoreKeys.has(pNorm) || deletedChoreKeys.has(pKey) || deletedChoreKeys.has(String(pr.index_))) {
           return;
         }
         seenCanonicalKeys.add(pKey);
@@ -2202,15 +2198,29 @@ function App({
         const freqInfo = getInitialChoreFrequency(pTask);
         const isWeekly = freqInfo.frequency === "weekly";
         const isBi = freqInfo.frequency === "biweekly";
+        let inferredCat = "Household";
+        let inferredNotes = "";
+        if (pLower.includes("litter") || pLower.includes("feed") || pLower.includes("herd") || pLower.includes("walk")) {
+          inferredCat = "Pet Care";
+          if (pLower.includes("walk")) inferredNotes = "Morning & evening walk for Ellie & Lewis";
+        } else if (pLower.includes("supper") || pLower.includes("dishes") || pLower.includes("dishwasher") || pLower.includes("kitchen")) {
+          inferredCat = "Kitchen";
+        } else if (pLower.includes("bedroom")) {
+          inferredCat = "Bedrooms";
+        } else if (pLower.includes("basement")) {
+          inferredCat = "Common Areas";
+        } else if (pLower.includes("sign-off") || pLower.includes("inspection")) {
+          inferredCat = "Administration";
+        }
         chores.push({
           index_: pr.index_,
           task: pTask,
           canonicalKey: pKey,
-          category: "Household",
+          category: inferredCat,
           frequency: isBi ? "Bi-Weekly" : isWeekly ? "Once a Week" : "Daily",
           targetDay: isBi ? "Thursday Evening" : isWeekly ? "Saturday" : "Mon \u2013 Sun",
-          rotationGroup: pr.row[1] || "All Non-Casual",
-          notes: "",
+          rotationGroup: "Non-Casual",
+          notes: inferredNotes,
           source: "printable_sheet"
         });
       });
@@ -2227,7 +2237,7 @@ function App({
       });
     }
     if (chores.length === 0) {
-      chores = DEFAULT_MASTER_CHORES.map((c, idx) => {
+      chores = DEFAULT_MASTER_CHORES.filter(c => !isSignOffChore(c.title)).map((c, idx) => {
         var _a2, _b2;
         return {
           index_: 5 + idx,
@@ -2411,8 +2421,22 @@ function App({
         }
       });
     }
+    const hasSignOff = items.some(it => !it.isSectionHeader && isSignOffChore(it.task));
+    if (!hasSignOff) {
+      items.push({
+        isSectionHeader: false,
+        index_: 15,
+        row: ["Weekly Sign-Off & Inspection", "Parents", false, null, null, null, null, null, null, "Thom / Meghan", null, null, null, null, null],
+        task: "Weekly Sign-Off & Inspection",
+        category: "Administration",
+        frequency: "Once a Week",
+        targetDay: "Sunday",
+        rotationGroup: "Parents",
+        notes: "Check off bedroom tidiness and completed chores"
+      });
+    }
     return items.filter(item => {
-      if (item.isSectionHeader) return true;
+      if (item.isSectionHeader || isSignOffChore(item.task)) return true;
       const idKey = String(item.index_);
       const taskKey = String(item.task || "").toLowerCase().trim();
       if (deletedChoreKeys.has(idKey) || deletedChoreKeys.has(taskKey)) {
@@ -2566,15 +2590,55 @@ function App({
   const [masterSearchQuery, setMasterSearchQuery] = useState("");
   const [editingMasterIndex, setEditingMasterIndex] = useState(null);
   const [masterInlineDraft, setMasterInlineDraft] = useState(null);
+  const [openTargetDayDropdown, setOpenTargetDayDropdown] = useState<string | number | null>(null);
   const [showInlineAddForm, setShowInlineAddForm] = useState(false);
   const [newMasterDraft, setNewMasterDraft] = useState({
     task: "",
     category: "Household",
     frequency: "Daily",
     targetDay: "Mon \u2013 Sun",
-    rotationGroup: "All Non-Casual",
+    selectedTargetDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    customTargetEnabled: false,
+    customTargetText: "",
+    rotationGroup: "Non-Casual",
     notes: ""
   });
+  const ALL_WEEK_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const parseTargetDayState = (rawTargetDay: string) => {
+    const clean = String(rawTargetDay || "").trim();
+    if (!clean || clean === "Mon \u2013 Sun" || clean === "Mon - Sun" || clean.toLowerCase() === "daily") {
+      return {
+        selectedDays: [...ALL_WEEK_DAYS],
+        customEnabled: false,
+        customText: ""
+      };
+    }
+    const parts = clean.split(",").map(s => s.trim()).filter(Boolean);
+    const selectedDays: string[] = [];
+    const customParts: string[] = [];
+    parts.forEach(p => {
+      const matchedDay = ALL_WEEK_DAYS.find(d => d.toLowerCase() === p.toLowerCase());
+      if (matchedDay) {
+        if (!selectedDays.includes(matchedDay)) selectedDays.push(matchedDay);
+      } else {
+        customParts.push(p);
+      }
+    });
+    return {
+      selectedDays: ALL_WEEK_DAYS.filter(d => selectedDays.includes(d)),
+      customEnabled: customParts.length > 0,
+      customText: customParts.join(", ")
+    };
+  };
+  const formatTargetDayState = (selectedDays: string[], customEnabled: boolean, customText: string) => {
+    const orderedDays = ALL_WEEK_DAYS.filter(d => selectedDays.includes(d));
+    const dayPart = orderedDays.length === 7 ? "Mon \u2013 Sun" : orderedDays.join(", ");
+    const cleanCustom = String(customText || "").trim();
+    if (customEnabled && cleanCustom) {
+      return dayPart ? `${dayPart}, ${cleanCustom}` : cleanCustom;
+    }
+    return dayPart || "Mon \u2013 Sun";
+  };
   const filteredMasterChores = useMemo(() => {
     return hubMasterChores.filter(ch => {
       if (masterCategoryFilter !== "ALL" && (ch.category || "").toLowerCase() !== masterCategoryFilter.toLowerCase()) {
@@ -3650,7 +3714,7 @@ function App({
     const hRowIdx = getHubRowIndex(oldTitle, choreIndex);
     if (hubRangeIndex >= 0 && hRowIdx !== void 0 && hRowIdx !== null) {
       const updateRow = new Array(12).fill(void 0);
-      if ("task" in patch) updateRow[6] = patch.task;
+      updateRow[6] = patch.task || oldTitle || "";
       if ("rotationGroup" in patch) updateRow[7] = patch.rotationGroup;
       if ("frequency" in patch) updateRow[8] = patch.frequency;
       if ("targetDay" in patch) updateRow[9] = patch.targetDay;
@@ -3658,6 +3722,16 @@ function App({
       if ("category" in patch) updateRow[11] = patch.category;
       updateItem(hubRangeIndex, hRowIdx, updateRow);
     }
+    setCustomMasterChores(prev => prev.map(cmc => {
+      if (cmc.index_ === choreIndex || normalizeTaskName(cmc.task) === normalizeTaskName(oldTitle)) {
+        return {
+          ...cmc,
+          ...patch,
+          task: patch.task || cmc.task
+        };
+      }
+      return cmc;
+    }));
     const pRowIdx = getPrintableRowIndex(oldTitle, choreIndex);
     if (printableRangeIndex >= 0 && "task" in patch && pRowIdx !== void 0 && pRowIdx !== null) {
       const updateP = new Array(15).fill(void 0);
@@ -3684,7 +3758,7 @@ function App({
     }
     setEditingMasterIndex(null);
     setMasterInlineDraft(null);
-    setNotice(`Updated "${patch.task || "chore"}" in schedule and master registry!`);
+    setNotice(`Updated "${patch.task || oldTitle || "chore"}" in schedule and master registry!`);
     setTimeout(() => setNotice(null), 3e3);
   };
   const handleDeleteMasterChore = (choreIndex, taskTitle) => {
@@ -5057,7 +5131,7 @@ function App({
               ...prev
             },
             category: e.target.value
-          }))} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">{CHORE_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon}{" "}{c.name}</option>)}</select></div><div><label className="block font-bold text-slate-700 mb-1">Frequency</label><select value={newMasterDraft.frequency} onChange={e => {
+          }))} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">{CHORE_CATEGORIES.map(c => <option key={c.id} value={c.name}>{c.icon}{" "}{c.name}</option>)}</select></div><div><label className="block font-bold text-slate-700 mb-1">Frequency</label><select value={newMasterDraft.frequency} onChange={e => {
             const val = e.target.value;
             setNewMasterDraft(prev => ({
               ...{
@@ -5066,75 +5140,122 @@ function App({
               frequency: val,
               targetDay: val === "Daily" ? "Mon \u2013 Sun" : val === "Bi-Weekly" ? "Thursday Evening" : "Saturday"
             }));
-          }} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="Daily">Daily</option><option value="Once a Week">Once a Week</option><option value="Bi-Weekly">Bi-Weekly</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Target Day(s)</label><input type="text" value={newMasterDraft.targetDay} onChange={e => setNewMasterDraft(prev => ({
+          }} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="Daily">Daily</option><option value="Once a Week">Once a Week</option><option value="Bi-Weekly">Bi-Weekly</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Target Day(s)</label><select value={newMasterDraft.targetDay} onChange={e => setNewMasterDraft(prev => ({
             ...{
               ...prev
             },
             targetDay: e.target.value
-          }))} placeholder="e.g. Mon \u2013 Sun, Saturday, Thursday Evening..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium" /></div><div><label className="block font-bold text-slate-700 mb-1">Rotation Group</label><select value={newMasterDraft.rotationGroup} onChange={e => setNewMasterDraft(prev => ({
+          }))} className="hidden" /><div className="relative"><button type="button" onClick={() => setOpenTargetDayDropdown(openTargetDayDropdown === "NEW_CHORE" ? null : "NEW_CHORE")} className="w-full flex items-center justify-between gap-2 text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 hover:border-indigo-400 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500"><span className="truncate">{newMasterDraft.targetDay || "Select days..."}</span><ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openTargetDayDropdown === "NEW_CHORE" ? "rotate-180 text-indigo-600" : ""}`} /></button>{openTargetDayDropdown === "NEW_CHORE" && <><div className="fixed inset-0 z-20" onClick={() => setOpenTargetDayDropdown(null)} /><div className="absolute left-0 top-full mt-1 z-30 w-60 bg-white rounded-xl border border-slate-200 shadow-xl p-2 space-y-1"><div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">Select Day(s)</div>{ALL_WEEK_DAYS.map(dayName => { const currentDays = newMasterDraft.selectedTargetDays || parseTargetDayState(newMasterDraft.targetDay).selectedDays; const isChecked = currentDays.includes(dayName); return <label key={dayName} className="flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-indigo-50/70 cursor-pointer select-none transition"><input type="checkbox" checked={isChecked} onChange={() => { const set = new Set(currentDays); if (set.has(dayName)) set.delete(dayName); else set.add(dayName); const nextDays = ALL_WEEK_DAYS.filter(d => set.has(d)); const nextTarget = formatTargetDayState(nextDays, Boolean(newMasterDraft.customTargetEnabled), newMasterDraft.customTargetText || ""); setNewMasterDraft(prev => ({ ...prev, selectedTargetDays: nextDays, targetDay: nextTarget })); }} className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" /><span className={`text-xs ${isChecked ? "font-bold text-indigo-950" : "font-medium text-slate-700"}`}>{dayName}</span></label>; })}<div className="pt-1.5 mt-1 border-t border-slate-100 space-y-1.5 px-2 pb-1"><label className="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" checked={Boolean(newMasterDraft.customTargetEnabled)} onChange={e => { const nextCustom = e.target.checked; const currentDays = newMasterDraft.selectedTargetDays || parseTargetDayState(newMasterDraft.targetDay).selectedDays; const nextTarget = formatTargetDayState(currentDays, nextCustom, newMasterDraft.customTargetText || ""); setNewMasterDraft(prev => ({ ...prev, customTargetEnabled: nextCustom, targetDay: nextTarget })); }} className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" /><span className={`text-xs ${newMasterDraft.customTargetEnabled ? "font-bold text-indigo-950" : "font-medium text-slate-700"}`}>Custom</span></label><input type="text" value={newMasterDraft.customTargetText || ""} onChange={e => { const val = e.target.value; const currentDays = newMasterDraft.selectedTargetDays || []; const nextTarget = formatTargetDayState(currentDays, true, val); setNewMasterDraft(prev => ({ ...prev, customTargetEnabled: true, customTargetText: val, targetDay: nextTarget })); }} placeholder="e.g. Thursday Evening..." className="w-full px-2 py-1 text-xs text-slate-800 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div></div></>}</div></div><div><label className="block font-bold text-slate-700 mb-1">Rotation Group</label><select value={newMasterDraft.rotationGroup === "All Non-Casual" ? "Non-Casual" : newMasterDraft.rotationGroup} onChange={e => setNewMasterDraft(prev => ({
             ...{
               ...prev
             },
             rotationGroup: e.target.value
-          }))} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="All Non-Casual">All Non-Casual (Sydney, Cadence, Mason, Thom, Meghan)</option><option value="Kids Rotation">Kids Rotation</option><option value="Parents & Kids">Parents & Kids</option><option value="All Occupants">All Occupants</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option><option value="Full-Time Roster">Full-Time Roster</option>{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</select></div><div className="md:col-span-3"><label className="block font-bold text-slate-700 mb-1">Operational Notes / Routine</label><input type="text" value={newMasterDraft.notes} onChange={e => setNewMasterDraft(prev => ({
+          }))} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><optgroup label="Special Rotation Groups"><option value="Non-Casual">Non-Casual</option><option value="Kids">Kids</option><option value="Parents">Parents</option><option value="All">All</option></optgroup><optgroup label="Individual Members">{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</optgroup></select></div><div className="md:col-span-3"><label className="block font-bold text-slate-700 mb-1">Operational Notes / Routine</label><input type="text" value={newMasterDraft.notes} onChange={e => setNewMasterDraft(prev => ({
             ...{
               ...prev
             },
             notes: e.target.value
-          }))} placeholder="Instructions, supplies, details or timing notes..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium" /></div></div><div className="flex justify-end gap-2 pt-2 border-t border-indigo-200"><button type="button" onClick={() => setShowInlineAddForm(false)} className="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition">Cancel</button><button type="button" onClick={() => handleAddNewMasterChore(newMasterDraft)} disabled={!newMasterDraft.task.trim()} className="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm disabled:opacity-40 transition flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /><span>Add Chore to Master List</span></button></div></div>}<div className="grid grid-cols-2 sm:grid-cols-4 gap-3"><div className="p-3 bg-slate-50 rounded-xl border border-slate-200"><span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Template Chores</span><div className="text-xl font-bold text-slate-900 mt-0.5">{hubMasterChores.length}{" Tasks"}</div><span className="text-[11px] text-slate-500">All registered tasks</span></div><div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200"><span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">Daily Chores</span><div className="text-xl font-bold text-blue-900 mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("daily")).length}{" Tasks"}</div><span className="text-[11px] text-blue-600">Mon – Sun rotation</span></div><div className="p-3 bg-purple-50/70 rounded-xl border border-purple-200"><span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider block">Once a Week</span><div className="text-xl font-bold text-purple-900 mt-0.5">{hubMasterChores.filter(c => { const f = (c.frequency || "").toLowerCase(); return (f.includes("weekly") || f.includes("once")) && !f.includes("bi"); }).length}{" Tasks"}</div><span className="text-[11px] text-purple-600">Saturday & Sunday deep tasks</span></div><div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200"><span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">Bi-Weekly Tasks</span><div className="text-xl font-bold text-amber-900 mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("bi-weekly") || c.frequency.toLowerCase().includes("biweekly")).length}{" Tasks"}</div><span className="text-[11px] text-amber-700">Split Curbside Recycling & Waste</span></div></div><div className="pt-2 space-y-3"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div className="relative flex-1 max-w-md"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" /><input type="text" placeholder="Search chores by name, category, group, or notes..." value={masterSearchQuery} onChange={e => setMasterSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500" />{masterSearchQuery && <button onClick={() => setMasterSearchQuery("")} className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"><X className="w-3.5 h-3.5" /></button>}</div><div className="flex items-center gap-1.5 text-xs"><span className="text-slate-500 font-semibold mr-1">Frequency:</span><button onClick={() => setMasterFrequencyFilter("ALL")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "ALL" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>All</button><button onClick={() => setMasterFrequencyFilter("Daily")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Daily" ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-700 hover:bg-blue-100"}`}>Daily</button><button onClick={() => setMasterFrequencyFilter("Once a Week")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Once a Week" ? "bg-purple-600 text-white" : "bg-purple-50 text-purple-700 hover:bg-purple-100"}`}>Weekly</button><button onClick={() => setMasterFrequencyFilter("Bi-Weekly")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Bi-Weekly" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-800 hover:bg-amber-100"}`}>Bi-Weekly</button></div></div><div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs"><span className="text-slate-400 font-semibold mr-1 shrink-0">Category:</span><button onClick={() => setMasterCategoryFilter("ALL")} className={`px-2.5 py-1 rounded-full font-semibold shrink-0 transition ${masterCategoryFilter === "ALL" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>All Categories ({hubMasterChores.length})</button>{CHORE_CATEGORIES.map(cat => {
+          }))} placeholder="Instructions, supplies, details or timing notes..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium" /></div></div><div className="flex justify-end gap-2 pt-2 border-t border-indigo-200"><button type="button" onClick={() => setShowInlineAddForm(false)} className="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition">Cancel</button><button type="button" onClick={() => handleAddNewMasterChore({ ...newMasterDraft, rotationGroup: newMasterDraft.rotationGroup === "All Non-Casual" ? "Non-Casual" : newMasterDraft.rotationGroup })} disabled={!newMasterDraft.task.trim()} className="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm disabled:opacity-40 transition flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /><span>Add Chore to Master List</span></button></div></div>}<div className="grid grid-cols-2 sm:grid-cols-4 gap-3"><div className="p-3 bg-slate-50 rounded-xl border border-slate-200"><span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Template Chores</span><div className="text-xl font-bold text-slate-900 mt-0.5">{hubMasterChores.length}{" Tasks"}</div><span className="text-[11px] text-slate-500">All registered tasks</span></div><div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200"><span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">Daily Chores</span><div className="text-xl font-bold text-blue-900 mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("daily")).length}{" Tasks"}</div><span className="text-[11px] text-blue-600">Mon – Sun rotation</span></div><div className="p-3 bg-purple-50/70 rounded-xl border border-purple-200"><span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider block">Once a Week</span><div className="text-xl font-bold text-purple-900 mt-0.5">{hubMasterChores.filter(c => { const f = (c.frequency || "").toLowerCase(); return (f.includes("weekly") || f.includes("once")) && !f.includes("bi"); }).length}{" Tasks"}</div><span className="text-[11px] text-purple-600">Saturday & Sunday deep tasks</span></div><div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200"><span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">Bi-Weekly Tasks</span><div className="text-xl font-bold text-amber-900 mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("bi-weekly") || c.frequency.toLowerCase().includes("biweekly")).length}{" Tasks"}</div><span className="text-[11px] text-amber-700">Split Curbside Recycling & Waste</span></div></div><div className="pt-2 space-y-3"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div className="relative flex-1 max-w-md"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" /><input type="text" placeholder="Search chores by name, category, group, or notes..." value={masterSearchQuery} onChange={e => setMasterSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500" />{masterSearchQuery && <button onClick={() => setMasterSearchQuery("")} className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"><X className="w-3.5 h-3.5" /></button>}</div><div className="flex items-center gap-1.5 text-xs"><span className="text-slate-500 font-semibold mr-1">Frequency:</span><button onClick={() => setMasterFrequencyFilter("ALL")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "ALL" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>All</button><button onClick={() => setMasterFrequencyFilter("Daily")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Daily" ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-700 hover:bg-blue-100"}`}>Daily</button><button onClick={() => setMasterFrequencyFilter("Once a Week")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Once a Week" ? "bg-purple-600 text-white" : "bg-purple-50 text-purple-700 hover:bg-purple-100"}`}>Weekly</button><button onClick={() => setMasterFrequencyFilter("Bi-Weekly")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Bi-Weekly" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-800 hover:bg-amber-100"}`}>Bi-Weekly</button></div></div><div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs"><span className="text-slate-400 font-semibold mr-1 shrink-0">Category:</span><button onClick={() => setMasterCategoryFilter("ALL")} className={`px-2.5 py-1 rounded-full font-semibold shrink-0 transition ${masterCategoryFilter === "ALL" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>All Categories ({hubMasterChores.length})</button>{CHORE_CATEGORIES.map(cat => {
             const count = hubMasterChores.filter(c => c.category.toLowerCase() === cat.name.toLowerCase()).length;
             return <button key={cat.id} onClick={() => setMasterCategoryFilter(cat.name)} className={`px-2.5 py-1 rounded-full font-semibold shrink-0 transition flex items-center gap-1.5 border ${masterCategoryFilter === cat.name ? "ring-2 ring-slate-800 shadow-xs" : "opacity-85 hover:opacity-100"} ${cat.bg} ${cat.text} ${cat.border}`}><span>{cat.icon}</span><span>{cat.name}</span><span className="text-[10px] opacity-75">({count})</span></button>;
-          })}</div></div><div className="space-y-3">{filteredMasterChores.map((ch, idx) => {
-            var _a2;
+          })}</div></div><div className="overflow-visible border border-slate-200 rounded-xl shadow-2xs"><table className="w-full text-left text-xs"><thead className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3 w-10 text-center">#</th><th className="p-3">Chore / Task</th><th className="p-3">Category</th><th className="p-3">Frequency</th><th className="p-3">Target Day(s)</th><th className="p-3">Rotation Group</th><th className="p-3 text-right">Actions</th></tr></thead><tbody>{filteredMasterChores.map((ch, idx) => {
             const isEditing = editingMasterIndex === ch.index_;
-            const catConfig = CHORE_CATEGORIES.find(c => c.name.toLowerCase() === ch.category.toLowerCase()) || CHORE_CATEGORIES[3];
-            const isBiWeekly = ch.frequency.toLowerCase().includes("bi-weekly") || ch.frequency.toLowerCase().includes("biweekly");
-            const isCurbsideRecycling = ch.task.toLowerCase().includes("recycling");
-            const isCurbsideWaste = ch.task.toLowerCase().includes("waste");
-            return <div key={`${ch.index_ || ch.task}-${idx}`} className={`bg-white rounded-xl border transition-all ${isEditing ? "border-indigo-400 ring-2 ring-indigo-100 shadow-md p-4" : "border-slate-200 hover:border-slate-300 shadow-xs p-4"}`}>{!isEditing ? <div className="flex flex-col md:flex-row md:items-start justify-between gap-3 text-xs"><div className="flex items-start gap-3 flex-1 min-w-0"><span className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center shrink-0 mt-0.5 text-[11px]">{idx + 1}</span><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="font-bold text-sm text-slate-900 leading-snug">{ch.task}</h3><span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${catConfig.bg} ${catConfig.text} ${catConfig.border}`}><span>{catConfig.icon}</span><span>{ch.category}</span></span><span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border ${isBiWeekly ? "bg-amber-50 text-amber-800 border-amber-200" : ch.frequency.toLowerCase().includes("daily") ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-purple-50 text-purple-700 border-purple-200"}`}>{ch.frequency}</span></div><div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-600"><div className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-slate-400" /><span className="font-medium text-slate-500">Target Day:</span><span className="font-bold text-slate-800 px-1.5 py-0.5 rounded bg-slate-100">{ch.targetDay}</span></div><div className="flex items-center gap-1"><Users className="w-3.5 h-3.5 text-slate-400" /><span className="font-medium text-slate-500">Rotation Group:</span><span className={`font-semibold px-1.5 py-0.5 rounded border ${ch.rotationGroup === "All Non-Casual" ? "bg-purple-100 text-purple-900 border-purple-300 font-bold" : "text-indigo-700 bg-indigo-50 border-indigo-100"}`} title={ch.rotationGroup === "All Non-Casual" ? "Covers Sydney, Cadence, Mason, Thom, and Meghan (excludes casuals Koda and Keyanna; no other group is equivalent)" : void 0}>{ch.rotationGroup}{ch.rotationGroup === "All Non-Casual" && <span className="ml-1 text-[9px] font-normal text-purple-700 hidden sm:inline">(5 non-casual)</span>}</span></div></div>{ch.notes && <p className="mt-2 text-[11px] text-slate-600 bg-slate-50/80 p-2 rounded-lg border border-slate-100 leading-relaxed"><span className="font-semibold text-slate-700">Instructions:</span>{" "}{ch.notes}</p>}{(isCurbsideRecycling || isCurbsideWaste) && <div className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-semibold text-amber-900 bg-amber-50/90 border border-amber-200 px-2 py-1 rounded-md"><span>{"\u2139\uFE0F"}</span><span>{isCurbsideRecycling ? "Alternating Friday pickup starts Oct 16. Curb task set for preceding Thursday evening." : "Alternating Friday pickup starts Oct 23. Curb task set for preceding Thursday evening."}</span></div>}</div></div><div className="flex items-center gap-1.5 shrink-0 self-end md:self-start pt-2 md:pt-0"><button type="button" onClick={() => {
+            const catConfig = CHORE_CATEGORIES.find(c => c.name.toLowerCase() === (ch.category || "").toLowerCase()) || CHORE_CATEGORIES[3];
+            const draftCatConfig = isEditing && (masterInlineDraft == null ? void 0 : masterInlineDraft.category)
+              ? CHORE_CATEGORIES.find(c => c.name.toLowerCase() === masterInlineDraft.category.toLowerCase()) || catConfig
+              : catConfig;
+            const freqVal = (ch.frequency || "").toLowerCase().includes("bi") ? "Bi-Weekly" : (ch.frequency || "").toLowerCase().includes("once") || (ch.frequency || "").toLowerCase().includes("weekly") ? "Once a Week" : "Daily";
+            const draftFreqVal = isEditing && (masterInlineDraft == null ? void 0 : masterInlineDraft.frequency) ? masterInlineDraft.frequency : freqVal;
+            const currentTargetDay = ch.targetDay || (freqVal === "Daily" ? "Mon \u2013 Sun" : freqVal === "Bi-Weekly" ? "Thursday Evening" : "Saturday");
+            const draftTargetDay = isEditing && (masterInlineDraft == null ? void 0 : masterInlineDraft.targetDay) !== void 0 ? masterInlineDraft.targetDay : currentTargetDay;
+            const parsedTargetState = parseTargetDayState(draftTargetDay);
+            const draftSelectedDays: string[] = isEditing && Array.isArray(masterInlineDraft == null ? void 0 : masterInlineDraft.selectedTargetDays)
+              ? masterInlineDraft.selectedTargetDays
+              : parsedTargetState.selectedDays;
+            const draftCustomEnabled: boolean = isEditing && (masterInlineDraft == null ? void 0 : masterInlineDraft.customTargetEnabled) !== void 0
+              ? Boolean(masterInlineDraft.customTargetEnabled)
+              : parsedTargetState.customEnabled;
+            const draftCustomText: string = isEditing && (masterInlineDraft == null ? void 0 : masterInlineDraft.customTargetText) !== void 0
+              ? masterInlineDraft.customTargetText
+              : parsedTargetState.customText;
+            const isTargetDayOpen = isEditing && openTargetDayDropdown === ch.index_;
+            const groupVal = ch.rotationGroup || "Non-Casual";
+            const draftGroupVal = isEditing && (masterInlineDraft == null ? void 0 : masterInlineDraft.rotationGroup) ? masterInlineDraft.rotationGroup : groupVal;
+            const saveChoreInlineEdit = () => {
+              const cleanTask = ((masterInlineDraft == null ? void 0 : masterInlineDraft.task) || "").trim() || ch.task;
+              const cleanNotes = ((masterInlineDraft == null ? void 0 : masterInlineDraft.notes) || "").trim();
+              const resolvedTargetDay = formatTargetDayState(draftSelectedDays, draftCustomEnabled, draftCustomText);
+              setOpenTargetDayDropdown(null);
+              handleUpdateMasterChore(ch.index_, {
+                oldTask: ch.task,
+                task: cleanTask,
+                category: draftCatConfig.name,
+                frequency: draftFreqVal,
+                targetDay: resolvedTargetDay,
+                rotationGroup: draftGroupVal,
+                notes: cleanNotes
+              });
+            };
+            return <React.Fragment key={`${ch.index_ || ch.task}-${idx}`}><tr className={`transition ${idx > 0 ? "border-t border-slate-200" : ""} ${isEditing ? "bg-indigo-50/50" : "hover:bg-slate-50/70"}`}><td className="px-3 pt-3 pb-1.5 text-center align-middle"><span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 font-bold inline-flex items-center justify-center text-[10px]">{idx + 1}</span></td><td className="px-3 pt-3 pb-1.5 font-semibold text-slate-800 min-w-[200px] align-middle">{isEditing ? <input type="text" value={(masterInlineDraft == null ? void 0 : masterInlineDraft.task) || ""} onChange={e => setMasterInlineDraft(prev => ({ ...prev, task: e.target.value }))} onKeyDown={e => { if (e.key === "Enter") saveChoreInlineEdit(); if (e.key === "Escape") { setOpenTargetDayDropdown(null); setEditingMasterIndex(null); setMasterInlineDraft(null); } }} className="w-full px-2 py-1 text-xs font-bold text-slate-900 bg-white border border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" autoFocus /> : <span className="font-bold text-slate-900 leading-snug">{ch.task}</span>}</td><td className="px-3 pt-3 pb-1.5 align-middle">{isEditing ? <select value={draftCatConfig.name} onChange={e => setMasterInlineDraft(prev => ({ ...prev, category: e.target.value }))} className={`px-2.5 py-1 rounded-lg font-bold text-[11px] border cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 ${draftCatConfig.bg} ${draftCatConfig.text} ${draftCatConfig.border}`}>{CHORE_CATEGORIES.map(c => <option key={c.id} value={c.name}>{c.icon}{" "}{c.name}</option>)}</select> : <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold text-[11px] border ${catConfig.bg} ${catConfig.text} ${catConfig.border}`}><span>{catConfig.icon}</span><span>{catConfig.name}</span></span>}</td><td className="px-3 pt-3 pb-1.5 align-middle">{isEditing ? <select value={draftFreqVal} onChange={e => {
+              const nextFreq = e.target.value;
+              const nextTarget = nextFreq === "Daily" ? "Mon \u2013 Sun" : nextFreq === "Bi-Weekly" ? "Thursday Evening" : draftTargetDay === "Mon \u2013 Sun" ? "Saturday" : draftTargetDay;
+              const nextParsed = parseTargetDayState(nextTarget);
+              setMasterInlineDraft(prev => ({
+                ...prev,
+                frequency: nextFreq,
+                targetDay: nextTarget,
+                selectedTargetDays: nextParsed.selectedDays,
+                customTargetEnabled: nextParsed.customEnabled,
+                customTargetText: nextParsed.customText
+              }));
+            }} className={`px-2.5 py-1 rounded-lg font-bold text-[11px] border cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 ${draftFreqVal === "Bi-Weekly" ? "bg-amber-50 text-amber-800 border-amber-200" : draftFreqVal === "Daily" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-purple-50 text-purple-700 border-purple-200"}`}><option value="Daily">Daily</option><option value="Once a Week">Once a Week</option><option value="Bi-Weekly">Bi-Weekly</option></select> : <span className={`inline-flex items-center px-2.5 py-1 rounded-lg font-bold text-[11px] border ${freqVal === "Bi-Weekly" ? "bg-amber-50 text-amber-800 border-amber-200" : freqVal === "Daily" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-purple-50 text-purple-700 border-purple-200"}`}>{freqVal}</span>}</td><td className="px-3 pt-3 pb-1.5 align-middle relative">{isEditing ? <><button type="button" onClick={() => setOpenTargetDayDropdown(isTargetDayOpen ? null : ch.index_)} className="min-w-[155px] flex items-center justify-between gap-2 px-2.5 py-1 rounded-lg font-semibold text-[11px] bg-white text-slate-800 border border-indigo-300 hover:border-indigo-400 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"><span className="truncate">{formatTargetDayState(draftSelectedDays, draftCustomEnabled, draftCustomText)}</span><ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${isTargetDayOpen ? "rotate-180 text-indigo-600" : ""}`} /></button>{isTargetDayOpen && <><div className="fixed inset-0 z-20" onClick={() => setOpenTargetDayDropdown(null)} /><div className="absolute left-3 top-full mt-1 z-30 w-56 bg-white rounded-xl border border-slate-200 shadow-xl p-2 space-y-1"><div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">Target Day(s)</div>{ALL_WEEK_DAYS.map(dayName => {
+              const isChecked = draftSelectedDays.includes(dayName);
+              return <label key={dayName} className="flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-indigo-50/70 cursor-pointer select-none transition"><input type="checkbox" checked={isChecked} onChange={() => {
+                const set = new Set(draftSelectedDays);
+                if (set.has(dayName)) set.delete(dayName);
+                else set.add(dayName);
+                const nextDays = ALL_WEEK_DAYS.filter(d => set.has(d));
+                const nextTarget = formatTargetDayState(nextDays, draftCustomEnabled, draftCustomText);
+                setMasterInlineDraft(prev => ({
+                  ...prev,
+                  selectedTargetDays: nextDays,
+                  targetDay: nextTarget
+                }));
+              }} className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" /><span className={`text-xs ${isChecked ? "font-bold text-indigo-950" : "font-medium text-slate-700"}`}>{dayName}</span></label>;
+            })}<div className="pt-1.5 mt-1 border-t border-slate-100 space-y-1.5 px-2 pb-1"><label className="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" checked={draftCustomEnabled} onChange={e => {
+              const nextCustom = e.target.checked;
+              const nextTarget = formatTargetDayState(draftSelectedDays, nextCustom, draftCustomText);
+              setMasterInlineDraft(prev => ({
+                ...prev,
+                customTargetEnabled: nextCustom,
+                targetDay: nextTarget
+              }));
+            }} className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" /><span className={`text-xs ${draftCustomEnabled ? "font-bold text-indigo-950" : "font-medium text-slate-700"}`}>Custom</span></label><input type="text" value={draftCustomText} onChange={e => {
+              const val = e.target.value;
+              const nextTarget = formatTargetDayState(draftSelectedDays, true, val);
+              setMasterInlineDraft(prev => ({
+                ...prev,
+                customTargetEnabled: true,
+                customTargetText: val,
+                targetDay: nextTarget
+              }));
+            }} onKeyDown={e => { if (e.key === "Enter") { setOpenTargetDayDropdown(null); } }} placeholder="e.g. Thursday Evening..." className="w-full px-2 py-1 text-xs text-slate-800 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div></div></>}</> : <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-semibold text-[11px] bg-slate-100 text-slate-800 border border-slate-200">{currentTargetDay}</span>}</td><td className="px-3 pt-3 pb-1.5 align-middle">{isEditing ? <select value={draftGroupVal} onChange={e => setMasterInlineDraft(prev => ({ ...prev, rotationGroup: e.target.value }))} className={`px-2.5 py-1 rounded-lg font-bold text-[11px] border cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 ${draftGroupVal === "Non-Casual" ? "bg-purple-50 text-purple-800 border-purple-200" : draftGroupVal === "Kids" ? "bg-indigo-50 text-indigo-800 border-indigo-200" : draftGroupVal === "Parents" ? "bg-amber-100 text-amber-900 border-amber-300" : draftGroupVal === "All" ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-sky-50 text-sky-800 border-sky-200"}`}><optgroup label="Special Rotation Groups"><option value="Non-Casual">Non-Casual</option><option value="Kids">Kids</option><option value="Parents">Parents</option><option value="All">All</option></optgroup><optgroup label="Individual Members">{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}</optgroup></select> : <span className={`inline-flex items-center px-2.5 py-1 rounded-lg font-bold text-[11px] border ${groupVal === "Non-Casual" ? "bg-purple-50 text-purple-800 border-purple-200" : groupVal === "Kids" ? "bg-indigo-50 text-indigo-800 border-indigo-200" : groupVal === "Parents" ? "bg-amber-100 text-amber-900 border-amber-300" : groupVal === "All" ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-sky-50 text-sky-800 border-sky-200"}`}>{groupVal}</span>}</td><td className="px-3 pt-3 pb-1.5 text-right whitespace-nowrap align-middle"><div className="inline-flex items-center justify-end gap-1"><button type="button" onClick={() => handleMoveChore(ch, "up")} disabled={idx === 0} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-20 rounded-lg transition cursor-pointer" title="Move chore up"><ArrowUp className="w-3.5 h-3.5" /></button><button type="button" onClick={() => handleMoveChore(ch, "down")} disabled={idx === filteredMasterChores.length - 1} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-20 rounded-lg transition cursor-pointer" title="Move chore down"><ArrowDown className="w-3.5 h-3.5" /></button>{isEditing ? <><button type="button" onClick={saveChoreInlineEdit} className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition cursor-pointer" title="Save changes"><Check className="w-3.5 h-3.5" /></button><button type="button" onClick={() => { setOpenTargetDayDropdown(null); setEditingMasterIndex(null); setMasterInlineDraft(null); }} className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition cursor-pointer" title="Cancel editing"><X className="w-3.5 h-3.5" /></button></> : <button type="button" onClick={() => {
+              const initTargetState = parseTargetDayState(currentTargetDay);
+              setOpenTargetDayDropdown(null);
               setEditingMasterIndex(ch.index_);
               setMasterInlineDraft({
-                ...ch
+                task: ch.task || "",
+                category: catConfig.name,
+                frequency: freqVal,
+                targetDay: currentTargetDay,
+                selectedTargetDays: initTargetState.selectedDays,
+                customTargetEnabled: initTargetState.customEnabled,
+                customTargetText: initTargetState.customText,
+                rotationGroup: groupVal,
+                notes: ch.notes || ""
               });
-            }} className="px-2.5 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg flex items-center gap-1 transition" title="Edit chore details"><Pen className="w-3.5 h-3.5" /><span>Edit</span></button><button type="button" onClick={() => handleMoveChore(ch, "up")} disabled={idx === 0} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-20 rounded transition cursor-pointer" title="Move chore up"><ArrowUp className="w-4 h-4" /></button><button type="button" onClick={() => handleMoveChore(ch, "down")} disabled={idx === filteredMasterChores.length - 1} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-20 rounded transition cursor-pointer" title="Move chore down"><ArrowDown className="w-4 h-4" /></button><button type="button" onClick={() => handleDeleteMasterChore(ch.index_, ch.task)} className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded transition" title={`Remove "${ch.task}"`}><Trash2 className="w-3.5 h-3.5" /></button></div></div> : <div className="space-y-3 text-xs"><div className="flex items-center justify-between pb-2 border-b border-indigo-200"><span className="font-bold text-indigo-900 flex items-center gap-1.5"><Pen className="w-3.5 h-3.5 text-indigo-600" /><span>Editing #{idx + 1}{": "}{ch.task}</span></span><span className="text-[10px] font-semibold text-slate-400">{"Sheet Row Index: "}{ch.index_}</span></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3"><div className="md:col-span-2"><label className="block font-bold text-slate-700 mb-1">{"Task Title "}<span className="text-rose-500">{"*"}</span></label><input type="text" value={(masterInlineDraft == null ? void 0 : masterInlineDraft.task) || ""} onChange={e => setMasterInlineDraft(prev => ({
-              ...{
-                ...prev
-              },
-              task: e.target.value
-            }))} className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div><div><label className="block font-bold text-slate-700 mb-1">Category</label><select value={(masterInlineDraft == null ? void 0 : masterInlineDraft.category) || "Household"} onChange={e => setMasterInlineDraft(prev => ({
-              ...{
-                ...prev
-              },
-              category: e.target.value
-            }))} className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">{CHORE_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.icon}{" "}{c.name}</option>)}</select></div><div><label className="block font-bold text-slate-700 mb-1">Frequency</label><select value={(masterInlineDraft == null ? void 0 : masterInlineDraft.frequency) || "Daily"} onChange={e => {
-              const val = e.target.value;
-              setMasterInlineDraft(prev => ({
-                ...{
-                  ...prev
-                },
-                frequency: val,
-                targetDay: val === "Daily" ? "Mon \u2013 Sun" : val === "Bi-Weekly" ? "Thursday Evening" : prev.targetDay
-              }));
-            }} className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="Daily">Daily</option><option value="Once a Week">Once a Week</option><option value="Bi-Weekly">Bi-Weekly</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Target Day(s)</label><input type="text" value={(masterInlineDraft == null ? void 0 : masterInlineDraft.targetDay) || ""} onChange={e => setMasterInlineDraft(prev => ({
-              ...{
-                ...prev
-              },
-              targetDay: e.target.value
-            }))} placeholder="e.g. Mon \u2013 Sun, Saturday, Thursday Evening..." className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div><div><label className="block font-bold text-slate-700 mb-1">Rotation Group</label><select value={(masterInlineDraft == null ? void 0 : masterInlineDraft.rotationGroup) || "All Non-Casual"} onChange={e => setMasterInlineDraft(prev => ({
-              ...{
-                ...prev
-              },
-              rotationGroup: e.target.value
-            }))} className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="All Non-Casual">All Non-Casual (Sydney, Cadence, Mason, Thom, Meghan)</option><option value="Kids Rotation">Kids Rotation</option><option value="Parents & Kids">Parents & Kids</option><option value="All Occupants">All Occupants</option><option value="All Kids">All Kids</option><option value="Parents">Parents</option><option value="Full-Time Roster">Full-Time Roster</option>{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</select><p className="text-[10px] text-slate-500 mt-1 leading-snug">{"\u{1F4A1} "}<strong>All Non-Casual:</strong>{" Covers Sydney, Cadence, Mason, Thom, and Meghan (excludes casuals Koda & Keyanna). "}<em>No equivalent currently exists among existing groups</em>.</p></div><div className="md:col-span-3"><label className="block font-bold text-slate-700 mb-1">Operational Notes</label><input type="text" value={(masterInlineDraft == null ? void 0 : masterInlineDraft.notes) || ""} onChange={e => setMasterInlineDraft(prev => ({
-              ...{
-                ...prev
-              },
-              notes: e.target.value
-            }))} placeholder="Operational details, supplies or timing notes..." className="w-full text-xs p-2 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div></div><div className="flex items-center justify-between pt-2 border-t border-indigo-200"><button type="button" onClick={() => handleDeleteMasterChore(ch.index_, ch.task)} className="px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-1 transition"><Trash2 className="w-3.5 h-3.5" /><span>Remove Chore</span></button><div className="flex items-center gap-2"><button type="button" onClick={() => {
-              setEditingMasterIndex(null);
-              setMasterInlineDraft(null);
-            }} className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition">Cancel</button><button type="button" onClick={() => handleUpdateMasterChore(ch.index_, masterInlineDraft)} disabled={!((_a2 = masterInlineDraft == null ? void 0 : masterInlineDraft.task) == null ? void 0 : _a2.trim())} className="px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-xs transition disabled:opacity-40">Save Changes</button></div></div></div>}</div>;
-          })}{hubMasterChores.length === 0 && <div className="p-8 text-center bg-white rounded-xl border border-slate-200 text-slate-500"><ListTodo className="w-8 h-8 text-slate-300 mx-auto mb-2" /><p className="font-semibold">No chores found in Master Template</p><button onClick={() => setShowInlineAddForm(true)} className="mt-3 text-xs font-bold px-3 py-1.5 bg-indigo-600 text-white rounded-lg">Add First Chore</button></div>}</div></div></div></div>}</main>{activeDayModal && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"><div className="p-4 bg-slate-900 text-white flex items-center justify-between"><div><span className="text-xs uppercase tracking-wider text-slate-400 font-semibold">Day Schedule</span><h3 className="text-base font-bold">{(() => {
+            }} className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition cursor-pointer" title={`Edit ${ch.task}`}><Pen className="w-3.5 h-3.5" /></button>}<button type="button" onClick={() => handleDeleteMasterChore(ch.index_, ch.task)} className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer" title={`Remove "${ch.task}"`}><Trash2 className="w-3.5 h-3.5" /></button></div></td></tr><tr className={`transition ${isEditing ? "bg-indigo-50/50" : "hover:bg-slate-50/70"}`}><td className="px-3 pb-3 pt-0" /><td colSpan={6} className="px-3 pb-3 pt-0">{isEditing ? <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-indigo-300 shadow-2xs focus-within:ring-2 focus-within:ring-indigo-500"><span className="font-bold text-[11px] text-indigo-800 shrink-0">Instructions / Notes:</span><input type="text" value={(masterInlineDraft == null ? void 0 : masterInlineDraft.notes) || ""} onChange={e => setMasterInlineDraft(prev => ({ ...prev, notes: e.target.value }))} onKeyDown={e => { if (e.key === "Enter") saveChoreInlineEdit(); if (e.key === "Escape") { setEditingMasterIndex(null); setMasterInlineDraft(null); } }} placeholder="Add operational instructions or routine notes..." className="w-full text-xs text-slate-800 bg-transparent focus:outline-none" /></div> : <div className="px-3 py-1.5 rounded-lg bg-slate-50/90 border border-slate-200/80 text-[11px] text-slate-600 leading-snug"><span className="font-bold text-slate-700">Instructions / Notes:</span>{" "}{ch.notes || <span className="italic text-slate-400">No instructions</span>}</div>}</td></tr></React.Fragment>;
+          })}</tbody></table>{filteredMasterChores.length === 0 && <div className="p-8 text-center bg-white text-slate-500"><ListTodo className="w-8 h-8 text-slate-300 mx-auto mb-2" /><p className="font-semibold">No chores match the current filters</p>{hubMasterChores.length === 0 ? <button onClick={() => setShowInlineAddForm(true)} className="mt-3 text-xs font-bold px-3 py-1.5 bg-indigo-600 text-white rounded-lg">Add First Chore</button> : <button onClick={() => { setMasterCategoryFilter("ALL"); setMasterFrequencyFilter("ALL"); setMasterSearchQuery(""); }} className="mt-3 text-xs font-bold px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg">Reset Filters</button>}</div>}</div></div></div></div>}</main>{activeDayModal && <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"><div className="p-4 bg-slate-900 text-white flex items-center justify-between"><div><span className="text-xs uppercase tracking-wider text-slate-400 font-semibold">Day Schedule</span><h3 className="text-base font-bold">{(() => {
             const parsed = parseDateKey(activeDayModal);
             if (!parsed) return activeDayModal;
             const d = new Date(parsed.year, parsed.month, parsed.day);

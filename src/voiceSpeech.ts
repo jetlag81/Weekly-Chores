@@ -243,3 +243,9 @@ export function speakParentHouseholdSummary(
   speakText(text, { rate: 0.98, pitch: 1.0 });
 }
 
+export function speakInspectionApproval(weekLabel: string, kidNames: string[]): void {
+  const namesStr = kidNames.length <= 2 ? kidNames.join(" and ") : `${kidNames.slice(0, -1).join(", ")}, and ${kidNames[kidNames.length - 1]}`;
+  const text = `Weekly Sunday inspection officially approved by parents Thom and Meghan for the week of ${weekLabel}! Allowances signed off for ${namesStr}. Fantastic work this week everyone!`;
+  speakText(text, { rate: 1.0, pitch: 1.05 });
+}
+

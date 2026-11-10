@@ -26,10 +26,12 @@ import {
   Award,
   Users,
   Smartphone,
-  Download
+  Download,
+  ShieldCheck
 } from "lucide-react";
 import { isStandalone, subscribeInstallable } from "./pwaManager";
 import { InstallPwaModal } from "./InstallPwaModal";
+import { ParentInspectionModal } from "./ParentInspectionModal";
 import {
   playChoreCompletionSound,
   saveDeviceSession,
@@ -68,6 +70,17 @@ interface MinionDashboardProps {
   formatDateKey: (year: number, month: number, day: number) => string;
   activeSyncWeek?: string;
   getChoreStatus?: (dateKey: string, choreIndex: number, taskTitle?: string) => { who: string; done: boolean; kidsDone?: Record<string, boolean>; hasExplicitRecord?: boolean };
+  signOffStatus?: { done: boolean; who?: string };
+  onToggleWeeklySignOff?: () => void;
+  activeWeekDays?: Array<{
+    year: number;
+    month: number;
+    day: number;
+    dateKey: string;
+    dayOfWeekIndex: number;
+  }>;
+  allKidsList?: string[];
+  onToggleKidChore?: (dateKey: string, choreIndex: number, kidName: string, taskTitle: string, dayIdx: number) => void;
 }
 
 export const MinionDashboard: React.FC<MinionDashboardProps> = ({
@@ -88,7 +101,12 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   onKidSwitched,
   formatDateKey,
   activeSyncWeek,
-  getChoreStatus
+  getChoreStatus,
+  signOffStatus = { done: false, who: "Parents" },
+  onToggleWeeklySignOff,
+  activeWeekDays = [],
+  allKidsList = ["Sydney", "Cadence", "Mason"],
+  onToggleKidChore
 }) => {
   const kidMembers = React.useMemo(() => {
     return familyMembers.filter(
@@ -125,6 +143,8 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
   const [showExitPinModal, setShowExitPinModal] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
+  const [showInspectionModal, setShowInspectionModal] = useState(false);
+  const [pinAction, setPinAction] = useState<"menu" | "inspection" | "exit">("menu");
   const [canInstallPwa, setCanInstallPwa] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
@@ -326,7 +346,11 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     e.preventDefault();
     if (pinInput === "1234" || pinInput === "0000") {
       setShowExitPinModal(false);
-      onExitMinionMode();
+      if (pinAction === "inspection") {
+        setShowInspectionModal(true);
+      } else {
+        onExitMinionMode();
+      }
     } else {
       setPinError("Incorrect Parent PIN (Default is 1234)");
     }
@@ -408,12 +432,40 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
               </button>
             )}
 
+            {/* Sunday Inspection Quick Access for Parents */}
+            <button
+              type="button"
+              onClick={() => {
+                setPinInput("");
+                setPinError("");
+                setPinAction("inspection");
+                setShowExitPinModal(true);
+              }}
+              className={`p-1.5 sm:px-2.5 rounded-xl transition flex items-center gap-1.5 text-xs font-bold cursor-pointer shadow-2xs border ${
+                signOffStatus?.done
+                  ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
+                  : "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
+              }`}
+              title="Parent Sunday Inspection (PIN: 1234)"
+            >
+              <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
+              <span className="hidden sm:inline">Sunday Inspection</span>
+              <span
+                className={`text-[10px] font-mono px-1 py-0.2 rounded font-black ${
+                  signOffStatus?.done ? "bg-emerald-200 text-emerald-950" : "bg-amber-200 text-amber-950"
+                }`}
+              >
+                {signOffStatus?.done ? "✓ TV/MV" : "Inspect"}
+              </span>
+            </button>
+
             {/* Parent Lock / Exit Button */}
             <button
               type="button"
               onClick={() => {
                 setPinInput("");
                 setPinError("");
+                setPinAction("menu");
                 setShowExitPinModal(true);
               }}
               className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition flex items-center gap-1 text-xs font-semibold cursor-pointer shadow-2xs"
@@ -965,17 +1017,33 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     )}
   </main>
 
-      {/* Parent PIN Unlock Modal to Exit Minion Mode */}
+      {/* Parent PIN Unlock Modal for Inspections & Admin Access */}
       {showExitPinModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-xs w-full p-5 shadow-2xl border border-slate-200 space-y-4">
+          <div className="bg-white rounded-3xl max-w-xs w-full p-5 shadow-2xl border border-slate-200 space-y-4">
             <div className="text-center space-y-1">
-              <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-700 mx-auto flex items-center justify-center">
-                <Lock className="w-5 h-5" />
+              <div
+                className={`w-11 h-11 rounded-2xl mx-auto flex items-center justify-center ${
+                  pinAction === "inspection"
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                {pinAction === "inspection" ? (
+                  <ShieldCheck className="w-6 h-6" />
+                ) : (
+                  <Lock className="w-5 h-5" />
+                )}
               </div>
-              <h3 className="font-extrabold text-base text-slate-900">Parent Unlock</h3>
+              <h3 className="font-extrabold text-base text-slate-900">
+                {pinAction === "inspection"
+                  ? "Sunday Inspection"
+                  : "Parent Admin Unlock"}
+              </h3>
               <p className="text-xs text-slate-500">
-                Enter your 4-digit Parent PIN to return to Admin Hub:
+                {pinAction === "inspection"
+                  ? "Enter Parent PIN to inspect rooms and sign off weekly allowances:"
+                  : "Enter Parent PIN to access inspection or return to Admin Hub:"}
               </p>
             </div>
 
@@ -990,7 +1058,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                   setPinInput(e.target.value);
                   setPinError("");
                 }}
-                className="w-full text-center text-xl tracking-widest font-mono font-bold py-2 px-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full text-center text-xl tracking-widest font-mono font-bold py-2 px-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
 
               {pinError && (
@@ -999,21 +1067,66 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowExitPinModal(false)}
-                  className="py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition cursor-pointer"
-                >
-                  Unlock
-                </button>
-              </div>
+              {pinAction === "inspection" ? (
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowExitPinModal(false)}
+                    className="py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="py-2.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition cursor-pointer shadow-xs"
+                  >
+                    Inspect Rooms
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2 pt-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (pinInput === "1234" || pinInput === "0000") {
+                          setShowExitPinModal(false);
+                          setShowInspectionModal(true);
+                        } else {
+                          setPinError("Enter Parent PIN (1234) first");
+                        }
+                      }}
+                      className="py-2.5 px-2 text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-xl transition cursor-pointer flex items-center justify-center gap-1 border border-amber-300"
+                    >
+                      <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Inspect</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (pinInput === "1234" || pinInput === "0000") {
+                          setShowExitPinModal(false);
+                          onExitMinionMode();
+                        } else {
+                          setPinError("Enter Parent PIN (1234) first");
+                        }
+                      }}
+                      className="py-2.5 px-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition cursor-pointer shadow-xs"
+                    >
+                      Admin Hub
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowExitPinModal(false)}
+                    className="w-full py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
 
               <div className="pt-2 border-t border-slate-100 text-center">
                 <button
@@ -1027,7 +1140,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                       setPinError("Enter Parent PIN (1234) first to unpair");
                     }
                   }}
-                  className="w-full py-1.5 text-[11px] font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                  className="w-full py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                 >
                   Unpair This Device ({currentKid.name})
                 </button>
@@ -1035,6 +1148,27 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             </form>
           </div>
         </div>
+      )}
+
+      {/* Parent Room Inspection & Weekly Sign-Off Modal */}
+      {showInspectionModal && (
+        <ParentInspectionModal
+          isOpen={showInspectionModal}
+          onClose={() => setShowInspectionModal(false)}
+          activeSyncWeek={activeSyncWeek || "2026-10-12"}
+          activeWeekDays={activeWeekDays}
+          familyMembers={familyMembers}
+          allKidsList={allKidsList}
+          monthSchedule={monthSchedule}
+          signOffStatus={signOffStatus}
+          onToggleWeeklySignOff={onToggleWeeklySignOff || (() => {})}
+          onToggleWeeklyKidChore={onToggleWeeklyKidChore}
+          getWeeklyKidsStatus={getWeeklyKidsStatus}
+          onToggleKidChore={onToggleKidChore}
+          monthlyIncentive={monthlyIncentive}
+          monthlyGoalTarget={monthlyGoalTarget}
+          topPerformer={topPerformer}
+        />
       )}
 
       {showInstallModal && (

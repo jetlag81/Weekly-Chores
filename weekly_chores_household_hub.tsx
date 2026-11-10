@@ -36,6 +36,7 @@ import {
   Volume2,
   VolumeX,
   Download,
+  ShieldCheck,
   X
 } from 'lucide-react';
 import {
@@ -54,6 +55,7 @@ import { InviteModal } from "./src/InviteModal";
 import { KidPairingScreen } from "./src/KidPairingScreen";
 import { FirebaseSettingsModal } from "./src/FirebaseSettingsModal";
 import { InstallPwaModal } from "./src/InstallPwaModal";
+import { ParentInspectionModal } from "./src/ParentInspectionModal";
 import { isStandalone } from "./src/pwaManager";
 import { getChoreCanonicalKey, normalizeTaskName } from "./src/choreUtils";
 import {
@@ -1774,6 +1776,7 @@ function App({
   const [showPairingScreen, setShowPairingScreen] = useState(false);
   const [showFirebaseModal, setShowFirebaseModal] = useState(false);
   const [showPwaModal, setShowPwaModal] = useState(false);
+  const [showInspectionModal, setShowInspectionModal] = useState(false);
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
 
   useEffect(() => {
@@ -5405,6 +5408,11 @@ function App({
         getWeeklyKidsStatus={getWeeklyKidsStatus}
         formatDateKey={formatDateKey}
         activeSyncWeek={activeSyncWeek}
+        activeWeekDays={activeWeekDays}
+        allKidsList={allKidsList}
+        signOffStatus={signOffStatus}
+        onToggleWeeklySignOff={handleToggleWeeklySignOff}
+        onToggleKidChore={handleToggleKidChore}
         getChoreStatus={getChoreStatus}
         onKidSwitched={(kName) => {
           setDeviceSession(prev => ({ ...prev, role: "kid", kidName: kName }));
@@ -5503,6 +5511,28 @@ function App({
                 <span>Install App</span>
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => setShowInspectionModal(true)}
+              className={`flex items-center gap-1.5 text-xs font-bold px-3 py-2 border rounded-lg transition cursor-pointer shadow-2xs ${
+                signOffStatus.done
+                  ? "bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100"
+                  : "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
+              }`}
+              title="Conduct Sunday room inspection and sign off weekly allowances"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+              <span>Sunday Inspection</span>
+              <span
+                className={`text-[10px] font-black px-1.5 py-0.2 rounded font-mono ${
+                  signOffStatus.done
+                    ? "bg-emerald-200 text-emerald-950"
+                    : "bg-amber-200 text-amber-950"
+                }`}
+              >
+                {signOffStatus.done ? "✓ TV / MV" : "Pending"}
+              </span>
+            </button>
             {isSpeechSupported() && (
               <button
                 type="button"
@@ -5909,7 +5939,7 @@ function App({
       })}{/* Decorative 7-Day Color Band matching Weekly Chores Original - Printed.pdf */}
           <tr className="h-14 print:h-5 color-band-row"><td style={{ backgroundColor: "#002060" }} />{DAY_STYLES.map(d => <td key={`band-${d.name}`} colSpan={2} style={{ backgroundColor: d.color }} />)}</tr>
           {/* Weekly Sign-Off Row matching Weekly Chores Original - Printed.pdf */}
-          <tr className="sign-off-row bg-white text-slate-900" style={{ borderTop: "1px solid #475569", borderBottom: "2.5px solid #C55A11" }}><td className="py-2 px-2.5 font-semibold text-xs text-slate-900 bg-white" style={{ borderLeft: "1px solid #C55A11", borderRight: "1.5px solid #475569" }}>Weekly Sign-Off</td><td colSpan={12} className="py-2 px-3 text-right font-semibold text-xs text-slate-900 bg-white" style={{ borderRight: "1.5px solid #475569" }}>Parent Initials:</td><td colSpan={2} className="py-2 px-2 text-center bg-white" style={{ borderRight: "1px solid #C55A11" }}><button type="button" onClick={handleToggleWeeklySignOff} className="inline-flex items-center justify-center w-full cursor-pointer font-semibold text-xs text-slate-900" title="Click to toggle Parent Sign-Off"><span className={`inline-block min-w-[56px] border-b border-slate-800 ${signOffStatus.done ? "text-emerald-700 font-bold" : "text-transparent select-none"}`}>{signOffStatus.done ? "\u2713 TV / MV" : "_________"}</span></button></td></tr></tbody></table></div></div><div className="no-print grid grid-cols-1 md:grid-cols-3 gap-4 text-xs"><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-indigo-900">HOUSEHOLD ROSTER</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div><strong className="text-slate-900">{"\u2022 Full-Time:"}</strong>{" "}{familyMembers.filter(m => m.type === "regular").map(m => m.name).join(", ") || "Sydney, Thom, Meghan"}</div><div><strong className="text-pink-900">{"\u2022 Bi-Weekly:"}</strong>{" "}{familyMembers.filter(m => m.type === "biweekly").map(m => m.name).join(" & ") || "Cadence & Mason"}</div><div><strong className="text-sky-900">{"\u2022 Casual:"}</strong>{" "}{familyMembers.filter(m => m.type === "casual").map(m => m.name).join(", ") || "Koda, Keyanna"}</div></div></div><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-pink-900">BI-WEEKLY SCHEDULE</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div>{"\u2022 Cadence & Mason: Alternating bi-weekly schedule"}</div><div>{"\u2022 Status this week: Not here \u2022 Arrive Sunday, Oct. 18 @ 5:00 PM"}</div><div>{"\u2022 Transitions: Sundays @ 5:00 PM (alternating bi-weekly from Oct 18)"}</div><div>{"\u2022 Off-weeks (This week): Chores split among full-time roster (Thom, Meghan, Sydney)"}</div><div>{"\u2022 On-weeks (Starts Oct 19): Included in daily chore rotations"}</div></div></div><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-amber-900">{'PET CARE ROUTINE ("FEED THE HERD")'}</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div>{"\u2022 Cats (Litter Crew): Morning & evening feeding, scoop litter box daily"}</div><div>{"\u2022 Family Dog(s): Morning & evening feeding, outdoor routine, fresh water"}</div><div>{"\u2022 Herd Feeding Station: Refill all water bowls daily, wipe station, dispose waste"}</div><div>{"\u2022 Routine: Daily feeding, fresh water & station cleanup"}</div></div></div></div></div>}{activeTab === "stats" && <div className="max-w-4xl mx-auto space-y-6"><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Scheduled Chores</span><Calendar className="w-4 h-4 text-slate-400" /></div><div className="text-2xl font-bold text-slate-900 mt-2">{monthStats.totalScheduled}</div><p className="text-xs text-slate-500 mt-1">{"Total across "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</p></div><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Completed Chores</span><CircleCheck className="w-4 h-4 text-emerald-500" /></div><div className="text-2xl font-bold text-emerald-600 mt-2">{monthStats.totalCompleted}</div><p className="text-xs text-slate-500 mt-1">{monthStats.completionRate}% completion rate</p></div><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Active Tasks</span><ListTodo className="w-4 h-4 text-indigo-500" /></div><div className="text-2xl font-bold text-indigo-600 mt-2">{choreRows.length}</div><p className="text-xs text-slate-500 mt-1">Daily & weekly routines</p></div><div className="bg-gradient-to-br from-amber-50 to-orange-50/70 p-4 rounded-xl border border-amber-300 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-bold text-amber-900">Current Top Performer</span><Crown className="w-4 h-4 text-amber-600" /></div><div className="text-xl font-black text-amber-950 mt-2 truncate">{topPerformer ? topPerformer.name : "TBD"}</div><p className="text-xs text-amber-800 mt-1 truncate">{topPerformer ? `${topPerformer.done} chores finished` : "Track chores to rank"}</p></div></div><div className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 rounded-2xl text-white p-5 shadow-md"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-white/20"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 shadow-inner"><Trophy className="w-6 h-6 text-amber-200" /></div><div><div className="flex items-center gap-2"><span className="text-xs font-extrabold uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full">Monthly Incentive Prize</span><span className="text-xs opacity-90">{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</span></div><h3 className="text-base font-extrabold mt-0.5">Top Performer Reward & Recognition</h3></div></div><div className="flex items-center gap-2"><button onClick={() => {
+          <tr className="sign-off-row bg-white text-slate-900" style={{ borderTop: "1px solid #475569", borderBottom: "2.5px solid #C55A11" }}><td className="py-2 px-2.5 font-semibold text-xs text-slate-900 bg-white" style={{ borderLeft: "1px solid #C55A11", borderRight: "1.5px solid #475569" }}>Weekly Sign-Off</td><td colSpan={12} className="py-2 px-3 text-right font-semibold text-xs text-slate-900 bg-white" style={{ borderRight: "1.5px solid #475569" }}>Parent Initials:</td><td colSpan={2} className="py-2 px-2 text-center bg-white" style={{ borderRight: "1px solid #C55A11" }}><button type="button" onClick={() => setShowInspectionModal(true)} className="inline-flex items-center justify-center w-full cursor-pointer font-semibold text-xs text-slate-900 hover:opacity-80 transition" title="Click to open Parent Sunday Inspection & Sign-Off"><span className={`inline-block min-w-[56px] border-b border-slate-800 ${signOffStatus.done ? "text-emerald-700 font-bold" : "text-transparent select-none"}`}>{signOffStatus.done ? "\u2713 TV / MV" : "_________"}</span></button></td></tr></tbody></table></div></div><div className="no-print grid grid-cols-1 md:grid-cols-3 gap-4 text-xs"><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-indigo-900">HOUSEHOLD ROSTER</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div><strong className="text-slate-900">{"\u2022 Full-Time:"}</strong>{" "}{familyMembers.filter(m => m.type === "regular").map(m => m.name).join(", ") || "Sydney, Thom, Meghan"}</div><div><strong className="text-pink-900">{"\u2022 Bi-Weekly:"}</strong>{" "}{familyMembers.filter(m => m.type === "biweekly").map(m => m.name).join(" & ") || "Cadence & Mason"}</div><div><strong className="text-sky-900">{"\u2022 Casual:"}</strong>{" "}{familyMembers.filter(m => m.type === "casual").map(m => m.name).join(", ") || "Koda, Keyanna"}</div></div></div><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-pink-900">BI-WEEKLY SCHEDULE</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div>{"\u2022 Cadence & Mason: Alternating bi-weekly schedule"}</div><div>{"\u2022 Status this week: Not here \u2022 Arrive Sunday, Oct. 18 @ 5:00 PM"}</div><div>{"\u2022 Transitions: Sundays @ 5:00 PM (alternating bi-weekly from Oct 18)"}</div><div>{"\u2022 Off-weeks (This week): Chores split among full-time roster (Thom, Meghan, Sydney)"}</div><div>{"\u2022 On-weeks (Starts Oct 19): Included in daily chore rotations"}</div></div></div><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-amber-900">{'PET CARE ROUTINE ("FEED THE HERD")'}</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div>{"\u2022 Cats (Litter Crew): Morning & evening feeding, scoop litter box daily"}</div><div>{"\u2022 Family Dog(s): Morning & evening feeding, outdoor routine, fresh water"}</div><div>{"\u2022 Herd Feeding Station: Refill all water bowls daily, wipe station, dispose waste"}</div><div>{"\u2022 Routine: Daily feeding, fresh water & station cleanup"}</div></div></div></div></div>}{activeTab === "stats" && <div className="max-w-4xl mx-auto space-y-6"><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Scheduled Chores</span><Calendar className="w-4 h-4 text-slate-400" /></div><div className="text-2xl font-bold text-slate-900 mt-2">{monthStats.totalScheduled}</div><p className="text-xs text-slate-500 mt-1">{"Total across "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</p></div><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Completed Chores</span><CircleCheck className="w-4 h-4 text-emerald-500" /></div><div className="text-2xl font-bold text-emerald-600 mt-2">{monthStats.totalCompleted}</div><p className="text-xs text-slate-500 mt-1">{monthStats.completionRate}% completion rate</p></div><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Active Tasks</span><ListTodo className="w-4 h-4 text-indigo-500" /></div><div className="text-2xl font-bold text-indigo-600 mt-2">{choreRows.length}</div><p className="text-xs text-slate-500 mt-1">Daily & weekly routines</p></div><div className="bg-gradient-to-br from-amber-50 to-orange-50/70 p-4 rounded-xl border border-amber-300 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-bold text-amber-900">Current Top Performer</span><Crown className="w-4 h-4 text-amber-600" /></div><div className="text-xl font-black text-amber-950 mt-2 truncate">{topPerformer ? topPerformer.name : "TBD"}</div><p className="text-xs text-amber-800 mt-1 truncate">{topPerformer ? `${topPerformer.done} chores finished` : "Track chores to rank"}</p></div></div><div className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 rounded-2xl text-white p-5 shadow-md"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-white/20"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 shadow-inner"><Trophy className="w-6 h-6 text-amber-200" /></div><div><div className="flex items-center gap-2"><span className="text-xs font-extrabold uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full">Monthly Incentive Prize</span><span className="text-xs opacity-90">{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</span></div><h3 className="text-base font-extrabold mt-0.5">Top Performer Reward & Recognition</h3></div></div><div className="flex items-center gap-2"><button onClick={() => {
             setIsEditingIncentive(prev => !prev);
             setIncentiveDraft(monthlyIncentive);
             setTargetDraft(monthlyGoalTarget || 25);
@@ -6518,6 +6548,25 @@ function App({
       )}
       {showPwaModal && (
         <InstallPwaModal onClose={() => setShowPwaModal(false)} />
+      )}
+      {showInspectionModal && (
+        <ParentInspectionModal
+          isOpen={showInspectionModal}
+          onClose={() => setShowInspectionModal(false)}
+          activeSyncWeek={activeSyncWeek}
+          activeWeekDays={activeWeekDays}
+          familyMembers={familyMembers}
+          allKidsList={allKidsList}
+          monthSchedule={monthSchedule}
+          signOffStatus={signOffStatus}
+          onToggleWeeklySignOff={handleToggleWeeklySignOff}
+          onToggleWeeklyKidChore={handleToggleWeeklyKidChore}
+          getWeeklyKidsStatus={getWeeklyKidsStatus}
+          onToggleKidChore={handleToggleKidChore}
+          monthlyIncentive={monthlyIncentive}
+          monthlyGoalTarget={monthlyGoalTarget || 25}
+          topPerformer={topPerformer}
+        />
       )}
     </div>
   );

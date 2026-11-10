@@ -34,7 +34,7 @@ import {
   X
 } from 'lucide-react';
 
-const STORAGE_KEY = 'weekly_chores_canvas_sheet_data_v3';
+const STORAGE_KEY = 'weekly_chores_canvas_sheet_data_v4';
 
 export const INITIAL_SHEET_DATA = [
   {
@@ -2236,11 +2236,23 @@ function App({
       });
     }
     if (choreOrderOverrides && Array.isArray(choreOrderOverrides) && choreOrderOverrides.length > 0) {
+      const findOrderIdx = c => {
+        const norm = normalizeTaskName(c.task);
+        const idx = choreOrderOverrides.indexOf(norm);
+        if (idx !== -1) return idx;
+        const rawLower = (c.task || "").toLowerCase().trim();
+        const rawIdx = choreOrderOverrides.indexOf(rawLower);
+        if (rawIdx !== -1) return rawIdx;
+        const cKey = getChoreCanonicalKey(c.task);
+        if (cKey) {
+          const cIdx = choreOrderOverrides.findIndex(k => getChoreCanonicalKey(k) === cKey);
+          if (cIdx !== -1) return cIdx;
+        }
+        return -1;
+      };
       chores.sort((a, b) => {
-        const nameA = (a.task || "").toLowerCase().trim();
-        const nameB = (b.task || "").toLowerCase().trim();
-        const idxA = choreOrderOverrides.indexOf(nameA);
-        const idxB = choreOrderOverrides.indexOf(nameB);
+        const idxA = findOrderIdx(a);
+        const idxB = findOrderIdx(b);
         if (idxA !== -1 && idxB !== -1) return idxA - idxB;
         if (idxA !== -1) return -1;
         if (idxB !== -1) return 1;
@@ -3648,7 +3660,7 @@ function App({
       next.delete(cleanTask.toLowerCase().trim());
       return next;
     });
-    setChoreOrderOverrides(prev => prev ? [...prev, cleanTask.toLowerCase().trim()] : null);
+    setChoreOrderOverrides(prev => prev ? [...prev, normalizeTaskName(cleanTask)] : null);
     setChoreFrequencies(prev => ({
       ...{
         ...prev
@@ -3716,7 +3728,12 @@ function App({
       }
       return cmc;
     }));
-    const pRowIdx = getPrintableRowIndex(oldTitle, choreIndex);
+    if (patch.task && oldTitle && normalizeTaskName(patch.task) !== normalizeTaskName(oldTitle)) {
+      const oldNorm = normalizeTaskName(oldTitle);
+      const newNorm = normalizeTaskName(patch.task);
+      setChoreOrderOverrides(prev => prev ? prev.map(k => k === oldNorm ? newNorm : k) : null);
+    }
+    const pRowIdx = getPrintableRowIndex(oldTitle);
     if (printableRangeIndex >= 0 && "task" in patch && pRowIdx !== void 0 && pRowIdx !== null) {
       const updateP = new Array(15).fill(void 0);
       updateP[0] = patch.task;
@@ -3847,7 +3864,12 @@ function App({
         dayOfWeek: dayIdx
       }
     }));
-    const pRowIdx = getPrintableRowIndex(oldTitle, choreIndex);
+    if (patch.task && oldTitle && normalizeTaskName(patch.task) !== normalizeTaskName(oldTitle)) {
+      const oldNorm = normalizeTaskName(oldTitle);
+      const newNorm = normalizeTaskName(patch.task);
+      setChoreOrderOverrides(prev => prev ? prev.map(k => k === oldNorm ? newNorm : k) : null);
+    }
+    const pRowIdx = getPrintableRowIndex(oldTitle);
     if (printableRangeIndex >= 0 && pRowIdx !== void 0 && pRowIdx !== null) {
       const updateRow = new Array(15).fill(void 0);
       updateRow[0] = cleanTitle;
@@ -4016,27 +4038,35 @@ function App({
     setEditingChoreIndex(null);
   };
   const handleMoveChore = (choreItemOrIndex, direction) => {
-    const currentList = [...hubMasterChores];
-    const listIndex = currentList.findIndex(r => {
-      if (typeof choreItemOrIndex === "object" && choreItemOrIndex !== null) {
-        return r === choreItemOrIndex || r.index_ !== void 0 && r.index_ === choreItemOrIndex.index_ || normalizeTaskName(r.task) === normalizeTaskName(choreItemOrIndex.task);
+    const matchChore = (r, target) => {
+      if (typeof target === "object" && target !== null) {
+        return r === target || normalizeTaskName(r.task) === normalizeTaskName(target.task);
       }
-      return r.index_ === choreItemOrIndex || String(r.index_) === String(choreItemOrIndex) || normalizeTaskName(r.task) === normalizeTaskName(String(choreItemOrIndex));
-    });
-    if (listIndex === -1) return;
-    const targetListIndex = direction === "up" ? listIndex - 1 : listIndex + 1;
-    if (targetListIndex < 0 || targetListIndex >= currentList.length) return;
-    const itemCurrent = currentList[listIndex];
-    const itemTarget = currentList[targetListIndex];
+      return r.index_ === target || String(r.index_) === String(target) || normalizeTaskName(r.task) === normalizeTaskName(String(target));
+    };
+    const visibleList = typeof choreItemOrIndex === "object" && choreItemOrIndex !== null && filteredMasterChores.length > 0 ? filteredMasterChores : hubMasterChores;
+    const visibleIdx = visibleList.findIndex(r => matchChore(r, choreItemOrIndex));
+    if (visibleIdx === -1) return;
+    const targetVisibleIdx = direction === "up" ? visibleIdx - 1 : visibleIdx + 1;
+    if (targetVisibleIdx < 0 || targetVisibleIdx >= visibleList.length) return;
+    const itemCurrent = visibleList[visibleIdx];
+    const itemTarget = visibleList[targetVisibleIdx];
+    const currentList = [...hubMasterChores];
+    const listIndex = currentList.findIndex(r => matchChore(r, itemCurrent));
+    const targetListIndex = currentList.findIndex(r => matchChore(r, itemTarget));
+    if (listIndex === -1 || targetListIndex === -1) return;
     const choreName = itemCurrent.task || "Chore";
     currentList[listIndex] = itemTarget;
     currentList[targetListIndex] = itemCurrent;
     const newOverrides = currentList.map(c => normalizeTaskName(c.task));
     setChoreOrderOverrides(newOverrides);
     if (printableRangeIndex >= 0) {
-      const pCurrent = findPrintableRow(itemCurrent.task, itemCurrent.index_);
-      const pTarget = findPrintableRow(itemTarget.task, itemTarget.index_);
-      if (pCurrent && pTarget && pCurrent.index_ !== pTarget.index_) {
+      const pCurrent = findPrintableRow(itemCurrent.task);
+      const pTarget = findPrintableRow(itemTarget.task);
+      const weeklyBanner = (printableSheet == null ? void 0 : printableSheet.data) == null ? void 0 : printableSheet.data.find(r => r.row && String(r.row[0] || "").toLowerCase().trim() === "weekly tasks");
+      const bannerIdx = weeklyBanner ? weeklyBanner.index_ : 10;
+      const inSamePrintableSection = pCurrent && pTarget && ((pCurrent.index_ < bannerIdx && pTarget.index_ < bannerIdx) || (pCurrent.index_ > bannerIdx && pTarget.index_ > bannerIdx));
+      if (pCurrent && pTarget && pCurrent.index_ !== pTarget.index_ && inSamePrintableSection) {
         const rowDataA = [...(pCurrent.row || [])];
         const rowDataB = [...(pTarget.row || [])];
         updateItem(printableRangeIndex, pCurrent.index_, rowDataB);
@@ -4044,8 +4074,8 @@ function App({
       }
     }
     if (hubRangeIndex >= 0) {
-      const rCurrent = findHubChoreRow(itemCurrent.task, itemCurrent.index_);
-      const rTarget = findHubChoreRow(itemTarget.task, itemTarget.index_);
+      const rCurrent = findHubChoreRow(itemCurrent.task);
+      const rTarget = findHubChoreRow(itemTarget.task);
       if (rCurrent && rTarget && rCurrent.index_ !== rTarget.index_) {
         const rowCurrent = rCurrent.row || [];
         const rowTarget = rTarget.row || [];

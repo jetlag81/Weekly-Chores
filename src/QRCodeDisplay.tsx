@@ -1,7 +1,7 @@
-// Clean SVG QR Code Renderer for Device Pairing
+// Standard Compliant QR Code Display using official 'qrcode' library
 
-import React, { useMemo } from "react";
-import { generateQRCode } from "./qrCode";
+import React, { useState, useEffect } from "react";
+import QRCode from "qrcode";
 
 interface QRCodeDisplayProps {
   value: string;
@@ -14,47 +14,63 @@ export const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({
   size = 180,
   className = ""
 }) => {
-  const qr = useMemo(() => {
-    try {
-      return generateQRCode(value);
-    } catch (e) {
-      console.error("Failed to generate QR Code:", e);
-      return null;
+  const [svgContent, setSvgContent] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    if (!value) {
+      setSvgContent("");
+      return;
     }
+
+    QRCode.toString(value, {
+      type: "svg",
+      margin: 2,
+      errorCorrectionLevel: "M",
+      color: {
+        dark: "#1e1b4b",
+        light: "#ffffff"
+      }
+    })
+      .then(svg => {
+        if (isMounted) {
+          setSvgContent(svg);
+          setError(null);
+        }
+      })
+      .catch(err => {
+        if (isMounted) {
+          console.error("QR Code generation error:", err);
+          setError("Failed to generate QR");
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [value]);
 
-  if (!qr) {
+  if (error || !svgContent) {
     return (
       <div
-        style={{ width: size, height: size }}
-        className={`flex items-center justify-center bg-slate-100 rounded-xl text-xs text-slate-400 ${className}`}
+        style={{ width: size + 24, height: size + 24 }}
+        className={`flex items-center justify-center bg-slate-100 rounded-2xl text-xs text-slate-400 border border-slate-200 ${className}`}
       >
-        QR unavailable
+        {error || "Generating QR..."}
       </div>
     );
   }
 
-  // Add 3-module quiet zone margin around the QR code
-  const margin = 3;
-  const viewBoxSize = qr.size + margin * 2;
-
   return (
     <div
-      className={`inline-block p-3 bg-white rounded-2xl shadow-sm border border-slate-200 ${className}`}
-      style={{ width: size + 24, height: size + 24 }}
+      className={`inline-block p-2 bg-white rounded-2xl shadow-sm border border-slate-200 select-none ${className}`}
+      style={{ width: size + 16, height: size + 16 }}
     >
-      <svg
-        viewBox={`0 0 ${viewBoxSize} ${viewBoxSize}`}
-        shapeRendering="crispEdges"
-        className="w-full h-full"
-      >
-        {/* White background */}
-        <rect width={viewBoxSize} height={viewBoxSize} fill="#ffffff" />
-        {/* QR Modules */}
-        <g transform={`translate(${margin}, ${margin})`} fill="#1e1b4b">
-          <path d={qr.svgPath} />
-        </g>
-      </svg>
+      <div
+        className="w-full h-full flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:rounded-xl"
+        dangerouslySetInnerHTML={{ __html: svgContent }}
+      />
     </div>
   );
 };

@@ -300,3 +300,4 @@ export function generateQRCode(text: string): QRCodeData {
     svgPath: svgPath.trim()
   };
 }
+

@@ -45,6 +45,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
   const [activeTab, setActiveTab] = useState<"invite" | "manage">("invite");
   const [selectedKidName, setSelectedKidName] = useState(() => kidMembers[0]?.name || "Sydney");
   const [createdInvite, setCreatedInvite] = useState<HouseholdInvite | null>(null);
+  const [targetDevice, setTargetDevice] = useState<"local" | "wifi">("local");
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -77,10 +78,11 @@ export const InviteModal: React.FC<InviteModalProps> = ({
 
   const getInviteUrl = (code: string) => {
     if (typeof window === "undefined") return `http://localhost:5173/?join=${code}`;
-    const host = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    const host = targetDevice === "wifi"
       ? "192.168.0.8:5173"
-      : window.location.host;
-    return `${window.location.protocol}//${host}/?join=${code}`;
+      : (window.location.host || "localhost:5173");
+    const kidQuery = createdInvite?.kidName ? `&kid=${encodeURIComponent(createdInvite.kidName)}` : "";
+    return `${window.location.protocol}//${host}/?join=${code}${kidQuery}`;
   };
 
   const handleCopyLink = () => {
@@ -238,6 +240,32 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                   </p>
                 </div>
 
+                {/* Target Device Selector */}
+                <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold max-w-sm mx-auto">
+                  <button
+                    type="button"
+                    onClick={() => setTargetDevice("local")}
+                    className={`flex-1 py-1.5 px-3 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                      targetDevice === "local"
+                        ? "bg-white text-indigo-700 shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <span>💻 This PC / Window</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTargetDevice("wifi")}
+                    className={`flex-1 py-1.5 px-3 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                      targetDevice === "wifi"
+                        ? "bg-white text-indigo-700 shadow-xs"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <span>📱 Wi-Fi (192.168.0.8)</span>
+                  </button>
+                </div>
+
                 {/* QR Code and Quick Connect Card */}
                 <div className="p-4 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50 rounded-2xl border-2 border-indigo-200 text-center space-y-3 shadow-2xs">
                   {/* QR Code */}
@@ -245,7 +273,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                     <QRCodeDisplay value={getInviteUrl(createdInvite.code)} size={160} />
                     <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider flex items-center gap-1 mt-1">
                       <QrCode className="w-3.5 h-3.5" />
-                      <span>Scan to Join Minion Mode Instantly</span>
+                      <span>{targetDevice === "local" ? "PC / Local QR Code" : "Home Wi-Fi QR Code"}</span>
                     </span>
                   </div>
 
@@ -261,6 +289,14 @@ export const InviteModal: React.FC<InviteModalProps> = ({
 
                   {/* Action Buttons */}
                   <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                    <a
+                      href={getInviteUrl(createdInvite.code)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-2xs transition cursor-pointer no-underline"
+                    >
+                      <span>Open Minion Mode ↗</span>
+                    </a>
                     <button
                       type="button"
                       onClick={handleCopyCode}
@@ -285,8 +321,8 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-600 text-[11px] leading-relaxed text-left space-y-1">
-                  <div><strong>Tip 1:</strong> Point any phone or tablet camera at the QR code above — it opens directly into {createdInvite.kidName}&apos;s Minion Mode!</div>
-                  <div><strong>Tip 2:</strong> When connecting over home Wi-Fi, visit: <code className="bg-slate-200 px-1 py-0.5 rounded text-indigo-900 font-semibold">{getInviteUrl(createdInvite.code)}</code></div>
+                  <div><strong>💻 Testing on PC:</strong> Click <em>&quot;Open Minion Mode ↗&quot;</em> or open the link in Edge / incognito.</div>
+                  <div><strong>📱 Testing on Phone:</strong> Select the <em>&quot;Wi-Fi (192.168.0.8)&quot;</em> tab. If your phone cannot load the link, ensure your phone is connected to the same Wi-Fi network (not cellular data), or simply enter code <strong>{createdInvite.code}</strong>.</div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 pt-2">

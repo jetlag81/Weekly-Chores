@@ -1800,6 +1800,20 @@ function App({
           setShowPairingScreen(false);
           setNotice(`🎉 Connected to ${res.invite.kidName}'s Minion Mode!`);
           setTimeout(() => setNotice(null), 4000);
+        } else if (kidParam) {
+          // Graceful fallback: activate Minion mode for this kid directly
+          const newSession: DeviceSession = {
+            role: "kid",
+            householdId: cur.householdId || "household_family_hub",
+            kidName: kidParam,
+            deviceId: cur.deviceId,
+            parentPin: "1234"
+          };
+          saveDeviceSession(newSession);
+          setDeviceSession(newSession);
+          setShowPairingScreen(false);
+          setNotice(`🎉 Connected to ${kidParam}'s Minion Mode!`);
+          setTimeout(() => setNotice(null), 4000);
         }
       });
       const cleanUrl = window.location.pathname;

@@ -32,6 +32,7 @@ import {
   Trophy,
   Users,
   Smartphone,
+  Cloud,
   X
 } from 'lucide-react';
 import {
@@ -39,11 +40,15 @@ import {
   saveDeviceSession,
   subscribeToRealtimeSync,
   broadcastLocalUpdate,
+  syncChoreToFirestore,
+  subscribeToFirestoreSchedule,
+  getStoredFirebaseConfig,
   type DeviceSession
 } from "./src/firebaseSync";
 import { MinionDashboard } from "./src/MinionDashboard";
 import { InviteModal } from "./src/InviteModal";
 import { KidPairingScreen } from "./src/KidPairingScreen";
+import { FirebaseSettingsModal } from "./src/FirebaseSettingsModal";
 
 const STORAGE_KEY = 'weekly_chores_canvas_sheet_data_v5';
 
@@ -1774,6 +1779,32 @@ function App({
   const [deviceSession, setDeviceSession] = useState(() => getStoredDeviceSession());
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showPairingScreen, setShowPairingScreen] = useState(false);
+  const [showFirebaseModal, setShowFirebaseModal] = useState(false);
+
+  // Real-time Firestore Cloud subscription across physically separate devices
+  useEffect(() => {
+    const householdId = (deviceSession == null ? void 0 : deviceSession.householdId) || "household_family_hub";
+    const unsubFirestore = subscribeToFirestoreSchedule(householdId, (dateKey, remoteChores) => {
+      if (!remoteChores) return;
+      setMonthSchedule(prev => {
+        const currentDay = prev[dateKey] || {};
+        const nextDay = { ...currentDay };
+        Object.keys(remoteChores).forEach(cIdx => {
+          if (cIdx !== "lastUpdated") {
+            nextDay[cIdx] = { ...(currentDay[cIdx] || {}), ...remoteChores[cIdx] };
+          }
+        });
+        return {
+          ...prev,
+          [dateKey]: nextDay
+        };
+      });
+    });
+
+    return () => {
+      if (unsubFirestore) unsubFirestore();
+    };
+  }, [deviceSession == null ? void 0 : deviceSession.householdId]);
 
   useEffect(() => {
     const unsub = subscribeToRealtimeSync((msg: any) => {
@@ -3669,6 +3700,12 @@ function App({
       choreIndex,
       patch
     });
+    syncChoreToFirestore(
+      (deviceSession == null ? void 0 : deviceSession.householdId) || "household_family_hub",
+      dateKey,
+      choreIndex,
+      patch
+    );
     const pRow = findPrintableRow(choreTask, choreIndex);
     if (printableRangeIndex >= 0 && pRow) {
       const parsedStart = parseDateKey(activeSyncWeek);
@@ -5060,6 +5097,14 @@ function App({
               </button>
             </div>
             <button
+              onClick={() => setShowFirebaseModal(true)}
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200 rounded-lg transition cursor-pointer shadow-2xs"
+              title="Configure live Firebase Cloud Sync across internet"
+            >
+              <Cloud className="w-3.5 h-3.5 text-amber-600" />
+              <span>{getStoredFirebaseConfig() ? "Cloud Sync: Live" : "Cloud Sync (Setup)"}</span>
+            </button>
+            <button
               onClick={() => setShowInviteModal(true)}
               className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition cursor-pointer shadow-2xs"
               title="Generate a 6-character invite code to pair a kid's phone, tablet, or PC"
@@ -6011,6 +6056,15 @@ function App({
             saveDeviceSession(kidSession);
             setDeviceSession(kidSession);
             setShowInviteModal(false);
+          }}
+        />
+      )}
+      {showFirebaseModal && (
+        <FirebaseSettingsModal
+          onClose={() => setShowFirebaseModal(false)}
+          onConfigSaved={() => {
+            setNotice("Firebase Cloud configuration updated successfully!");
+            setTimeout(() => setNotice(null), 3500);
           }}
         />
       )}

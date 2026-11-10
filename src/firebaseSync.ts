@@ -1,13 +1,15 @@
 // Realtime Firebase & Multi-User Household Synchronization Module
 
-import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import { initializeApp, getApps, deleteApp, type FirebaseApp } from "firebase/app";
 import {
   getFirestore,
   doc,
   setDoc,
   getDoc,
+  collection,
   onSnapshot,
   updateDoc,
+  deleteDoc,
   type Firestore,
   type Unsubscribe
 } from "firebase/firestore";
@@ -107,7 +109,7 @@ export function generateKidInviteCode(prefix = "HERD"): string {
 
 export function getStoredDeviceSession(): DeviceSession {
   if (typeof window === "undefined") {
-    return { role: "admin", householdId: "default_household", deviceId: "node_device" };
+    return { role: "admin", householdId: "household_family_hub", deviceId: "node_device" };
   }
   const raw = localStorage.getItem(STORAGE_KEY_DEVICE_SESSION);
   if (raw) {
@@ -180,6 +182,124 @@ export function initFirebase(config?: FirebaseConfig | null): { app: FirebaseApp
   }
 }
 
+// Parses string snippet from Firebase Console (JSON or JS object)
+export function parseFirebaseConfigSnippet(text: string): FirebaseConfig | null {
+  if (!text || !text.trim()) return null;
+  const cleaned = text.trim();
+
+  // Try direct JSON parse
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (parsed.apiKey && parsed.projectId) return parsed;
+  } catch {}
+
+  // Parse JavaScript object format e.g. apiKey: "AIza...", projectId: "my-app"
+  const extract = (key: string): string => {
+    const re = new RegExp(`['"]?${key}['"]?\\s*:\\s*['"\`]([^'"\`]+)['"\`]`, "i");
+    const m = cleaned.match(re);
+    return m ? m[1].trim() : "";
+  };
+
+  const apiKey = extract("apiKey");
+  const projectId = extract("projectId");
+  const authDomain = extract("authDomain") || (projectId ? `${projectId}.firebaseapp.com` : "");
+  const storageBucket = extract("storageBucket");
+  const messagingSenderId = extract("messagingSenderId");
+  const appId = extract("appId");
+
+  if (apiKey && projectId) {
+    return {
+      apiKey,
+      projectId,
+      authDomain,
+      storageBucket,
+      messagingSenderId,
+      appId
+    };
+  }
+
+  return null;
+}
+
+// Test Firebase connection by writing and deleting a test ping doc
+export async function testFirebaseConnection(config: FirebaseConfig): Promise<{ success: boolean; error?: string }> {
+  try {
+    let testApp: FirebaseApp;
+    const testAppName = "health_check_" + Date.now();
+    testApp = initializeApp(config, testAppName);
+    const db = getFirestore(testApp);
+
+    const testDocRef = doc(db, "_health_check_", "ping");
+    await setDoc(testDocRef, { timestamp: Date.now(), client: "household_hub_web" });
+    await deleteDoc(testDocRef);
+
+    await deleteApp(testApp);
+    return { success: true };
+  } catch (err: any) {
+    console.error("Firebase connection test error:", err);
+    return {
+      success: false,
+      error: err?.message || String(err) || "Failed to connect to Firebase. Check API key and project ID."
+    };
+  }
+}
+
+// Sync chore update to Firestore (called on each toggle)
+export async function syncChoreToFirestore(
+  householdId: string,
+  dateKey: string,
+  choreIndex: number,
+  patch: Record<string, unknown>
+): Promise<void> {
+  const { db } = initFirebase();
+  if (!db) return;
+
+  try {
+    const scheduleRef = doc(db, "households", householdId, "schedule", dateKey);
+    await setDoc(
+      scheduleRef,
+      {
+        [choreIndex]: patch,
+        lastUpdated: Date.now()
+      },
+      { merge: true }
+    );
+  } catch (err) {
+    console.warn("Firestore chore sync write failed (will use local):", err);
+  }
+}
+
+// Subscribe to real-time Firestore schedule changes for cloud multi-device sync
+export function subscribeToFirestoreSchedule(
+  householdId: string,
+  onRemoteScheduleUpdate: (dateKey: string, chores: Record<string, any>) => void
+): Unsubscribe | null {
+  const { db } = initFirebase();
+  if (!db) return null;
+
+  try {
+    const scheduleCol = collection(db, "households", householdId, "schedule");
+    return onSnapshot(
+      scheduleCol,
+      snapshot => {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === "added" || change.type === "modified") {
+            const dateKey = change.doc.id;
+            const data = change.doc.data() || {};
+            onRemoteScheduleUpdate(dateKey, data);
+          }
+        });
+      },
+      err => {
+        console.warn("Firestore schedule subscription error:", err);
+      }
+    );
+  } catch (err) {
+    console.warn("Could not attach Firestore schedule listener:", err);
+    return null;
+  }
+}
+
 // Manage Invites (Stored in Firestore when connected, fallback to localStorage)
 export async function createKidInvite(kidName: string, householdId: string): Promise<HouseholdInvite> {
   const code = generateKidInviteCode();
@@ -227,7 +347,6 @@ export async function redeemKidInvite(
   const { db } = initFirebase();
   if (db) {
     try {
-      // Look across households or check local household
       const session = getStoredDeviceSession();
       const ref = doc(db, "households", session.householdId, "invites", cleanCode);
       const snap = await getDoc(ref);
@@ -300,4 +419,3 @@ export function subscribeToRealtimeSync(
     window.removeEventListener("storage", storageHandler);
   };
 }
-

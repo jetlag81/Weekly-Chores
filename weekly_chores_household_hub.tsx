@@ -638,7 +638,7 @@ export const INITIAL_SHEET_DATA = [
           "Non-Casual",
           "Bi-Weekly",
           "Thursday Evening",
-          "Roll waste bin to curb Thursday evening for Friday pickup (alternating weeks)",
+          "Roll waste bin to curb Thursday evening for Friday pickup (Bi-Weekly)",
           "Household"
         ]
       },

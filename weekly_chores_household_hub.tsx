@@ -1275,22 +1275,6 @@ var CHORE_CATEGORIES = [{
   text: "text-blue-800",
   border: "border-blue-200",
   dot: "#2563EB"
-}, {
-  id: "Common Areas",
-  name: "Common Areas",
-  icon: "\u{1F6CB}\uFE0F",
-  bg: "bg-purple-50",
-  text: "text-purple-800",
-  border: "border-purple-200",
-  dot: "#7C3AED"
-}, {
-  id: "Administration",
-  name: "Administration",
-  icon: "\u{1F4CB}",
-  bg: "bg-slate-100",
-  text: "text-slate-700",
-  border: "border-slate-300",
-  dot: "#475569"
 }];
 var DEFAULT_MASTER_CHORES = [{
   title: "Empty the Litter Box (Morning & Evening)",
@@ -1356,7 +1340,7 @@ var DEFAULT_MASTER_CHORES = [{
   notes: "Linens, clothes, fold and put in drawers"
 }, {
   title: "Clean Basement & Rec Room",
-  category: "Common Areas",
+  category: "Household",
   freq: {
     frequency: "weekly",
     dayOfWeek: 5
@@ -2164,7 +2148,7 @@ function App({
         } else if (tLower.includes("bedroom")) {
           category = "Bedrooms";
         } else if (tLower.includes("basement")) {
-          category = "Common Areas";
+          category = "Household";
         } else if (tLower.includes("sign-off") || tLower.includes("inspection")) {
           category = "Administration";
         }
@@ -2208,7 +2192,7 @@ function App({
         } else if (pLower.includes("bedroom")) {
           inferredCat = "Bedrooms";
         } else if (pLower.includes("basement")) {
-          inferredCat = "Common Areas";
+          inferredCat = "Household";
         } else if (pLower.includes("sign-off") || pLower.includes("inspection")) {
           inferredCat = "Administration";
         }
@@ -2514,7 +2498,7 @@ function App({
         const kid = getSpecificKidForChore(title);
         rotationGroup = kid || "Each Child";
       } else if (title.toLowerCase().includes("basement")) {
-        category = "Common Areas";
+        category = "Household";
         frequency = "Once a Week";
         targetDay = "Saturday";
         rotationGroup = "All Kids";

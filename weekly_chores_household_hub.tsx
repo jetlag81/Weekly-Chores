@@ -4601,24 +4601,32 @@ function App({
     };
   }, [calendarWeeks, choreRows, monthSchedule, familyMembers, getMember]);
   const rankedMembers = useMemo(() => {
-    return [...familyMembers].map(m => {
-      const stat = monthStats.assigneeCounts[m.name] || {
-        total: 0,
-        done: 0
-      };
-      const pct = stat.total > 0 ? Math.round(stat.done / stat.total * 100) : 0;
-      return {
-        ...{
-          ...m
-        },
-        done: stat.done,
-        total: stat.total,
-        pct
-      };
-    }).sort((a, b) => {
-      if (b.done !== a.done) return b.done - a.done;
-      return b.pct - a.pct;
-    });
+    return familyMembers
+      .filter(m => {
+        const nameLower = (m.name || "").toLowerCase().trim();
+        const roleLower = String(m.role || "").toLowerCase();
+        if (nameLower === "thom" || nameLower === "meghan") return false;
+        if (roleLower.includes("overlord") || roleLower.includes("overseer") || roleLower.includes("parent")) return false;
+        return true;
+      })
+      .map(m => {
+        const stat = monthStats.assigneeCounts[m.name] || {
+          total: 0,
+          done: 0
+        };
+        const pct = stat.total > 0 ? Math.round(stat.done / stat.total * 100) : 0;
+        return {
+          ...{
+            ...m
+          },
+          done: stat.done,
+          total: stat.total,
+          pct
+        };
+      }).sort((a, b) => {
+        if (b.done !== a.done) return b.done - a.done;
+        return b.pct - a.pct;
+      });
   }, [familyMembers, monthStats]);
   const topPerformer = useMemo(() => {
     if (rankedMembers.length === 0) return null;
@@ -5180,7 +5188,7 @@ function App({
               setNotice(`Updated Monthly Incentive: "${incentiveDraft.trim()}"`);
               setTimeout(() => setNotice(null), 3e3);
             }
-          }} className="px-4 py-2 bg-white text-amber-900 font-extrabold rounded-lg hover:bg-amber-50 transition">Save Prize</button></div><div className="flex flex-wrap items-center gap-1.5 text-[11px] pt-1"><span className="opacity-80">Quick ideas:</span><button onClick={() => setIncentiveDraft("$15 Allowance Bonus & Pizza Night Pick")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">{"$15 + Pizza Night"}</button><button onClick={() => setIncentiveDraft("1-Day Chore Exemption Pass & Movie Pick")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">1-Day Chore Pass</button><button onClick={() => setIncentiveDraft("$20 Gift Card & Weekend Treat")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">{"$20 Gift Card"}</button><button onClick={() => setIncentiveDraft("Family Ice Cream Outing of Their Choice")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">Ice Cream Outing</button></div></div>}</div><div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-200"><div><div className="flex items-center gap-2"><h3 className="text-base font-bold text-slate-900">Family Members Completion</h3><span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Unified Roster ({rankedMembers.length}{" Members)"}</span></div><p className="text-xs text-slate-500 mt-0.5">{"Monthly Total Tracker ranked by total chores completed for "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}. All household members are displayed together in a single unified leaderboard.</p></div><div className="flex items-center gap-2 text-xs text-slate-500"><Award className="w-4 h-4 text-amber-500" /><span className="font-semibold text-slate-700">Ranked by Monthly Completions</span></div></div><div className="space-y-3">{rankedMembers.map((m, idx) => {
+          }} className="px-4 py-2 bg-white text-amber-900 font-extrabold rounded-lg hover:bg-amber-50 transition">Save Prize</button></div><div className="flex flex-wrap items-center gap-1.5 text-[11px] pt-1"><span className="opacity-80">Quick ideas:</span><button onClick={() => setIncentiveDraft("$15 Allowance Bonus & Pizza Night Pick")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">{"$15 + Pizza Night"}</button><button onClick={() => setIncentiveDraft("1-Day Chore Exemption Pass & Movie Pick")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">1-Day Chore Pass</button><button onClick={() => setIncentiveDraft("$20 Gift Card & Weekend Treat")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">{"$20 Gift Card"}</button><button onClick={() => setIncentiveDraft("Family Ice Cream Outing of Their Choice")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">Ice Cream Outing</button></div></div>}</div><div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-200"><div><div className="flex items-center gap-2"><h3 className="text-base font-bold text-slate-900">Family Members Completion</h3><span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Kids & Minions ({rankedMembers.length}{" Members)"}</span></div><p className="text-xs text-slate-500 mt-0.5">{"Monthly Total Tracker ranked by total chores completed for "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}. Kids and minions completion leaderboard competing for the monthly reward.</p></div><div className="flex items-center gap-2 text-xs text-slate-500"><Award className="w-4 h-4 text-amber-500" /><span className="font-semibold text-slate-700">Ranked by Monthly Completions</span></div></div><div className="space-y-3">{rankedMembers.map((m, idx) => {
             const isFirst = idx === 0 && m.done > 0;
             const isSecond = idx === 1 && m.done > 0;
             const isThird = idx === 2 && m.done > 0;

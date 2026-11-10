@@ -1,0 +1,499 @@
+{
+  "sheetData": [
+    {
+      "index_": 0,
+      "name": "Printable Weekly Schedule",
+      "data": [
+        {
+          "index_": 0,
+          "row": [
+            "Chore Schedule",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 1,
+          "row": [
+            "FOR THE WEEK OF:",
+            "MON",
+            null,
+            "TUE",
+            null,
+            "WED",
+            null,
+            "THU",
+            null,
+            "FRI",
+            null,
+            "SAT",
+            null,
+            "SUN",
+            null
+          ]
+        },
+        {
+          "index_": 2,
+          "row": [
+            "2026-10-19",
+            "19",
+            null,
+            "20",
+            null,
+            "21",
+            null,
+            "22",
+            null,
+            "23",
+            null,
+            "24",
+            null,
+            "25",
+            null
+          ]
+        },
+        {
+          "index_": 3,
+          "row": [
+            "TASK",
+            "WHO\nDay 1",
+            "DONE \nDay 1",
+            "WHO \nDAY 2",
+            "DONE \nDAY 2",
+            "WHO \nDAY 3",
+            "DONE  \nDAY 3",
+            "WHO \nDAY 4",
+            "DONE\nDAY 4",
+            "WHO\nDAY 5",
+            "DONE\nDAY 5",
+            "WHO\nDAY 6",
+            "DONE\nDAY 6",
+            "WHO\nDAY 7",
+            "DONE \nDAY 7"
+          ]
+        },
+        {
+          "index_": 4,
+          "row": [
+            "Daily Tasks",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 10,
+          "row": [
+            "Weekly Tasks",
+            "Description",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "Initials / Assigned",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 18,
+          "row": [
+            "Weekly Sign-Off",
+            "Parent Initials:",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "_________",
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "index_": 1,
+      "name": "Household Hub (Background Data)",
+      "data": [
+        {
+          "index_": 0,
+          "row": [
+            "HOUSEHOLD HUB & MASTER DIRECTORY",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 1,
+          "row": [
+            "Centralized household administration: Family member roster & occupancy, chore allocation master rules, and pet care routines.",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 3,
+          "row": [
+            "HOUSEHOLD MEMBERS",
+            null,
+            null,
+            null,
+            null,
+            null,
+            "MASTER CHORE REGISTRY & ALLOCATION RULES",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 4,
+          "row": [
+            "Name",
+            "Role",
+            "Occupancy",
+            "Special Rotation Groups",
+            "Active Status",
+            null,
+            "Chore",
+            "Member / Group",
+            "Frequency",
+            "Suggested Days",
+            "Details / Notes",
+            null
+          ]
+        },
+        {
+          "index_": 5,
+          "row": [
+            null,
+            "Supreme Overlord",
+            "Full-Time",
+            "Parents, Non-Casual, All",
+            false,
+            "MEMBER_ROW",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 6,
+          "row": [
+            null,
+            "Supreme Overlord",
+            "Full-Time",
+            "Parents, Non-Casual, All",
+            false,
+            "MEMBER_ROW",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 7,
+          "row": [
+            null,
+            "Minion",
+            "Full-Time",
+            "Kids, Non-Casual, All",
+            false,
+            "MEMBER_ROW",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 8,
+          "row": [
+            null,
+            "Minion",
+            "Bi-Weekly",
+            "Kids, Non-Casual, All",
+            false,
+            "MEMBER_ROW",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 13,
+          "row": [
+            "OCCUPANCY CATEGORIES",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 14,
+          "row": [
+            "Type",
+            "Description",
+            "Rules",
+            null,
+            "Active Status",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 15,
+          "row": [
+            "Full-Time",
+            "Constant Residency",
+            "Included in all weekly/monthly schedulings",
+            null,
+            true,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 16,
+          "row": [
+            "Bi-Weekly",
+            "Half-Time Residency",
+            "Included in weekly/monthly schedulings when in residence, Use \"Custody Schedule Rotation\" data",
+            null,
+            true,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 18,
+          "row": [
+            "Casual",
+            "Periodic Residency",
+            "Manually added to any schedules",
+            null,
+            true,
+            null,
+            "SCHEDULE CONFIGURATIONS",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 19,
+          "row": [
+            "SPECIAL ROTATION GROUPS",
+            null,
+            null,
+            null,
+            null,
+            null,
+            "Active Week Start Date",
+            "2026-10-19",
+            "Printable Weekly Schedule",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 20,
+          "row": [
+            "Name",
+            "Members",
+            null,
+            null,
+            "Active Status",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 21,
+          "row": [
+            "All",
+            "",
+            null,
+            null,
+            true,
+            null,
+            "Custody Schedule Rotation",
+            "Kids Week",
+            "Bi-Weekly Schedule",
+            null,
+            "",
+            null
+          ]
+        },
+        {
+          "index_": 22,
+          "row": [
+            "Kids",
+            "",
+            null,
+            null,
+            true,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 23,
+          "row": [
+            "Parents",
+            "",
+            null,
+            null,
+            true,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 24,
+          "row": [
+            "Non-Casual",
+            "",
+            null,
+            null,
+            true,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "index_": 27,
+          "row": [
+            "Pet Name",
+            "Dog / Cat",
+            "Routine",
+            "Care Responsibilities",
+            "Active Status",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    }
+  ],
+  "savedAt": "2026-11-10T00:00:00.000Z",
+  "version": "5.0-starter-template"
+}
+

@@ -326,6 +326,25 @@ export default defineConfig({
             res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
           }
         });
+
+        server.middlewares.use('/__load-starter', (req, res) => {
+          try {
+            const starterFile = path.resolve(process.cwd(), 'weekly-chores-starter-template.json');
+            if (fs.existsSync(starterFile)) {
+              const content = fs.readFileSync(starterFile, 'utf-8');
+              res.setHeader('Content-Type', 'application/json');
+              res.end(content);
+            } else {
+              res.statusCode = 404;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ ok: false, error: 'No starter template found' }));
+            }
+          } catch (err: any) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+          }
+        });
       },
     },
   ],

@@ -1909,91 +1909,7 @@ function App({
       return true;
     });
     if (memberRows.length === 0) {
-      return [{
-        id: "Thom",
-        name: "Thom",
-        role: "Overseer Supreme",
-        residency: "Full-Time",
-        type: "regular",
-        specialGroups: "Parents, Non-Casual, All",
-        active: true,
-        color: "#2563EB",
-        bg: "#DBEAFE",
-        text: "#1D4ED8",
-        index_: 5
-      }, {
-        id: "Meghan",
-        name: "Meghan",
-        role: "Overseer Supreme",
-        residency: "Full-Time",
-        type: "regular",
-        specialGroups: "Parents, Non-Casual, All",
-        active: true,
-        color: "#8B5CF6",
-        bg: "#EDE9FE",
-        text: "#6D28D9",
-        index_: 6
-      }, {
-        id: "Sydney",
-        name: "Sydney",
-        role: "Minion",
-        residency: "Full-Time",
-        type: "regular",
-        specialGroups: "Kids, Non-Casual, All",
-        active: true,
-        color: "#0D9488",
-        bg: "#CCFBF1",
-        text: "#0F766E",
-        index_: 7
-      }, {
-        id: "Cadence",
-        name: "Cadence",
-        role: "Minion",
-        residency: "Bi-Weekly",
-        type: "biweekly",
-        specialGroups: "Kids, Non-Casual, All",
-        active: true,
-        color: "#EC4899",
-        bg: "#FCE7F3",
-        text: "#BE185D",
-        index_: 8
-      }, {
-        id: "Mason",
-        name: "Mason",
-        role: "Minion",
-        residency: "Bi-Weekly",
-        type: "biweekly",
-        specialGroups: "Kids, Non-Casual, All",
-        active: true,
-        color: "#EA580C",
-        bg: "#FFEDD5",
-        text: "#C2410C",
-        index_: 9
-      }, {
-        id: "Koda",
-        name: "Koda",
-        role: "Minion",
-        residency: "Casual",
-        type: "casual",
-        specialGroups: "All",
-        active: true,
-        color: "#0284C7",
-        bg: "#E0F2FE",
-        text: "#0369A1",
-        index_: 10
-      }, {
-        id: "Keyanna",
-        name: "Keyanna",
-        role: "Minion",
-        residency: "Casual",
-        type: "casual",
-        specialGroups: "All",
-        active: true,
-        color: "#D97706",
-        bg: "#FEF3C7",
-        text: "#B45309",
-        index_: 11
-      }];
+      return [];
     }
     return memberRows.map((r, i) => {
       const rawName = String(r.row[0] || "").trim();
@@ -2052,9 +1968,7 @@ function App({
     }).map(m => m.name);
   }, [familyMembers]);
   const allKidsList = useMemo(() => {
-    const fallbackKids = ["Sydney", "Cadence", "Mason", "Koda", "Keyanna"];
-    const merged = Array.from(new Set([...kidsList, ...fallbackKids]));
-    return merged.length > 0 ? merged : fallbackKids;
+    return kidsList;
   }, [kidsList]);
   const rosterPets = useMemo(() => {
     const rRows = rosterSheet.data || [];
@@ -2102,22 +2016,7 @@ function App({
         };
       });
     }
-    return HOUSE_PETS.map((p, idx) => {
-      const palette = PRESET_PET_COLORS[p.name.toLowerCase()] || MEMBER_COLOR_PALETTES[idx % MEMBER_COLOR_PALETTES.length];
-      return {
-        name: p.name,
-        type: p.kind,
-        routine: "Morning & Evening",
-        care: p.kind === "Dog" ? "Feed breakfast & supper, outdoor routine, fresh water" : "Feed morning/evening, scoop litter box, fresh water",
-        active: true,
-        icon: p.icon,
-        color: palette.color,
-        bg: palette.bg,
-        text: palette.text,
-        border: palette.border || palette.color,
-        index_: 15 + idx
-      };
-    });
+    return [];
   }, [rosterSheet]);
   const hubMasterChores = useMemo(() => {
     const rRows = rosterSheet.data || [];
@@ -2244,19 +2143,7 @@ function App({
       });
     }
     if (chores.length === 0) {
-      chores = DEFAULT_MASTER_CHORES.filter(c => !isSignOffChore(c.title)).map((c, idx) => {
-        var _a2, _b2;
-        return {
-          index_: 5 + idx,
-          task: c.title,
-          category: c.category || "Household",
-          frequency: ((_a2 = c.freq) == null ? void 0 : _a2.frequency) === "weekly" ? "Once a Week" : ((_b2 = c.freq) == null ? void 0 : _b2.frequency) === "biweekly" ? "Bi-Weekly" : "Daily",
-          targetDay: c.targetDay || "Mon \u2013 Sun",
-          rotationGroup: c.rotationGroup || "Non-Casual",
-          notes: c.notes || "",
-          source: "default"
-        };
-      });
+      return [];
     }
     if (choreOrderOverrides && Array.isArray(choreOrderOverrides) && choreOrderOverrides.length > 0) {
       const findOrderIdx = c => {
@@ -2569,19 +2456,7 @@ function App({
       };
     });
     if (rawPrintableChores.length > 0) return rawPrintableChores;
-    return DEFAULT_MASTER_CHORES.map((c, i) => {
-      var _a2, _b2;
-      return {
-        index_: 4 + i,
-        row: [c.title, null, false, null, false, null, false, null, false, null, false, null, false, null, false],
-        task: c.title,
-        category: c.category,
-        frequency: ((_a2 = c.freq) == null ? void 0 : _a2.frequency) === "weekly" ? "Once a Week" : ((_b2 = c.freq) == null ? void 0 : _b2.frequency) === "biweekly" ? "Bi-Weekly" : "Daily",
-        targetDay: c.targetDay,
-        rotationGroup: c.rotationGroup,
-        notes: c.notes
-      };
-    });
+    return [];
   }, [printableScheduleItems, hubMasterChores]);
   const currentWeekInfo = useMemo(() => getCurrentWeekMonday(), []);
   const [activeTab, setActiveTab] = useState("matrix");
@@ -2709,6 +2584,67 @@ function App({
     };
     reader.readAsText(file);
     e.target.value = '';
+  };
+
+  const handleLoadStarterTemplate = async () => {
+    if (!window.confirm("Switch to a blank initialized starter template?\n\nThis provides a clean slate without names or chores populated, ready for a new user to set up.\n\nYour current setup is preserved in 'weekly-chores-config.json' and you can restore it anytime.")) {
+      return;
+    }
+    try {
+      const res = await fetch('/__load-starter');
+      const json = await res.json();
+      const starterData = json.sheetData || (Array.isArray(json) ? json : null);
+      if (Array.isArray(starterData) && starterData.length > 0) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(starterData));
+        setSheetData(starterData);
+        window.postMessage({ type: 'SYNC_DATA', payload: starterData }, '*');
+        setNotice('✓ Initialized blank starter template loaded! Ready for a new user to set up.');
+      } else {
+        setNotice('⚠️ Starter template file could not be loaded.');
+      }
+    } catch (e: any) {
+      setNotice(`⚠️ Failed to load starter template: ${e?.message || String(e)}`);
+    }
+    setTimeout(() => setNotice(null), 4000);
+  };
+
+  const handleLoadSavedSetup = async () => {
+    try {
+      const res = await fetch('/__load-config');
+      const json = await res.json();
+      const savedData = json.sheetData || (Array.isArray(json) ? json : null);
+      if (Array.isArray(savedData) && savedData.length > 0) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(savedData));
+        setSheetData(savedData);
+        window.postMessage({ type: 'SYNC_DATA', payload: savedData }, '*');
+        setNotice('✓ Restored saved household configuration from weekly-chores-config.json!');
+      } else {
+        setNotice('⚠️ Saved config file could not be loaded.');
+      }
+    } catch (e: any) {
+      setNotice(`⚠️ Failed to load saved config: ${e?.message || String(e)}`);
+    }
+    setTimeout(() => setNotice(null), 4000);
+  };
+
+  const handleExportStarterTemplate = async () => {
+    try {
+      const res = await fetch('/__load-starter');
+      const json = await res.json();
+      const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'weekly-chores-starter-template.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setNotice('✓ Downloaded blank starter template (weekly-chores-starter-template.json)!');
+    } catch (e: any) {
+      setNotice(`⚠️ Export starter failed: ${e?.message || String(e)}`);
+    }
+    setTimeout(() => setNotice(null), 3500);
   };
 
   const ALL_WEEK_DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -5166,7 +5102,7 @@ function App({
               width: `${m.pct}%`,
               backgroundColor: isFirst ? "#D97706" : m.color
             }} /></div>{isFirst && <div className="mt-2 pt-2 border-t border-amber-200/60 flex items-center justify-between text-[11px] text-amber-900 font-medium"><div className="flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-amber-700 shrink-0" /><span>{"Qualifying Reward: "}<strong>{monthlyIncentive}</strong></span></div><span className="font-bold text-amber-700">{"Rank #1 in "}{MONTH_NAMES[selectedMonth]}</span></div>}</div>;
-          })}</div></div><div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 shadow-sm"><h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-2 flex items-center gap-1.5"><span>{"\u{1F43E} House Pets Overview"}</span></h4><div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">{rosterPets.filter(p => p.active !== false).map(pet => <div key={`${pet.index_}-${pet.name}`} className="p-2.5 rounded-lg border flex items-center gap-2" style={{ backgroundColor: pet.bg, borderColor: pet.border }}><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: pet.color }} /><span className="text-base">{pet.icon}</span><div><div className="font-bold" style={{ color: pet.text }}>{pet.name}</div><div className="text-[10px] opacity-80" style={{ color: pet.text }}>{pet.type}</div></div></div>)}</div></div></div>}{activeTab === "roster" && <div className="max-w-5xl mx-auto space-y-6"><div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200"><div><div className="flex items-center gap-2"><h2 className="text-lg font-bold text-slate-900">Household Hub Master Data</h2><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Linked: Monthly Calendar & Printable Weekly Schedule</span></div><p className="text-xs text-slate-500 mt-0.5">Centralized household administration: Family member roster & occupancy, pet care routines, and chore allocation master files.</p></div><div className="flex flex-wrap items-center gap-2"><span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 font-semibold rounded-lg border border-slate-200">{"Selected Week: "}<strong>{activeSyncWeek || hubScheduleConfig.activeWeekStart}</strong></span><span className="text-xs px-2.5 py-1 bg-pink-50 text-pink-700 font-semibold rounded-lg border border-pink-200">{"Kids Week: "}<strong>{isBiWeeklyHereThisWeek ? "Active" : "Inactive"}</strong></span><button type="button" onClick={handleSaveAsDefault} className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 shadow-2xs transition cursor-pointer" title="Save current browser setup as the permanent default in code (.tsx) and weekly-chores-config.json"><span>💾</span><span>Save as Default</span></button><button type="button" onClick={handleExportConfig} className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 shadow-2xs transition cursor-pointer" title="Download / export current configuration backup file (.json)"><span>⬇️</span><span>Export Config</span></button><label className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 shadow-2xs transition cursor-pointer" title="Import / restore a configuration file (.json)"><span>⬆️</span><span>Import Config</span><input type="file" accept=".json" onChange={handleImportConfigFile} className="hidden" /></label></div></div><div className="my-5 p-4 rounded-xl bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/50 border border-indigo-200 shadow-2xs space-y-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-indigo-600" /><h3 className="text-xs font-bold uppercase tracking-wider text-indigo-950">Special Rules & Parameters</h3></div><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">Live Analytical Summary</span></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">{(() => {
+          })}</div></div><div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 shadow-sm"><h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-2 flex items-center gap-1.5"><span>{"\u{1F43E} House Pets Overview"}</span></h4><div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">{rosterPets.filter(p => p.active !== false).map(pet => <div key={`${pet.index_}-${pet.name}`} className="p-2.5 rounded-lg border flex items-center gap-2" style={{ backgroundColor: pet.bg, borderColor: pet.border }}><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: pet.color }} /><span className="text-base">{pet.icon}</span><div><div className="font-bold" style={{ color: pet.text }}>{pet.name}</div><div className="text-[10px] opacity-80" style={{ color: pet.text }}>{pet.type}</div></div></div>)}</div></div></div>}{activeTab === "roster" && <div className="max-w-5xl mx-auto space-y-6"><div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200"><div><div className="flex items-center gap-2"><h2 className="text-lg font-bold text-slate-900">Household Hub Master Data</h2><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Linked: Monthly Calendar & Printable Weekly Schedule</span></div><p className="text-xs text-slate-500 mt-0.5">Centralized household administration: Family member roster & occupancy, pet care routines, and chore allocation master files.</p></div><div className="flex flex-wrap items-center gap-2"><span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 font-semibold rounded-lg border border-slate-200">{"Selected Week: "}<strong>{activeSyncWeek || hubScheduleConfig.activeWeekStart}</strong></span><span className="text-xs px-2.5 py-1 bg-pink-50 text-pink-700 font-semibold rounded-lg border border-pink-200">{"Kids Week: "}<strong>{isBiWeeklyHereThisWeek ? "Active" : "Inactive"}</strong></span><button type="button" onClick={handleSaveAsDefault} className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 shadow-2xs transition cursor-pointer" title="Save current browser setup as the permanent default in code (.tsx) and weekly-chores-config.json"><span>💾</span><span>Save as Default</span></button><button type="button" onClick={handleExportConfig} className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 shadow-2xs transition cursor-pointer" title="Download / export current configuration backup file (.json)"><span>⬇️</span><span>Export Config</span></button><label className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 shadow-2xs transition cursor-pointer" title="Import / restore a configuration file (.json)"><span>⬆️</span><span>Import Config</span><input type="file" accept=".json" onChange={handleImportConfigFile} className="hidden" /></label><button type="button" onClick={handleLoadStarterTemplate} className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-amber-500 text-white rounded-lg hover:bg-amber-600 shadow-2xs transition cursor-pointer" title="Load clean blank starter template without pre-populated names or chores"><span>✨</span><span>Blank Starter</span></button><button type="button" onClick={handleExportStarterTemplate} className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-white text-amber-800 border border-amber-300 rounded-lg hover:bg-amber-50 shadow-2xs transition cursor-pointer" title="Download clean starter template file (.json)"><span>⬇️</span><span>Export Starter</span></button><button type="button" onClick={handleLoadSavedSetup} className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 shadow-2xs transition cursor-pointer" title="Restore previously saved setup from weekly-chores-config.json"><span>🔄</span><span>Restore Setup</span></button></div></div><div className="my-5 p-4 rounded-xl bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/50 border border-indigo-200 shadow-2xs space-y-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-indigo-600" /><h3 className="text-xs font-bold uppercase tracking-wider text-indigo-950">Special Rules & Parameters</h3></div><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">Live Analytical Summary</span></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">{(() => {
             const activeOverlords = familyMembers.filter(m => m.active !== false && (m.role === "Supreme Overlord" || m.role === "Overseer Supreme")).map(m => m.name);
             const overlordsLabel = activeOverlords.length > 0 ? activeOverlords.join(" & ") : "None";
             const activeFullTime = familyMembers.filter(m => m.active !== false && m.type === "regular").map(m => m.name);
@@ -5178,7 +5114,7 @@ function App({
             const wasteActive = thu ? isCurbsideActiveOnDate("Curbside Waste", thu.year, thu.month, thu.day) : false;
             const recyclingActive = thu ? isCurbsideActiveOnDate("Curbside Recycling", thu.year, thu.month, thu.day) : true;
             return <>{"For selected week, "}<strong>{activeSyncWeek || hubScheduleConfig.activeWeekStart}</strong>{":"}<br />{"Waste = "}<strong className={wasteActive ? "text-emerald-700" : "text-rose-700"}>{wasteActive ? "Active" : "Inactive"}</strong><br />{"Recycling = "}<strong className={recyclingActive ? "text-emerald-700" : "text-rose-700"}>{recyclingActive ? "Active" : "Inactive"}</strong></>;
-          })()}</p></div></div></div><div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4"><div className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl"><div className="text-[10px] font-bold text-purple-900 uppercase tracking-wider">Full-Time Occupants</div><div className="text-[8px] italic text-purple-800 leading-tight" style={{ fontSize: "8px" }}>(Eternally working)</div><div className="text-lg font-extrabold text-purple-950 mt-0.5">{familyMembers.filter(m => m.active !== false && m.type === "regular").length}{" Members"}</div><div className="text-[11px] text-purple-700 break-words leading-snug mt-0.5">{familyMembers.filter(m => m.active !== false && m.type === "regular").map(m => m.name).join(", ") || "None"}</div></div><div className="p-3 bg-pink-50/70 border border-pink-200 rounded-xl"><div className="text-[10px] font-bold text-pink-900 uppercase tracking-wider">Bi-Weekly Occupants</div><div className="text-[8px] italic text-pink-800 leading-tight" style={{ fontSize: "8px" }}>(Half-Timers)</div><div className="text-lg font-extrabold text-pink-950 mt-0.5">{familyMembers.filter(m => m.active !== false && m.type === "biweekly").length}{" Members"}</div><div className="text-[11px] text-pink-700 break-words leading-snug mt-0.5">{familyMembers.filter(m => m.active !== false && m.type === "biweekly").map(m => m.name).join(", ") || "None"}</div></div><div className="p-3 bg-sky-50/70 border border-sky-200 rounded-xl"><div className="text-[10px] font-bold text-sky-900 uppercase tracking-wider">Casual Assignees</div><div className="text-[8px] italic text-sky-800 leading-tight" style={{ fontSize: "8px" }}>(Manually added to schedule)</div><div className="text-lg font-extrabold text-sky-950 mt-0.5">{familyMembers.filter(m => m.active !== false && m.type === "casual").length}{" Members"}</div><div className="text-[11px] text-sky-700 break-words leading-snug mt-0.5">{familyMembers.filter(m => m.active !== false && m.type === "casual").map(m => m.name).join(", ") || "None"}</div></div><div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl"><div className="text-[10px] font-bold text-amber-900 uppercase tracking-wider">The Herd</div><div className="text-[8px] italic text-amber-800 leading-tight" style={{ fontSize: "8px" }}>(Various beasts)</div><div className="text-lg font-extrabold text-amber-950 mt-0.5">{rosterPets.filter(p => p.active !== false).length}{" Pets"}</div><div className="text-[11px] text-amber-800 break-words leading-snug mt-0.5">{rosterPets.filter(p => p.active !== false).map(p => p.name).join(", ") || "None"}</div></div></div><div className="space-y-3"><div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><Users className="w-4 h-4 text-indigo-600" /><h3 className="text-sm font-bold text-slate-900">Household Members</h3><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">{"Rows 5\u201311 \u2022 Linked Data"}</span></div><div className="flex items-center gap-3"><span className="text-xs text-slate-500">{familyMembers.length}{" Registered Occupants"}</span><button type="button" onClick={() => setShowAddMemberModal(true)} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-xs transition cursor-pointer" title="Add a new household member"><Plus className="w-3.5 h-3.5" /><span>Add Member</span></button></div></div><div className="overflow-visible border border-slate-200 rounded-xl shadow-2xs"><table className="w-full text-left text-xs"><thead className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3">Name</th><th className="p-3">Role</th><th className="p-3">Occupancy</th><th className="p-3">Special Rotation Groups</th><th className="p-3 text-center">Active Status</th><th className="p-3 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-200">{familyMembers.map(member => {
+          })()}</p></div></div></div><div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4"><div className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl"><div className="text-[10px] font-bold text-purple-900 uppercase tracking-wider">Full-Time Occupants</div><div className="text-[8px] italic text-purple-800 leading-tight" style={{ fontSize: "8px" }}>(Eternally working)</div><div className="text-lg font-extrabold text-purple-950 mt-0.5">{familyMembers.filter(m => m.active !== false && m.type === "regular").length}{" Members"}</div><div className="text-[11px] text-purple-700 break-words leading-snug mt-0.5">{familyMembers.filter(m => m.active !== false && m.type === "regular").map(m => m.name).join(", ") || "None"}</div></div><div className="p-3 bg-pink-50/70 border border-pink-200 rounded-xl"><div className="text-[10px] font-bold text-pink-900 uppercase tracking-wider">Bi-Weekly Occupants</div><div className="text-[8px] italic text-pink-800 leading-tight" style={{ fontSize: "8px" }}>(Half-Timers)</div><div className="text-lg font-extrabold text-pink-950 mt-0.5">{familyMembers.filter(m => m.active !== false && m.type === "biweekly").length}{" Members"}</div><div className="text-[11px] text-pink-700 break-words leading-snug mt-0.5">{familyMembers.filter(m => m.active !== false && m.type === "biweekly").map(m => m.name).join(", ") || "None"}</div></div><div className="p-3 bg-sky-50/70 border border-sky-200 rounded-xl"><div className="text-[10px] font-bold text-sky-900 uppercase tracking-wider">Casual Assignees</div><div className="text-[8px] italic text-sky-800 leading-tight" style={{ fontSize: "8px" }}>(Manually added to schedule)</div><div className="text-lg font-extrabold text-sky-950 mt-0.5">{familyMembers.filter(m => m.active !== false && m.type === "casual").length}{" Members"}</div><div className="text-[11px] text-sky-700 break-words leading-snug mt-0.5">{familyMembers.filter(m => m.active !== false && m.type === "casual").map(m => m.name).join(", ") || "None"}</div></div><div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl"><div className="text-[10px] font-bold text-amber-900 uppercase tracking-wider">The Herd</div><div className="text-[8px] italic text-amber-800 leading-tight" style={{ fontSize: "8px" }}>(Various beasts)</div><div className="text-lg font-extrabold text-amber-950 mt-0.5">{rosterPets.filter(p => p.active !== false).length}{" Pets"}</div><div className="text-[11px] text-amber-800 break-words leading-snug mt-0.5">{rosterPets.filter(p => p.active !== false).map(p => p.name).join(", ") || "None"}</div></div></div><div className="space-y-3"><div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><Users className="w-4 h-4 text-indigo-600" /><h3 className="text-sm font-bold text-slate-900">Household Members</h3><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">{"Rows 5\u201311 \u2022 Linked Data"}</span></div><div className="flex items-center gap-3"><span className="text-xs text-slate-500">{familyMembers.length}{" Registered Occupants"}</span><button type="button" onClick={() => setShowAddMemberModal(true)} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-xs transition cursor-pointer" title="Add a new household member"><Plus className="w-3.5 h-3.5" /><span>Add Member</span></button></div></div><div className="overflow-visible border border-slate-200 rounded-xl shadow-2xs"><table className="w-full text-left text-xs"><thead className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3">Name</th><th className="p-3">Role</th><th className="p-3">Occupancy</th><th className="p-3">Special Rotation Groups</th><th className="p-3 text-center">Active Status</th><th className="p-3 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-200">{familyMembers.length === 0 ? <tr><td colSpan={6} className="text-center py-8 text-slate-400"><div className="flex flex-col items-center justify-center gap-1.5"><Users className="w-5 h-5 text-slate-300" /><span className="font-semibold text-slate-600 text-xs">No household members added yet</span><span className="text-[11px] text-slate-400">Click &ldquo;+ Add Member&rdquo; above to register your family members.</span></div></td></tr> : familyMembers.map(member => {
             const roleVal = member.role === "Supreme Overlord" || member.role === "Overseer Supreme" ? "Supreme Overlord" : "Minion";
             const resVal = member.type === "biweekly" ? "Bi-Weekly" : member.type === "casual" ? "Casual" : "Full-Time";
             const allGroupTypes = ["Parents", "Kids", "Non-Casual", "All"];
@@ -5216,7 +5152,7 @@ function App({
               setEditingMemberIndex(member.index_);
               setMemberEditName(member.name);
             }} className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition cursor-pointer" title={`Rename ${member.name}`}><Pen className="w-3.5 h-3.5" /></button>}<button type="button" onClick={() => handleDeleteRosterMember(member.index_, member.name)} className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer" title={`Remove ${member.name} from Household Members`}><Trash2 className="w-3.5 h-3.5" /></button></div></td></tr>;
-          })}</tbody></table></div></div><div className="mt-8 pt-5 border-t border-slate-200 space-y-3"><div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><span className="text-base">{"\u{1F43E}"}</span><h3 className="text-sm font-bold text-slate-900">Household Pets</h3><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">{"Rows 27\u201332 \u2022 Linked Data"}</span></div><div className="flex items-center gap-3"><span className="text-xs text-slate-500">{rosterPets.length}{" Registered Pets"}</span><button type="button" onClick={() => setShowAddPetModal(true)} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 shadow-xs transition cursor-pointer" title="Add a new household pet member"><Plus className="w-3.5 h-3.5" /><span>Add Member</span></button></div></div><div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs"><table className="w-full text-left text-xs"><thead className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3">Name</th><th className="p-3">Species</th><th className="p-3">Feeding Routine</th><th className="p-3">Care Responsibilities</th><th className="p-3 text-center">Active Status</th><th className="p-3 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-200">{rosterPets.map(pet => {
+          })}</tbody></table></div></div><div className="mt-8 pt-5 border-t border-slate-200 space-y-3"><div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><span className="text-base">{"\u{1F43E}"}</span><h3 className="text-sm font-bold text-slate-900">Household Pets</h3><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">{"Rows 27\u201332 \u2022 Linked Data"}</span></div><div className="flex items-center gap-3"><span className="text-xs text-slate-500">{rosterPets.length}{" Registered Pets"}</span><button type="button" onClick={() => setShowAddPetModal(true)} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-amber-600 text-white rounded-lg hover:bg-amber-700 shadow-xs transition cursor-pointer" title="Add a new household pet member"><Plus className="w-3.5 h-3.5" /><span>Add Member</span></button></div></div><div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs"><table className="w-full text-left text-xs"><thead className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3">Name</th><th className="p-3">Species</th><th className="p-3">Feeding Routine</th><th className="p-3">Care Responsibilities</th><th className="p-3 text-center">Active Status</th><th className="p-3 text-right">Actions</th></tr></thead><tbody className="divide-y divide-slate-200">{rosterPets.length === 0 ? <tr><td colSpan={6} className="text-center py-8 text-slate-400"><div className="flex flex-col items-center justify-center gap-1.5"><span className="text-xl opacity-40">🐾</span><span className="font-semibold text-slate-600 text-xs">No household pets registered yet</span><span className="text-[11px] text-slate-400">Click &ldquo;+ Add Member&rdquo; above to register your pets.</span></div></td></tr> : rosterPets.map(pet => {
             const speciesOptions = ["Dog", "Cat", "Bird", "Fish", "Small Pet", "Other"];
             const currentSpecies = pet.type || "Dog";
             if (!speciesOptions.includes(currentSpecies)) {
@@ -5283,7 +5219,7 @@ function App({
           }))} placeholder="Instructions, supplies, details or timing notes..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium" /></div></div><div className="flex justify-end gap-2 pt-2 border-t border-indigo-200"><button type="button" onClick={() => setShowInlineAddForm(false)} className="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition">Cancel</button><button type="button" onClick={() => handleAddNewMasterChore({ ...newMasterDraft, rotationGroup: newMasterDraft.rotationGroup === "All Non-Casual" ? "Non-Casual" : newMasterDraft.rotationGroup })} disabled={!newMasterDraft.task.trim()} className="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm disabled:opacity-40 transition flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /><span>Add Chore to Master List</span></button></div></div>}<div className="grid grid-cols-2 sm:grid-cols-4 gap-3"><div className="p-3 bg-slate-50 rounded-xl border border-slate-200"><span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Template Chores</span><div className="text-xl font-bold text-slate-900 mt-0.5">{hubMasterChores.length}{" Tasks"}</div><span className="text-[11px] text-slate-500">All registered tasks</span></div><div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200"><span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">Daily Chores</span><div className="text-xl font-bold text-blue-900 mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("daily")).length}{" Tasks"}</div><span className="text-[11px] text-blue-600">Mon – Sun rotation</span></div><div className="p-3 bg-purple-50/70 rounded-xl border border-purple-200"><span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider block">Once a Week</span><div className="text-xl font-bold text-purple-900 mt-0.5">{hubMasterChores.filter(c => { const f = (c.frequency || "").toLowerCase(); return (f.includes("weekly") || f.includes("once")) && !f.includes("bi"); }).length}{" Tasks"}</div><span className="text-[11px] text-purple-600">Saturday & Sunday deep tasks</span></div><div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200"><span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">Bi-Weekly Tasks</span><div className="text-xl font-bold text-amber-900 mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("bi-weekly") || c.frequency.toLowerCase().includes("biweekly")).length}{" Tasks"}</div><span className="text-[11px] text-amber-700">Split Curbside Recycling & Waste</span></div></div><div className="pt-2 space-y-3"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div className="relative flex-1 max-w-md"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" /><input type="text" placeholder="Search chores by name, category, group, or notes..." value={masterSearchQuery} onChange={e => setMasterSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500" />{masterSearchQuery && <button onClick={() => setMasterSearchQuery("")} className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"><X className="w-3.5 h-3.5" /></button>}</div><div className="flex items-center gap-1.5 text-xs"><span className="text-slate-500 font-semibold mr-1">Frequency:</span><button onClick={() => setMasterFrequencyFilter("ALL")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "ALL" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>All</button><button onClick={() => setMasterFrequencyFilter("Daily")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Daily" ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-700 hover:bg-blue-100"}`}>Daily</button><button onClick={() => setMasterFrequencyFilter("Once a Week")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Once a Week" ? "bg-purple-600 text-white" : "bg-purple-50 text-purple-700 hover:bg-purple-100"}`}>Weekly</button><button onClick={() => setMasterFrequencyFilter("Bi-Weekly")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Bi-Weekly" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-800 hover:bg-amber-100"}`}>Bi-Weekly</button></div></div><div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs"><span className="text-slate-400 font-semibold mr-1 shrink-0">Category:</span><button onClick={() => setMasterCategoryFilter("ALL")} className={`px-2.5 py-1 rounded-full font-semibold shrink-0 transition ${masterCategoryFilter === "ALL" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>All Categories ({hubMasterChores.length})</button>{CHORE_CATEGORIES.map(cat => {
             const count = hubMasterChores.filter(c => c.category.toLowerCase() === cat.name.toLowerCase()).length;
             return <button key={cat.id} onClick={() => setMasterCategoryFilter(cat.name)} className={`px-2.5 py-1 rounded-full font-semibold shrink-0 transition flex items-center gap-1.5 border ${masterCategoryFilter === cat.name ? "ring-2 ring-slate-800 shadow-xs" : "opacity-85 hover:opacity-100"} ${cat.bg} ${cat.text} ${cat.border}`}><span>{cat.icon}</span><span>{cat.name}</span><span className="text-[10px] opacity-75">({count})</span></button>;
-          })}</div></div><div className="overflow-visible border border-slate-200 rounded-xl shadow-2xs"><table className="w-full text-left text-xs"><thead className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3 w-10 text-center">#</th><th className="p-3">Chore / Task</th><th className="p-3">Category</th><th className="p-3">Frequency</th><th className="p-3">Target Day(s)</th><th className="p-3">Rotation Group</th><th className="p-3 text-right">Actions</th></tr></thead><tbody>{filteredMasterChores.map((ch, idx) => {
+          })}</div></div><div className="overflow-visible border border-slate-200 rounded-xl shadow-2xs"><table className="w-full text-left text-xs"><thead className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3 w-10 text-center">#</th><th className="p-3">Chore / Task</th><th className="p-3">Category</th><th className="p-3">Frequency</th><th className="p-3">Target Day(s)</th><th className="p-3">Rotation Group</th><th className="p-3 text-right">Actions</th></tr></thead><tbody>{filteredMasterChores.length === 0 ? <tr><td colSpan={7} className="text-center py-8 text-slate-400"><div className="flex flex-col items-center justify-center gap-1.5"><Sparkles className="w-5 h-5 text-slate-300" /><span className="font-semibold text-slate-600 text-xs">No master chores registered yet</span><span className="text-[11px] text-slate-400">Click &ldquo;+ Add Chore&rdquo; above to build your household chore list.</span></div></td></tr> : filteredMasterChores.map((ch, idx) => {
             const isEditing = editingMasterIndex === ch.index_;
             const catConfig = CHORE_CATEGORIES.find(c => c.name.toLowerCase() === (ch.category || "").toLowerCase()) || CHORE_CATEGORIES[3];
             const draftCatConfig = isEditing && (masterInlineDraft == null ? void 0 : masterInlineDraft.category)
@@ -5776,7 +5712,7 @@ export default function AppWrapper() {
       const saved = localStorage.getItem(STORAGE_KEY);
       const dataToSave = saved ? JSON.parse(saved) : sheetData;
       if (Array.isArray(dataToSave) && dataToSave.length > 0) {
-        fetch('/__save-config?asDefault=true', {
+        fetch('/__save-config', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sheetData: dataToSave }),

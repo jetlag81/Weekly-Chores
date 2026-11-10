@@ -804,6 +804,62 @@ function CodeInspectorOverlay() {
     e.target.value = '';
   };
 
+  const handleLoadStarterTemplate = async () => {
+    if (!window.confirm("Switch to a blank initialized starter template?\n\nThis provides a clean slate without names or chores populated, ready for a new user to set up.\n\nYour current setup is preserved in 'weekly-chores-config.json' and you can restore it anytime.")) {
+      return;
+    }
+    try {
+      const res = await fetch('/__load-starter');
+      const json = await res.json();
+      const starterData = json.sheetData || (Array.isArray(json) ? json : null);
+      if (Array.isArray(starterData) && starterData.length > 0) {
+        localStorage.setItem('weekly_chores_canvas_sheet_data_v5', JSON.stringify(starterData));
+        window.postMessage({ type: 'SYNC_DATA', payload: starterData }, '*');
+        triggerToast('✓ Initialized blank starter template loaded!');
+      } else {
+        triggerToast('⚠️ Starter template file could not be loaded');
+      }
+    } catch (e: any) {
+      triggerToast(`⚠️ Failed to load starter: ${e?.message || String(e)}`);
+    }
+  };
+
+  const handleRestoreSavedSetup = async () => {
+    try {
+      const res = await fetch('/__load-config');
+      const json = await res.json();
+      const savedData = json.sheetData || (Array.isArray(json) ? json : null);
+      if (Array.isArray(savedData) && savedData.length > 0) {
+        localStorage.setItem('weekly_chores_canvas_sheet_data_v5', JSON.stringify(savedData));
+        window.postMessage({ type: 'SYNC_DATA', payload: savedData }, '*');
+        triggerToast('✓ Restored saved setup from weekly-chores-config.json!');
+      } else {
+        triggerToast('⚠️ Saved config file could not be loaded');
+      }
+    } catch (e: any) {
+      triggerToast(`⚠️ Failed to restore saved config: ${e?.message || String(e)}`);
+    }
+  };
+
+  const handleExportStarterTemplate = async () => {
+    try {
+      const res = await fetch('/__load-starter');
+      const json = await res.json();
+      const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'weekly-chores-starter-template.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      triggerToast('✓ Downloaded blank starter template (.json)!');
+    } catch (e: any) {
+      triggerToast(`⚠️ Export starter failed: ${e?.message || String(e)}`);
+    }
+  };
+
   const cycleDockCorner = () => {
     setDockCorner((prev) => {
       const order: DockCorner[] = ['top-right', 'bottom-left', 'top-left', 'bottom-right', 'float'];
@@ -1317,6 +1373,78 @@ function CodeInspectorOverlay() {
         >
           <span>💾</span>
           <span>Save as Default</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleLoadStarterTemplate}
+          title="Load clean blank starter template without pre-populated names or chores (initialized app setup)"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '7px 12px',
+            borderRadius: '9999px',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: '1px solid #D97706',
+            backgroundColor: '#78350F',
+            color: '#FEF3C7',
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <span>✨</span>
+          <span>Blank Starter</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleRestoreSavedSetup}
+          title="Restore your saved household configuration from weekly-chores-config.json"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '7px 12px',
+            borderRadius: '9999px',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: '1px solid #6366F1',
+            backgroundColor: '#312E81',
+            color: '#EEF2FF',
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <span>🔄</span>
+          <span>Restore Setup</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleExportStarterTemplate}
+          title="Download the blank starter template JSON file"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '7px 12px',
+            borderRadius: '9999px',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: '1px solid #334155',
+            backgroundColor: '#1E293B',
+            color: '#E2E8F0',
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <span>⬇️</span>
+          <span>Export Starter</span>
         </button>
 
         <button

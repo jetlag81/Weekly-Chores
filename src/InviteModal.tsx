@@ -45,12 +45,24 @@ export const InviteModal: React.FC<InviteModalProps> = ({
   const [activeTab, setActiveTab] = useState<"invite" | "manage">("invite");
   const [selectedKidName, setSelectedKidName] = useState(() => kidMembers[0]?.name || "Sydney");
   const [createdInvite, setCreatedInvite] = useState<HouseholdInvite | null>(null);
-  const [targetDevice, setTargetDevice] = useState<"local" | "wifi">("local");
+  const [tunnelUrl, setTunnelUrl] = useState<string>("https://6adf3d2fac0e7c.lhr.life");
+  const [targetDevice, setTargetDevice] = useState<"tunnel" | "local" | "wifi">("tunnel");
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [loading, setLoading] = useState(false);
   const [invitesList, setInvitesList] = useState<HouseholdInvite[]>(() => getLocalInvites());
   const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/__tunnel-url")
+      .then(r => r.json())
+      .then(d => {
+        if (d?.url) {
+          setTunnelUrl(d.url);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const refreshInvites = () => {
     setInvitesList(getLocalInvites());
@@ -77,11 +89,15 @@ export const InviteModal: React.FC<InviteModalProps> = ({
   };
 
   const getInviteUrl = (code: string) => {
-    if (typeof window === "undefined") return `http://localhost:5173/?join=${code}`;
+    const kidQuery = createdInvite?.kidName ? `&kid=${encodeURIComponent(createdInvite.kidName)}` : "";
+    if (targetDevice === "tunnel" && tunnelUrl) {
+      const cleanTunnel = tunnelUrl.replace(/\/+$/, "");
+      return `${cleanTunnel}/?join=${code}${kidQuery}`;
+    }
+    if (typeof window === "undefined") return `http://localhost:5173/?join=${code}${kidQuery}`;
     const host = targetDevice === "wifi"
       ? "192.168.0.8:5173"
       : (window.location.host || "localhost:5173");
-    const kidQuery = createdInvite?.kidName ? `&kid=${encodeURIComponent(createdInvite.kidName)}` : "";
     return `${window.location.protocol}//${host}/?join=${code}${kidQuery}`;
   };
 
@@ -241,28 +257,39 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                 </div>
 
                 {/* Target Device Selector */}
-                <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold max-w-sm mx-auto">
+                <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold max-w-md mx-auto">
                   <button
                     type="button"
-                    onClick={() => setTargetDevice("local")}
-                    className={`flex-1 py-1.5 px-3 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
-                      targetDevice === "local"
-                        ? "bg-white text-indigo-700 shadow-xs"
+                    onClick={() => setTargetDevice("tunnel")}
+                    className={`flex-1 py-1.5 px-2.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-1 ${
+                      targetDevice === "tunnel"
+                        ? "bg-emerald-600 text-white shadow-xs font-black"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
-                    <span>💻 This PC / Window</span>
+                    <span>📱 Phone (Instant Scan)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTargetDevice("local")}
+                    className={`flex-1 py-1.5 px-2.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-1 ${
+                      targetDevice === "local"
+                        ? "bg-white text-indigo-700 shadow-xs font-bold"
+                        : "text-slate-600 hover:text-slate-900"
+                    }`}
+                  >
+                    <span>💻 PC Tab</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setTargetDevice("wifi")}
-                    className={`flex-1 py-1.5 px-3 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                    className={`flex-1 py-1.5 px-2.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-1 ${
                       targetDevice === "wifi"
-                        ? "bg-white text-indigo-700 shadow-xs"
+                        ? "bg-white text-indigo-700 shadow-xs font-bold"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
-                    <span>📱 Wi-Fi (192.168.0.8)</span>
+                    <span>📶 Local IP</span>
                   </button>
                 </div>
 
@@ -273,7 +300,13 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                     <QRCodeDisplay value={getInviteUrl(createdInvite.code)} size={160} />
                     <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider flex items-center gap-1 mt-1">
                       <QrCode className="w-3.5 h-3.5" />
-                      <span>{targetDevice === "local" ? "PC / Local QR Code" : "Home Wi-Fi QR Code"}</span>
+                      <span>
+                        {targetDevice === "tunnel"
+                          ? "🌐 Instant Phone QR (Works Anywhere)"
+                          : targetDevice === "local"
+                          ? "💻 PC / Local QR Code"
+                          : "📶 Local Wi-Fi QR Code"}
+                      </span>
                     </span>
                   </div>
 
@@ -321,8 +354,8 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-600 text-[11px] leading-relaxed text-left space-y-1">
-                  <div><strong>💻 Testing on PC:</strong> Click <em>&quot;Open Minion Mode ↗&quot;</em> or open the link in Edge / incognito.</div>
-                  <div><strong>📱 Testing on Phone:</strong> Select the <em>&quot;Wi-Fi (192.168.0.8)&quot;</em> tab. If your phone cannot load the link, ensure your phone is connected to the same Wi-Fi network (not cellular data), or simply enter code <strong>{createdInvite.code}</strong>.</div>
+                  <div><strong>📱 Phone / Tablet:</strong> Use <strong>📱 Phone (Instant Scan)</strong> — it connects immediately with HTTPS across cellular data or Wi-Fi with zero firewall blocks.</div>
+                  <div><strong>💻 Testing on PC:</strong> Click <em>&quot;Open Minion Mode ↗&quot;</em> to open in another browser tab or Edge.</div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 pt-2">

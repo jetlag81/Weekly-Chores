@@ -414,6 +414,21 @@ export default defineConfig({
             res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
           }
         });
+
+        server.middlewares.use('/__tunnel-url', (req, res) => {
+          res.setHeader('Content-Type', 'application/json');
+          try {
+            const tunnelFile = path.resolve(process.cwd(), '.tunnel-url');
+            if (fs.existsSync(tunnelFile)) {
+              const url = fs.readFileSync(tunnelFile, 'utf-8').trim();
+              res.end(JSON.stringify({ ok: true, url }));
+            } else {
+              res.end(JSON.stringify({ ok: true, url: '' }));
+            }
+          } catch {
+            res.end(JSON.stringify({ ok: true, url: '' }));
+          }
+        });
       },
     },
   ],
@@ -428,5 +443,6 @@ export default defineConfig({
     host: true,
     port: 5173,
     strictPort: false,
+    allowedHosts: true,
   },
 });

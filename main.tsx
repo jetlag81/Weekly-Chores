@@ -693,9 +693,23 @@ function StandaloneCsvMapWindow() {
   );
 }
 
+type DockCorner = 'top-right' | 'bottom-left' | 'top-left' | 'bottom-right' | 'float';
+const DOCK_CORNER_KEY = '__code_inspector_dock_corner';
+
 function CodeInspectorOverlay() {
   const [inspectToggle, setInspectToggle] = useState(false);
   const [altPressed, setAltPressed] = useState(false);
+  const [dockCorner, setDockCorner] = useState<DockCorner>(() => {
+    try {
+      const saved = localStorage.getItem(DOCK_CORNER_KEY) as DockCorner | null;
+      if (saved && ['top-right', 'bottom-left', 'top-left', 'bottom-right', 'float'].includes(saved)) {
+        return saved;
+      }
+    } catch (e) {}
+    return 'top-right';
+  });
+  const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const [hovered, setHovered] = useState<SourceInfo | null>(null);
   const [snippet, setSnippet] = useState<SnippetLine[]>([]);
   const [jumpToast, setJumpToast] = useState<string | null>(null);
@@ -712,6 +726,18 @@ function CodeInspectorOverlay() {
     setTimeout(() => setJumpToast(null), 2400);
   };
 
+  const cycleDockCorner = () => {
+    setDockCorner((prev) => {
+      const order: DockCorner[] = ['top-right', 'bottom-left', 'top-left', 'bottom-right', 'float'];
+      const next = order[(order.indexOf(prev) + 1) % order.length];
+      try {
+        localStorage.setItem(DOCK_CORNER_KEY, next);
+      } catch (e) {}
+      triggerToast(`Inspector window docked: ${next.replace('-', ' ').toUpperCase()}`);
+      return next;
+    });
+  };
+
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Alt') {
@@ -721,6 +747,8 @@ function CodeInspectorOverlay() {
           setInspectToggle(false);
           setHovered(null);
         }
+      } else if ((e.key === 'd' || e.key === 'D') && isInspecting) {
+        cycleDockCorner();
       }
     };
     const onKeyUp = (e: KeyboardEvent) => {
@@ -755,6 +783,8 @@ function CodeInspectorOverlay() {
         setHovered(null);
         return;
       }
+
+      setMousePos({ x: e.clientX, y: e.clientY });
 
       const el = target.closest('[data-source-loc]') as HTMLElement | null;
       if (!el) {
@@ -847,19 +877,65 @@ function CodeInspectorOverlay() {
     };
   }, [isInspecting]);
 
-  let tooltipTop = 12;
-  let tooltipLeft = 12;
+  // Determine placement for the detailed code card with smart auto-flipping to prevent covering hovered elements
+  let cardStyle: React.CSSProperties = {};
   if (hovered) {
-    const spaceAbove = hovered.rect.top;
-    if (spaceAbove > 170) {
-      tooltipTop = Math.max(8, hovered.rect.top - 165);
+    const pad = 16;
+    const cardW = 465;
+    const cardH = 320;
+    const r = hovered.rect;
+
+    if (dockCorner === 'top-right') {
+      const collides = r.right > window.innerWidth - (cardW + pad * 2) && r.top < cardH + pad;
+      if (collides) {
+        cardStyle = { bottom: `${pad + 48}px`, left: `${pad}px` };
+      } else {
+        cardStyle = { top: `${pad}px`, right: `${pad}px` };
+      }
+    } else if (dockCorner === 'bottom-left') {
+      const collides = r.left < cardW + pad * 2 && r.bottom > window.innerHeight - (cardH + pad + 48);
+      if (collides) {
+        cardStyle = { top: `${pad}px`, right: `${pad}px` };
+      } else {
+        cardStyle = { bottom: `${pad + 48}px`, left: `${pad}px` };
+      }
+    } else if (dockCorner === 'top-left') {
+      const collides = r.left < cardW + pad * 2 && r.top < cardH + pad;
+      if (collides) {
+        cardStyle = { bottom: `${pad + 48}px`, right: `${pad}px` };
+      } else {
+        cardStyle = { top: `${pad}px`, left: `${pad}px` };
+      }
+    } else if (dockCorner === 'bottom-right') {
+      const collides = r.right > window.innerWidth - (cardW + pad * 2) && r.bottom > window.innerHeight - (cardH + pad + 48);
+      if (collides) {
+        cardStyle = { top: `${pad}px`, left: `${pad}px` };
+      } else {
+        cardStyle = { bottom: `${pad + 48}px`, right: `${pad}px` };
+      }
     } else {
-      tooltipTop = Math.min(window.innerHeight - 185, hovered.rect.bottom + 8);
+      // 'float' - smart side-offset so it NEVER covers the element itself
+      let fTop = r.top;
+      let fLeft = r.right + 16;
+      if (fLeft + cardW > window.innerWidth - pad) {
+        fLeft = r.left - cardW - 16;
+      }
+      if (fLeft < pad) {
+        fLeft = Math.max(pad, Math.min(r.left, window.innerWidth - cardW - pad));
+        fTop = r.top > cardH + pad ? r.top - cardH - 12 : r.bottom + 12;
+      }
+      fTop = Math.max(pad, Math.min(fTop, window.innerHeight - cardH - pad));
+      cardStyle = { top: `${fTop}px`, left: `${fLeft}px` };
     }
-    tooltipLeft = Math.min(
-      Math.max(8, hovered.rect.left),
-      Math.max(8, window.innerWidth - 470)
-    );
+  }
+
+  let isMouseNearCard = false;
+  if (cardRef.current && isInspecting) {
+    const cr = cardRef.current.getBoundingClientRect();
+    const cx = Math.max(cr.left, Math.min(mousePos.x, cr.right));
+    const cy = Math.max(cr.top, Math.min(mousePos.y, cr.bottom));
+    const dist = Math.hypot(mousePos.x - cx, mousePos.y - cy);
+    if (dist < 40) isMouseNearCard = true;
   }
 
   return (
@@ -881,35 +957,88 @@ function CodeInspectorOverlay() {
               transition: 'all 0.04s ease-out',
             }}
           />
-          {/* Floating Code Tooltip */}
+          {/* Mini Element Badge directly next to element border (unobtrusive, doesn't cover content) */}
           <div
             style={{
               position: 'fixed',
-              top: tooltipTop,
-              left: tooltipLeft,
-              maxWidth: '465px',
+              top: hovered.rect.top > 24 ? hovered.rect.top - 22 : hovered.rect.bottom + 4,
+              left: Math.max(4, Math.min(hovered.rect.left, window.innerWidth - 240)),
+              padding: '2px 8px',
+              borderRadius: '4px',
+              backgroundColor: '#0F172A',
+              color: '#93C5FD',
+              border: '1px solid #3B82F6',
+              fontSize: '10px',
+              fontWeight: 700,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+              pointerEvents: 'none',
+              whiteSpace: 'nowrap',
+              zIndex: 999999,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <span>&lt;{hovered.tag}&gt;{hovered.comp ? ` in <${hovered.comp}>` : ''}</span>
+            <span style={{ color: '#38BDF8', fontWeight: 600 }}>• Line {hovered.line}</span>
+          </div>
+
+          {/* Detailed Floating / Docked Code Card */}
+          <div
+            ref={cardRef}
+            style={{
+              position: 'fixed',
+              ...cardStyle,
+              width: '465px',
+              maxWidth: 'calc(100vw - 32px)',
               backgroundColor: '#0F172A',
               color: '#F8FAFC',
-              padding: '8px 12px',
-              borderRadius: '8px',
-              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+              padding: '10px 14px',
+              borderRadius: '10px',
+              boxShadow: '0 12px 30px -5px rgba(0, 0, 0, 0.65)',
               border: '1px solid #334155',
               fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
               fontSize: '11px',
               lineHeight: '1.45',
-              pointerEvents: 'none',
+              pointerEvents: 'auto',
+              opacity: isMouseNearCard ? 0.22 : 0.98,
+              transition: 'opacity 0.15s ease, top 0.2s ease, left 0.2s ease, right 0.2s ease, bottom 0.2s ease',
+              zIndex: 999999,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '4px' }}>
-              <span style={{ color: '#60A5FA', fontWeight: 700 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '6px' }}>
+              <span style={{ color: '#60A5FA', fontWeight: 700, fontSize: '11.5px' }}>
                 &lt;{hovered.tag}&gt;
                 {hovered.comp ? (
                   <span style={{ color: '#C084FC', fontWeight: 500 }}> in {hovered.comp}</span>
                 ) : null}
               </span>
-              <span style={{ color: '#38BDF8', backgroundColor: '#1E293B', padding: '1px 6px', borderRadius: '4px', fontWeight: 600 }}>
-                Line {hovered.line}:{hovered.col}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={cycleDockCorner}
+                  title="Move inspector window corner (or press 'D' key)"
+                  style={{
+                    backgroundColor: '#1E293B',
+                    color: '#93C5FD',
+                    border: '1px solid #3B82F6',
+                    borderRadius: '4px',
+                    padding: '2px 7px',
+                    fontSize: '9.5px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span>◰</span>
+                  <span>Dock: {dockCorner.replace('-', ' ')}</span>
+                </button>
+                <span style={{ color: '#38BDF8', backgroundColor: '#1E293B', padding: '1px 6px', borderRadius: '4px', fontWeight: 600 }}>
+                  Line {hovered.line}:{hovered.col}
+                </span>
+              </div>
             </div>
             <div style={{ color: '#94A3B8', fontSize: '10px', marginBottom: '6px' }}>
               {hovered.file} (<strong>Click</strong> = UI code)
@@ -1148,6 +1277,32 @@ function CodeInspectorOverlay() {
           <span>🔍</span>
           <span>{isInspecting ? 'Inspecting Code (Click element)' : 'Inspect Code (or hold Alt)'}</span>
         </button>
+
+        {isInspecting && (
+          <button
+            type="button"
+            onClick={cycleDockCorner}
+            title="Cycle inspector info window corner (or press 'D' key while inspecting)"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '7px 12px',
+              borderRadius: '9999px',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              border: '1px solid #475569',
+              backgroundColor: '#1E293B',
+              color: '#93C5FD',
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            <span>◰</span>
+            <span>Dock: {dockCorner.replace('-', ' ')} (Key: D)</span>
+          </button>
+        )}
       </div>
     </div>
   );

@@ -5112,6 +5112,16 @@ function App({
               <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
               <span>Invite Kid Device</span>
             </button>
+            <a
+              href="/Workflow_Diagrams_Export.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 rounded-lg transition cursor-pointer shadow-2xs no-underline"
+              title="Open, copy, or download Architecture & Workflow diagrams as PNG/SVG"
+            >
+              <span>📊</span>
+              <span>Diagrams</span>
+            </a>
             <button
               onClick={() => setShowAutoAssignModal(true)}
               className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 rounded-lg transition"

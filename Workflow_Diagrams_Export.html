@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Household Hub - Workflow &amp; Architecture Diagrams</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #090d16;
+      color: #f1f5f9;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .header {
+      max-width: 1040px;
+      width: 100%;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+    .header h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .header p {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+    .card {
+      max-width: 1040px;
+      width: 100%;
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 40px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #38bdf8;
+    }
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    button:hover {
+      background: #334155;
+      border-color: #64748b;
+      transform: translateY(-1px);
+    }
+    button.primary {
+      background: #0284c7;
+      border-color: #38bdf8;
+      color: #ffffff;
+    }
+    button.primary:hover {
+      background: #0369a1;
+    }
+    button.success {
+      background: #059669;
+      border-color: #34d399;
+      color: #ffffff;
+    }
+    button.success:hover {
+      background: #047857;
+    }
+    .svg-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      background: #0f172a;
+      border-radius: 12px;
+      border: 1px solid #1e293b;
+      display: flex;
+      justify-content: center;
+      padding: 10px;
+    }
+    svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+    .toast {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: #10b981;
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      display: none;
+      animation: fadeIn 0.2s ease;
+      z-index: 9999;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>📊 Household Hub Workflow &amp; Architecture Visuals</h1>
+    <p>High-resolution exportable diagrams. Use the buttons below to download as PNG, SVG, or copy directly to your clipboard.</p>
+  </div>
+
+  <!-- DIAGRAM 1: ARCHITECTURE OVERVIEW -->
+  <div class="card">
+    <div class="card-top">
+      <div class="card-title">1. Multi-User &amp; Cross-Platform Architecture</div>
+      <div class="btn-group">
+        <button class="primary" onclick="downloadAsPng('diag1', 'Household_Hub_Architecture_Workflow.png')">
+          📥 Download PNG
+        </button>
+        <button onclick="downloadAsSvg('diag1', 'Household_Hub_Architecture_Workflow.svg')">
+          📥 Download SVG
+        </button>
+        <button class="success" onclick="copyToClipboard('diag1', this)">
+          📋 Copy to Clipboard
+        </button>
+      </div>
+    </div>
+    <div class="svg-wrapper">
+      <div id="diag1-container" style="width: 100%;">
+        <!-- SVG 1 inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- DIAGRAM 2: PAIRING WORKFLOW -->
+  <div class="card">
+    <div class="card-top">
+      <div class="card-title">2. Kid Onboarding &amp; Device Pairing Flow</div>
+      <div class="btn-group">
+        <button class="primary" onclick="downloadAsPng('diag2', 'Kid_Device_Pairing_Workflow.png')">
+          📥 Download PNG
+        </button>
+        <button onclick="downloadAsSvg('diag2', 'Kid_Device_Pairing_Workflow.svg')">
+          📥 Download SVG
+        </button>
+        <button class="success" onclick="copyToClipboard('diag2', this)">
+          📋 Copy to Clipboard
+        </button>
+      </div>
+    </div>
+    <div class="svg-wrapper">
+      <div id="diag2-container" style="width: 100%;">
+        <!-- SVG 2 inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">✅ Copied image to clipboard!</div>
+
+  <script>
+    // Load external SVG files into containers
+    async function loadSvgs() {
+      try {
+        const res1 = await fetch('Household_Hub_Architecture_Workflow.svg');
+        const text1 = await res1.text();
+        document.getElementById('diag1-container').innerHTML = text1;
+        document.getElementById('diag1-container').querySelector('svg').id = 'diag1';
+
+        const res2 = await fetch('Kid_Device_Pairing_Workflow.svg');
+        const text2 = await res2.text();
+        document.getElementById('diag2-container').innerHTML = text2;
+        document.getElementById('diag2-container').querySelector('svg').id = 'diag2';
+      } catch (err) {
+        console.error('Failed to load SVGs:', err);
+      }
+    }
+    loadSvgs();
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+
+    function downloadAsSvg(svgId, filename) {
+      const svg = document.getElementById(svgId);
+      if (!svg) return;
+      const serializer = new XMLSerializer();
+      let source = serializer.serializeToString(svg);
+      if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+        source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+      }
+      const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('📥 Downloaded ' + filename);
+    }
+
+    function renderSvgToCanvas(svg, scale = 2) {
+      return new Promise((resolve, reject) => {
+        const serializer = new XMLSerializer();
+        const source = serializer.serializeToString(svg);
+        const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => {
+          const width = (svg.viewBox.baseVal.width || svg.clientWidth || 1000) * scale;
+          const height = (svg.viewBox.baseVal.height || svg.clientHeight || 800) * scale;
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.scale(scale, scale);
+          ctx.drawImage(img, 0, 0);
+          URL.revokeObjectURL(url);
+          resolve(canvas);
+        };
+        img.onerror = (e) => {
+          URL.revokeObjectURL(url);
+          reject(e);
+        };
+        img.src = url;
+      });
+    }
+
+    async function downloadAsPng(svgId, filename) {
+      const svg = document.getElementById(svgId);
+      if (!svg) return;
+      try {
+        const canvas = await renderSvgToCanvas(svg, 2);
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('📥 Downloaded ' + filename);
+      } catch (err) {
+        alert('Export error: ' + err.message);
+      }
+    }
+
+    async function copyToClipboard(svgId, btn) {
+      const svg = document.getElementById(svgId);
+      if (!svg) return;
+      try {
+        const canvas = await renderSvgToCanvas(svg, 2);
+        canvas.toBlob(async (blob) => {
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            showToast('📋 Copied PNG to Clipboard! Paste anywhere with Ctrl+V');
+          } catch (err) {
+            downloadAsPng(svgId, svgId + '.png');
+          }
+        }, 'image/png');
+      } catch (err) {
+        alert('Could not copy image automatically. Downloading PNG instead.');
+        downloadAsPng(svgId, svgId + '.png');
+      }
+    }
+  </script>
+</body>
+</html>
+

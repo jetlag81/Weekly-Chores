@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 760" width="960" height="760" style="background:#0f172a; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <linearGradient id="bgGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <filter id="shadow2" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+    <marker id="arrCyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8"/>
+    </marker>
+    <marker id="arrAmber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#fbbf24"/>
+    </marker>
+    <marker id="arrGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#34d399"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="960" height="760" fill="url(#bgGrad2)"/>
+
+  <!-- Title Card -->
+  <rect x="40" y="24" width="880" height="70" rx="14" fill="#1e293b" stroke="#334155" stroke-width="1.5" filter="url(#shadow2)"/>
+  <text x="480" y="55" text-anchor="middle" fill="#ffffff" font-size="20" font-weight="800">KID ONBOARDING &amp; DEVICE PAIRING WORKFLOW</text>
+  <text x="480" y="77" text-anchor="middle" fill="#94a3b8" font-size="13">Zero-Password Onboarding Flow Between Parent Hub, Firebase, and Kid Devices</text>
+
+  <!-- Actor Lifelines (Vertical Columns) -->
+  <!-- Actor 1: Parent -->
+  <g transform="translate(140, 115)" filter="url(#shadow2)">
+    <rect width="180" height="56" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="2"/>
+    <text x="32" y="36" font-size="22">👑</text>
+    <text x="65" y="28" fill="#ffffff" font-size="14" font-weight="700">Parent Device</text>
+    <text x="65" y="46" fill="#fbbf24" font-size="11" font-weight="600">Admin Hub (PC/Phone)</text>
+  </g>
+  <line x1="230" y1="171" x2="230" y2="700" stroke="#334155" stroke-width="2" stroke-dasharray="6,6"/>
+
+  <!-- Actor 2: Firestore Cloud -->
+  <g transform="translate(390, 115)" filter="url(#shadow2)">
+    <rect width="180" height="56" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+    <text x="32" y="36" font-size="22">⚡</text>
+    <text x="65" y="28" fill="#ffffff" font-size="14" font-weight="700">Cloud Firestore</text>
+    <text x="65" y="46" fill="#38bdf8" font-size="11" font-weight="600">Firebase Realtime</text>
+  </g>
+  <line x1="480" y1="171" x2="480" y2="700" stroke="#334155" stroke-width="2" stroke-dasharray="6,6"/>
+
+  <!-- Actor 3: Kid Device -->
+  <g transform="translate(640, 115)" filter="url(#shadow2)">
+    <rect width="180" height="56" rx="10" fill="#1e293b" stroke="#34d399" stroke-width="2"/>
+    <text x="32" y="36" font-size="22">🎒</text>
+    <text x="65" y="28" fill="#ffffff" font-size="14" font-weight="700">Kid Device</text>
+    <text x="65" y="46" fill="#34d399" font-size="11" font-weight="600">Phone / Tablet (Minion)</text>
+  </g>
+  <line x1="730" y1="171" x2="730" y2="700" stroke="#334155" stroke-width="2" stroke-dasharray="6,6"/>
+
+  <!-- Step 1: Parent generates code -->
+  <line x1="230" y1="205" x2="480" y2="205" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrAmber)"/>
+  <rect x="250" y="190" width="210" height="24" rx="6" fill="#0f172a" stroke="#d97706" stroke-width="1"/>
+  <text x="355" y="206" text-anchor="middle" fill="#fde68a" font-size="11" font-weight="600">1. Generate Code for Liam</text>
+
+  <!-- Step 2: Firestore records invite -->
+  <rect x="420" y="235" width="120" height="32" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="480" y="254" text-anchor="middle" fill="#7dd3fc" font-size="11" font-weight="600">2. Save HERD-84</text>
+
+  <!-- Step 3: Return code to Parent Hub -->
+  <line x1="480" y1="285" x2="230" y2="285" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrCyan)"/>
+  <rect x="250" y="270" width="210" height="24" rx="6" fill="#0f172a" stroke="#0284c7" stroke-width="1"/>
+  <text x="355" y="286" text-anchor="middle" fill="#bae6fd" font-size="11" font-weight="600">3. Display Code &amp; QR in Modal</text>
+
+  <!-- Step 4: Kid installs/opens app -->
+  <rect x="670" y="320" width="150" height="38" rx="8" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+  <text x="745" y="337" text-anchor="middle" fill="#6ee7b7" font-size="11" font-weight="600">4. Open App on Phone</text>
+  <text x="745" y="350" text-anchor="middle" fill="#94a3b8" font-size="10">Tap "Join with Code"</text>
+
+  <!-- Step 5: Kid sends code to Cloud -->
+  <line x1="730" y1="385" x2="480" y2="385" stroke="#34d399" stroke-width="2" marker-end="url(#arrGreen)"/>
+  <rect x="510" y="370" width="200" height="24" rx="6" fill="#0f172a" stroke="#059669" stroke-width="1"/>
+  <text x="610" y="386" text-anchor="middle" fill="#a7f3d0" font-size="11" font-weight="600">5. Submit code 'HERD-84'</text>
+
+  <!-- Step 6: Firestore validates invite & marks claimed -->
+  <rect x="400" y="415" width="160" height="36" rx="6" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+  <text x="480" y="432" text-anchor="middle" fill="#7dd3fc" font-size="11" font-weight="600">6. Validate &amp; Claim</text>
+  <text x="480" y="445" text-anchor="middle" fill="#94a3b8" font-size="10">Link device to Liam's profile</text>
+
+  <!-- Step 7: Cloud issues token & config to Kid Device -->
+  <line x1="480" y1="475" x2="730" y2="475" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrCyan)"/>
+  <rect x="510" y="460" width="200" height="24" rx="6" fill="#0f172a" stroke="#0284c7" stroke-width="1"/>
+  <text x="610" y="476" text-anchor="middle" fill="#bae6fd" font-size="11" font-weight="600">7. Pair Device &amp; Sync Chores</text>
+
+  <!-- Step 8: Kid Dashboard active -->
+  <rect x="655" y="510" width="180" height="42" rx="8" fill="#1e293b" stroke="#34d399" stroke-width="2"/>
+  <text x="745" y="528" text-anchor="middle" fill="#6ee7b7" font-size="12" font-weight="700">8. Minion Mode Activated</text>
+  <text x="745" y="543" text-anchor="middle" fill="#94a3b8" font-size="10.5">Shows Liam's Routines &amp; Streaks</text>
+
+  <!-- Step 9: Kid taps chore -> Live Sync back to Parent Hub -->
+  <g transform="translate(60, 575)">
+    <rect width="840" height="110" rx="12" fill="#132338" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="5,4"/>
+    <rect x="20" y="14" width="40" height="40" rx="8" fill="#0284c7"/>
+    <text x="40" y="40" text-anchor="middle" font-size="20">🎉</text>
+    <text x="75" y="32" fill="#ffffff" font-size="14" font-weight="700">9. Instant Real-Time Chore Check-off Flow</text>
+    <text x="75" y="49" fill="#38bdf8" font-size="11.5" font-weight="600">Kid taps "Fold Laundry" &rarr; Audio Chime + Confetti Bursts on Kid Device</text>
+    <text x="75" y="70" fill="#94a3b8" font-size="11">&bull; Firestore receives instant update in sub-500ms via WebSocket</text>
+    <text x="75" y="88" fill="#94a3b8" font-size="11">&bull; Parent Admin Hub on PC flashes green &amp; marks checkmark immediately without refreshing page!</text>
+  </g>
+</svg>

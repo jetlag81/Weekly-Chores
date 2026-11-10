@@ -1,0 +1,184 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 820" width="1000" height="820" style="background:#0f172a; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="blueCard" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="purpleCard" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4338ca"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="amberCard" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b45309"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="emeraldCard" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#065f46"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+    
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8"/>
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#fbbf24"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1000" height="820" fill="url(#bgGrad)"/>
+  
+  <!-- Header Banner -->
+  <rect x="40" y="24" width="920" height="74" rx="14" fill="#1e293b" stroke="#334155" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="500" y="58" text-anchor="middle" fill="#ffffff" font-size="22" font-weight="800" letter-spacing="0.5">HOUSEHOLD HUB: MULTI-USER &amp; CROSS-PLATFORM ARCHITECTURE</text>
+  <text x="500" y="82" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="500">Unified React/Tailwind Client &bull; Capacitor Native Wrappers &bull; Realtime Cloud Firestore</text>
+
+  <!-- ================= SECTION 1: TARGET PLATFORMS ================= -->
+  <rect x="40" y="118" width="920" height="150" rx="16" fill="#182234" stroke="#2563eb" stroke-dasharray="6,4" stroke-width="1.5"/>
+  <rect x="60" y="108" width="220" height="24" rx="6" fill="#2563eb"/>
+  <text x="170" y="124" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700" letter-spacing="0.5">TARGET PLATFORMS (1 CODEBASE)</text>
+
+  <!-- Platform 1: iOS -->
+  <g transform="translate(65, 142)" filter="url(#shadow)">
+    <rect width="270" height="106" rx="12" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+    <rect x="14" y="14" width="36" height="36" rx="8" fill="#0284c7"/>
+    <text x="32" y="38" text-anchor="middle" fill="#ffffff" font-size="20">📱</text>
+    <text x="60" y="32" fill="#ffffff" font-size="16" font-weight="700">Apple iOS</text>
+    <text x="60" y="48" fill="#38bdf8" font-size="12" font-weight="600">iPhone &amp; iPad Native</text>
+    <text x="14" y="74" fill="#94a3b8" font-size="11.5">Packaged with Capacitor</text>
+    <text x="14" y="92" fill="#94a3b8" font-size="11.5">Offline cache &amp; tactile haptics</text>
+  </g>
+
+  <!-- Platform 2: Android -->
+  <g transform="translate(365, 142)" filter="url(#shadow)">
+    <rect width="270" height="106" rx="12" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+    <rect x="14" y="14" width="36" height="36" rx="8" fill="#059669"/>
+    <text x="32" y="38" text-anchor="middle" fill="#ffffff" font-size="20">🤖</text>
+    <text x="60" y="32" fill="#ffffff" font-size="16" font-weight="700">Google Android</text>
+    <text x="60" y="48" fill="#34d399" font-size="12" font-weight="600">Phones &amp; Tablets</text>
+    <text x="14" y="74" fill="#94a3b8" font-size="11.5">APK / Google Play ready</text>
+    <text x="14" y="92" fill="#94a3b8" font-size="11.5">Auto-updates from same web bundle</text>
+  </g>
+
+  <!-- Platform 3: PC / Mac Desktop -->
+  <g transform="translate(665, 142)" filter="url(#shadow)">
+    <rect width="270" height="106" rx="12" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+    <rect x="14" y="14" width="36" height="36" rx="8" fill="#7c3aed"/>
+    <text x="32" y="38" text-anchor="middle" fill="#ffffff" font-size="20">💻</text>
+    <text x="60" y="32" fill="#ffffff" font-size="16" font-weight="700">PC / Mac Desktop</text>
+    <text x="60" y="48" fill="#a78bfa" font-size="12" font-weight="600">Installable PWA App</text>
+    <text x="14" y="74" fill="#94a3b8" font-size="11.5">Runs in dedicated window</text>
+    <text x="14" y="92" fill="#94a3b8" font-size="11.5">One-click Letter Landscape printing</text>
+  </g>
+
+  <!-- Connectors from Platforms to Roles -->
+  <line x1="200" y1="268" x2="200" y2="330" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="500" y1="268" x2="500" y2="330" stroke="#34d399" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="800" y1="268" x2="800" y2="330" stroke="#a78bfa" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ================= SECTION 2: USER INTERFACES & ROLES ================= -->
+  <rect x="40" y="330" width="920" height="190" rx="16" fill="#182234" stroke="#8b5cf6" stroke-dasharray="6,4" stroke-width="1.5"/>
+  <rect x="60" y="320" width="220" height="24" rx="6" fill="#8b5cf6"/>
+  <text x="170" y="336" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700" letter-spacing="0.5">USER INTERFACES &amp; ROLES</text>
+
+  <!-- Role 1: Parent Admin Hub -->
+  <g transform="translate(65, 356)" filter="url(#shadow)">
+    <rect width="270" height="144" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+    <rect x="14" y="14" width="36" height="36" rx="8" fill="#d97706"/>
+    <text x="32" y="38" text-anchor="middle" fill="#ffffff" font-size="20">👑</text>
+    <text x="60" y="32" fill="#ffffff" font-size="16" font-weight="700">Parent Admin Hub</text>
+    <text x="60" y="48" fill="#fbbf24" font-size="12" font-weight="600">"Supreme Overlord Mode"</text>
+    <text x="14" y="74" fill="#e2e8f0" font-size="11.5">&bull; Full 14-Day Schedule &amp; Rotations</text>
+    <text x="14" y="92" fill="#e2e8f0" font-size="11.5">&bull; Auto-Assign algorithm &amp; Rosters</text>
+    <text x="14" y="110" fill="#e2e8f0" font-size="11.5">&bull; 1-Page Letter Landscape Print</text>
+    <text x="14" y="128" fill="#e2e8f0" font-size="11.5">&bull; Issue Kid Pairing Invite Codes</text>
+  </g>
+
+  <!-- Role 2: Kid Minion Mode -->
+  <g transform="translate(365, 356)" filter="url(#shadow)">
+    <rect width="270" height="144" rx="12" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+    <rect x="14" y="14" width="36" height="36" rx="8" fill="#0284c7"/>
+    <text x="32" y="38" text-anchor="middle" fill="#ffffff" font-size="20">🎒</text>
+    <text x="60" y="32" fill="#ffffff" font-size="16" font-weight="700">Kid Minion Mode</text>
+    <text x="60" y="48" fill="#38bdf8" font-size="12" font-weight="600">"Distraction-Free Dashboard"</text>
+    <text x="14" y="74" fill="#e2e8f0" font-size="11.5">&bull; Today's Chores tactile cards</text>
+    <text x="14" y="92" fill="#e2e8f0" font-size="11.5">&bull; Confetti burst + chime on tap</text>
+    <text x="14" y="110" fill="#e2e8f0" font-size="11.5">&bull; Streak &amp; monthly prize tracker</text>
+    <text x="14" y="128" fill="#e2e8f0" font-size="11.5">&bull; Parent Lock PIN to switch modes</text>
+  </g>
+
+  <!-- Role 3: Pairing Flow -->
+  <g transform="translate(665, 356)" filter="url(#shadow)">
+    <rect width="270" height="144" rx="12" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+    <rect x="14" y="14" width="36" height="36" rx="8" fill="#059669"/>
+    <text x="32" y="38" text-anchor="middle" fill="#ffffff" font-size="20">📲</text>
+    <text x="60" y="32" fill="#ffffff" font-size="16" font-weight="700">Device Pairing Flow</text>
+    <text x="60" y="48" fill="#34d399" font-size="12" font-weight="600">"Zero-Password Onboarding"</text>
+    <text x="14" y="74" fill="#e2e8f0" font-size="11.5">&bull; 6-Character code (HERD-84)</text>
+    <text x="14" y="92" fill="#e2e8f0" font-size="11.5">&bull; Kid types code on their device</text>
+    <text x="14" y="110" fill="#e2e8f0" font-size="11.5">&bull; Auto-links device to profile</text>
+    <text x="14" y="128" fill="#e2e8f0" font-size="11.5">&bull; Saves locally in IndexedDB</text>
+  </g>
+
+  <!-- Connectors from Roles to Firebase -->
+  <line x1="200" y1="520" x2="200" y2="580" stroke="#fbbf24" stroke-width="2" marker-end="url(#arrowAmber)"/>
+  <line x1="500" y1="520" x2="500" y2="580" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="800" y1="520" x2="800" y2="580" stroke="#34d399" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ================= SECTION 3: FIREBASE CLOUD BACKEND ================= -->
+  <rect x="40" y="580" width="920" height="200" rx="16" fill="#182234" stroke="#f59e0b" stroke-dasharray="6,4" stroke-width="1.5"/>
+  <rect x="60" y="570" width="260" height="24" rx="6" fill="#f59e0b"/>
+  <text x="190" y="586" text-anchor="middle" fill="#0f172a" font-size="11" font-weight="800" letter-spacing="0.5">FIREBASE REALTIME CLOUD INFRASTRUCTURE</text>
+
+  <!-- Firebase 1: Auth -->
+  <g transform="translate(65, 608)" filter="url(#shadow)">
+    <rect width="200" height="150" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="100" y="36" text-anchor="middle" font-size="24">🔐</text>
+    <text x="100" y="62" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="700">Firebase Auth</text>
+    <text x="100" y="80" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="600">Parent &amp; Device Identity</text>
+    <text x="20" y="104" fill="#94a3b8" font-size="11">&bull; Parent email/password</text>
+    <text x="20" y="122" fill="#94a3b8" font-size="11">&bull; Anonymous kid token</text>
+    <text x="20" y="140" fill="#94a3b8" font-size="11">&bull; Persistent sessions</text>
+  </g>
+
+  <!-- Firebase 2: Firestore -->
+  <g transform="translate(290, 608)" filter="url(#shadow)">
+    <rect width="200" height="150" rx="12" fill="#1e293b" stroke="#38bdf8" stroke-width="2"/>
+    <text x="100" y="36" text-anchor="middle" font-size="24">⚡</text>
+    <text x="100" y="62" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="700">Cloud Firestore</text>
+    <text x="100" y="80" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="600">Real-Time Sync Engine</text>
+    <text x="20" y="104" fill="#94a3b8" font-size="11">&bull; onSnapshot listener</text>
+    <text x="20" y="122" fill="#94a3b8" font-size="11">&bull; Sub-second updates</text>
+    <text x="20" y="140" fill="#94a3b8" font-size="11">&bull; Multi-device mesh</text>
+  </g>
+
+  <!-- Firebase 3: Security Rules -->
+  <g transform="translate(515, 608)" filter="url(#shadow)">
+    <rect width="200" height="150" rx="12" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+    <text x="100" y="36" text-anchor="middle" font-size="24">🛡️</text>
+    <text x="100" y="62" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="700">Security Rules</text>
+    <text x="100" y="80" text-anchor="middle" fill="#34d399" font-size="11" font-weight="600">Access Governance</text>
+    <text x="20" y="104" fill="#94a3b8" font-size="11">&bull; Kids edit own chores</text>
+    <text x="20" y="122" fill="#94a3b8" font-size="11">&bull; Parents edit rosters</text>
+    <text x="20" y="140" fill="#94a3b8" font-size="11">&bull; Invites auto-expire</text>
+  </g>
+
+  <!-- Firebase 4: Push Notifications -->
+  <g transform="translate(740, 608)" filter="url(#shadow)">
+    <rect width="195" height="150" rx="12" fill="#1e293b" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="97" y="36" text-anchor="middle" font-size="24">🔔</text>
+    <text x="97" y="62" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="700">Cloud Messaging</text>
+    <text x="97" y="80" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="600">Push &amp; Alerts</text>
+    <text x="16" y="104" fill="#94a3b8" font-size="11">&bull; Morning chore alerts</text>
+    <text x="16" y="122" fill="#94a3b8" font-size="11">&bull; Completion notice</text>
+    <text x="16" y="140" fill="#94a3b8" font-size="11">&bull; Prize milestones</text>
+  </g>
+</svg>

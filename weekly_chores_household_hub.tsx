@@ -4992,7 +4992,7 @@ function App({
           backgroundColor: d.color,
           borderRight: dayIdx < 6 ? "2px solid #FFFFFF" : "none"
         }}><div className="text-xs font-bold uppercase tracking-wider">{d.short.toUpperCase()}</div><div className="text-sm font-bold leading-tight mt-1">{dayNumber}</div></th>;
-      })}</tr><tr className="bg-white text-[8.5px] font-bold text-slate-900" style={{ borderTop: "2px solid #FFFFFF", borderBottom: "2px solid #C55A11" }}><th className="py-0.5 px-2 text-left uppercase tracking-wider font-extrabold text-[9px]">TASK</th>{DAY_STYLES.map(d => <React.Fragment key={`sub-${d.name}`}><th className="py-0.5 px-1 text-left uppercase font-bold">WHO</th><th className="py-0.5 px-1 text-right uppercase font-bold">DONE</th></React.Fragment>)}</tr></thead><tbody>{printableScheduleItems.filter(item => {
+      })}</tr><tr className="bg-white text-[8.5px] font-bold text-slate-900" style={{ borderTop: "2px solid #FFFFFF", borderBottom: "2px solid #C55A11" }}><th className="py-0.5 px-2 text-left uppercase tracking-wider font-extrabold text-[9px]">TASK</th>{DAY_STYLES.map(d => <React.Fragment key={`sub-${d.name}`}><th className="py-0.5 px-1 text-center uppercase font-bold">WHO</th><th className="py-0.5 px-1 text-center font-bold" title="Done"><SquareCheckBig className="w-3 h-3 mx-auto text-slate-800" /></th></React.Fragment>)}</tr></thead><tbody>{printableScheduleItems.filter(item => {
         if (searchQuery && !item.isSectionHeader) {
           if (!(item.task || "").toLowerCase().includes(searchQuery.toLowerCase())) return false;
         }

@@ -1,0 +1,303 @@
+// Realtime Firebase & Multi-User Household Synchronization Module
+
+import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  onSnapshot,
+  updateDoc,
+  type Firestore,
+  type Unsubscribe
+} from "firebase/firestore";
+
+export type UserRole = "admin" | "kid";
+
+export interface FirebaseConfig {
+  apiKey: string;
+  authDomain: string;
+  projectId: string;
+  storageBucket?: string;
+  messagingSenderId?: string;
+  appId?: string;
+}
+
+export interface DeviceSession {
+  role: UserRole;
+  householdId: string;
+  kidName?: string;
+  kidMemberId?: string;
+  deviceId: string;
+  parentPin?: string;
+}
+
+export interface HouseholdInvite {
+  code: string;
+  householdId: string;
+  kidName: string;
+  createdAt: number;
+  expiresAt: number;
+  claimed: boolean;
+  claimedByDeviceId?: string;
+}
+
+const STORAGE_KEY_FIREBASE_CONFIG = "household_hub_firebase_config";
+const STORAGE_KEY_DEVICE_SESSION = "household_hub_device_session";
+const STORAGE_KEY_LOCAL_INVITES = "household_hub_local_invites";
+
+// BroadcastChannel for instant zero-latency multi-window & multi-tab sync
+let broadcastChannel: BroadcastChannel | null = null;
+try {
+  if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+    broadcastChannel = new BroadcastChannel("household-hub-realtime");
+  }
+} catch {
+  broadcastChannel = null;
+}
+
+let firebaseApp: FirebaseApp | null = null;
+let firestoreDb: Firestore | null = null;
+
+// Audio Chime using Web Audio API for rewarding kid chore completion
+export function playChoreCompletionSound() {
+  try {
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    
+    // Play a happy 2-tone melodic chime (C5 -> G5)
+    const now = ctx.currentTime;
+    
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(523.25, now); // C5
+    gain1.gain.setValueAtTime(0.15, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.35);
+
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(783.99, now + 0.12); // G5
+    gain2.gain.setValueAtTime(0.2, now + 0.12);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.12);
+    osc2.stop(now + 0.6);
+  } catch (err) {
+    console.warn("Audio chime not supported or muted:", err);
+  }
+}
+
+// Generate an unambiguous random 6-character kid invite code (e.g. HERD-84)
+export function generateKidInviteCode(prefix = "HERD"): string {
+  const chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // exclude easily confused chars (0, O, 1, I)
+  let code = "";
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `${prefix}-${code}`;
+}
+
+export function getStoredDeviceSession(): DeviceSession {
+  if (typeof window === "undefined") {
+    return { role: "admin", householdId: "default_household", deviceId: "node_device" };
+  }
+  const raw = localStorage.getItem(STORAGE_KEY_DEVICE_SESSION);
+  if (raw) {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      // fallback
+    }
+  }
+  const newDeviceId = "dev_" + Math.random().toString(36).substring(2, 9);
+  const defaultSession: DeviceSession = {
+    role: "admin",
+    householdId: "household_family_hub",
+    deviceId: newDeviceId,
+    parentPin: "1234"
+  };
+  localStorage.setItem(STORAGE_KEY_DEVICE_SESSION, JSON.stringify(defaultSession));
+  return defaultSession;
+}
+
+export function saveDeviceSession(session: DeviceSession) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEY_DEVICE_SESSION, JSON.stringify(session));
+  broadcastLocalUpdate({ type: "SESSION_CHANGED", session });
+}
+
+export function getStoredFirebaseConfig(): FirebaseConfig | null {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem(STORAGE_KEY_FIREBASE_CONFIG);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function saveFirebaseConfig(config: FirebaseConfig | null) {
+  if (typeof window === "undefined") return;
+  if (!config) {
+    localStorage.removeItem(STORAGE_KEY_FIREBASE_CONFIG);
+    firebaseApp = null;
+    firestoreDb = null;
+  } else {
+    localStorage.setItem(STORAGE_KEY_FIREBASE_CONFIG, JSON.stringify(config));
+    initFirebase(config);
+  }
+}
+
+export function initFirebase(config?: FirebaseConfig | null): { app: FirebaseApp | null; db: Firestore | null } {
+  const activeConfig = config || getStoredFirebaseConfig();
+  if (!activeConfig || !activeConfig.apiKey || !activeConfig.projectId) {
+    return { app: null, db: null };
+  }
+
+  try {
+    if (!firebaseApp) {
+      const existing = getApps();
+      if (existing.length > 0) {
+        firebaseApp = existing[0];
+      } else {
+        firebaseApp = initializeApp(activeConfig);
+      }
+      firestoreDb = getFirestore(firebaseApp);
+    }
+    return { app: firebaseApp, db: firestoreDb };
+  } catch (err) {
+    console.error("Firebase initialization failed:", err);
+    return { app: null, db: null };
+  }
+}
+
+// Manage Invites (Stored in Firestore when connected, fallback to localStorage)
+export async function createKidInvite(kidName: string, householdId: string): Promise<HouseholdInvite> {
+  const code = generateKidInviteCode();
+  const invite: HouseholdInvite = {
+    code,
+    householdId,
+    kidName,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days validity
+    claimed: false
+  };
+
+  // 1. Try Firebase Firestore
+  const { db } = initFirebase();
+  if (db) {
+    try {
+      const ref = doc(db, "households", householdId, "invites", code);
+      await setDoc(ref, invite);
+    } catch (e) {
+      console.warn("Firestore invite save fallback to local:", e);
+    }
+  }
+
+  // 2. Always persist to localStorage for instant local pairing
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_LOCAL_INVITES);
+    const invites: HouseholdInvite[] = raw ? JSON.parse(raw) : [];
+    invites.push(invite);
+    localStorage.setItem(STORAGE_KEY_LOCAL_INVITES, JSON.stringify(invites));
+    broadcastLocalUpdate({ type: "INVITE_CREATED", invite });
+  } catch (err) {
+    console.error("Local invite save error:", err);
+  }
+
+  return invite;
+}
+
+export async function redeemKidInvite(
+  code: string,
+  deviceId: string
+): Promise<{ success: boolean; invite?: HouseholdInvite; error?: string }> {
+  const cleanCode = code.trim().toUpperCase();
+
+  // 1. Check Firestore
+  const { db } = initFirebase();
+  if (db) {
+    try {
+      // Look across households or check local household
+      const session = getStoredDeviceSession();
+      const ref = doc(db, "households", session.householdId, "invites", cleanCode);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const inv = snap.data() as HouseholdInvite;
+        if (inv.claimed) {
+          return { success: false, error: "This invite code has already been claimed." };
+        }
+        await updateDoc(ref, { claimed: true, claimedByDeviceId: deviceId });
+        return { success: true, invite: inv };
+      }
+    } catch (e) {
+      console.warn("Firestore invite redeem fallback to local:", e);
+    }
+  }
+
+  // 2. Check local invites
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_LOCAL_INVITES);
+    const invites: HouseholdInvite[] = raw ? JSON.parse(raw) : [];
+    const found = invites.find(i => i.code.toUpperCase() === cleanCode);
+    if (!found) {
+      return { success: false, error: "Invalid invite code. Please check with your parents for a valid code." };
+    }
+    if (found.claimed) {
+      return { success: false, error: "This invite code has already been claimed." };
+    }
+    found.claimed = true;
+    found.claimedByDeviceId = deviceId;
+    localStorage.setItem(STORAGE_KEY_LOCAL_INVITES, JSON.stringify(invites));
+    return { success: true, invite: found };
+  } catch {
+    return { success: false, error: "Unable to process invite code." };
+  }
+}
+
+export function broadcastLocalUpdate(data: unknown) {
+  if (broadcastChannel) {
+    try {
+      broadcastChannel.postMessage(data);
+    } catch {
+      // Ignore broadcast errors
+    }
+  }
+}
+
+export function subscribeToRealtimeSync(
+  onUpdate: (msg: unknown) => void
+): () => void {
+  const handler = (e: MessageEvent) => {
+    onUpdate(e.data);
+  };
+
+  if (broadcastChannel) {
+    broadcastChannel.addEventListener("message", handler);
+  }
+
+  // Also hook window storage event for cross-tab localStorage changes
+  const storageHandler = (e: StorageEvent) => {
+    if (e.key === "weekly_chores_month_schedule" || e.key === "weekly-chores-config") {
+      onUpdate({ type: "STORAGE_SYNC", key: e.key });
+    }
+  };
+  window.addEventListener("storage", storageHandler);
+
+  return () => {
+    if (broadcastChannel) {
+      broadcastChannel.removeEventListener("message", handler);
+    }
+    window.removeEventListener("storage", storageHandler);
+  };
+}
+

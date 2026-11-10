@@ -31,8 +31,19 @@ import {
   Trash2,
   Trophy,
   Users,
+  Smartphone,
   X
 } from 'lucide-react';
+import {
+  getStoredDeviceSession,
+  saveDeviceSession,
+  subscribeToRealtimeSync,
+  broadcastLocalUpdate,
+  type DeviceSession
+} from "./src/firebaseSync";
+import { MinionDashboard } from "./src/MinionDashboard";
+import { InviteModal } from "./src/InviteModal";
+import { KidPairingScreen } from "./src/KidPairingScreen";
 
 const STORAGE_KEY = 'weekly_chores_canvas_sheet_data_v5';
 
@@ -1760,6 +1771,32 @@ function App({
   const [choreOrderOverrides, setChoreOrderOverrides] = useState(null);
   const [editingPrintableChore, setEditingPrintableChore] = useState(null);
   const [deletingChoreTarget, setDeletingChoreTarget] = useState(null);
+  const [deviceSession, setDeviceSession] = useState(() => getStoredDeviceSession());
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showPairingScreen, setShowPairingScreen] = useState(false);
+
+  useEffect(() => {
+    const unsub = subscribeToRealtimeSync((msg: any) => {
+      if (!msg) return;
+      if (msg.type === "CHORE_UPDATED") {
+        setMonthSchedule(prev => {
+          const currentDay = prev[msg.dateKey] || {};
+          const currentChore = currentDay[msg.choreIndex] || { who: "", done: false };
+          const updated = { ...currentChore, ...msg.patch };
+          return {
+            ...prev,
+            [msg.dateKey]: {
+              ...currentDay,
+              [msg.choreIndex]: updated
+            }
+          };
+        });
+      } else if (msg.type === "SESSION_CHANGED") {
+        if (msg.session) setDeviceSession(msg.session);
+      }
+    });
+    return unsub;
+  }, []);
   const printableEnvelope = useMemo(() => {
     if (!data || !Array.isArray(data)) return null;
     return data.find(d => {
@@ -3626,6 +3663,12 @@ function App({
         [dateKey]: nextDay
       };
     });
+    broadcastLocalUpdate({
+      type: "CHORE_UPDATED",
+      dateKey,
+      choreIndex,
+      patch
+    });
     const pRow = findPrintableRow(choreTask, choreIndex);
     if (printableRangeIndex >= 0 && pRow) {
       const parsedStart = parseDateKey(activeSyncWeek);
@@ -4917,6 +4960,47 @@ function App({
     }
   }, [activeTab]);
   const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+  if (showPairingScreen) {
+    return (
+      <KidPairingScreen
+        onPairedSuccess={(newSession) => {
+          setDeviceSession(newSession);
+          setShowPairingScreen(false);
+        }}
+        onContinueAsParent={() => {
+          const adminSession = { role: "admin", householdId: "household_family_hub", deviceId: "local_dev", parentPin: "1234" };
+          saveDeviceSession(adminSession);
+          setDeviceSession(adminSession);
+          setShowPairingScreen(false);
+        }}
+      />
+    );
+  }
+
+  if (deviceSession.role === "kid" && deviceSession.kidName) {
+    return (
+      <MinionDashboard
+        kidName={deviceSession.kidName}
+        familyMembers={familyMembers}
+        monthSchedule={monthSchedule}
+        hubMasterChores={hubMasterChores}
+        monthlyIncentive={monthlyIncentive}
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
+        onUpdateChore={handleUpdateChore}
+        onToggleWeeklyKidChore={handleToggleWeeklyKidChore}
+        getWeeklyKidsStatus={getWeeklyKidsStatus}
+        formatDateKey={formatDateKey}
+        onExitMinionMode={() => {
+          const adminSession = { role: "admin", householdId: deviceSession.householdId || "household_family_hub", deviceId: deviceSession.deviceId || "local_dev", parentPin: "1234" };
+          saveDeviceSession(adminSession);
+          setDeviceSession(adminSession);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
       {notice && (
@@ -4976,6 +5060,14 @@ function App({
               </button>
             </div>
             <button
+              onClick={() => setShowInviteModal(true)}
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition cursor-pointer shadow-2xs"
+              title="Generate a 6-character invite code to pair a kid's phone, tablet, or PC"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Invite Kid Device</span>
+            </button>
+            <button
               onClick={() => setShowAutoAssignModal(true)}
               className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 rounded-lg transition"
             >
@@ -5019,6 +5111,29 @@ function App({
             >
               <Users className="w-3.5 h-3.5" />
               <span>Household Hub ({familyMembers.length})</span>
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                const firstKid = familyMembers.find(m => m.active !== false && m.role !== "Supreme Overlord" && m.role !== "Overseer Supreme")?.name || "Sydney";
+                const kidSession = { role: "kid", kidName: firstKid, householdId: deviceSession.householdId || "household_family_hub", deviceId: deviceSession.deviceId || "local_dev" };
+                saveDeviceSession(kidSession);
+                setDeviceSession(kidSession);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition cursor-pointer shadow-2xs"
+              title="Preview or switch to the Kid Interface (Minion Mode)"
+            >
+              <span>🎒</span>
+              <span>Minion Mode</span>
+            </button>
+            <button
+              onClick={() => setShowPairingScreen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition cursor-pointer"
+              title="Open Device Pairing Setup (Device Onboarding)"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-slate-500" />
+              <span className="hidden sm:inline">Pair Device</span>
             </button>
           </div>
         </div>
@@ -5885,7 +6000,21 @@ function App({
             });
           }} disabled={!((_c = editingPrintableChore.task) == null ? void 0 : _c.trim())} className="px-4 py-2 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition disabled:opacity-40">Save Changes</button></div></div></div></div>}{deletingChoreTarget && <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-slate-200 overflow-hidden"><div className="p-4 bg-rose-600 text-white flex items-center justify-between"><div className="flex items-center gap-2"><Trash2 className="w-5 h-5 text-rose-200" /><h3 className="text-base font-bold">Delete Chore</h3></div><button onClick={() => setDeletingChoreTarget(null)} className="p-1 rounded-lg text-rose-200 hover:text-white hover:bg-black/10 transition"><X className="w-5 h-5" /></button></div><div className="p-5 text-xs text-slate-700 space-y-3"><p>{"Are you sure you want to remove "}<strong className="text-slate-900 font-bold">{'"'}{deletingChoreTarget.task}{'"'}</strong>{" from the Printable Weekly Schedule?"}</p><div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-[11px] text-rose-900 leading-relaxed">This will delete the chore and clear its scheduled assignments for this week. This update takes effect immediately.</div></div><div className="p-3 bg-slate-50 border-t border-slate-200 flex justify-end gap-2 text-xs"><button type="button" onClick={() => setDeletingChoreTarget(null)} className="px-3 py-1.5 font-semibold text-slate-600 hover:bg-slate-200 rounded-lg transition">Cancel</button><button type="button" onClick={() => {
             handleDeletePrintableChore(deletingChoreTarget.index_, deletingChoreTarget.task);
-          }} className="px-4 py-1.5 font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-sm transition">Delete Chore</button></div></div></div>}</div>
+          }} className="px-4 py-1.5 font-bold bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-sm transition">Delete Chore</button></div></div></div>}
+      {showInviteModal && (
+        <InviteModal
+          householdId={deviceSession.householdId || "household_family_hub"}
+          familyMembers={familyMembers}
+          onClose={() => setShowInviteModal(false)}
+          onKidPairedLocally={(kName) => {
+            const kidSession = { role: "kid", kidName: kName, householdId: deviceSession.householdId || "household_family_hub", deviceId: "local_dev", parentPin: "1234" };
+            saveDeviceSession(kidSession);
+            setDeviceSession(kidSession);
+            setShowInviteModal(false);
+          }}
+        />
+      )}
+    </div>
   );
 }
 var ErrorBoundary = class extends React.Component {

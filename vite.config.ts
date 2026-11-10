@@ -444,5 +444,8 @@ export default defineConfig({
     port: 5173,
     strictPort: false,
     allowedHosts: true,
+    watch: {
+      ignored: ['**/*.exe', '**/.tunnel-url', '**/.git/**'],
+    },
   },
 });

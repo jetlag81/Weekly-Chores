@@ -45,7 +45,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
   const [activeTab, setActiveTab] = useState<"invite" | "manage">("invite");
   const [selectedKidName, setSelectedKidName] = useState(() => kidMembers[0]?.name || "Sydney");
   const [createdInvite, setCreatedInvite] = useState<HouseholdInvite | null>(null);
-  const [tunnelUrl, setTunnelUrl] = useState<string>("https://6adf3d2fac0e7c.lhr.life");
+  const [tunnelUrl, setTunnelUrl] = useState<string>("https://bedrooms-simpsons-significantly-speak.trycloudflare.com");
   const [targetDevice, setTargetDevice] = useState<"tunnel" | "local" | "wifi">("tunnel");
   const [copied, setCopied] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);

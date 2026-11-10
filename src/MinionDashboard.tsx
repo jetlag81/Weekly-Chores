@@ -17,7 +17,9 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  RefreshCw
+  RefreshCw,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 import {
   playChoreCompletionSound,
@@ -27,6 +29,15 @@ import {
   type DeviceSession
 } from "./firebaseSync";
 import { getChoreCanonicalKey, normalizeTaskName } from "./choreUtils";
+import {
+  speakKidDailySummary,
+  speakSingleChore,
+  speakChoreCelebration,
+  stopSpeaking,
+  isSpeaking,
+  subscribeSpeechState,
+  isSpeechSupported
+} from "./voiceSpeech";
 
 interface MinionDashboardProps {
   kidName: string;
@@ -91,6 +102,11 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const [showExitPinModal, setShowExitPinModal] = useState(false);
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
+  const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
+
+  useEffect(() => {
+    return subscribeSpeechState(speaking => setIsSpeakingAudio(speaking));
+  }, []);
 
   const activeDateKey = formatDateKey(
     activeDate.getFullYear(),
@@ -208,6 +224,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
       } catch {
         // Confetti fallback
       }
+      speakChoreCelebration(currentKid.name, taskTitle || "Chore");
     }
   };
 
@@ -224,6 +241,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
       } catch {
         // Confetti fallback
       }
+      speakChoreCelebration(currentKid.name, taskTitle);
     }
   };
 
@@ -360,11 +378,52 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                 {completedTodayCount} / {dailyChoresForKid.length}
               </span>
             </h2>
-            {completedTodayCount === dailyChoresForKid.length && dailyChoresForKid.length > 0 && (
-              <span className="text-[11px] font-extrabold text-emerald-700 flex items-center gap-1">
-                <span>🌟 All Done Today!</span>
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {isSpeechSupported() && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isSpeakingAudio) {
+                      stopSpeaking();
+                    } else {
+                      speakKidDailySummary(
+                        currentKid.name,
+                        formattedDayName,
+                        dailyChoresForKid.map(c => ({
+                          task: c.chore.task,
+                          done: c.done,
+                          notes: c.chore.notes
+                        }))
+                      );
+                    }
+                  }}
+                  className={`text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer ${
+                    isSpeakingAudio
+                      ? "bg-rose-100 text-rose-700 border border-rose-300 animate-pulse"
+                      : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
+                  }`}
+                  title={isSpeakingAudio ? "Stop reading" : "Read today's chores aloud"}
+                >
+                  {isSpeakingAudio ? (
+                    <>
+                      <VolumeX className="w-3.5 h-3.5 text-rose-600" />
+                      <span>Stop</span>
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Read Aloud</span>
+                    </>
+                  )}
+                </button>
+              )}
+              {completedTodayCount === dailyChoresForKid.length && dailyChoresForKid.length > 0 && (
+                <span className="text-[11px] font-extrabold text-emerald-700 flex items-center gap-1">
+                  <span>🌟 All Done Today!</span>
+                </span>
+              )}
+            </div>
           </div>
 
           {dailyChoresForKid.length === 0 ? (
@@ -423,7 +482,20 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                       </div>
                     </div>
 
-                    <div className="shrink-0">
+                    <div className="shrink-0 flex items-center gap-1.5">
+                      {isSpeechSupported() && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            speakSingleChore(chore.task, chore.notes, done);
+                          }}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition cursor-pointer"
+                          title="Listen to this chore"
+                        >
+                          <Volume2 className="w-4 h-4" />
+                        </button>
+                      )}
                       <span
                         className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition ${
                           done
@@ -486,7 +558,26 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                     </div>
                   </div>
 
-                  <div className="shrink-0">
+                  <div className="shrink-0 flex items-center gap-1.5">
+                    {isSpeechSupported() && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          speakSingleChore(
+                            wChore.task,
+                            isLaundry
+                              ? "Wash, dry, fold and put away your clothes"
+                              : "Pick up floor, dust, vacuum and organize room",
+                            isDone
+                          );
+                        }}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-50 transition cursor-pointer"
+                        title="Listen to this task"
+                      >
+                        <Volume2 className="w-4 h-4" />
+                      </button>
+                    )}
                     <span
                       className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition ${
                         isDone

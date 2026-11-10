@@ -33,6 +33,8 @@ import {
   Users,
   Smartphone,
   Cloud,
+  Volume2,
+  VolumeX,
   X
 } from 'lucide-react';
 import {
@@ -50,6 +52,13 @@ import { InviteModal } from "./src/InviteModal";
 import { KidPairingScreen } from "./src/KidPairingScreen";
 import { FirebaseSettingsModal } from "./src/FirebaseSettingsModal";
 import { getChoreCanonicalKey, normalizeTaskName } from "./src/choreUtils";
+import {
+  speakParentHouseholdSummary,
+  stopSpeaking,
+  isSpeaking,
+  subscribeSpeechState,
+  isSpeechSupported
+} from "./src/voiceSpeech";
 
 const STORAGE_KEY = 'weekly_chores_canvas_sheet_data_v5';
 
@@ -1760,6 +1769,11 @@ function App({
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showPairingScreen, setShowPairingScreen] = useState(false);
   const [showFirebaseModal, setShowFirebaseModal] = useState(false);
+  const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
+
+  useEffect(() => {
+    return subscribeSpeechState(speaking => setIsSpeakingAudio(speaking));
+  }, []);
 
   // Real-time Firestore Cloud subscription across physically separate devices
   useEffect(() => {
@@ -5342,6 +5356,32 @@ function App({
               <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
               <span>Invite Kid Device</span>
             </button>
+            {isSpeechSupported() && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (isSpeakingAudio) {
+                    stopSpeaking();
+                  } else {
+                    speakParentHouseholdSummary(
+                      activeSyncWeek || "Current Week",
+                      choreRows.length,
+                      monthStats.totalCompleted,
+                      topPerformer ? topPerformer.name : undefined
+                    );
+                  }
+                }}
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition cursor-pointer shadow-2xs ${
+                  isSpeakingAudio
+                    ? "bg-rose-100 text-rose-700 border border-rose-300 animate-pulse"
+                    : "bg-teal-50 text-teal-800 hover:bg-teal-100 border border-teal-200"
+                }`}
+                title={isSpeakingAudio ? "Stop voice narration" : "Speak household chore summary aloud"}
+              >
+                {isSpeakingAudio ? <VolumeX className="w-3.5 h-3.5 text-rose-600" /> : <Volume2 className="w-3.5 h-3.5 text-teal-600" />}
+                <span>{isSpeakingAudio ? "Stop Voice" : "Voice Summary"}</span>
+              </button>
+            )}
             <a
               href="/Workflow_Diagrams_Export.html"
               target="_blank"

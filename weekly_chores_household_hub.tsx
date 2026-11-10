@@ -265,7 +265,7 @@ export const INITIAL_SHEET_DATA = [
         "index_": 11,
         "row": [
           "Personal Laundry",
-          "(Each Minion Does Their Own) - Wash, Dry, Fold & Put Away",
+          "Wash, Dry, Fold & Put Away (Each Minion Does Their Own)",
           false,
           null,
           false,
@@ -285,7 +285,7 @@ export const INITIAL_SHEET_DATA = [
         "index_": 12,
         "row": [
           "Tidy Bedrooms / Personal Spaces",
-          "(Each Minion Does Their Own) - Pick Up Mess / laundry, Organize, Dust & Vacuum",
+          "Pick Up Mess / laundry, Organize, Dust & Vacuum (Each Minion Does Their Own)",
           false,
           null,
           false,
@@ -305,7 +305,7 @@ export const INITIAL_SHEET_DATA = [
         "index_": 13,
         "row": [
           "Clean Up Basement",
-          "- Pick Up, Organize, Dust & Vacuum",
+          "Pick Up, Organize, Dust & Vacuum",
           null,
           null,
           null,
@@ -325,7 +325,7 @@ export const INITIAL_SHEET_DATA = [
         "index_": 14,
         "row": [
           "Herd Feeding Station Deep Clean",
-          "- Clean & Sanitize Bowls, Vacuum & Wipe Space, Dispose of Waste",
+          "Clean & Sanitize Bowls, Vacuum & Wipe Space, Dispose of Waste",
           null,
           null,
           null,
@@ -345,7 +345,7 @@ export const INITIAL_SHEET_DATA = [
         "index_": 15,
         "row": [
           "Curbside Recycling",
-          "- Roll recycling bin to curb Thursday evening for Friday pickup (Bi-Weekly)",
+          "Roll recycling bin to curb Thursday evening for Friday pickup (Bi-Weekly)",
           null,
           null,
           null,

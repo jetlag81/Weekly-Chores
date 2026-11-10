@@ -34,7 +34,7 @@ import {
   X
 } from 'lucide-react';
 
-const STORAGE_KEY = 'weekly_chores_canvas_sheet_data_v4';
+const STORAGE_KEY = 'weekly_chores_canvas_sheet_data_v5';
 
 export const INITIAL_SHEET_DATA = [
   {
@@ -326,6 +326,26 @@ export const INITIAL_SHEET_DATA = [
         "row": [
           "Herd Feeding Station Deep Clean",
           "- Clean & Sanitize Bowls, Vacuum & Wipe Space, Dispose of Waste",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          "Who: _____________________",
+          null,
+          null,
+          null,
+          "Done: ______",
+          false
+        ]
+      },
+      {
+        "index_": 15,
+        "row": [
+          "Curbside Recycling",
+          "- Roll recycling bin to curb Thursday evening for Friday pickup (Bi-Weekly)",
           null,
           null,
           null,
@@ -1123,8 +1143,11 @@ function isSignOffChore(title) {
   return lower.includes("sign-off") || lower.includes("sign off") || lower.includes("inspection");
 }
 function isStreamlinedWeeklyTask(title, choreFreq) {
+  if (isKidsChecklistChore(title) || isSignOffChore(title)) return false;
   if (isCleanBasementChore(title) || isHerdFeedingStationChore(title)) return true;
-  if (choreFreq && choreFreq.frequency === "weekly" && !isKidsChecklistChore(title) && !isSignOffChore(title)) {
+  const lower = String(title || "").toLowerCase();
+  if (lower.includes("curbside") || lower.includes("recycling") || lower.includes("waste")) return true;
+  if (choreFreq && (choreFreq.frequency === "weekly" || choreFreq.frequency === "biweekly")) {
     return true;
   }
   return false;
@@ -1759,7 +1782,7 @@ function App({
       });
       if (partialMatch) return partialMatch;
     }
-    if (fallbackIndex !== void 0 && fallbackIndex !== null) {
+    if (!taskTitle && fallbackIndex !== void 0 && fallbackIndex !== null) {
       const byIdx = printableSheet.data.find(r => r.index_ === fallbackIndex && r.index_ >= 4);
       if (byIdx) return byIdx;
     }
@@ -1793,7 +1816,7 @@ function App({
       });
       if (partialMatch) return partialMatch;
     }
-    if (fallbackIndex !== void 0 && fallbackIndex !== null) {
+    if (!taskTitle && fallbackIndex !== void 0 && fallbackIndex !== null) {
       const byIdx = hubSheet.data.find(r => r.index_ === fallbackIndex && r.index_ >= 5);
       if (byIdx) return byIdx;
     }
@@ -2287,169 +2310,176 @@ function App({
   }, [sheetStartDateStr]);
   const printableScheduleItems = useMemo(() => {
     const rawPrintable = (printableSheet == null ? void 0 : printableSheet.data) || [];
-    let items = [];
-    if (rawPrintable.length === 0) {
-      const dailyChores = hubMasterChores.filter(c => c.frequency.toLowerCase().includes("daily"));
-      const weeklyChores = hubMasterChores.filter(c => !c.frequency.toLowerCase().includes("daily"));
-      items.push({
-        isSectionHeader: true,
-        headerType: "daily",
-        index_: 4,
-        title: "Daily Tasks"
-      });
-      dailyChores.forEach(c => {
-        items.push({
-          isSectionHeader: false,
-          index_: c.index_,
-          row: [c.task, "", false, "", false, "", false, "", false, "", false, "", false, "", false],
-          task: c.task,
-          category: c.category,
-          frequency: c.frequency,
-          targetDay: c.targetDay,
-          rotationGroup: c.rotationGroup,
-          notes: c.notes
-        });
-      });
-      if (weeklyChores.length > 0) {
-        items.push({
-          isSectionHeader: true,
-          headerType: "weekly",
-          index_: 999,
-          title: "Weekly Tasks",
-          descHeader: "Description",
-          rightHeader: "Initials / Assigned"
-        });
-        weeklyChores.forEach(c => {
-          items.push({
-            isSectionHeader: false,
-            index_: c.index_,
-            row: [c.task, c.rotationGroup === "Kids" ? "Each Child" : "", false, "", false, "", false, "", false, "", false, "", false, "", false],
-            task: c.task,
-            category: c.category,
-            frequency: c.frequency,
-            targetDay: c.targetDay,
-            rotationGroup: c.rotationGroup,
-            notes: c.notes
-          });
-        });
+
+    const isChoreDaily = (taskName: string, freqStr?: string) => {
+      const cKey = getChoreCanonicalKey(taskName);
+      if (cKey === "litter_box" || cKey === "feed_herd" || cKey === "empty_dishwasher" || cKey === "make_supper" || cKey === "dinner_dishes" || cKey === "walk_dogs") {
+        return true;
       }
-    } else {
-      rawPrintable.forEach(r => {
-        if (r.index_ < 4) return;
-        if (!r.row || r.row.length === 0) return;
-        const cell0 = r.row[0] !== void 0 && r.row[0] !== null ? String(r.row[0]).trim() : "";
-        if (!cell0) return;
-        const lower0 = cell0.toLowerCase();
-        if (lower0.includes("pet care routine") || lower0.includes("household roster") || lower0.includes("bi-weekly schedule") || lower0.startsWith("\u2022")) {
-          return;
-        }
-        if (lower0 === "daily tasks") {
-          items.push({
-            isSectionHeader: true,
-            headerType: "daily",
-            index_: r.index_,
-            title: "Daily Tasks"
-          });
-          return;
-        }
-        const isBanner = (lower0 === "weekly tasks" || lower0.includes("once-a-week") || lower0.includes("bedroom checklist") || lower0.includes("weekly chores")) && !lower0.includes("empty dishwasher");
-        if (isBanner) {
-          items.push({
-            isSectionHeader: true,
-            headerType: "weekly",
-            index_: r.index_,
-            title: "Weekly Tasks",
-            descHeader: r.row[1] || "Description",
-            rightHeader: r.row[9] || "Initials / Assigned"
-          });
-          return;
-        }
-        items.push({
-          isSectionHeader: false,
-          index_: r.index_,
-          row: r.row,
-          task: cell0
-        });
-      });
-      const hasDailyBanner = items.some(it => it.isSectionHeader && it.headerType === "daily");
-      if (!hasDailyBanner && items.length > 0) {
-        items.unshift({
-          isSectionHeader: true,
-          headerType: "daily",
-          index_: 4,
-          title: "Daily Tasks"
-        });
+      if (cKey === "curbside_recycling" || cKey === "curbside_waste" || cKey === "clean_basement" || cKey === "feeding_station_deep_clean" || cKey === "tidy_bedrooms" || cKey === "laundry") {
+        return false;
       }
-      const hasWeeklyBanner = items.some(it => it.isSectionHeader && it.headerType === "weekly");
-      if (!hasWeeklyBanner) {
-        const firstWeeklyIdx = items.findIndex(it => {
-          if (it.isSectionHeader) return false;
-          const tLower = (it.task || "").toLowerCase();
-          return tLower.includes("clean basement") || tLower.includes("clean up basement") || tLower.includes("feeding station") || tLower.includes("tidy bedroom") || tLower.includes("laundry");
-        });
-        if (firstWeeklyIdx !== -1) {
-          items.splice(firstWeeklyIdx, 0, {
-            isSectionHeader: true,
-            headerType: "weekly",
-            index_: 998,
-            title: "Weekly Tasks",
-            descHeader: "Description",
-            rightHeader: "Initials / Assigned"
-          });
+      const f = String(freqStr || "").toLowerCase();
+      if (f.includes("bi") || f.includes("once") || f.includes("week")) return false;
+      if (f.includes("daily")) return true;
+      const freqInfo = getInitialChoreFrequency(taskName);
+      return freqInfo.frequency === "daily";
+    };
+
+    const dailyItems: any[] = [];
+    const weeklyItems: any[] = [];
+    const seenKeys = new Set<string>();
+
+    hubMasterChores.forEach(c => {
+      if (isSignOffChore(c.task)) return;
+      const cKey = getChoreCanonicalKey(c.task);
+      const norm = normalizeTaskName(c.task);
+      if (seenKeys.has(cKey) || seenKeys.has(norm)) return;
+      seenKeys.add(cKey);
+      seenKeys.add(norm);
+
+      const existingRow = rawPrintable.find(r => {
+        if (r.index_ < 4 || !r.row || !r.row[0]) return false;
+        const rTask = String(r.row[0]).trim();
+        return getChoreCanonicalKey(rTask) === cKey || normalizeTaskName(rTask) === norm;
+      });
+
+      const isDaily = isChoreDaily(c.task, c.frequency);
+      let rowData = existingRow?.row;
+      if (!rowData) {
+        if (isDaily) {
+          rowData = [c.task, "", false, "", false, "", false, "", false, "", false, "", false, "", false];
+        } else if (isKidsChecklistChore(c.task)) {
+          rowData = [c.task, c.notes || "(Each Minion Does Their Own) - Pick Up Mess / laundry, Organize, Dust & Vacuum", false, null, false, null, false, null, null, "SG: ____  CV: ____  MV: ____  KV: ____  KG: ____", null, null, false, null, false];
+        } else {
+          const desc = c.notes || (cKey.includes("recycling") ? "- Roll recycling bin to curb Thursday evening for Friday pickup (Bi-Weekly)" : cKey.includes("waste") ? "- Roll waste bin to curb Thursday evening for Friday pickup (Bi-Weekly)" : "- Pick Up, Organize, Dust & Vacuum");
+          rowData = [c.task, desc, null, null, null, null, null, null, null, "Who: _____________________", null, null, null, "Done: ______", false];
         }
       }
-    }
+
+      const itemObj = {
+        isSectionHeader: false,
+        index_: existingRow ? existingRow.index_ : c.index_,
+        row: rowData,
+        task: c.task,
+        category: c.category,
+        frequency: c.frequency,
+        targetDay: c.targetDay,
+        rotationGroup: c.rotationGroup,
+        notes: c.notes
+      };
+
+      if (isDaily) {
+        dailyItems.push(itemObj);
+      } else {
+        weeklyItems.push(itemObj);
+      }
+    });
+
+    rawPrintable.forEach(r => {
+      if (r.index_ < 4 || !r.row || !r.row[0]) return;
+      const cell0 = String(r.row[0]).trim();
+      const lower0 = cell0.toLowerCase();
+      if (!cell0 || lower0 === "daily tasks" || lower0 === "weekly tasks" || lower0.includes("once-a-week") || lower0.includes("bedroom checklist") || lower0.includes("pet care routine") || lower0.includes("household roster") || lower0.includes("bi-weekly schedule") || lower0.startsWith("\u2022") || isSignOffChore(cell0)) {
+        return;
+      }
+      const cKey = getChoreCanonicalKey(cell0);
+      const norm = normalizeTaskName(cell0);
+      if (seenKeys.has(cKey) || seenKeys.has(norm)) return;
+      seenKeys.add(cKey);
+      seenKeys.add(norm);
+
+      const isDaily = isChoreDaily(cell0);
+      const itemObj = {
+        isSectionHeader: false,
+        index_: r.index_,
+        row: r.row,
+        task: cell0
+      };
+      if (isDaily) {
+        dailyItems.push(itemObj);
+      } else {
+        weeklyItems.push(itemObj);
+      }
+    });
+
     if (customAddedChores.length > 0) {
       customAddedChores.forEach(cac => {
-        const alreadyIn = items.some(it => it.task && it.task.toLowerCase().trim() === cac.task.toLowerCase().trim());
-        if (!alreadyIn) {
-          items.push({
-            isSectionHeader: false,
-            index_: cac.index_,
-            row: cac.row,
-            task: cac.task,
-            category: cac.category,
-            frequency: cac.frequency,
-            targetDay: cac.targetDay,
-            rotationGroup: cac.rotationGroup,
-            notes: cac.notes
-          });
+        const cKey = getChoreCanonicalKey(cac.task);
+        const norm = normalizeTaskName(cac.task);
+        if (seenKeys.has(cKey) || seenKeys.has(norm)) return;
+        seenKeys.add(cKey);
+        seenKeys.add(norm);
+        const isDaily = isChoreDaily(cac.task, cac.frequency);
+        const itemObj = {
+          isSectionHeader: false,
+          index_: cac.index_,
+          row: cac.row,
+          task: cac.task,
+          category: cac.category,
+          frequency: cac.frequency,
+          targetDay: cac.targetDay,
+          rotationGroup: cac.rotationGroup,
+          notes: cac.notes
+        };
+        if (isDaily) {
+          dailyItems.push(itemObj);
+        } else {
+          weeklyItems.push(itemObj);
         }
       });
     }
-    const hasSignOff = items.some(it => !it.isSectionHeader && isSignOffChore(it.task));
-    if (!hasSignOff) {
-      items.push({
-        isSectionHeader: false,
-        index_: 15,
-        row: ["Weekly Sign-Off & Inspection", "Parents", false, null, null, null, null, null, null, "Thom / Meghan", null, null, null, null, null],
-        task: "Weekly Sign-Off & Inspection",
-        category: "Administration",
-        frequency: "Once a Week",
-        targetDay: "Sunday",
-        rotationGroup: "Parents",
-        notes: "Check off bedroom tidiness and completed chores"
-      });
-    }
+
+    const items: any[] = [];
+    items.push({
+      isSectionHeader: true,
+      headerType: "daily",
+      index_: 4,
+      title: "Daily Tasks"
+    });
+    items.push(...dailyItems);
+
+    items.push({
+      isSectionHeader: true,
+      headerType: "weekly",
+      index_: 10,
+      title: "Weekly Tasks",
+      descHeader: "Description",
+      rightHeader: "Initials / Assigned"
+    });
+    items.push(...weeklyItems);
+
+    items.push({
+      isSectionHeader: false,
+      index_: 18,
+      row: ["Weekly Sign-Off & Inspection", "Parents", false, null, null, null, null, null, null, "Thom / Meghan", null, null, null, null, null],
+      task: "Weekly Sign-Off & Inspection",
+      category: "Administration",
+      frequency: "Once a Week",
+      targetDay: "Sunday",
+      rotationGroup: "Parents",
+      notes: "Check off bedroom tidiness and completed chores"
+    });
+
     return items.filter(item => {
       if (item.isSectionHeader || isSignOffChore(item.task)) return true;
       const idKey = String(item.index_);
       const taskKey = String(item.task || "").toLowerCase().trim();
-      if (deletedChoreKeys.has(idKey) || deletedChoreKeys.has(taskKey)) {
+      const norm = normalizeTaskName(item.task);
+      const cKey = getChoreCanonicalKey(item.task);
+      if (deletedChoreKeys.has(idKey) || deletedChoreKeys.has(taskKey) || deletedChoreKeys.has(norm) || deletedChoreKeys.has(cKey)) {
         return false;
       }
       return true;
     }).map(item => {
       if (item.isSectionHeader) return item;
-      const edit = choreEdits[item.index_] || choreEdits[String(item.task || "").toLowerCase().trim()];
+      const edit = choreEdits[item.index_] || choreEdits[String(item.task || "").toLowerCase().trim()] || (item.task ? choreEdits[getChoreCanonicalKey(item.task)] : null);
       if (!edit) return item;
       const updatedTask = edit.task || item.task;
       const updatedRow = edit.row ? [...edit.row] : [...(item.row || [])];
       updatedRow[0] = updatedTask;
       return {
-        ...{
-          ...item
-        },
+        ...item,
         task: updatedTask,
         row: updatedRow,
         category: edit.category || item.category,
@@ -2463,18 +2493,20 @@ function App({
   const choreRows = useMemo(() => {
     const rawPrintableChores = printableScheduleItems.filter(item => !item.isSectionHeader).map(item => {
       const title = item.task;
+      const cKey = getChoreCanonicalKey(title);
+      const tNorm = normalizeTaskName(title);
       const hubMatch = hubMasterChores.find(h => {
+        if (cKey && getChoreCanonicalKey(h.task) === cKey) return true;
+        if (tNorm && normalizeTaskName(h.task) === tNorm) return true;
         const hTask = h.task.toLowerCase().trim();
         const tLower = title.toLowerCase().trim();
-        if (tLower === hTask) return true;
-        if (h.index_ === item.index_) return true;
-        return false;
+        return tLower === hTask;
       }) || hubMasterChores.find(h => {
         const hTask = h.task.toLowerCase().trim();
         const tLower = title.toLowerCase().trim();
         if (tLower.includes("deep clean") && hTask.includes("deep clean")) return true;
         if (tLower.includes("feed the herd") && hTask.includes("feed the herd")) return true;
-        return tLower.includes(hTask) || hTask.includes(tLower) || tLower.includes("dishes") && hTask.includes("dishes") || tLower.includes("litter") && hTask.includes("litter") || tLower.includes("supper") && hTask.includes("supper") || tLower.includes("basement") && hTask.includes("basement") || tLower.includes("laundry") && hTask.includes("laundry") || tLower.includes("sign-off") && hTask.includes("sign-off");
+        return tLower.includes(hTask) || hTask.includes(tLower) || (tLower.includes("dishes") && hTask.includes("dishes")) || (tLower.includes("litter") && hTask.includes("litter")) || (tLower.includes("supper") && hTask.includes("supper")) || (tLower.includes("basement") && hTask.includes("basement")) || (tLower.includes("laundry") && hTask.includes("laundry")) || (tLower.includes("sign-off") && hTask.includes("sign-off"));
       });
       let category = (hubMatch == null ? void 0 : hubMatch.category) || "Household";
       let frequency = (hubMatch == null ? void 0 : hubMatch.frequency) || "Daily";
@@ -2709,7 +2741,8 @@ function App({
         dayOfWeek: 6
       };
     }
-    const hubMatch = hubMasterChores.find(h => h.index_ === (cr == null ? void 0 : cr.index_) || h.task.toLowerCase() === title.toLowerCase());
+    const cKey = getChoreCanonicalKey(title);
+    const hubMatch = hubMasterChores.find(h => (cKey && getChoreCanonicalKey(h.task) === cKey) || normalizeTaskName(h.task) === normalizeTaskName(title) || h.task.toLowerCase() === title.toLowerCase());
     if (hubMatch) {
       const fLower = String(hubMatch.frequency || "").toLowerCase();
       const tLower = String(hubMatch.targetDay || "").toLowerCase();
@@ -3130,7 +3163,7 @@ function App({
         return true;
       };
       const tLower = String(taskTitle || cr.task || "").toLowerCase();
-      if (tLower.includes("basement") || tLower.includes("feeding station") || tLower.includes("deep clean") || tLower.includes("sign-off")) {
+      if (tLower.includes("basement") || tLower.includes("feeding station") || tLower.includes("deep clean") || tLower.includes("sign-off") || tLower.includes("curbside") || tLower.includes("recycling") || tLower.includes("waste")) {
         if (cr.row[14] === true || String(cr.row[14]).toLowerCase() === "true") done = true;
         const col9Text = String(cr.row[9] || "").replace(/^Who:\s*/i, "").trim();
         const col1Text = String(cr.row[1] || "").trim();
@@ -3240,11 +3273,11 @@ function App({
         } : {})
       };
     });
-    const pRow = findPrintableRow(taskTitle, choreIndex);
+    const pRow = findPrintableRow(taskTitle);
     if (printableRangeIndex >= 0 && pRow) {
       const pRowIdx = pRow.index_;
       const updateRow = new Array(15).fill(void 0);
-      if (cKey === "clean_basement" || cKey === "feeding_station_deep_clean") {
+      if (cKey === "clean_basement" || cKey === "feeding_station_deep_clean" || cKey === "curbside_recycling" || cKey === "curbside_waste") {
         if ("who" in patch) updateRow[9] = updatedWho ? `Who: ${updatedWho}` : "Who: _____________________";
         if ("done" in patch) updateRow[14] = updatedDone;
       } else if (cKey === "weekly_sign_off") {
@@ -3784,7 +3817,7 @@ function App({
         }
       });
     }
-    const pRow = findPrintableRow(taskTitle, choreIndex);
+    const pRow = findPrintableRow(taskTitle);
     if (printableRangeIndex >= 0 && pRow) {
       deleteItem(printableRangeIndex, pRow.index_);
     }
@@ -3864,9 +3897,9 @@ function App({
         dayOfWeek: dayIdx
       }
     }));
-    if (patch.task && oldTitle && normalizeTaskName(patch.task) !== normalizeTaskName(oldTitle)) {
+    if (editData.task && oldTitle && normalizeTaskName(editData.task) !== normalizeTaskName(oldTitle)) {
       const oldNorm = normalizeTaskName(oldTitle);
-      const newNorm = normalizeTaskName(patch.task);
+      const newNorm = normalizeTaskName(editData.task);
       setChoreOrderOverrides(prev => prev ? prev.map(k => k === oldNorm ? newNorm : k) : null);
     }
     const pRowIdx = getPrintableRowIndex(oldTitle);
@@ -4984,7 +5017,7 @@ function App({
         const isSpecialKidChore = getSpecificKidForChore(taskTitle);
         const isKidsChecklistTask = isKidsChecklistChore(taskTitle) && !isSpecialKidChore;
         const isStreamlined = isStreamlinedWeeklyTask(taskTitle, choreFreq);
-        const rawDescription = ((_b2 = cr.row) == null ? void 0 : _b2[1]) && (isKidsChecklistTask || isStreamlined) && !familyMembers.some(m => m.name.toLowerCase() === String(cr.row[1]).trim().toLowerCase()) ? String(cr.row[1]).trim() : isLaundryChore(taskTitle) ? "(Each Minion Does Their Own) - Wash, Dry, Fold & Put Away" : isBedroomChore(taskTitle) ? "(Each Minion Does Their Own) - Pick Up Mess / laundry, Organize, Dust & Vacuum" : isCleanBasementChore(taskTitle) ? "- Pick Up, Organize, Dust & Vacuum" : isHerdFeedingStationChore(taskTitle) ? "- Clean & Sanitize Bowls, Vacuum & Wipe Space, Dispose of Waste" : cr.notes || "";
+        const rawDescription = ((_b2 = cr.row) == null ? void 0 : _b2[1]) && (isKidsChecklistTask || isStreamlined) && !familyMembers.some(m => m.name.toLowerCase() === String(cr.row[1]).trim().toLowerCase()) ? String(cr.row[1]).trim() : isLaundryChore(taskTitle) ? "(Each Minion Does Their Own) - Wash, Dry, Fold & Put Away" : isBedroomChore(taskTitle) ? "(Each Minion Does Their Own) - Pick Up Mess / laundry, Organize, Dust & Vacuum" : isCleanBasementChore(taskTitle) ? "- Pick Up, Organize, Dust & Vacuum" : isHerdFeedingStationChore(taskTitle) ? "- Clean & Sanitize Bowls, Vacuum & Wipe Space, Dispose of Waste" : taskTitle.toLowerCase().includes("recycling") ? "- Roll recycling bin to curb Thursday evening for Friday pickup (Bi-Weekly)" : taskTitle.toLowerCase().includes("waste") ? "- Roll waste bin to curb Thursday evening for Friday pickup (Bi-Weekly)" : cr.notes || "";
         return <tr key={`row-${cr.index_}-${taskTitle}`} className="bg-white hover:bg-slate-50/60 transition-colors" style={{ borderBottom: "1px solid #C55A11" }}><td className="py-1.5 px-2 text-slate-900 bg-white align-middle" style={{ borderLeft: "1px solid #C55A11", borderRight: "1.5px solid #475569" }}><div className="leading-tight text-slate-900 font-semibold text-[11px]">{mainTitle}</div>{subTitle && <div className="text-[9.5px] text-slate-700 font-normal mt-0.5 leading-tight">{subTitle}</div>}</td>{isKidsChecklistTask ? (() => {
           const weeklyKidsDone = getWeeklyKidsStatus(cr.index_, taskTitle);
           const minionInitials = [

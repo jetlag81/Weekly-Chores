@@ -1095,6 +1095,8 @@ function CodeInspectorOverlay() {
               localStorage.removeItem('weekly_chores_canvas_sheet_data_v1');
               localStorage.removeItem('weekly_chores_canvas_sheet_data_v2');
               localStorage.removeItem('weekly_chores_canvas_sheet_data_v3');
+              localStorage.removeItem('weekly_chores_canvas_sheet_data_v4');
+              localStorage.removeItem('weekly_chores_canvas_sheet_data_v5');
             } catch (e) {}
             window.postMessage(
               { type: 'SYNC_DATA', payload: INITIAL_SHEET_DATA },

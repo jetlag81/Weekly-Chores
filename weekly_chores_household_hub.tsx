@@ -35,6 +35,7 @@ import {
   Cloud,
   Volume2,
   VolumeX,
+  Download,
   X
 } from 'lucide-react';
 import {

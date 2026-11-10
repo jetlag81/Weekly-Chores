@@ -39,6 +39,12 @@ self.addEventListener('fetch', (event) => {
     url.pathname.startsWith('/__save') ||
     url.pathname.startsWith('/__load') ||
     url.pathname.startsWith('/__tunnel') ||
+    url.pathname.includes('/@vite/') ||
+    url.pathname.includes('/@fs/') ||
+    url.pathname.includes('/@id/') ||
+    url.pathname.includes('node_modules') ||
+    url.pathname.endsWith('.tsx') ||
+    url.pathname.endsWith('.ts') ||
     url.hostname.includes('firestore') ||
     url.hostname.includes('firebase')
   ) {
@@ -68,3 +74,4 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+

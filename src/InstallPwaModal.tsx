@@ -176,3 +176,4 @@ export const InstallPwaModal: React.FC<InstallPwaModalProps> = ({ onClose }) => 
     </div>
   );
 };
+

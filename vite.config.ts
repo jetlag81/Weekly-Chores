@@ -231,6 +231,101 @@ export default defineConfig({
             res.end(JSON.stringify({ ok: false, error: e?.message }));
           }
         });
+
+        server.middlewares.use('/__save-config', (req, res) => {
+          if (req.method !== 'POST') {
+            res.statusCode = 405;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ ok: false, error: 'Method not allowed' }));
+            return;
+          }
+
+          let body = '';
+          req.on('data', (chunk) => {
+            body += chunk;
+          });
+          req.on('end', () => {
+            try {
+              const url = new URL(req.url || '', 'http://localhost');
+              const isDefault = url.searchParams.get('asDefault') === 'true';
+              const payload = JSON.parse(body);
+              const sheetData = payload.sheetData || (Array.isArray(payload) ? payload : null);
+
+              if (!sheetData || !Array.isArray(sheetData)) {
+                res.statusCode = 400;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify({ ok: false, error: 'Invalid sheetData' }));
+                return;
+              }
+
+              // 1. Save to weekly-chores-config.json
+              const configFile = path.resolve(process.cwd(), 'weekly-chores-config.json');
+              const fullConfig = {
+                sheetData,
+                savedAt: new Date().toISOString(),
+                version: '5.0',
+              };
+              fs.writeFileSync(configFile, JSON.stringify(fullConfig, null, 2), 'utf-8');
+
+              // 2. If asDefault is true, write directly into INITIAL_SHEET_DATA in weekly_chores_household_hub.tsx
+              let updatedTsx = false;
+              if (isDefault) {
+                const tsxPath = path.resolve(process.cwd(), 'weekly_chores_household_hub.tsx');
+                let tsxContent = fs.readFileSync(tsxPath, 'utf-8');
+
+                const startMarker = 'export const INITIAL_SHEET_DATA = [';
+                const endMarker = '];\n\nvar DAY_STYLES';
+                const startIdx = tsxContent.indexOf(startMarker);
+                if (startIdx !== -1) {
+                  const endIdx = tsxContent.indexOf(endMarker, startIdx);
+                  if (endIdx !== -1) {
+                    const formattedData = JSON.stringify(sheetData, null, 2);
+                    const replacement = `export const INITIAL_SHEET_DATA = ${formattedData};\n\nvar DAY_STYLES`;
+                    tsxContent =
+                      tsxContent.substring(0, startIdx) +
+                      replacement +
+                      tsxContent.substring(endIdx + endMarker.length);
+                    fs.writeFileSync(tsxPath, tsxContent, 'utf-8');
+                    updatedTsx = true;
+                  }
+                }
+              }
+
+              res.setHeader('Content-Type', 'application/json');
+              res.end(
+                JSON.stringify({
+                  ok: true,
+                  savedToFile: 'weekly-chores-config.json',
+                  updatedTsx,
+                  timestamp: fullConfig.savedAt,
+                })
+              );
+            } catch (err: any) {
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+            }
+          });
+        });
+
+        server.middlewares.use('/__load-config', (req, res) => {
+          try {
+            const configFile = path.resolve(process.cwd(), 'weekly-chores-config.json');
+            if (fs.existsSync(configFile)) {
+              const content = fs.readFileSync(configFile, 'utf-8');
+              res.setHeader('Content-Type', 'application/json');
+              res.end(content);
+            } else {
+              res.statusCode = 404;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ ok: false, error: 'No saved configuration found' }));
+            }
+          } catch (err: any) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
+          }
+        });
       },
     },
   ],

@@ -726,6 +726,84 @@ function CodeInspectorOverlay() {
     setTimeout(() => setJumpToast(null), 2400);
   };
 
+  const handleSaveAsDefault = async () => {
+    try {
+      const rawData = localStorage.getItem('weekly_chores_canvas_sheet_data_v5');
+      if (!rawData) {
+        triggerToast('⚠️ No data found in localStorage');
+        return;
+      }
+      const res = await fetch('/__save-config?asDefault=true', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sheetData: JSON.parse(rawData) }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        triggerToast('✓ Saved current browser setup as default in code and config file!');
+      } else {
+        triggerToast(`⚠️ Failed: ${data.error}`);
+      }
+    } catch (e: any) {
+      triggerToast(`⚠️ Failed: ${e?.message || String(e)}`);
+    }
+  };
+
+  const handleExportConfig = () => {
+    try {
+      const rawData = localStorage.getItem('weekly_chores_canvas_sheet_data_v5');
+      const payload = {
+        sheetData: rawData ? JSON.parse(rawData) : null,
+        version: '5.0',
+        exportedAt: new Date().toISOString(),
+        appName: 'Weekly Chores & Household Hub',
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `weekly-chores-config-${dateStr}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      fetch('/__save-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }).catch(() => {});
+
+      triggerToast('✓ Exported configuration backup (.json)!');
+    } catch (e: any) {
+      triggerToast(`⚠️ Export failed: ${e?.message || String(e)}`);
+    }
+  };
+
+  const handleImportConfigFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target?.result as string);
+        const dataToLoad = parsed.sheetData || (Array.isArray(parsed) ? parsed : null);
+        if (Array.isArray(dataToLoad) && dataToLoad.length > 0) {
+          localStorage.setItem('weekly_chores_canvas_sheet_data_v5', JSON.stringify(dataToLoad));
+          window.postMessage({ type: 'SYNC_DATA', payload: dataToLoad }, '*');
+          triggerToast(`✓ Loaded configuration from "${file.name}"!`);
+        } else {
+          triggerToast('⚠️ Invalid config: missing sheetData');
+        }
+      } catch (err: any) {
+        triggerToast(`⚠️ Failed to parse: ${err?.message || String(err)}`);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   const cycleDockCorner = () => {
     setDockCorner((prev) => {
       const order: DockCorner[] = ['top-right', 'bottom-left', 'top-left', 'bottom-right', 'float'];
@@ -1216,6 +1294,77 @@ function CodeInspectorOverlay() {
           <span>↗</span>
           <span>Pop Out CSV Map</span>
         </button>
+
+        <button
+          type="button"
+          onClick={handleSaveAsDefault}
+          title="Save current browser setup as the permanent default in code (.tsx) and configuration file"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '7px 12px',
+            borderRadius: '9999px',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: '1px solid #059669',
+            backgroundColor: '#065F46',
+            color: '#ECFDF5',
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <span>💾</span>
+          <span>Save as Default</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleExportConfig}
+          title="Download/export configuration backup file (.json)"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '7px 12px',
+            borderRadius: '9999px',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: '1px solid #334155',
+            backgroundColor: '#1E293B',
+            color: '#E2E8F0',
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <span>⬇️</span>
+          <span>Export Config</span>
+        </button>
+
+        <label
+          title="Import/restore a configuration backup file (.json)"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '7px 12px',
+            borderRadius: '9999px',
+            fontSize: '12px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: '1px solid #334155',
+            backgroundColor: '#1E293B',
+            color: '#E2E8F0',
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <span>⬆️</span>
+          <span>Import Config</span>
+          <input type="file" accept=".json" onChange={handleImportConfigFile} style={{ display: 'none' }} />
+        </label>
 
         <button
           type="button"

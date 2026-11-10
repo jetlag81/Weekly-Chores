@@ -651,11 +651,11 @@ export const INITIAL_SHEET_DATA = [
           null,
           true,
           null,
-          "Walk Dogs: Ellie & Lewis (Morning & Evening walk)",
+          "Walk Dogs: Ellie & Lewis",
           "Non-Casual",
           "Daily",
           "Mon – Sun",
-          "Morning & evening walk for Ellie & Lewis",
+          "Walk Ellie & Lewis",
           "Pet Care"
         ]
       },

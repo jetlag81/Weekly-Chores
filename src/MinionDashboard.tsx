@@ -19,7 +19,12 @@ import {
   LogOut,
   RefreshCw,
   Volume2,
-  VolumeX
+  VolumeX,
+  Crown,
+  Target,
+  Medal,
+  Award,
+  Users
 } from "lucide-react";
 import {
   playChoreCompletionSound,
@@ -46,6 +51,9 @@ interface MinionDashboardProps {
   monthSchedule: Record<string, Record<string | number, { who?: string; done?: boolean; kidsDone?: Record<string, boolean> }>>;
   hubMasterChores: any[];
   monthlyIncentive: string;
+  monthlyGoalTarget?: number;
+  rankedMembers?: any[];
+  topPerformer?: any;
   selectedYear: number;
   selectedMonth: number;
   onUpdateChore: (dateKey: string, choreIndex: number, updates: { done?: boolean; who?: string }, taskTitle?: string) => void;
@@ -64,6 +72,9 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   monthSchedule,
   hubMasterChores,
   monthlyIncentive,
+  monthlyGoalTarget = 25,
+  rankedMembers,
+  topPerformer,
   selectedYear,
   selectedMonth,
   onUpdateChore,
@@ -112,6 +123,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
+  const [activeNavTab, setActiveNavTab] = useState<"chores" | "leaderboard">("chores");
 
   useEffect(() => {
     return subscribeSpeechState(speaking => setIsSpeakingAudio(speaking));
@@ -130,6 +142,11 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     year: "numeric"
   });
 
+  const MONTH_NAMES = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
   // Calculate monthly stats for this kid
   const kidMonthlyCompletions = React.useMemo(() => {
     let count = 0;
@@ -145,6 +162,47 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     });
     return count;
   }, [monthSchedule, currentKid.name]);
+
+  // Ranked kids for the leaderboard
+  const rankedKidsList = React.useMemo(() => {
+    if (rankedMembers && rankedMembers.length > 0) {
+      return rankedMembers;
+    }
+    // Fallback: compute dynamically from monthSchedule
+    return kidMembers.map(m => {
+      let done = 0;
+      Object.keys(monthSchedule).forEach(dKey => {
+        const dayChores = monthSchedule[dKey] || {};
+        Object.keys(dayChores).forEach(cIdx => {
+          const item = dayChores[cIdx];
+          if (item) {
+            if (item.who && item.who.toLowerCase() === m.name.toLowerCase() && item.done) done++;
+            if (item.kidsDone && item.kidsDone[m.name]) done++;
+          }
+        });
+      });
+      return {
+        id: m.id || m.name,
+        name: m.name,
+        color: m.color || "#6366F1",
+        role: m.role || "Minion",
+        residency: m.type === "biweekly" ? "Bi-Weekly" : m.type === "casual" ? "Casual" : "Full-Time",
+        type: m.type,
+        done,
+        total: Math.max(done, 20),
+        pct: Math.min(100, Math.round((done / Math.max(1, monthlyGoalTarget)) * 100))
+      };
+    }).sort((a, b) => {
+      if (b.done !== a.done) return b.done - a.done;
+      return b.pct - a.pct;
+    });
+  }, [rankedMembers, kidMembers, monthSchedule, monthlyGoalTarget]);
+
+  const leaderKid = topPerformer || rankedKidsList[0] || null;
+  const isMyKidLeading = leaderKid && leaderKid.name.toLowerCase() === currentKid.name.toLowerCase() && leaderKid.done > 0;
+  const myRank = rankedKidsList.findIndex(k => k.name.toLowerCase() === currentKid.name.toLowerCase()) + 1 || 1;
+  const choresBehind = leaderKid ? Math.max(0, leaderKid.done - kidMonthlyCompletions) : 0;
+  const topScore = leaderKid ? leaderKid.done : 0;
 
   // Daily chores assigned to this kid for activeDateKey
   const dailyChoresForKid = React.useMemo(() => {
@@ -346,30 +404,280 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         </div>
       </header>
 
+      {/* Navigation Tab Bar */}
+      <div className="max-w-xl mx-auto px-4 pt-3 pb-1">
+        <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-black shadow-2xs">
+          <button
+            type="button"
+            onClick={() => setActiveNavTab("chores")}
+            className={`flex-1 py-2 px-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-2 ${
+              activeNavTab === "chores"
+                ? "bg-white text-indigo-700 shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span>My Daily Chores</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700">
+              {completedTodayCount}/{dailyChoresForKid.length}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveNavTab("leaderboard")}
+            className={`flex-1 py-2 px-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-2 ${
+              activeNavTab === "leaderboard"
+                ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Trophy className="w-4 h-4 text-amber-200" />
+            <span>Leaderboard &amp; Prize</span>
+            {isMyKidLeading ? (
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-600 text-white font-black shadow-2xs">
+                #1
+              </span>
+            ) : (
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700 font-bold">
+                #{myRank}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
       <main className="max-w-xl mx-auto px-4 py-4 space-y-4">
-        {/* Monthly Incentive Reward Card */}
-        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 rounded-2xl p-4 text-white shadow-sm space-y-2">
-          <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-amber-100">
-            <span className="flex items-center gap-1.5">
-              <Trophy className="w-4 h-4 text-amber-200" />
-              <span>Monthly Goal & Incentive Prize</span>
-            </span>
-            <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px]">
-              Top Performer
-            </span>
-          </div>
-          <div className="flex items-center gap-2.5 pt-1">
-            <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-              <Gift className="w-5 h-5 text-amber-200" />
+        {activeNavTab === "leaderboard" ? (
+          /* LEADERBOARD & MONTHLY RACE VIEW */
+          <div className="space-y-4">
+            {/* Hero Monthly Prize Card */}
+            <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 rounded-3xl p-5 text-white shadow-md space-y-4">
+              <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-amber-100">
+                <span className="flex items-center gap-1.5 bg-black/20 px-3 py-1 rounded-full">
+                  <Trophy className="w-4 h-4 text-amber-200" />
+                  <span>Monthly Incentive Race</span>
+                </span>
+                <span className="bg-white/20 px-2.5 py-1 rounded-full text-[11px] font-extrabold">
+                  {MONTH_NAMES[selectedMonth]} {selectedYear}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3.5 pt-1">
+                <div className="w-14 h-14 rounded-2xl bg-white/25 flex items-center justify-center shrink-0 shadow-inner">
+                  <Gift className="w-8 h-8 text-amber-100" />
+                </div>
+                <div className="space-y-0.5">
+                  <div className="text-xs text-amber-100 font-bold uppercase tracking-wider">Top Performer Reward</div>
+                  <div className="text-lg font-black text-white leading-tight">
+                    {monthlyIncentive}
+                  </div>
+                </div>
+              </div>
+
+              {/* Monthly Target Progress for this Kid */}
+              <div className="bg-black/20 p-3.5 rounded-2xl space-y-2 border border-white/10">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="text-amber-100 flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Your Target: {monthlyGoalTarget} Chores</span>
+                  </span>
+                  <span className="text-white font-black text-xs">
+                    {kidMonthlyCompletions} / {monthlyGoalTarget} ({Math.min(100, Math.round((kidMonthlyCompletions / monthlyGoalTarget) * 100))}%)
+                  </span>
+                </div>
+                <div className="w-full bg-black/30 rounded-full h-3 overflow-hidden p-0.5">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-amber-300 to-yellow-200 transition-all duration-700 shadow-xs"
+                    style={{ width: `${Math.min(100, Math.max(5, (kidMonthlyCompletions / monthlyGoalTarget) * 100))}%` }}
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="text-xs text-amber-100 font-medium">Qualifying Prize:</div>
-              <div className="text-sm font-extrabold text-white leading-snug">
-                {monthlyIncentive}
+
+            {/* Current Minion's Status & Motivation Callout */}
+            <div className={`p-4 rounded-2xl border transition-all ${
+              isMyKidLeading
+                ? "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300 shadow-sm"
+                : "bg-white border-slate-200 shadow-2xs"
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-base shrink-0 shadow-xs ${
+                  isMyKidLeading
+                    ? "bg-amber-500 text-white"
+                    : myRank === 2
+                    ? "bg-slate-300 text-slate-800"
+                    : myRank === 3
+                    ? "bg-amber-700 text-white"
+                    : "bg-slate-100 text-slate-600"
+                }`}>
+                  {isMyKidLeading ? <Crown className="w-5 h-5" /> : `#${myRank}`}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+                    <span>{isMyKidLeading ? "👑 You are currently in 1st Place!" : `You are ranked #${myRank}`}</span>
+                  </div>
+                  <p className="text-xs text-slate-600 mt-0.5 leading-snug">
+                    {isMyKidLeading
+                      ? `Amazing job, ${currentKid.name}! You're on track to win "${monthlyIncentive}"!`
+                      : leaderKid
+                      ? `You have ${kidMonthlyCompletions} chores done — only ${choresBehind} behind ${leaderKid.name} for 1st place!`
+                      : `Keep completing your daily chores to climb the leaderboard!`}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Minions Leaderboard Standings */}
+            <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-2xs space-y-3.5">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div>
+                  <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+                    <Trophy className="w-4 h-4 text-amber-500" />
+                    <span>Minions Leaderboard</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500">Live rankings for {MONTH_NAMES[selectedMonth]} {selectedYear}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isSpeechSupported()) {
+                      const msg = isMyKidLeading
+                        ? `${currentKid.name} is in first place with ${kidMonthlyCompletions} chores completed! Keep rocking it!`
+                        : leaderKid
+                        ? `${leaderKid.name} leads the race with ${leaderKid.done} chores. ${currentKid.name} is in rank ${myRank} with ${kidMonthlyCompletions} chores!`
+                        : `Check out the family leaderboard for this month!`;
+                      window.speechSynthesis.cancel();
+                      const u = new SpeechSynthesisUtterance(msg);
+                      u.rate = 1.0;
+                      window.speechSynthesis.speak(u);
+                    }
+                  }}
+                  className="p-1.5 rounded-xl bg-amber-50 text-amber-800 hover:bg-amber-100 transition cursor-pointer flex items-center gap-1 text-[11px] font-bold"
+                  title="Announce leaderboard"
+                >
+                  <Volume2 className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Announce</span>
+                </button>
+              </div>
+
+              <div className="space-y-2.5">
+                {rankedKidsList.map((k, idx) => {
+                  const isLeader = idx === 0 && k.done > 0;
+                  const isMe = k.name.toLowerCase() === currentKid.name.toLowerCase();
+                  const rankBadge = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`;
+
+                  return (
+                    <div
+                      key={k.id || k.name}
+                      className={`p-3.5 rounded-2xl border transition-all ${
+                        isMe
+                          ? "border-indigo-400 bg-indigo-50/60 ring-2 ring-indigo-200 shadow-xs"
+                          : isLeader
+                          ? "border-amber-300 bg-amber-50/40"
+                          : "border-slate-200 bg-slate-50/60"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-base font-black w-6 text-center">{rankBadge}</span>
+                          <span
+                            className="w-4 h-4 rounded-full shadow-2xs shrink-0"
+                            style={{ backgroundColor: k.color }}
+                          />
+                          <span className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                            <span>{k.name}</span>
+                            {isMe && (
+                              <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-indigo-600 text-white uppercase tracking-wider">
+                                YOU
+                              </span>
+                            )}
+                            {isLeader && (
+                              <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-amber-200 text-amber-900 border border-amber-300 flex items-center gap-0.5">
+                                <Crown className="w-2.5 h-2.5" />
+                                <span>#1 Leader</span>
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-black text-sm text-slate-900">{k.done}</span>
+                          <span className="text-xs text-slate-500"> chores</span>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-700"
+                          style={{
+                            width: `${Math.min(100, Math.max(6, (k.done / Math.max(1, topScore, monthlyGoalTarget)) * 100))}%`,
+                            backgroundColor: isLeader ? "#D97706" : k.color
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveNavTab("chores")}
+                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl shadow-xs transition flex items-center justify-center gap-2 text-xs cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4 text-indigo-200" />
+                  <span>Back to My Daily Chores</span>
+                </button>
               </div>
             </div>
           </div>
-        </div>
+        ) : (
+          /* CHORES VIEW (Default) */
+          <>
+            {/* Interactive Monthly Incentive Reward Card */}
+            <div
+              onClick={() => setActiveNavTab("leaderboard")}
+              className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 rounded-2xl p-4 text-white shadow-sm space-y-2 cursor-pointer hover:shadow-md transition active:scale-[0.99]"
+              title="Click to view Family Leaderboard & Rankings"
+            >
+              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-amber-100">
+                <span className="flex items-center gap-1.5">
+                  <Trophy className="w-4 h-4 text-amber-200" />
+                  <span>Monthly Goal &amp; Incentive Prize</span>
+                </span>
+                <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-black flex items-center gap-1">
+                  <span>{isMyKidLeading ? "👑 Rank #1" : `Rank #${myRank}`}</span>
+                  <span>↗</span>
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3 pt-1">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                    <Gift className="w-5 h-5 text-amber-200" />
+                  </div>
+                  <div>
+                    <div className="text-xs text-amber-100 font-medium">Qualifying Prize:</div>
+                    <div className="text-sm font-extrabold text-white leading-snug">
+                      {monthlyIncentive}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-xs text-amber-100 font-semibold">Your Progress:</div>
+                  <div className="text-xs font-black text-white">
+                    {kidMonthlyCompletions} / {monthlyGoalTarget} chores
+                  </div>
+                </div>
+              </div>
+              {/* Mini Progress Bar */}
+              <div className="w-full bg-black/20 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-amber-200 transition-all duration-500"
+                  style={{ width: `${Math.min(100, Math.max(5, (kidMonthlyCompletions / monthlyGoalTarget) * 100))}%` }}
+                />
+              </div>
+            </div>
 
         {/* Date Selector Navigation */}
         <div className="bg-white rounded-2xl border border-slate-200 p-3 shadow-2xs flex items-center justify-between">
@@ -631,7 +939,9 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             })}
           </div>
         </div>
-      </main>
+      </>
+    )}
+  </main>
 
       {/* Parent PIN Unlock Modal to Exit Minion Mode */}
       {showExitPinModal && (

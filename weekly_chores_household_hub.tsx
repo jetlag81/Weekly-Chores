@@ -1876,6 +1876,17 @@ function App({
   useEffect(() => {
     const unsub = subscribeToRealtimeSync((msg: any) => {
       if (!msg) return;
+      if (msg.type === "INCENTIVE_UPDATED") {
+        if (msg.monthlyIncentive) {
+          setMonthlyIncentive(msg.monthlyIncentive);
+          try { localStorage.setItem("weekly_chores_monthly_incentive", msg.monthlyIncentive); } catch {}
+        }
+        if (msg.monthlyGoalTarget) {
+          setMonthlyGoalTarget(msg.monthlyGoalTarget);
+          try { localStorage.setItem("weekly_chores_monthly_target", String(msg.monthlyGoalTarget)); } catch {}
+        }
+        return;
+      }
       if (msg.type === "CHORE_UPDATED") {
         const cKey = msg.canonicalKey || (msg.taskTitle ? getChoreCanonicalKey(msg.taskTitle) : "");
         const norm = msg.normKey || (msg.taskTitle ? normalizeTaskName(msg.taskTitle) : "");
@@ -2896,9 +2907,25 @@ function App({
   const [customCombinedTitle, setCustomCombinedTitle] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [notice, setNotice] = useState(null);
-  const [monthlyIncentive, setMonthlyIncentive] = useState("$15 Allowance Bonus & Choice of Friday Family Dinner");
+  const [monthlyIncentive, setMonthlyIncentive] = useState(() => {
+    try {
+      const saved = localStorage.getItem("weekly_chores_monthly_incentive");
+      return saved || "$15 Allowance Bonus & Choice of Friday Family Dinner";
+    } catch {
+      return "$15 Allowance Bonus & Choice of Friday Family Dinner";
+    }
+  });
+  const [monthlyGoalTarget, setMonthlyGoalTarget] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem("weekly_chores_monthly_target");
+      return saved ? Number(saved) : 25;
+    } catch {
+      return 25;
+    }
+  });
   const [isEditingIncentive, setIsEditingIncentive] = useState(false);
   const [incentiveDraft, setIncentiveDraft] = useState("$15 Allowance Bonus & Choice of Friday Family Dinner");
+  const [targetDraft, setTargetDraft] = useState(25);
   const [masterCategoryFilter, setMasterCategoryFilter] = useState("ALL");
   const [masterFrequencyFilter, setMasterFrequencyFilter] = useState("ALL");
   const [masterSearchQuery, setMasterSearchQuery] = useState("");
@@ -5218,19 +5245,45 @@ function App({
             isScheduledDay = day.dayOfWeekIndex === freq.dayOfWeek && isCurbsideActiveOnDate(taskT, day.year, day.month, day.day);
           }
           const status = getChoreStatus(day.dateKey, cr.index_, cr.task || ((_b2 = cr.row) == null ? void 0 : _b2[0]));
-          const hasActivity = (status == null ? void 0 : status.done) || (status == null ? void 0 : status.who);
+          const hasActivity = (status == null ? void 0 : status.done) || (status == null ? void 0 : status.who) || (status == null ? void 0 : status.kidsDone);
           if (!isScheduledDay && !hasActivity) return;
           totalScheduled++;
           const isDone = status == null ? void 0 : status.done;
           const who = status == null ? void 0 : status.who;
+          const kidsDone = (status == null ? void 0 : status.kidsDone) || {};
           if (isDone) totalCompleted++;
+
           if (who) {
             const member = getMember(who);
             if (member && assigneeCounts[member.name]) {
               assigneeCounts[member.name].total++;
               if (isDone) assigneeCounts[member.name].done++;
+            } else if (who === "Each Child" || who === "All Kids") {
+              familyMembers.forEach(m => {
+                if (m.type !== "casual" && assigneeCounts[m.name]) {
+                  assigneeCounts[m.name].total++;
+                  if (kidsDone[m.name] || isDone) {
+                    assigneeCounts[m.name].done++;
+                  }
+                }
+              });
+            } else if (who === "Non-Casual" || who === "All Non-Casual") {
+              familyMembers.forEach(m => {
+                if (m.type === "regular" && assigneeCounts[m.name]) {
+                  assigneeCounts[m.name].total++;
+                  if (kidsDone[m.name] || isDone) {
+                    assigneeCounts[m.name].done++;
+                  }
+                }
+              });
             }
           }
+          // Also credit any explicitly recorded kidsDone
+          Object.entries(kidsDone).forEach(([kName, kDone]) => {
+            if (kDone && assigneeCounts[kName] && who !== "Each Child" && who !== "All Kids" && who !== "Non-Casual") {
+              assigneeCounts[kName].done++;
+            }
+          });
         });
       });
     });
@@ -5338,6 +5391,9 @@ function App({
         monthSchedule={monthSchedule}
         hubMasterChores={hubMasterChores}
         monthlyIncentive={monthlyIncentive}
+        monthlyGoalTarget={monthlyGoalTarget || 25}
+        rankedMembers={rankedMembers}
+        topPerformer={topPerformer}
         selectedYear={selectedYear}
         selectedMonth={selectedMonth}
         onUpdateChore={handleUpdateChore}
@@ -5841,14 +5897,27 @@ function App({
           <tr className="sign-off-row bg-white text-slate-900" style={{ borderTop: "1px solid #475569", borderBottom: "2.5px solid #C55A11" }}><td className="py-2 px-2.5 font-semibold text-xs text-slate-900 bg-white" style={{ borderLeft: "1px solid #C55A11", borderRight: "1.5px solid #475569" }}>Weekly Sign-Off</td><td colSpan={12} className="py-2 px-3 text-right font-semibold text-xs text-slate-900 bg-white" style={{ borderRight: "1.5px solid #475569" }}>Parent Initials:</td><td colSpan={2} className="py-2 px-2 text-center bg-white" style={{ borderRight: "1px solid #C55A11" }}><button type="button" onClick={handleToggleWeeklySignOff} className="inline-flex items-center justify-center w-full cursor-pointer font-semibold text-xs text-slate-900" title="Click to toggle Parent Sign-Off"><span className={`inline-block min-w-[56px] border-b border-slate-800 ${signOffStatus.done ? "text-emerald-700 font-bold" : "text-transparent select-none"}`}>{signOffStatus.done ? "\u2713 TV / MV" : "_________"}</span></button></td></tr></tbody></table></div></div><div className="no-print grid grid-cols-1 md:grid-cols-3 gap-4 text-xs"><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-indigo-900">HOUSEHOLD ROSTER</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div><strong className="text-slate-900">{"\u2022 Full-Time:"}</strong>{" "}{familyMembers.filter(m => m.type === "regular").map(m => m.name).join(", ") || "Sydney, Thom, Meghan"}</div><div><strong className="text-pink-900">{"\u2022 Bi-Weekly:"}</strong>{" "}{familyMembers.filter(m => m.type === "biweekly").map(m => m.name).join(" & ") || "Cadence & Mason"}</div><div><strong className="text-sky-900">{"\u2022 Casual:"}</strong>{" "}{familyMembers.filter(m => m.type === "casual").map(m => m.name).join(", ") || "Koda, Keyanna"}</div></div></div><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-pink-900">BI-WEEKLY SCHEDULE</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div>{"\u2022 Cadence & Mason: Alternating bi-weekly schedule"}</div><div>{"\u2022 Status this week: Not here \u2022 Arrive Sunday, Oct. 18 @ 5:00 PM"}</div><div>{"\u2022 Transitions: Sundays @ 5:00 PM (alternating bi-weekly from Oct 18)"}</div><div>{"\u2022 Off-weeks (This week): Chores split among full-time roster (Thom, Meghan, Sydney)"}</div><div>{"\u2022 On-weeks (Starts Oct 19): Included in daily chore rotations"}</div></div></div><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-amber-900">{'PET CARE ROUTINE ("FEED THE HERD")'}</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div>{"\u2022 Cats (Litter Crew): Morning & evening feeding, scoop litter box daily"}</div><div>{"\u2022 Family Dog(s): Morning & evening feeding, outdoor routine, fresh water"}</div><div>{"\u2022 Herd Feeding Station: Refill all water bowls daily, wipe station, dispose waste"}</div><div>{"\u2022 Routine: Daily feeding, fresh water & station cleanup"}</div></div></div></div></div>}{activeTab === "stats" && <div className="max-w-4xl mx-auto space-y-6"><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Scheduled Chores</span><Calendar className="w-4 h-4 text-slate-400" /></div><div className="text-2xl font-bold text-slate-900 mt-2">{monthStats.totalScheduled}</div><p className="text-xs text-slate-500 mt-1">{"Total across "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</p></div><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Completed Chores</span><CircleCheck className="w-4 h-4 text-emerald-500" /></div><div className="text-2xl font-bold text-emerald-600 mt-2">{monthStats.totalCompleted}</div><p className="text-xs text-slate-500 mt-1">{monthStats.completionRate}% completion rate</p></div><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Active Tasks</span><ListTodo className="w-4 h-4 text-indigo-500" /></div><div className="text-2xl font-bold text-indigo-600 mt-2">{choreRows.length}</div><p className="text-xs text-slate-500 mt-1">Daily & weekly routines</p></div><div className="bg-gradient-to-br from-amber-50 to-orange-50/70 p-4 rounded-xl border border-amber-300 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-bold text-amber-900">Current Top Performer</span><Crown className="w-4 h-4 text-amber-600" /></div><div className="text-xl font-black text-amber-950 mt-2 truncate">{topPerformer ? topPerformer.name : "TBD"}</div><p className="text-xs text-amber-800 mt-1 truncate">{topPerformer ? `${topPerformer.done} chores finished` : "Track chores to rank"}</p></div></div><div className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 rounded-2xl text-white p-5 shadow-md"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-white/20"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 shadow-inner"><Trophy className="w-6 h-6 text-amber-200" /></div><div><div className="flex items-center gap-2"><span className="text-xs font-extrabold uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full">Monthly Incentive Prize</span><span className="text-xs opacity-90">{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</span></div><h3 className="text-base font-extrabold mt-0.5">Top Performer Reward & Recognition</h3></div></div><div className="flex items-center gap-2"><button onClick={() => {
             setIsEditingIncentive(prev => !prev);
             setIncentiveDraft(monthlyIncentive);
-          }} className="text-xs font-bold px-3 py-1.5 bg-white text-amber-900 hover:bg-amber-50 rounded-lg shadow-sm transition flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-amber-700" /><span>{isEditingIncentive ? "Cancel Edit" : "Customize Incentive"}</span></button></div></div>{!isEditingIncentive ? <div className="pt-3 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"><div className="space-y-1"><div className="text-amber-100 font-medium">Incentive for Highest Monthly Chore Completions:</div><div className="text-sm font-black text-white flex items-center gap-2"><Gift className="w-4 h-4 text-amber-200 shrink-0" /><span>{monthlyIncentive}</span></div></div>{topPerformer && <div className="bg-white/15 px-3 py-2 rounded-xl backdrop-blur-xs flex items-center gap-2.5 self-start md:self-auto border border-white/20"><Crown className="w-4 h-4 text-amber-200 shrink-0" /><div><div className="text-[10px] text-amber-100 uppercase tracking-wider font-bold">Leading Candidate</div><div className="font-extrabold text-xs text-white">{topPerformer.name}{" ("}{topPerformer.done}{" finished \u2022 "}{topPerformer.pct}%)</div></div></div>}</div> : <div className="pt-3 space-y-3 text-xs bg-black/15 p-3 rounded-xl mt-3 border border-white/20"><label className="block font-bold text-white mb-1">Set Monthly Reward / Incentive Prize for the Top Performer:</label><div className="flex gap-2"><input type="text" value={incentiveDraft} onChange={e => setIncentiveDraft(e.target.value)} placeholder="e.g. $15 Allowance Bonus, Pizza Night Pick, 1-Day Chore Pass..." className="flex-1 p-2 bg-white text-slate-900 font-semibold rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-300" /><button onClick={() => {
+            setTargetDraft(monthlyGoalTarget || 25);
+          }} className="text-xs font-bold px-3 py-1.5 bg-white text-amber-900 hover:bg-amber-50 rounded-lg shadow-sm transition flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-amber-700" /><span>{isEditingIncentive ? "Cancel Edit" : "Customize Incentive & Goal"}</span></button></div></div>{!isEditingIncentive ? <div className="pt-3 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"><div className="space-y-1"><div className="text-amber-100 font-medium">Incentive for Highest Monthly Chore Completions:</div><div className="text-sm font-black text-white flex items-center gap-2"><Gift className="w-4 h-4 text-amber-200 shrink-0" /><span>{monthlyIncentive}</span><span className="text-xs font-bold bg-white/20 px-2 py-0.5 rounded-full text-amber-100">Target: {monthlyGoalTarget} Chores</span></div></div>{topPerformer && <div className="bg-white/15 px-3 py-2 rounded-xl backdrop-blur-xs flex items-center gap-2.5 self-start md:self-auto border border-white/20"><Crown className="w-4 h-4 text-amber-200 shrink-0" /><div><div className="text-[10px] text-amber-100 uppercase tracking-wider font-bold">Leading Candidate</div><div className="font-extrabold text-xs text-white">{topPerformer.name}{" ("}{topPerformer.done}{" finished \u2022 "}{topPerformer.pct}%)</div></div></div>}</div> : <div className="pt-3 space-y-3 text-xs bg-black/15 p-3 rounded-xl mt-3 border border-white/20"><div className="grid grid-cols-1 md:grid-cols-3 gap-2"><div className="md:col-span-2 space-y-1"><label className="block font-bold text-white text-[11px]">Set Monthly Reward / Incentive Prize for the Top Performer:</label><input type="text" value={incentiveDraft} onChange={e => setIncentiveDraft(e.target.value)} placeholder="e.g. $15 Allowance Bonus, Pizza Night Pick, 1-Day Chore Pass..." className="w-full p-2 bg-white text-slate-900 font-semibold rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-300" /></div><div className="space-y-1"><label className="block font-bold text-white text-[11px]">Monthly Goal Target (Chores):</label><input type="number" min="5" max="100" value={targetDraft} onChange={e => setTargetDraft(Math.max(1, Number(e.target.value) || 25))} className="w-full p-2 bg-white text-slate-900 font-bold rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-300" /></div></div><div className="flex justify-end gap-2 pt-1"><button onClick={() => {
             if (incentiveDraft.trim()) {
-              setMonthlyIncentive(incentiveDraft.trim());
+              const cleaned = incentiveDraft.trim();
+              const targetNum = targetDraft || 25;
+              setMonthlyIncentive(cleaned);
+              setMonthlyGoalTarget(targetNum);
+              try {
+                localStorage.setItem("weekly_chores_monthly_incentive", cleaned);
+                localStorage.setItem("weekly_chores_monthly_target", String(targetNum));
+              } catch {}
+              broadcastLocalUpdate({
+                type: "INCENTIVE_UPDATED",
+                monthlyIncentive: cleaned,
+                monthlyGoalTarget: targetNum
+              });
               setIsEditingIncentive(false);
-              setNotice(`Updated Monthly Incentive: "${incentiveDraft.trim()}"`);
+              setNotice(`Updated Monthly Incentive: "${cleaned}" (${targetNum} chores target)`);
               setTimeout(() => setNotice(null), 3e3);
             }
-          }} className="px-4 py-2 bg-white text-amber-900 font-extrabold rounded-lg hover:bg-amber-50 transition">Save Prize</button></div><div className="flex flex-wrap items-center gap-1.5 text-[11px] pt-1"><span className="opacity-80">Quick ideas:</span><button onClick={() => setIncentiveDraft("$15 Allowance Bonus & Pizza Night Pick")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">{"$15 + Pizza Night"}</button><button onClick={() => setIncentiveDraft("1-Day Chore Exemption Pass & Movie Pick")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">1-Day Chore Pass</button><button onClick={() => setIncentiveDraft("$20 Gift Card & Weekend Treat")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">{"$20 Gift Card"}</button><button onClick={() => setIncentiveDraft("Family Ice Cream Outing of Their Choice")} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white">Ice Cream Outing</button></div></div>}</div><div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-200"><div><div className="flex items-center gap-2"><h3 className="text-base font-bold text-slate-900">Family Members Completion</h3><span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Kids & Minions ({rankedMembers.length}{" Members)"}</span></div><p className="text-xs text-slate-500 mt-0.5">{"Monthly Total Tracker ranked by total chores completed for "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}. Kids and minions completion leaderboard competing for the monthly reward.</p></div><div className="flex items-center gap-2 text-xs text-slate-500"><Award className="w-4 h-4 text-amber-500" /><span className="font-semibold text-slate-700">Ranked by Monthly Completions</span></div></div><div className="space-y-3">{rankedMembers.map((m, idx) => {
+          }} className="px-4 py-2 bg-white text-amber-900 font-extrabold rounded-lg hover:bg-amber-50 transition cursor-pointer shadow-xs">Save Prize &amp; Goal</button></div><div className="flex flex-wrap items-center gap-1.5 text-[11px] pt-1"><span className="opacity-80">Quick ideas:</span><button onClick={() => { setIncentiveDraft("$15 Allowance Bonus & Pizza Night Pick"); setTargetDraft(25); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">{"$15 + Pizza Night (25)"}</button><button onClick={() => { setIncentiveDraft("1-Day Chore Exemption Pass & Movie Pick"); setTargetDraft(30); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">1-Day Chore Pass (30)</button><button onClick={() => { setIncentiveDraft("$20 Gift Card & Weekend Treat"); setTargetDraft(35); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">{"$20 Gift Card (35)"}</button><button onClick={() => { setIncentiveDraft("Family Ice Cream Outing of Their Choice"); setTargetDraft(20); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">Ice Cream Outing (20)</button></div></div>}</div><div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-200"><div><div className="flex items-center gap-2"><h3 className="text-base font-bold text-slate-900">Family Members Completion</h3><span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Kids & Minions ({rankedMembers.length}{" Members)"}</span></div><p className="text-xs text-slate-500 mt-0.5">{"Monthly Total Tracker ranked by total chores completed for "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}. Kids and minions completion leaderboard competing for the monthly reward.</p></div><div className="flex items-center gap-2 text-xs text-slate-500"><Award className="w-4 h-4 text-amber-500" /><span className="font-semibold text-slate-700">Ranked by Monthly Completions</span></div></div><div className="space-y-3">{rankedMembers.map((m, idx) => {
             const isFirst = idx === 0 && m.done > 0;
             const isSecond = idx === 1 && m.done > 0;
             const isThird = idx === 2 && m.done > 0;

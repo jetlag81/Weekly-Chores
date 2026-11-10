@@ -129,9 +129,9 @@
           "row": [
             "Feed the Herd (Breakfast & Supper)",
             "Sydney",
-            false,
-            "Cadence",
-            false,
+            true,
+            "Sydney",
+            true,
             "Mason",
             false,
             "Thom",
@@ -229,7 +229,7 @@
           "row": [
             "Personal Laundry",
             "Wash, Dry, Fold & Put Away (Each Minion Does Their Own)",
-            false,
+            true,
             null,
             false,
             null,
@@ -880,6 +880,6 @@
       ]
     }
   ],
-  "savedAt": "2026-11-10T15:09:59.162Z",
+  "savedAt": "2026-11-10T18:47:41.651Z",
   "version": "5.0"
 }

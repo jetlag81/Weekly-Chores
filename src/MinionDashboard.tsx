@@ -26,6 +26,7 @@ import {
   unpairKid,
   type DeviceSession
 } from "./firebaseSync";
+import { getChoreCanonicalKey, normalizeTaskName } from "./choreUtils";
 
 interface MinionDashboardProps {
   kidName: string;
@@ -35,12 +36,13 @@ interface MinionDashboardProps {
   monthlyIncentive: string;
   selectedYear: number;
   selectedMonth: number;
-  onUpdateChore: (dateKey: string, choreIndex: number, updates: { done?: boolean; who?: string }) => void;
+  onUpdateChore: (dateKey: string, choreIndex: number, updates: { done?: boolean; who?: string }, taskTitle?: string) => void;
   onToggleWeeklyKidChore: (choreIndex: number, kidName: string, taskTitle: string) => void;
   getWeeklyKidsStatus: (choreIndex: number, taskTitle: string) => Record<string, boolean>;
   onExitMinionMode: () => void;
   formatDateKey: (year: number, month: number, day: number) => string;
   activeSyncWeek?: string;
+  getChoreStatus?: (dateKey: string, choreIndex: number, taskTitle?: string) => { who: string; done: boolean; kidsDone?: Record<string, boolean> };
 }
 
 export const MinionDashboard: React.FC<MinionDashboardProps> = ({
@@ -56,7 +58,8 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   getWeeklyKidsStatus,
   onExitMinionMode,
   formatDateKey,
-  activeSyncWeek
+  activeSyncWeek,
+  getChoreStatus
 }) => {
   const currentKid = familyMembers.find(
     m => m.name.toLowerCase() === kidName.toLowerCase()
@@ -68,16 +71,21 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     text: "#4338CA"
   };
 
-  // Date selection (default to activeSyncWeek start, e.g. Monday of the active schedule)
+  // Date selection (default to today if within activeSyncWeek, or activeSyncWeek Monday)
   const [activeDate, setActiveDate] = useState(() => {
+    const now = new Date();
     if (activeSyncWeek) {
       const parts = activeSyncWeek.split("-").map(Number);
       if (parts.length === 3) {
-        return new Date(parts[0], parts[1] - 1, parts[2]);
+        const mon = new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+        const sun = new Date(parts[0], parts[1] - 1, parts[2] + 6, 23, 59, 59);
+        if (now >= mon && now <= sun) {
+          return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+        }
+        return mon;
       }
     }
-    const now = new Date();
-    return new Date(selectedYear, selectedMonth, now.getDate() <= 31 ? now.getDate() : 19);
+    return new Date(selectedYear, selectedMonth, now.getDate() <= 31 ? now.getDate() : 19, 12, 0, 0);
   });
 
   const [showExitPinModal, setShowExitPinModal] = useState(false);
@@ -116,14 +124,26 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   // Daily chores assigned to this kid for activeDateKey
   const dailyChoresForKid = React.useMemo(() => {
     const dayChores = monthSchedule[activeDateKey] || {};
-    const list: Array<{ chore: any; choreIndex: number; done: boolean; isAssignedToMe: boolean }> = [];
+    const list: Array<{ chore: any; choreIndex: number; done: boolean; isAssignedToMe: boolean; canonicalKey: string }> = [];
 
     hubMasterChores.forEach((chore, idx) => {
       const f = String(chore.frequency || "").toLowerCase();
       const isDaily = f.includes("daily") || (!f.includes("bi") && !f.includes("once") && !f.includes("week"));
       if (!isDaily) return;
 
-      const choreStatus = dayChores[chore.index_] || dayChores[idx] || {};
+      const cKey = getChoreCanonicalKey(chore.task);
+      const norm = normalizeTaskName(chore.task);
+
+      // Safe multi-key lookup: NEVER use idx!
+      const statusFromProp = getChoreStatus ? getChoreStatus(activeDateKey, chore.index_, chore.task) : null;
+      const choreStatus = (statusFromProp && (statusFromProp.who || statusFromProp.done))
+        ? statusFromProp
+        : (cKey ? dayChores[cKey] : null) ||
+          dayChores[chore.index_] ||
+          (chore.task ? dayChores[chore.task] : null) ||
+          (chore.task ? dayChores[chore.task.toLowerCase().trim()] : null) ||
+          (norm ? dayChores[norm] : null) || {};
+
       const who = choreStatus.who || "";
       const isDone = !!choreStatus.done;
 
@@ -134,18 +154,27 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         (who === "Non-Casual" && currentKid.type !== "casual") ||
         (who === "All Non-Casual" && currentKid.type !== "casual");
 
-      if (isDirectlyAssigned || isGroupAssigned || !who) {
+      // Stable list inclusion:
+      if (isDirectlyAssigned || isGroupAssigned || !who || isDone) {
         list.push({
           chore,
           choreIndex: chore.index_ !== undefined ? chore.index_ : idx,
           done: isDone,
-          isAssignedToMe: isDirectlyAssigned || isGroupAssigned
+          isAssignedToMe: isDirectlyAssigned || isGroupAssigned,
+          canonicalKey: cKey
         });
       }
     });
 
+    // Deterministic sorting by chore index so chores never jump or swap places!
+    list.sort((a, b) => {
+      const idxA = a.chore.index_ !== undefined ? a.chore.index_ : 0;
+      const idxB = b.chore.index_ !== undefined ? b.chore.index_ : 0;
+      return idxA - idxB;
+    });
+
     return list;
-  }, [hubMasterChores, monthSchedule, activeDateKey, currentKid]);
+  }, [hubMasterChores, monthSchedule, activeDateKey, currentKid, getChoreStatus]);
 
   // Weekly Checklist chores for this kid
   const weeklyChores = React.useMemo(() => {
@@ -155,12 +184,17 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     });
   }, [hubMasterChores]);
 
-  const handleToggleDailyChore = (choreIndex: number, currentDone: boolean) => {
+  const handleToggleDailyChore = (choreIndex: number, currentDone: boolean, taskTitle?: string) => {
     const nextDone = !currentDone;
-    onUpdateChore(activeDateKey, choreIndex, {
-      done: nextDone,
-      who: currentKid.name
-    });
+    onUpdateChore(
+      activeDateKey,
+      choreIndex,
+      {
+        done: nextDone,
+        who: currentKid.name
+      },
+      taskTitle
+    );
 
     if (nextDone) {
       // Confetti burst & cheerful melodic chime!
@@ -343,15 +377,15 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             </div>
           ) : (
             <div className="space-y-2.5">
-              {dailyChoresForKid.map(({ chore, choreIndex, done, isAssignedToMe }) => {
+              {dailyChoresForKid.map(({ chore, choreIndex, done, isAssignedToMe, canonicalKey }) => {
                 const titleLines = String(chore.task || "Chore").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
                 const mainTitle = titleLines[0] || chore.task;
                 const subTitle = titleLines.slice(1).join(" ") || chore.notes;
 
                 return (
                   <div
-                    key={`kid-chore-${choreIndex}`}
-                    onClick={() => handleToggleDailyChore(choreIndex, done)}
+                    key={`kid-chore-${canonicalKey || choreIndex}`}
+                    onClick={() => handleToggleDailyChore(choreIndex, done, chore.task)}
                     className={`p-4 rounded-2xl border transition-all cursor-pointer select-none flex items-center justify-between gap-3 shadow-2xs ${
                       done
                         ? "bg-emerald-50/80 border-emerald-300 ring-1 ring-emerald-300/60"

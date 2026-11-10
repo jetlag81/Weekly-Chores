@@ -173,7 +173,7 @@ export default defineConfig({
           const codeExe = 'C:\\Users\\thomv\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe';
 
           if (fs.existsSync(agyExe) && fs.existsSync(agyCli)) {
-            const agyEnv = { ...process.env, ELECTRON_RUN_AS_NODE: '1' };
+            const agyEnv: Record<string, string | undefined> = { ...process.env, ELECTRON_RUN_AS_NODE: '1' };
             delete agyEnv.VSCODE_DEV;
             const child = spawn(agyExe, [agyCli, '-r', '-g', target], {
               env: agyEnv,
@@ -306,6 +306,94 @@ export default defineConfig({
               res.end(JSON.stringify({ ok: false, error: err?.message || String(err) }));
             }
           });
+        });
+
+        // Local Cross-Browser & Multi-Device Sync Engine (Chrome, Edge, Safari, Mobile)
+        const syncState = {
+          invites: [] as any[],
+          choreUpdates: [] as any[],
+          choreSeq: 0,
+          lastChoreUpdate: Date.now(),
+        };
+
+        server.middlewares.use('/__sync-invites', (req, res) => {
+          res.setHeader('Content-Type', 'application/json');
+          if (req.method === 'POST') {
+            let body = '';
+            req.on('data', chunk => { body += chunk; });
+            req.on('end', () => {
+              try {
+                const data = JSON.parse(body || '{}');
+                if (data.action === 'CREATE' && data.invite) {
+                  syncState.invites = syncState.invites.filter(
+                    i => i.code !== data.invite.code && i.kidName.toLowerCase() !== data.invite.kidName.toLowerCase()
+                  );
+                  syncState.invites.push(data.invite);
+                } else if (data.action === 'CLAIM') {
+                  const inv = syncState.invites.find(i => i.code.toUpperCase() === String(data.code || '').toUpperCase());
+                  if (inv) {
+                    inv.claimed = true;
+                    inv.claimedByDeviceId = data.deviceId;
+                  }
+                } else if (data.action === 'UNPAIR') {
+                  syncState.invites = syncState.invites.filter(
+                    i => i.kidName.toLowerCase() !== String(data.kidName || '').toLowerCase()
+                  );
+                } else if (data.action === 'RESET') {
+                  syncState.invites = [];
+                }
+                res.end(JSON.stringify({ ok: true, invites: syncState.invites }));
+              } catch (e: any) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ ok: false, error: e?.message }));
+              }
+            });
+          } else {
+            res.end(JSON.stringify({ ok: true, invites: syncState.invites }));
+          }
+        });
+
+        server.middlewares.use('/__sync-chores', (req, res) => {
+          res.setHeader('Content-Type', 'application/json');
+          if (req.method === 'POST') {
+            let body = '';
+            req.on('data', chunk => { body += chunk; });
+            req.on('end', () => {
+              try {
+                const update = JSON.parse(body || '{}');
+                if (update.action === 'CLEAR') {
+                  syncState.choreUpdates = [];
+                  syncState.choreSeq = 0;
+                  res.end(JSON.stringify({ ok: true, cleared: true }));
+                  return;
+                }
+                syncState.choreSeq++;
+                update.seq = syncState.choreSeq;
+                update.timestamp = Date.now();
+                syncState.choreUpdates.push(update);
+                if (syncState.choreUpdates.length > 200) syncState.choreUpdates.shift();
+                syncState.lastChoreUpdate = update.timestamp;
+                res.end(JSON.stringify({ ok: true, seq: update.seq, timestamp: update.timestamp }));
+              } catch (e: any) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ ok: false, error: e?.message }));
+              }
+            });
+          } else {
+            const url = new URL(req.url || '', 'http://localhost:5173');
+            const hasSeq = url.searchParams.has('sinceSeq');
+            const sinceSeq = Number(url.searchParams.get('sinceSeq') || 0);
+            const sinceTimestamp = Number(url.searchParams.get('since') || 0);
+            const newUpdates = hasSeq
+              ? syncState.choreUpdates.filter(u => (u.seq || 0) > sinceSeq)
+              : syncState.choreUpdates.filter(u => u.timestamp > sinceTimestamp);
+            res.end(JSON.stringify({
+              ok: true,
+              updates: newUpdates,
+              lastSeq: syncState.choreSeq,
+              lastTimestamp: syncState.lastChoreUpdate
+            }));
+          }
         });
 
         server.middlewares.use('/__load-config', (req, res) => {

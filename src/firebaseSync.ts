@@ -338,6 +338,15 @@ export async function createKidInvite(kidName: string, householdId: string): Pro
     console.error("Local invite save error:", err);
   }
 
+  // Sync to local server bridge (allows Chrome & Edge to talk without Firebase!)
+  if (typeof window !== "undefined") {
+    fetch("/__sync-invites", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "CREATE", invite })
+    }).catch(() => {});
+  }
+
   // 2. Background non-blocking sync to Firebase Firestore (with 2.5s timeout)
   const { db } = initFirebase();
   if (db) {
@@ -376,7 +385,36 @@ export async function redeemKidInvite(
     console.warn("Local invite lookup warning:", err);
   }
 
-  // 2. Check Firestore with a 3-second timeout if not in local cache
+  // 2. Check local dev server bridge (allows Chrome & Edge to share invites instantly!)
+  if (typeof window !== "undefined") {
+    try {
+      const res = await fetch("/__sync-invites");
+      if (res.ok) {
+        const json = await res.json();
+        const serverInvites: HouseholdInvite[] = json.invites || [];
+        const found = serverInvites.find(i => i.code.toUpperCase() === cleanCode);
+        if (found) {
+          if (found.claimed) {
+            return { success: false, error: "This invite code has already been claimed." };
+          }
+          found.claimed = true;
+          found.claimedByDeviceId = deviceId;
+          localStorage.setItem(STORAGE_KEY_LOCAL_INVITES, JSON.stringify(serverInvites));
+          fetch("/__sync-invites", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "CLAIM", code: cleanCode, deviceId })
+          }).catch(() => {});
+          broadcastLocalUpdate({ type: "INVITE_CLAIMED", code: cleanCode, deviceId });
+          return { success: true, invite: found };
+        }
+      }
+    } catch {
+      // Local server bridge fallback
+    }
+  }
+
+  // 3. Check Firestore with a 3-second timeout if not in local cache
   const { db } = initFirebase();
   if (db) {
     try {
@@ -407,6 +445,14 @@ export function broadcastLocalUpdate(data: unknown) {
     } catch {
       // Ignore broadcast errors
     }
+  }
+  // Bridge across different browsers (Chrome, Edge) and local network devices
+  if (typeof window !== "undefined") {
+    fetch("/__sync-chores", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    }).catch(() => {});
   }
 }
 
@@ -453,6 +499,13 @@ export function unpairKid(kidName: string) {
 
   // 3. Notify all listeners
   broadcastLocalUpdate({ type: "KID_UNPAIRED", kidName });
+  if (typeof window !== "undefined") {
+    fetch("/__sync-invites", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "UNPAIR", kidName })
+    }).catch(() => {});
+  }
 }
 
 // Reset all device pairings across the household
@@ -467,6 +520,13 @@ export function resetAllDevicePairings() {
     parentPin: "1234"
   });
   broadcastLocalUpdate({ type: "ALL_DEVICES_RESET" });
+  if (typeof window !== "undefined") {
+    fetch("/__sync-invites", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "RESET" })
+    }).catch(() => {});
+  }
 }
 
 // Reset all Firebase credentials and revert to pure local mode
@@ -495,6 +555,28 @@ export function subscribeToRealtimeSync(
     broadcastChannel.addEventListener("message", handler);
   }
 
+  // Cross-browser bridge (syncs Chrome, Edge, and mobile via local dev server)
+  let lastSeq = 0;
+  let intervalId: any = null;
+  if (typeof window !== "undefined") {
+    intervalId = setInterval(async () => {
+      try {
+        const res = await fetch(`/__sync-chores?sinceSeq=${lastSeq}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.updates && json.updates.length > 0) {
+            json.updates.forEach((u: any) => {
+              onUpdate(u);
+            });
+          }
+          if (typeof json.lastSeq === "number" && json.lastSeq > lastSeq) {
+            lastSeq = json.lastSeq;
+          }
+        }
+      } catch {}
+    }, 350);
+  }
+
   // Also hook window storage event for cross-tab localStorage changes
   const storageHandler = (e: StorageEvent) => {
     if (e.key === "weekly_chores_month_schedule" || e.key === "weekly-chores-config") {
@@ -508,5 +590,6 @@ export function subscribeToRealtimeSync(
       broadcastChannel.removeEventListener("message", handler);
     }
     window.removeEventListener("storage", storageHandler);
+    if (intervalId) clearInterval(intervalId);
   };
 }

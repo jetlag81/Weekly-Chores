@@ -49,6 +49,7 @@ import { MinionDashboard } from "./src/MinionDashboard";
 import { InviteModal } from "./src/InviteModal";
 import { KidPairingScreen } from "./src/KidPairingScreen";
 import { FirebaseSettingsModal } from "./src/FirebaseSettingsModal";
+import { getChoreCanonicalKey, normalizeTaskName } from "./src/choreUtils";
 
 const STORAGE_KEY = 'weekly_chores_canvas_sheet_data_v5';
 
@@ -1113,28 +1114,7 @@ var PRESET_PET_COLORS = {
     border: "#FED7AA"
   }
 };
-function normalizeTaskName(title) {
-  if (!title) return "";
-  return String(title).toLowerCase().replace(/[•\-\–\—\(\)\:\,\/]/g, " ").replace(/\s+/g, " ").trim();
-}
-function getChoreCanonicalKey(title) {
-  if (!title) return "";
-  const lower = String(title).toLowerCase();
-  if (lower.includes("litter")) return "litter_box";
-  if (lower.includes("herd") && (lower.includes("breakfast") || lower.includes("supper") || lower.includes("feed the herd"))) return "feed_herd";
-  if (lower.includes("dishwasher") && lower.includes("empty")) return "empty_dishwasher";
-  if (lower.includes("supper") || lower.includes("dinner") && lower.includes("plan")) return "make_supper";
-  if (lower.includes("dishes") || lower.includes("kitchen cleanup")) return "dinner_dishes";
-  if (lower.includes("bedroom") || lower.includes("personal spaces")) return "tidy_bedrooms";
-  if (lower.includes("laundry")) return "laundry";
-  if (lower.includes("basement")) return "clean_basement";
-  if (lower.includes("feeding station") || lower.includes("deep clean") && lower.includes("feeding")) return "feeding_station_deep_clean";
-  if (lower.includes("recycling")) return "curbside_recycling";
-  if (lower.includes("waste")) return "curbside_waste";
-  if (lower.includes("sign-off") || lower.includes("sign off") || lower.includes("inspection")) return "weekly_sign_off";
-  if (lower.includes("walk") && lower.includes("dog")) return "walk_dogs";
-  return normalizeTaskName(title);
-}
+// normalizeTaskName and getChoreCanonicalKey are imported from ./src/choreUtils
 function isBedroomChore(title) {
   const lower = String(title || "").toLowerCase();
   return lower.includes("tidy bedroom") || lower.includes("tidy up bedroom") || lower.includes("tidy bedrooms") || lower.includes("personal spaces");
@@ -1810,27 +1790,95 @@ function App({
     const unsub = subscribeToRealtimeSync((msg: any) => {
       if (!msg) return;
       if (msg.type === "CHORE_UPDATED") {
+        const cKey = msg.canonicalKey || (msg.taskTitle ? getChoreCanonicalKey(msg.taskTitle) : "");
+        const norm = msg.normKey || (msg.taskTitle ? normalizeTaskName(msg.taskTitle) : "");
         setMonthSchedule(prev => {
           const currentDay = prev[msg.dateKey] || {};
-          const currentChore = currentDay[msg.choreIndex] || (msg.normKey ? currentDay[msg.normKey] : null) || { who: "", done: false };
+          const currentChore = (cKey ? currentDay[cKey] : null) ||
+            currentDay[msg.choreIndex] ||
+            (msg.originalIndex !== undefined ? currentDay[msg.originalIndex] : null) ||
+            (norm ? currentDay[norm] : null) || { who: "", done: false };
           const updated = { ...currentChore, ...msg.patch };
           const nextDay = {
             ...currentDay,
             [msg.choreIndex]: updated
           };
-          if (msg.taskTitle) nextDay[msg.taskTitle] = updated;
-          if (msg.normKey) nextDay[msg.normKey] = updated;
+          if (msg.originalIndex !== undefined) {
+            nextDay[msg.originalIndex] = updated;
+          }
+          if (msg.taskTitle) {
+            nextDay[msg.taskTitle] = updated;
+            nextDay[msg.taskTitle.toLowerCase()] = updated;
+            nextDay[msg.taskTitle.toLowerCase().trim()] = updated;
+          }
+          if (cKey) nextDay[cKey] = updated;
+          if (norm) nextDay[norm] = updated;
           return {
             ...prev,
             [msg.dateKey]: nextDay
           };
         });
-      } else if (msg.type === "WEEKLY_KID_CHORE_UPDATED") {
+
+        // Update choreEdits so printable table matrix updates immediately
+        if (msg.choreIndex !== undefined && msg.dateKey) {
+          const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr);
+          const parsedTarget = parseDateKey(msg.dateKey);
+          if (parsedStart && parsedTarget) {
+            const startDay = new Date(parsedStart.year, parsedStart.month, parsedStart.day, 12, 0, 0);
+            const targetDay = new Date(parsedTarget.year, parsedTarget.month, parsedTarget.day, 12, 0, 0);
+            const diffDays = Math.round((targetDay.getTime() - startDay.getTime()) / (1e3 * 60 * 60 * 24));
+            if (diffDays >= 0 && diffDays < 7) {
+              const whoCol = 1 + diffDays * 2;
+              const doneCol = 2 + diffDays * 2;
+              setChoreEdits(prev => {
+                const cur = prev[msg.choreIndex] || (cKey ? prev[cKey] : null) || {};
+                const pRow = findPrintableRow(msg.taskTitle, msg.choreIndex);
+                const existingRow = [...(cur.row || (pRow == null ? void 0 : pRow.row) || new Array(15).fill(""))];
+                if ("who" in msg.patch) existingRow[whoCol] = msg.patch.who;
+                if ("done" in msg.patch) existingRow[doneCol] = msg.patch.done;
+                const updatedObj = {
+                  ...cur,
+                  row: existingRow,
+                  ...msg.patch
+                };
+                const nextEdits = {
+                  ...prev,
+                  [msg.choreIndex]: updatedObj
+                };
+                if (cKey) nextEdits[cKey] = updatedObj;
+                if (msg.taskTitle) nextEdits[msg.taskTitle.toLowerCase().trim()] = updatedObj;
+                return nextEdits;
+              });
+            }
+          }
+        }
+      } else if (msg.type === "SINGLE_WEEKLY_CHORE_UPDATED") {
         setMonthSchedule(prev => {
           const next = { ...prev };
           (msg.activeWeekDays || []).forEach((dKey: string) => {
             const curDay = next[dKey] || {};
-            const curChore = curDay[msg.choreIndex] || { who: "", done: false, kidsDone: {} };
+            const curChore = curDay[msg.choreIndex] || { who: "", done: false };
+            const updated = { ...curChore, ...msg.patch };
+            next[dKey] = {
+              ...curDay,
+              [msg.choreIndex]: updated
+            };
+            if (msg.taskTitle) {
+              next[dKey][msg.taskTitle] = updated;
+              next[dKey][msg.taskTitle.toLowerCase()] = updated;
+              next[dKey][msg.taskTitle.toLowerCase().trim()] = updated;
+            }
+          });
+          return next;
+        });
+      } else if (msg.type === "WEEKLY_KID_CHORE_UPDATED") {
+        const cKey = msg.taskTitle ? getChoreCanonicalKey(msg.taskTitle) : "";
+        const norm = msg.taskTitle ? normalizeTaskName(msg.taskTitle) : "";
+        setMonthSchedule(prev => {
+          const next = { ...prev };
+          (msg.activeWeekDays || []).forEach((dKey: string) => {
+            const curDay = next[dKey] || {};
+            const curChore = curDay[msg.choreIndex] || (cKey ? curDay[cKey] : null) || { who: "", done: false, kidsDone: {} };
             const updated = {
               ...curChore,
               who: msg.whoLabel,
@@ -1841,10 +1889,19 @@ function App({
               ...curDay,
               [msg.choreIndex]: updated
             };
+            if (cKey === "tidy_bedrooms") {
+              next[dKey][10] = updated;
+              next[dKey][12] = updated;
+            } else if (cKey === "laundry") {
+              next[dKey][11] = updated;
+            }
             if (msg.taskTitle) {
               next[dKey][msg.taskTitle] = updated;
               next[dKey][msg.taskTitle.toLowerCase()] = updated;
+              next[dKey][msg.taskTitle.toLowerCase().trim()] = updated;
             }
+            if (cKey) next[dKey][cKey] = updated;
+            if (norm) next[dKey][norm] = updated;
           });
           return next;
         });
@@ -3222,7 +3279,14 @@ function App({
       done: false,
       kidsDone: {}
     };
-    const s = dayData[choreIndex] || (choreTitle ? dayData[choreTitle] : null) || (choreTitle ? dayData[choreTitle.toLowerCase()] : null);
+    const cKey = choreTitle ? getChoreCanonicalKey(choreTitle) : "";
+    const norm = choreTitle ? normalizeTaskName(choreTitle) : "";
+    const s = (cKey ? dayData[cKey] : null) ||
+      dayData[choreIndex] ||
+      (choreTitle ? dayData[choreTitle] : null) ||
+      (choreTitle ? dayData[choreTitle.toLowerCase()] : null) ||
+      (choreTitle ? dayData[choreTitle.toLowerCase().trim()] : null) ||
+      (norm ? dayData[norm] : null);
     if (!s) return {
       who: "",
       done: false,
@@ -3270,9 +3334,16 @@ function App({
     allKidsList.forEach(k => {
       result[k] = false;
     });
+    const cKey = taskTitle ? getChoreCanonicalKey(taskTitle) : "";
+    const norm = taskTitle ? normalizeTaskName(taskTitle) : "";
     const cr = choreRows.find(r => {
       var _a2;
-      return r.index_ === choreIndex || taskTitle && String(r.task || ((_a2 = r.row) == null ? void 0 : _a2[0]) || "").toLowerCase().trim() === String(taskTitle).toLowerCase().trim();
+      const rTask = r.task || ((_a2 = r.row) == null ? void 0 : _a2[0]) || "";
+      if (r.index_ === choreIndex) return true;
+      if (taskTitle && rTask.toLowerCase().trim() === String(taskTitle).toLowerCase().trim()) return true;
+      if (cKey && getChoreCanonicalKey(rTask) === cKey) return true;
+      if (norm && normalizeTaskName(rTask) === norm) return true;
+      return false;
     });
     if (cr && cr.row) {
       if (cr.row[2] === true || String(cr.row[2]).toLowerCase() === "true") result["Sydney"] = true;
@@ -3283,16 +3354,13 @@ function App({
     }
     activeWeekDays.forEach(d => {
       const s = getChoreStatus(d.dateKey, choreIndex, taskTitle);
-      if (s.kidsDone) {
+      if (s.kidsDone && Object.keys(s.kidsDone).length > 0) {
         Object.keys(s.kidsDone).forEach(k => {
-          if (s.kidsDone[k]) result[k] = true;
-          else if (s.kidsDone[k] === false) result[k] = false;
+          result[k] = !!s.kidsDone[k];
         });
-      }
-      if (s.who === "All Kids" && s.done) {
+      } else if (s.who === "All Kids" && s.done) {
         allKidsList.forEach(k => {
-          var _a2;
-          if (((_a2 = s.kidsDone) == null ? void 0 : _a2[k]) !== false) result[k] = true;
+          result[k] = true;
         });
       } else if (s.who && s.done) {
         const names = s.who.split(/[,&]+/).map(n => n.trim().toLowerCase());
@@ -3322,34 +3390,42 @@ function App({
       const doneNames = allKidsList.filter(k => updatedKids[k]);
       whoLabel = doneNames.length <= 2 ? doneNames.join(" & ") : `${doneNames.length} Kids`;
     }
+    const cKey = taskTitle ? getChoreCanonicalKey(taskTitle) : "";
+    const norm = taskTitle ? normalizeTaskName(taskTitle) : "";
     setMonthSchedule(prev => {
       const next = {
         ...prev
       };
       activeWeekDays.forEach(d => {
         const curDay = next[d.dateKey] || {};
-        const curChore = curDay[choreIndex] || {
+        const curChore = curDay[choreIndex] || (cKey ? curDay[cKey] : null) || {
           who: "",
           done: false,
           kidsDone: {}
         };
-        next[d.dateKey] = {
-          ...{
-            ...curDay
-          },
-          [choreIndex]: {
-            ...{
-              ...curChore
-            },
-            who: whoLabel,
-            done: anyDone,
-            kidsDone: updatedKids
-          }
+        const updatedEntry = {
+          ...curChore,
+          who: whoLabel,
+          done: anyDone,
+          kidsDone: updatedKids
         };
-        if (taskTitle) {
-          next[d.dateKey][taskTitle] = next[d.dateKey][choreIndex];
-          next[d.dateKey][taskTitle.toLowerCase()] = next[d.dateKey][choreIndex];
+        next[d.dateKey] = {
+          ...curDay,
+          [choreIndex]: updatedEntry
+        };
+        if (cKey === "tidy_bedrooms") {
+          next[d.dateKey][10] = updatedEntry;
+          next[d.dateKey][12] = updatedEntry;
+        } else if (cKey === "laundry") {
+          next[d.dateKey][11] = updatedEntry;
         }
+        if (taskTitle) {
+          next[d.dateKey][taskTitle] = updatedEntry;
+          next[d.dateKey][taskTitle.toLowerCase()] = updatedEntry;
+          next[d.dateKey][taskTitle.toLowerCase().trim()] = updatedEntry;
+        }
+        if (cKey) next[d.dateKey][cKey] = updatedEntry;
+        if (norm) next[d.dateKey][norm] = updatedEntry;
       });
       return next;
     });
@@ -3646,6 +3722,13 @@ function App({
       updateHub[7] = updatedWho;
       updateItem(hubRangeIndex, hRowIdx, updateHub);
     }
+    broadcastLocalUpdate({
+      type: "SINGLE_WEEKLY_CHORE_UPDATED",
+      choreIndex,
+      taskTitle,
+      patch,
+      activeWeekDays: (activeWeekDays || []).map(d => d.dateKey)
+    });
     setNotice(`Updated "${taskTitle || "Chore"}": Assigned to ${updatedWho || "unassigned"}`);
     setTimeout(() => setNotice(null), 3e3);
   };
@@ -3730,55 +3813,77 @@ function App({
       updateItem(printableRangeIndex, choreIndex, updateRow);
     }
   };
-  const handleUpdateChore = (dateKey, choreIndex, patch) => {
+  const handleUpdateChore = (dateKey, choreIndex, patch, optionalTaskTitle) => {
     var _a2;
-    const targetChore = choreRows.find(r => r.index_ === choreIndex);
-    const choreTask = (targetChore == null ? void 0 : targetChore.task) || "";
+    const rawTitle = optionalTaskTitle || "";
+    const rawCKey = rawTitle ? getChoreCanonicalKey(rawTitle) : "";
+    const rawNorm = rawTitle ? normalizeTaskName(rawTitle) : "";
+
+    const targetChore = choreRows.find(r => {
+      if (r.index_ === choreIndex) return true;
+      if (rawCKey && getChoreCanonicalKey(r.task) === rawCKey) return true;
+      if (rawTitle && String(r.task || "").toLowerCase().trim() === rawTitle.toLowerCase().trim()) return true;
+      if (rawNorm && normalizeTaskName(r.task) === rawNorm) return true;
+      return false;
+    });
+
+    const choreTask = (targetChore == null ? void 0 : targetChore.task) || rawTitle || "";
+    const cKey = getChoreCanonicalKey(choreTask);
     const norm = normalizeTaskName(choreTask);
+    const effectiveIndex = targetChore ? targetChore.index_ : choreIndex;
+
     setMonthSchedule(prev => {
       const currentDay = prev[dateKey] || {};
-      const currentChore = currentDay[choreIndex] || (norm ? currentDay[norm] : null) || {
-        who: "",
-        done: false
-      };
+      const currentChore = (cKey ? currentDay[cKey] : null) ||
+        currentDay[choreIndex] ||
+        currentDay[effectiveIndex] ||
+        (norm ? currentDay[norm] : null) || {
+          who: "",
+          done: false
+        };
       const updated = {
-        ...{
-          ...currentChore
-        },
+        ...currentChore,
         ...patch
       };
       const nextDay = {
-        ...{
-          ...currentDay
-        },
-        [choreIndex]: updated
+        ...currentDay,
+        [choreIndex]: updated,
+        [effectiveIndex]: updated
       };
-      if (choreTask) nextDay[choreTask] = updated;
+      if (choreTask) {
+        nextDay[choreTask] = updated;
+        nextDay[choreTask.toLowerCase()] = updated;
+        nextDay[choreTask.toLowerCase().trim()] = updated;
+      }
+      if (cKey) nextDay[cKey] = updated;
       if (norm) nextDay[norm] = updated;
       return {
-        ...{
-          ...prev
-        },
+        ...prev,
         [dateKey]: nextDay
       };
     });
+
     broadcastLocalUpdate({
       type: "CHORE_UPDATED",
       dateKey,
-      choreIndex,
+      choreIndex: effectiveIndex,
+      originalIndex: choreIndex,
       patch,
       taskTitle: choreTask,
-      normKey: norm
+      normKey: norm,
+      canonicalKey: cKey
     });
+
     syncChoreToFirestore(
       (deviceSession == null ? void 0 : deviceSession.householdId) || "household_family_hub",
       dateKey,
-      choreIndex,
+      effectiveIndex,
       patch
     );
-    const pRow = findPrintableRow(choreTask, choreIndex);
+
+    const pRow = findPrintableRow(choreTask, effectiveIndex);
     if (printableRangeIndex >= 0 && pRow) {
-      const parsedStart = parseDateKey(activeSyncWeek);
+      const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr);
       const parsedTarget = parseDateKey(dateKey);
       if (parsedStart && parsedTarget) {
         const startDateObj = new Date(parsedStart.year, parsedStart.month, parsedStart.day);
@@ -3893,6 +3998,14 @@ function App({
       updateHub[7] = value;
       updateItem(hubRangeIndex, hRow.index_, updateHub);
     }
+    broadcastLocalUpdate({
+      type: "CHORE_UPDATED",
+      dateKey,
+      choreIndex: rowIndex_,
+      patch: { [field]: value },
+      taskTitle: tTitle,
+      normKey: cKey
+    });
     setNotice(field === "who" ? `Assigned "${tTitle || "Chore"}" (${(_b2 = DAY_STYLES[dayIdx]) == null ? void 0 : _b2.name}) to ${value || "unassigned"}` : `Marked "${tTitle || "Chore"}" (${(_c2 = DAY_STYLES[dayIdx]) == null ? void 0 : _c2.name}) as ${value ? "completed \u2713" : "pending"}`);
     setTimeout(() => setNotice(null), 3e3);
   };
@@ -5100,6 +5213,7 @@ function App({
         getWeeklyKidsStatus={getWeeklyKidsStatus}
         formatDateKey={formatDateKey}
         activeSyncWeek={activeSyncWeek}
+        getChoreStatus={getChoreStatus}
         onExitMinionMode={() => {
           const adminSession = { role: "admin", householdId: deviceSession.householdId || "household_family_hub", deviceId: deviceSession.deviceId || "local_dev", parentPin: "1234" };
           saveDeviceSession(adminSession);
@@ -5533,7 +5647,7 @@ function App({
             var _a3, _b3, _c2, _d;
             const whoCol = 1 + dayIdx * 2;
             const doneCol = 2 + dayIdx * 2;
-            const parsedStart = parseDateKey(sheetStartDateStr) || {
+            const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr) || {
               year: 2026,
               month: 9,
               day: 19

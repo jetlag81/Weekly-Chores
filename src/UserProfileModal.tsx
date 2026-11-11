@@ -32,6 +32,7 @@ import {
   saveUserProfile,
   getUserProfile
 } from "./userProfiles";
+import { DatePickerDropdown } from "./DatePickerDropdown";
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -273,12 +274,11 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   </span>
                 )}
               </label>
-              <input
-                type="date"
+              <DatePickerDropdown
                 value={birthday}
-                onChange={e => setBirthday(e.target.value)}
-                disabled={!isParentViewer && ageTier === "junior"}
-                className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
+                onChange={setBirthday}
+                disabled={!isParent && ageTier === "junior"}
+                placeholder="MM/DD/YYYY"
               />
             </div>
             <div>

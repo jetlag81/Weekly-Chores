@@ -722,15 +722,15 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
                 </p>
               </div>
 
-              {/* Kid Selector (if multiple kids) */}
-              {allKidsList.length > 1 && (
-                <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+              {/* Kid Selector (only shown in Parent Mode) */}
+              {viewMode === "parent" && allKidsList.length > 1 && (
+                <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl overflow-x-auto no-scrollbar">
                   {allKidsList.map(kName => (
                     <button
                       key={kName}
                       type="button"
                       onClick={() => setSelectedKidForRewards(kName)}
-                      className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                      className={`flex-1 min-w-[70px] py-1 px-2 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
                         selectedKidForRewards === kName
                           ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs font-black"
                           : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -739,6 +739,23 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
                       {kName}
                     </button>
                   ))}
+                </div>
+              )}
+
+              {/* Minion Mode Individual Banner */}
+              {viewMode === "minion" && (
+                <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-xs shrink-0">
+                    {currentKidName.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="text-xs font-black text-indigo-950 dark:text-indigo-200">
+                      {currentKidName}'s Wishlist &amp; Reward Profiles
+                    </div>
+                    <div className="text-[11px] text-indigo-700/80 dark:text-indigo-400">
+                      Configure your wish goal and gaming usernames for digital gift cards
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -858,15 +875,15 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
                 </p>
               </div>
 
-              {/* Kid Selector */}
-              {allKidsList.length > 1 && (
-                <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+              {/* Kid Selector (only shown in Parent Mode) */}
+              {viewMode === "parent" && allKidsList.length > 1 && (
+                <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl overflow-x-auto no-scrollbar">
                   {allKidsList.map(kName => (
                     <button
                       key={kName}
                       type="button"
                       onClick={() => setSelectedKidForQr(kName)}
-                      className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer ${
+                      className={`flex-1 min-w-[70px] py-1.5 px-2 rounded-lg text-xs font-bold transition cursor-pointer text-center ${
                         selectedKidForQr === kName
                           ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs font-black"
                           : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"

@@ -141,21 +141,12 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   onToggleKidChore
 }) => {
   const kidMembers = React.useMemo(() => {
-    // Exclude parents/admins and casual occupants (e.g. Koda, Keyanna)
-    const nonCasual = familyMembers.filter(
+    return familyMembers.filter(
       m => m.active !== false &&
-           m.type !== "casual" &&
-           m.residency !== "Casual" &&
            m.role !== "Supreme Overlord" &&
            m.role !== "Overseer Supreme"
     );
-    if (allKidsList && allKidsList.length > 0) {
-      const allowed = allKidsList.map(k => k.trim().toLowerCase());
-      const matched = nonCasual.filter(m => allowed.includes(m.name.trim().toLowerCase()));
-      if (matched.length > 0) return matched;
-    }
-    return nonCasual;
-  }, [familyMembers, allKidsList]);
+  }, [familyMembers]);
 
   const currentKid = familyMembers.find(
     m => m.name.toLowerCase() === kidName.toLowerCase()

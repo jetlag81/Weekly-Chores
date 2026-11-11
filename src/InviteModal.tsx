@@ -40,8 +40,6 @@ export const InviteModal: React.FC<InviteModalProps> = ({
 }) => {
   const kidMembers = familyMembers.filter(
     m => m.active !== false &&
-         m.type !== "casual" &&
-         m.residency !== "Casual" &&
          m.role !== "Supreme Overlord" &&
          m.role !== "Overseer Supreme"
   );

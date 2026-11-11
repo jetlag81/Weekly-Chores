@@ -156,6 +156,26 @@ export const DEFAULT_KID_REWARD_PROFILES: Record<string, KidRewardProfile> = {
       roblox: "MasonBlocker"
     },
     lastUpdated: Date.now()
+  },
+  Koda: {
+    kidName: "Koda",
+    topWish: "Steam Gift Card or Roblox",
+    targetGoalAmount: 15,
+    platforms: {
+      steam: "KodaGaming",
+      roblox: "KodaBlocks"
+    },
+    lastUpdated: Date.now()
+  },
+  Keyanna: {
+    kidName: "Keyanna",
+    topWish: "Amazon Wishlist or Apple App Store Card",
+    targetGoalAmount: 15,
+    platforms: {
+      amazon: "https://www.amazon.com/hz/wishlist/ls",
+      apple: "keyanna@icloud.com"
+    },
+    lastUpdated: Date.now()
   }
 };
 

@@ -171,21 +171,33 @@ export function saveDeviceSession(session: DeviceSession) {
   // allowing side-by-side Parent Hub & Kid Minion testing without window conflicts!
 }
 
+// Default production Firebase configuration for family-chores-hub
+export const DEFAULT_FIREBASE_CONFIG: FirebaseConfig = {
+  apiKey: "AIzaSyCSGATVhnWFxD0f6xjJeiB41HpLOgJvhe0",
+  authDomain: "family-chores-hub.firebaseapp.com",
+  projectId: "family-chores-hub",
+  storageBucket: "family-chores-hub.firebasestorage.app",
+  messagingSenderId: "992354326987",
+  appId: "1:992354326987:web:f59e50b9bba3989db33e4e"
+};
+
 export function getStoredFirebaseConfig(): FirebaseConfig | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined") return DEFAULT_FIREBASE_CONFIG;
   const raw = localStorage.getItem(STORAGE_KEY_FIREBASE_CONFIG);
-  if (!raw) return null;
+  if (raw === "disabled") return null;
+  if (!raw) return DEFAULT_FIREBASE_CONFIG;
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return parsed && parsed.apiKey && parsed.projectId ? parsed : DEFAULT_FIREBASE_CONFIG;
   } catch {
-    return null;
+    return DEFAULT_FIREBASE_CONFIG;
   }
 }
 
 export function saveFirebaseConfig(config: FirebaseConfig | null) {
   if (typeof window === "undefined") return;
   if (!config) {
-    localStorage.removeItem(STORAGE_KEY_FIREBASE_CONFIG);
+    localStorage.setItem(STORAGE_KEY_FIREBASE_CONFIG, "disabled");
     firebaseApp = null;
     firestoreDb = null;
   } else {
@@ -558,7 +570,7 @@ export function resetAllDevicePairings() {
 // Reset all Firebase credentials and revert to pure local mode
 export function clearAllFirebaseData() {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(STORAGE_KEY_FIREBASE_CONFIG);
+  localStorage.setItem(STORAGE_KEY_FIREBASE_CONFIG, "disabled");
   localStorage.removeItem(STORAGE_KEY_LOCAL_INVITES);
   if (firebaseApp) {
     try {

@@ -1,30 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Households collection
-    match /households/{householdId} {
-      // Allow read/write to the household document
+    // Households collection and all nested subcollections (invites, schedule, chores, photos, etc.)
+    match /households/{householdId}/{document=**} {
       allow read, write: if true;
-
-      // Invites subcollection (for pairing kid devices)
-      match /invites/{inviteCode} {
-        allow read, write: if true;
-      }
-
-      // Schedule subcollection (real-time daily chore assignments & completions)
-      match /schedule/{dateKey} {
-        allow read, write: if true;
-      }
-
-      // Master chores subcollection
-      match /masterChores/{choreId} {
-        allow read, write: if true;
-      }
-
-      // Roster / family members subcollection
-      match /members/{memberId} {
-        allow read, write: if true;
-      }
+    }
+    match /households/{householdId} {
+      allow read, write: if true;
     }
 
     // Health check for testing connection

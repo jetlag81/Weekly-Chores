@@ -216,14 +216,9 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-sm font-black text-white tracking-tight leading-tight">
-                  Thom & Meghan
-                </h1>
-                <span className="text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded-md font-mono">
-                  TV / MV
-                </span>
-              </div>
+              <h1 className="text-sm font-black text-white tracking-tight leading-tight">
+                Thom & Meghan
+              </h1>
               <div className="text-[11px] text-slate-400 font-medium">
                 Parent Command Hub
               </div>

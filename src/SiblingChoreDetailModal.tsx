@@ -21,6 +21,7 @@ import { getKidRewardProfile } from "./rewardAccounts";
 import { playHouseholdRemoteChime, saveActivityEvent } from "./activityFeed";
 import { getPhotoProofForChore, type ChorePhotoProof } from "./chorePhotoTypes";
 import { ParentPhotoReviewModal } from "./ParentPhotoReviewModal";
+import { getUserProfile, calculateAge, getAgeTier } from "./userProfiles";
 
 export interface SiblingChoreItem {
   task: string;
@@ -59,6 +60,9 @@ export const SiblingChoreDetailModal: React.FC<SiblingChoreDetailModalProps> = (
 
   const isSelf = sibling.name.toLowerCase() === currentKidName.toLowerCase();
   const rewardProfile = getKidRewardProfile(sibling.name);
+  const siblingProfile = getUserProfile(sibling.name, sibling);
+  const siblingAge = calculateAge(siblingProfile.birthday);
+  const siblingAgeTier = getAgeTier(siblingAge, "Minion");
 
   const doneChores = chores.filter(c => c.done);
   const pendingChores = chores.filter(c => !c.done);
@@ -128,17 +132,31 @@ export const SiblingChoreDetailModal: React.FC<SiblingChoreDetailModalProps> = (
           }}
         >
           <div className="flex items-center gap-3 relative z-10">
-            <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-md ring-2 ring-white/30"
-              style={{ backgroundColor: sibling.color || "#6366F1" }}
-            >
-              {sibling.name.slice(0, 1).toUpperCase()}
+            <div className="relative">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-md ring-2 ring-white/30"
+                style={{ backgroundColor: siblingProfile.favoriteColor || sibling.color || "#6366F1" }}
+              >
+                {siblingProfile.avatarEmoji || sibling.name.slice(0, 1).toUpperCase()}
+              </div>
+              <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded-md bg-white text-slate-900 font-mono font-black text-[9px] shadow-xs">
+                {siblingProfile.initials || sibling.name.slice(0, 2).toUpperCase()}
+              </span>
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <h3 className="font-black text-lg text-white">
-                  {sibling.name}'s Chores
+                  {siblingProfile.displayName || sibling.name}'s Chores
                 </h3>
+                {siblingAgeTier === "teen" ? (
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full">
+                    ⚡ Age {siblingAge || "12+"}
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider bg-amber-400 text-amber-950 px-2 py-0.5 rounded-full">
+                    🌟 Age {siblingAge || "Junior"}
+                  </span>
+                )}
                 {isSelf && (
                   <span className="text-[10px] font-black uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full">
                     You

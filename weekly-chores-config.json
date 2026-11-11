@@ -147,8 +147,8 @@
         {
           "index_": 7,
           "row": [
-            "Empty Dishwasher (Before Supper) \n- Put away clean dishes; Load any dirty ones",
-            "Cadence",
+            "Empty Dishwasher",
+            "Put away clean dishes, Load any dirty dishes",
             false,
             "Mason",
             false,
@@ -168,7 +168,7 @@
           "index_": 8,
           "row": [
             "Make Supper: Plan Ahead!",
-            "Mason",
+            "Think of a menu, make a list if items are needed, prepare & serve (try to have a plan in place by at least the day before)",
             false,
             "Thom",
             false,
@@ -483,7 +483,7 @@
             "Daily",
             "Mon – Sun",
             "Think of a menu, make a list if items are needed, prepare & serve (try to have a plan in place by at least the day before)",
-            null
+            "Kitchen"
           ]
         },
         {
@@ -880,6 +880,6 @@
       ]
     }
   ],
-  "savedAt": "2026-11-11T16:45:27.978Z",
+  "savedAt": "2026-11-11T17:16:07.188Z",
   "version": "5.0"
 }

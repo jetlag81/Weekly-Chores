@@ -98,6 +98,15 @@ import {
   type KidRewardProfile
 } from "./rewardAccounts";
 import { ThemeToggle } from "./ThemeToggle";
+import { UserProfileModal } from "./UserProfileModal";
+import {
+  getUserProfile,
+  saveUserProfile,
+  calculateAge,
+  getAgeTier,
+  getDaysUntilBirthday,
+  type UserProfile
+} from "./userProfiles";
 
 interface MinionDashboardProps {
   kidName: string;
@@ -200,6 +209,17 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>("appearance");
   const [rewardProfile, setRewardProfile] = useState<KidRewardProfile>(() => getKidRewardProfile(kidName));
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [profileVersion, setProfileVersion] = useState(0);
+
+  // Kid user profile with Age, Age Tier, Birthday, and Autonomy permissions
+  const kidProfile = React.useMemo(() => {
+    return getUserProfile(currentKid.name, currentKid);
+  }, [currentKid.name, currentKid, profileVersion]);
+
+  const kidAge = calculateAge(kidProfile.birthday);
+  const kidAgeTier = getAgeTier(kidAge, currentKid.role);
+  const kidBdayDays = getDaysUntilBirthday(kidProfile.birthday);
   const [inspectingSibling, setInspectingSibling] = useState<{
     name: string;
     color?: string;
@@ -414,6 +434,18 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
   useEffect(() => {
     return subscribeInstallable(can => setCanInstallPwa(can));
+  }, []);
+
+  useEffect(() => {
+    const handleProfileSync = () => {
+      setProfileVersion(v => v + 1);
+    };
+    window.addEventListener("household_profile_updated", handleProfileSync);
+    window.addEventListener("storage", handleProfileSync);
+    return () => {
+      window.removeEventListener("household_profile_updated", handleProfileSync);
+      window.removeEventListener("storage", handleProfileSync);
+    };
   }, []);
 
   const formattedDayName = activeDate.toLocaleDateString("en-US", { weekday: "long" });
@@ -837,20 +869,53 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         <div className="max-w-xl mx-auto flex items-center justify-between gap-2">
           {/* Avatar and Kid Name */}
           <div className="flex items-center gap-2.5 min-w-0">
-            <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-white text-base shadow-sm ring-2 ring-white dark:ring-slate-700 shrink-0"
-              style={{ backgroundColor: currentKid.color || "#6366F1" }}
+            <button
+              type="button"
+              onClick={() => setShowProfileModal(true)}
+              className="relative group cursor-pointer shrink-0"
+              title="Click to view & customize your user profile"
             >
-              {currentKid.name.slice(0, 2).toUpperCase()}
-            </div>
+              <div
+                className="w-11 h-11 rounded-2xl flex items-center justify-center font-black text-white text-xl shadow-sm ring-2 ring-white dark:ring-slate-700 transition-transform group-hover:scale-105"
+                style={{ backgroundColor: kidProfile.favoriteColor || currentKid.color || "#6366F1" }}
+              >
+                {kidProfile.avatarEmoji || currentKid.name.slice(0, 1).toUpperCase()}
+              </div>
+              <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-black text-[9px] shadow-xs border border-slate-200 dark:border-slate-700">
+                {kidProfile.initials || currentKid.name.slice(0, 2).toUpperCase()}
+              </span>
+            </button>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <h1 className="font-black text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate">
-                  {currentKid.name}'s Chores
-                </h1>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0">
-                  🎒 Minion
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowProfileModal(true)}
+                  className="font-black text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate hover:text-indigo-600 transition flex items-center gap-1 cursor-pointer text-left"
+                >
+                  <span>{kidProfile.firstName || currentKid.name}</span>
+                  {kidProfile.lastName && (
+                    <span className="text-slate-400 font-semibold text-xs hidden sm:inline">{kidProfile.lastName}</span>
+                  )}
+                </button>
+                {kidAgeTier === "teen" ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowProfileModal(true)}
+                    className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0 hover:bg-indigo-100 transition cursor-pointer"
+                    title="Teen Autonomy Mode (12+) • Profile & Email enabled"
+                  >
+                    ⚡ Age {kidAge || "12+"} • Teen
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowProfileModal(true)}
+                    className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0 hover:bg-amber-100 transition cursor-pointer animate-pulse"
+                    title="Junior Explorer Mode (≤11) • High Visual Stimulation"
+                  >
+                    🌟 Age {kidAge || "Junior"} • Junior
+                  </button>
+                )}
               </div>
               <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate">
                 <span className="flex items-center gap-0.5 text-amber-600 dark:text-amber-400 font-bold shrink-0">
@@ -917,6 +982,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             {kidMembers.map(m => {
               const isCurrent = m.name.toLowerCase() === currentKid.name.toLowerCase();
               const mStats = getMemberCompletionForDay(m.name, activeDateKey);
+              const mProfile = getUserProfile(m.name, m);
 
               return (
                 <button
@@ -935,10 +1001,13 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                       className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-white/50"
                       style={{ backgroundColor: m.color || "#6366F1" }}
                     />
+                    <span className="text-[9px] font-mono font-black px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300">
+                      {mProfile.initials}
+                    </span>
                     <span className="text-xs truncate font-bold">
                       {m.name}
                       {isCurrent && (
-                        <span className="ml-1 text-[9px] font-normal text-indigo-600 dark:text-indigo-400">
+                        <span className="ml-0.5 text-[9px] font-normal text-indigo-600 dark:text-indigo-400">
                           (You)
                         </span>
                       )}
@@ -1360,6 +1429,81 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         ) : (
           /* CHORES VIEW (Default) */
           <>
+            {/* Age Split: Junior Visual Stimulation Card (Age <= 11) */}
+            {kidAgeTier === "junior" && (
+              <div className="bg-gradient-to-r from-amber-400 via-pink-400 to-purple-500 rounded-2xl p-0.5 shadow-md shadow-amber-500/10">
+                <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-[14px] p-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        try {
+                          confetti({ particleCount: 35, spread: 60, origin: { y: 0.5 } });
+                        } catch {}
+                      }}
+                      className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-300 via-pink-300 to-purple-400 flex items-center justify-center text-xl shrink-0 shadow-sm cursor-pointer hover:scale-110 active:scale-95 transition-transform"
+                      title="Tap for celebration confetti!"
+                    >
+                      {kidProfile.avatarEmoji || "🌟"}
+                    </button>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[11px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
+                          Junior Minion HQ
+                        </span>
+                        <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+                          ⭐ {kidMonthlyCompletions} Stars
+                        </span>
+                        {kidBdayDays !== null && kidBdayDays <= 60 && (
+                          <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-pink-100 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300 border border-pink-300 dark:border-pink-800">
+                            🎂 {kidBdayDays === 0 ? "Birthday Today! 🎉" : `${kidBdayDays}d to Birthday!`}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate mt-0.5">
+                        {kidProfile.bio || "Crushing daily missions one chore at a time! 🚀"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowProfileModal(true)}
+                    className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-600 hover:to-pink-600 text-white font-extrabold text-[11px] shrink-0 shadow-xs cursor-pointer flex items-center gap-1 active:scale-95 transition-all"
+                    title="Customize your avatar and theme"
+                  >
+                    <span>My Badge</span>
+                    <span>🎨</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Age Split: Teen Autonomy Status Strip (Age 12+) */}
+            {kidAgeTier === "teen" && (
+              <div className="bg-slate-900/90 dark:bg-slate-900/95 border border-indigo-500/30 rounded-2xl p-2.5 px-3 flex items-center justify-between gap-2 shadow-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[11px] px-2 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-black shrink-0">
+                    ⚡ Teen Autonomy
+                  </span>
+                  <span className="text-xs text-slate-300 truncate">
+                    {kidProfile.email ? (
+                      <span className="font-mono text-[11px] text-indigo-200">📧 {kidProfile.email}</span>
+                    ) : (
+                      <span className="text-slate-400 italic">No email linked yet</span>
+                    )}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowProfileModal(true)}
+                  className="text-[11px] font-bold text-indigo-300 hover:text-white bg-indigo-600/30 hover:bg-indigo-600/50 px-2.5 py-1 rounded-lg border border-indigo-400/30 shrink-0 cursor-pointer transition"
+                >
+                  {kidProfile.email ? "Edit Profile & Email" : "+ Add Email"}
+                </button>
+              </div>
+            )}
+
             {/* Unified Motivational Goal & Wish Strip */}
             <div
               onClick={() => setActiveNavTab(rewardProfile.topWish ? "rewards" : "leaderboard")}
@@ -2112,6 +2256,20 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
           onProofUpdated={(updated) => {
             saveChorePhotoProof(updated);
             setViewingProof(updated);
+          }}
+        />
+      )}
+
+      {/* User Profile Modal */}
+      {showProfileModal && (
+        <UserProfileModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          profile={kidProfile}
+          isParentEditor={false}
+          onSaveProfile={(updated: UserProfile) => {
+            saveUserProfile(updated);
+            setProfileVersion(v => v + 1);
           }}
         />
       )}

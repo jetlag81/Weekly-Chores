@@ -23,10 +23,12 @@ import {
   sendParentNudge,
   PRAISE_PRESETS,
   NUDGE_PRESETS,
+  JUNIOR_NUDGE_PRESETS,
   type ParentNudgeEvent
 } from "./nudgeSystem";
 import {
   getRandomGoodJobGif,
+  getRandomAlmostGif,
   getRandomMehGif,
   ORIGINAL_MEH_ITEMS,
   type OriginalMehGifItem
@@ -36,6 +38,11 @@ import {
   searchFamilyGiphyGifs,
   type GiphyGifItem
 } from "./giphyService";
+import {
+  getUserProfile,
+  getEffectiveAgeTier,
+  calculateAge
+} from "./userProfiles";
 
 interface ParentNudgeModalProps {
   isOpen: boolean;
@@ -63,6 +70,12 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
   const [previewGif, setPreviewGif] = useState<string>("");
   const [sentNudge, setSentNudge] = useState<ParentNudgeEvent | null>(null);
 
+  // Profile and age tier awareness
+  const kidProfile = getUserProfile(selectedKid);
+  const kidAgeTier = getEffectiveAgeTier(kidProfile);
+  const isJunior = kidAgeTier === "junior";
+  const kidAge = calculateAge(kidProfile.birthday);
+
   // Original Meh vault & Giphy search state
   const [showMehVault, setShowMehVault] = useState(false);
   const [showGiphySearch, setShowGiphySearch] = useState(false);
@@ -82,34 +95,73 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
       setGiphySearchQuery("");
       setGiphySearchResults([]);
 
+      const targetProf = getUserProfile(kid);
+      const targetIsJunior = getEffectiveAgeTier(targetProf) === "junior";
+
       // Default preset
-      const presets = initialType === "praise" ? PRAISE_PRESETS : NUDGE_PRESETS;
+      const presets = initialType === "praise"
+        ? PRAISE_PRESETS
+        : targetIsJunior
+        ? JUNIOR_NUDGE_PRESETS
+        : NUDGE_PRESETS;
       setHeadline(presets[0].headline);
       setMessage(presets[0].message);
 
-      // Initial reaction GIF: Praise uses Giphy/GoodJob, Nudge always starts with the original Meh folder!
-      const gif = initialType === "praise" ? getRandomGiphyOrFallbackGif("goodJob") : getRandomMehGif();
+      // Initial reaction GIF: Praise uses GoodJob, Junior Nudge uses upbeat positive encouragement (Almost There / cheer), Teen Nudge uses original Meh folder!
+      const gif = initialType === "praise"
+        ? getRandomGiphyOrFallbackGif("goodJob")
+        : targetIsJunior
+        ? getRandomAlmostGif()
+        : getRandomMehGif();
       setPreviewGif(gif);
     }
   }, [isOpen, initialKid, initialType, allKidsList]);
+
+  // When switching selected kid, adjust tone & presets if tier changes
+  const handleSelectKid = (kid: string) => {
+    setSelectedKid(kid);
+    setShowMehVault(false);
+    setShowGiphySearch(false);
+    const targetProf = getUserProfile(kid);
+    const targetIsJunior = getEffectiveAgeTier(targetProf) === "junior";
+
+    if (nudgeType === "nudge") {
+      const presets = targetIsJunior ? JUNIOR_NUDGE_PRESETS : NUDGE_PRESETS;
+      setHeadline(presets[0].headline);
+      setMessage(presets[0].message);
+      setPreviewGif(targetIsJunior ? getRandomAlmostGif() : getRandomMehGif());
+    }
+  };
 
   // When changing type, pick a new preset & GIF
   const handleTypeChange = (type: "praise" | "nudge") => {
     setNudgeType(type);
     setShowMehVault(false);
     setShowGiphySearch(false);
-    const presets = type === "praise" ? PRAISE_PRESETS : NUDGE_PRESETS;
-    setHeadline(presets[0].headline);
-    setMessage(presets[0].message);
-    const gif = type === "praise" ? getRandomGiphyOrFallbackGif("goodJob") : getRandomMehGif();
-    setPreviewGif(gif);
+    if (type === "praise") {
+      setHeadline(PRAISE_PRESETS[0].headline);
+      setMessage(PRAISE_PRESETS[0].message);
+      setPreviewGif(getRandomGiphyOrFallbackGif("goodJob"));
+    } else {
+      const presets = isJunior ? JUNIOR_NUDGE_PRESETS : NUDGE_PRESETS;
+      setHeadline(presets[0].headline);
+      setMessage(presets[0].message);
+      setPreviewGif(isJunior ? getRandomAlmostGif() : getRandomMehGif());
+    }
   };
 
   const handleShuffleGif = () => {
     if (nudgeType === "praise") {
       setPreviewGif(getRandomGiphyOrFallbackGif("goodJob"));
+    } else if (isJunior) {
+      // In Junior mode, shuffle between positive cheering / Almost There encouragement!
+      if (showGiphySearch) {
+        setPreviewGif(getRandomGiphyOrFallbackGif("almost"));
+      } else {
+        setPreviewGif(getRandomAlmostGif());
+      }
     } else {
-      // In Meh mode, if Giphy search is active, shuffle a fresh G-rated Meh from Giphy; otherwise shuffle from original Meh folder!
+      // In Teen Meh mode, if Giphy search is active, shuffle a fresh G-rated Meh from Giphy; otherwise shuffle from original Meh folder!
       if (showGiphySearch) {
         setPreviewGif(getRandomGiphyOrFallbackGif("meh", true));
       } else {
@@ -138,8 +190,10 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
   };
 
   const handleSend = () => {
-    const finalHeadline = headline.trim() || (nudgeType === "praise" ? "Awesome Job! ⭐" : "Minion Nudge! 🧹");
-    const finalMsg = message.trim() || (nudgeType === "praise" ? "Keep up the fantastic work!" : "Time for a quick chore touch-up!");
+    const defaultNudgeHeadline = isJunior ? "You Can Do It! 🌟" : "Minion Nudge! 🧹";
+    const defaultNudgeMsg = isJunior ? "Almost done! A quick tidy up and you're all set!" : "Time for a quick chore touch-up!";
+    const finalHeadline = headline.trim() || (nudgeType === "praise" ? "Awesome Job! ⭐" : defaultNudgeHeadline);
+    const finalMsg = message.trim() || (nudgeType === "praise" ? "Keep up the fantastic work!" : defaultNudgeMsg);
 
     const dispatched = sendParentNudge({
       targetKid: selectedKid,
@@ -159,7 +213,7 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
 
   if (!isOpen) return null;
 
-  const currentPresets = nudgeType === "praise" ? PRAISE_PRESETS : NUDGE_PRESETS;
+  const currentPresets = nudgeType === "praise" ? PRAISE_PRESETS : isJunior ? JUNIOR_NUDGE_PRESETS : NUDGE_PRESETS;
 
   return (
     <div
@@ -276,24 +330,48 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
             <>
               {/* Target Kid Selector */}
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
-                  Send To Kid:
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {allKidsList.map(kid => (
-                    <button
-                      key={kid}
-                      type="button"
-                      onClick={() => setSelectedKid(kid)}
-                      className={`py-2 px-3 rounded-xl font-extrabold text-xs transition cursor-pointer border flex items-center justify-center gap-1.5 ${
-                        selectedKid === kid
-                          ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
-                          : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-                      }`}
-                    >
-                      <span>{kid}</span>
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-black uppercase tracking-wider text-slate-500">
+                    Send To Kid:
+                  </label>
+                  {isJunior && (
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <span>🌟 Junior Mode Active</span>
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+                  {allKidsList.map(kid => {
+                    const prof = getUserProfile(kid);
+                    const tier = getEffectiveAgeTier(prof);
+                    const age = calculateAge(prof.birthday);
+                    const isKidJunior = tier === "junior";
+                    const isSelected = selectedKid === kid;
+                    return (
+                      <button
+                        key={kid}
+                        type="button"
+                        onClick={() => handleSelectKid(kid)}
+                        className={`py-2 px-2 rounded-xl font-extrabold text-xs transition cursor-pointer border flex flex-col items-center justify-center gap-0.5 ${
+                          isSelected
+                            ? isKidJunior
+                              ? "bg-amber-500 text-white border-amber-600 shadow-sm"
+                              : "bg-indigo-600 text-white border-indigo-600 shadow-sm"
+                            : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                        }`}
+                      >
+                        <span className="flex items-center gap-1">
+                          {isKidJunior && <span className="text-amber-300 text-xs">🌟</span>}
+                          <span>{kid}</span>
+                        </span>
+                        <span className={`text-[9px] font-bold ${
+                          isSelected ? (isKidJunior ? "text-amber-100" : "text-indigo-200") : "text-slate-400"
+                        }`}>
+                          {isKidJunior ? `Age ${age || "≤11"}` : `Teen (${age || "12+"})`}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -329,19 +407,33 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
                     onClick={() => handleTypeChange("nudge")}
                     className={`p-3 rounded-2xl border text-left transition cursor-pointer flex items-center gap-2.5 ${
                       nudgeType === "nudge"
-                        ? "bg-orange-50 border-orange-400 ring-2 ring-orange-500/20"
+                        ? isJunior
+                          ? "bg-amber-50 border-amber-400 ring-2 ring-amber-500/20"
+                          : "bg-orange-50 border-orange-400 ring-2 ring-orange-500/20"
                         : "bg-white border-slate-200 hover:border-slate-300 opacity-70"
                     }`}
                   >
-                    <div className="w-8 h-8 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
-                      <Meh className="w-4 h-4" />
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                      isJunior ? "bg-amber-100 text-amber-700" : "bg-orange-100 text-orange-700"
+                    }`}>
+                      {isJunior ? <Sparkles className="w-4 h-4" /> : <Meh className="w-4 h-4" />}
                     </div>
                     <div>
-                      <div className="text-xs font-black text-orange-950 flex items-center gap-1">
-                        <span>Nudge</span>
-                        <span className="text-[10px] bg-orange-200 text-orange-900 px-1 rounded">Meh GIF</span>
+                      <div className={`text-xs font-black flex items-center gap-1 ${
+                        isJunior ? "text-amber-950" : "text-orange-950"
+                      }`}>
+                        <span>{isJunior ? "Gentle Nudge" : "Meh Nudge"}</span>
+                        <span className={`text-[10px] px-1 rounded ${
+                          isJunior ? "bg-amber-200 text-amber-900" : "bg-orange-200 text-orange-900"
+                        }`}>
+                          {isJunior ? "Cheer 🌟" : "Meh GIF"}
+                        </span>
                       </div>
-                      <div className="text-[11px] text-orange-700 font-medium">Unmade bed, messy room</div>
+                      <div className={`text-[11px] font-medium leading-tight ${
+                        isJunior ? "text-amber-700" : "text-orange-700"
+                      }`}>
+                        {isJunior ? "Positive encouragement & cheers" : "Playful reminder for chores"}
+                      </div>
                     </div>
                   </button>
                 </div>
@@ -433,7 +525,13 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
                           if (nextShow) {
                             setShowMehVault(false);
                             if (giphySearchResults.length === 0) {
-                              handlePerformGiphySearch(nudgeType === "praise" ? "great job celebration" : "meh reaction");
+                              handlePerformGiphySearch(
+                                nudgeType === "praise"
+                                  ? "great job celebration"
+                                  : isJunior
+                                  ? "you can do it cheering"
+                                  : "meh reaction"
+                              );
                             }
                           }
                         }}
@@ -529,9 +627,11 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
                             value={giphySearchQuery}
                             onChange={(e) => setGiphySearchQuery(e.target.value)}
                             placeholder={
-                              nudgeType === "nudge"
-                                ? "Search G-rated Meh reactions (e.g. eye roll, facepalm, shrug)..."
-                                : "Search G-rated GIFs (e.g. Star Wars, Mario, Dance)..."
+                              nudgeType === "praise"
+                                ? "Search G-rated celebration GIFs..."
+                                : isJunior
+                                ? "Search cheering GIFs (e.g. you got this, high five, cartoon cheer)..."
+                                : "Search G-rated Meh reactions (e.g. eye roll, facepalm, shrug)..."
                             }
                             className="w-full text-xs pl-8 pr-2.5 py-1.5 rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-1 focus:ring-indigo-500 font-medium"
                           />
@@ -549,10 +649,29 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
                         </button>
                       </form>
 
-                      {/* Quick Family Search Chips - Aligned to Mode */}
+                      {/* Quick Family Search Chips - Aligned to Mode & Tier */}
                       <div className="flex flex-wrap gap-1">
-                        {(nudgeType === "nudge"
+                        {(nudgeType === "praise"
                           ? [
+                              "⭐ Celebration",
+                              "👏 High Five",
+                              "💃 Dance",
+                              "🎉 Winner",
+                              "🎮 Gaming",
+                              "🐶 Cute Pets"
+                            ]
+                          : isJunior
+                          ? [
+                              "🌟 You Got This",
+                              "👏 Cheering",
+                              "🚀 Super Minion",
+                              "🐶 Cute Pets",
+                              "🎮 Level Up",
+                              "🧹 Quick Clean",
+                              "⭐ Almost There",
+                              "😄 Thumbs Up"
+                            ]
+                          : [
                               "😒 Meh",
                               "🙄 Eye Roll",
                               "🤷 Shrug / Whatever",
@@ -562,14 +681,6 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
                               "🐸 Kermit No",
                               "🥱 Bored",
                               "🛑 Do Better"
-                            ]
-                          : [
-                              "⭐ Celebration",
-                              "👏 High Five",
-                              "💃 Dance",
-                              "🎉 Winner",
-                              "🎮 Gaming",
-                              "🐶 Cute Pets"
                             ]
                         ).map((tag) => (
                           <button

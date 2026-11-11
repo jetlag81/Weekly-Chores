@@ -34,6 +34,14 @@ export const NUDGE_PRESETS = [
   { headline: "Trash / Recycling! 🗑️", message: "Take out the trash and recycling bins before bedtime." }
 ];
 
+export const JUNIOR_NUDGE_PRESETS = [
+  { headline: "Almost There, Star! 🌟", message: "You're doing awesome! Just a quick tidy up and you're all done!" },
+  { headline: "Super Minion Power! 🚀", message: "Let's do a quick lightning clean! You've got this, champion!" },
+  { headline: "Cozy Bed Magic! ✨", message: "Smooth out your blankets and make your bed cozy for tonight!" },
+  { headline: "Furry Friends Cheering! 🐾", message: "The pets are so happy when you help with their stations!" },
+  { headline: "Level Up Time! 🎮", message: "Finish up your chore to unlock screen time and level up!" }
+];
+
 export function getStoredParentNudges(): ParentNudgeEvent[] {
   if (typeof window === "undefined") return [];
   try {

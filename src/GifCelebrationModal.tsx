@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Sparkles, X, CheckCircle2, ThumbsUp, Flame, AlertCircle, Bell, HeartHandshake } from "lucide-react";
+import { getUserProfile, getEffectiveAgeTier } from "./userProfiles";
 
 export type GifModalVariant = "good_job" | "almost" | "praise" | "nudge";
 
@@ -53,6 +54,8 @@ export const GifCelebrationModal: React.FC<GifCelebrationModalProps> = ({
   const [headline, setHeadline] = useState("Awesome Job!");
   const [progressPct, setProgressPct] = useState(100);
 
+  const isJunior = getEffectiveAgeTier(getUserProfile(kidName)) === "junior";
+
   // Pick a fresh energetic headline on open based on variant
   useEffect(() => {
     if (isOpen) {
@@ -64,14 +67,14 @@ export const GifCelebrationModal: React.FC<GifCelebrationModalProps> = ({
       } else if (variant === "praise") {
         setHeadline("Parent Praise! ⭐");
       } else if (variant === "nudge") {
-        setHeadline("Minion Nudge! 🧹");
+        setHeadline(isJunior ? "Cheer Nudge! 🌟" : "Minion Nudge! 🧹");
       } else {
         const phrase = GOOD_JOB_PHRASES[Math.floor(Math.random() * GOOD_JOB_PHRASES.length)];
         setHeadline(phrase);
       }
       setProgressPct(100);
     }
-  }, [isOpen, gifUrl, variant, customHeadline]);
+  }, [isOpen, gifUrl, variant, customHeadline, isJunior]);
 
   // Handle auto-close timer and visual progress bar
   useEffect(() => {
@@ -136,12 +139,14 @@ export const GifCelebrationModal: React.FC<GifCelebrationModalProps> = ({
       progressGradient: "from-emerald-400 via-teal-500 to-cyan-500"
     },
     nudge: {
-      borderColor: "border-orange-400",
-      badgeGradient: "from-orange-600 to-rose-600",
-      badgeIcon: <Bell className="w-3.5 h-3.5 text-amber-200" />,
-      subHeader: `${fromSender || "Parents Thom & Meghan"} sent a reminder:`,
-      actionBtn: "On it! 🫡",
-      actionIcon: <CheckCircle2 className="w-3.5 h-3.5" />,
+      borderColor: isJunior ? "border-amber-400" : "border-orange-400",
+      badgeGradient: isJunior ? "from-amber-500 via-orange-500 to-rose-500" : "from-orange-600 to-rose-600",
+      badgeIcon: isJunior ? <Sparkles className="w-3.5 h-3.5 text-amber-200" /> : <Bell className="w-3.5 h-3.5 text-amber-200" />,
+      subHeader: isJunior
+        ? `${fromSender || "Parents Thom & Meghan"} sent some cheer:`
+        : `${fromSender || "Parents Thom & Meghan"} sent a reminder:`,
+      actionBtn: isJunior ? "You Got This! 🌟" : "On it! 🫡",
+      actionIcon: isJunior ? <Sparkles className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />,
       progressGradient: "from-orange-400 via-amber-500 to-rose-500"
     }
   }[variant];

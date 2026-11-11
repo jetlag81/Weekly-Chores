@@ -21,11 +21,14 @@ import {
   Calendar,
   ThumbsUp,
   Check,
-  RotateCcw
+  RotateCcw,
+  Wallet
 } from "lucide-react";
 import { playChoreCompletionSound } from "./firebaseSync";
 import { speakInspectionApproval, isSpeaking, stopSpeaking } from "./voiceSpeech";
 import { getChoreCanonicalKey } from "./choreUtils";
+import { saveAllowancePayout, type AllowancePayoutRecord } from "./allowanceLedger";
+import { AllowanceLedgerModal } from "./AllowanceLedgerModal";
 
 interface ParentInspectionModalProps {
   isOpen: boolean;
@@ -109,6 +112,8 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
       return "";
     }
   });
+
+  const [showLedgerModal, setShowLedgerModal] = useState(false);
 
   // Save room inspections when changed
   const handleToggleRoomInspection = (kidName: string) => {
@@ -233,6 +238,43 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
     onToggleWeeklySignOff();
 
     if (nextDone) {
+      // Save finalized snapshot to the Allowance Ledger
+      const payoutItems = allKidsList.map(kidName => {
+        const stats = kidStats[kidName] || { scheduled: 7, completed: 0, pct: 0, bedroomDone: false, laundryDone: false };
+        const isRoomApproved = !!inspectedRooms[kidName];
+        const baseAllowance = DEFAULT_BASE_ALLOWANCES[kidName] || 10;
+        const bonusDelta = allowanceAdjustments[kidName] || 0;
+        const earnedMultiplier = stats.pct >= 80 ? 1 : Math.max(0.2, stats.pct / 100);
+        const calculatedPayout = Math.max(0, Math.round(baseAllowance * earnedMultiplier) + bonusDelta);
+
+        return {
+          kidName,
+          completedChores: stats.completed,
+          scheduledChores: stats.scheduled,
+          completionPct: stats.pct,
+          baseAllowance,
+          bonusDelta,
+          finalAmount: calculatedPayout,
+          roomApproved: isRoomApproved,
+          paid: false
+        };
+      });
+
+      const totalHouseholdPayout = payoutItems.reduce((sum, item) => sum + item.finalAmount, 0);
+
+      const record: AllowancePayoutRecord = {
+        id: `payout_${activeSyncWeek}`,
+        activeSyncWeek,
+        weekLabel,
+        timestamp: Date.now(),
+        signedBy: "Thom & Meghan (TV / MV)",
+        parentNotes: parentNotes.trim() || undefined,
+        totalAmount: totalHouseholdPayout,
+        items: payoutItems
+      };
+
+      saveAllowancePayout(record);
+
       playChoreCompletionSound();
       confetti({
         particleCount: 85,
@@ -273,14 +315,26 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition cursor-pointer"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowLedgerModal(true)}
+              className="px-2.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="View Past Allowance Ledger & History"
+            >
+              <Wallet className="w-4 h-4 text-amber-200" />
+              <span className="hidden sm:inline">Ledger</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Status Callout Banner */}
@@ -618,6 +672,15 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Historical Allowance Ledger Modal */}
+      {showLedgerModal && (
+        <AllowanceLedgerModal
+          isOpen={showLedgerModal}
+          onClose={() => setShowLedgerModal(false)}
+          familyMembers={familyMembers}
+        />
+      )}
     </div>
   );
 };

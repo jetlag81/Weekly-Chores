@@ -38,6 +38,7 @@ import {
   Download,
   ShieldCheck,
   Bell,
+  DollarSign,
   X
 } from 'lucide-react';
 import {
@@ -58,6 +59,7 @@ import { KidPairingScreen } from "./src/KidPairingScreen";
 import { FirebaseSettingsModal } from "./src/FirebaseSettingsModal";
 import { InstallPwaModal } from "./src/InstallPwaModal";
 import { ParentInspectionModal } from "./src/ParentInspectionModal";
+import { AllowanceLedgerModal } from "./src/AllowanceLedgerModal";
 import { GifCelebrationModal } from "./src/GifCelebrationModal";
 import { getRandomGoodJobGif, preloadNextGoodJobGifs } from "./src/gifCelebrations";
 import { HouseholdActivityDrawer } from "./src/HouseholdActivityDrawer";
@@ -1790,6 +1792,7 @@ function App({
   const [showFirebaseModal, setShowFirebaseModal] = useState(false);
   const [showPwaModal, setShowPwaModal] = useState(false);
   const [showInspectionModal, setShowInspectionModal] = useState(false);
+  const [showAllowanceLedger, setShowAllowanceLedger] = useState(false);
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
 
   // Good Job GIF Celebration state
@@ -5651,6 +5654,15 @@ function App({
                 </span>
               )}
             </button>
+            <button
+              type="button"
+              onClick={() => setShowAllowanceLedger(true)}
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg transition cursor-pointer shadow-2xs"
+              title="Open Household Allowance Ledger & Payment History"
+            >
+              <DollarSign className="w-3.5 h-3.5 text-emerald-700" />
+              <span>Allowance Ledger</span>
+            </button>
             {isSpeechSupported() && (
               <button
                 type="button"
@@ -6716,6 +6728,15 @@ function App({
         onClose={() => setActiveToastEvent(null)}
         onOpenFeed={() => setShowActivityDrawer(true)}
       />
+
+      {/* Household Allowance Ledger & History Modal */}
+      {showAllowanceLedger && (
+        <AllowanceLedgerModal
+          isOpen={showAllowanceLedger}
+          onClose={() => setShowAllowanceLedger(false)}
+          familyMembers={familyMembers}
+        />
+      )}
     </div>
   );
 }

@@ -28,7 +28,8 @@ import {
   Smartphone,
   Download,
   ShieldCheck,
-  Bell
+  Bell,
+  Wallet
 } from "lucide-react";
 import { isStandalone, subscribeInstallable } from "./pwaManager";
 import { InstallPwaModal } from "./InstallPwaModal";
@@ -37,6 +38,7 @@ import { GifCelebrationModal } from "./GifCelebrationModal";
 import { getRandomGoodJobGif, preloadNextGoodJobGifs } from "./gifCelebrations";
 import { HouseholdActivityDrawer } from "./HouseholdActivityDrawer";
 import { ActivityToast } from "./ActivityToast";
+import { getStoredAllowanceLedger } from "./allowanceLedger";
 import {
   type HouseholdActivityEvent,
   getStoredActivityLog,
@@ -296,6 +298,50 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
       return b.pct - a.pct;
     });
   }, [rankedMembers, kidMembers, monthSchedule, monthlyGoalTarget]);
+
+  // Allowance and Earnings Summary for this kid
+  const kidAllowanceSummary = React.useMemo(() => {
+    const records = getStoredAllowanceLedger();
+    let totalEarned = 0;
+    let totalPaid = 0;
+    let latestPayout: {
+      weekLabel: string;
+      finalAmount: number;
+      paid: boolean;
+      paymentMethod?: string;
+      completionPct: number;
+    } | null = null;
+
+    records.forEach(rec => {
+      const item = rec.items.find(i => i.kidName.toLowerCase() === currentKid.name.toLowerCase());
+      if (item) {
+        totalEarned += item.finalAmount;
+        if (item.paid) totalPaid += item.finalAmount;
+        if (!latestPayout) {
+          latestPayout = {
+            weekLabel: rec.weekLabel,
+            finalAmount: item.finalAmount,
+            paid: item.paid,
+            paymentMethod: item.paymentMethod,
+            completionPct: item.completionPct
+          };
+        }
+      }
+    });
+
+    return {
+      totalEarned,
+      totalPaid,
+      pending: Math.max(0, totalEarned - totalPaid),
+      latestPayout: latestPayout as {
+        weekLabel: string;
+        finalAmount: number;
+        paid: boolean;
+        paymentMethod?: string;
+        completionPct: number;
+      } | null
+    };
+  }, [currentKid.name]);
 
   const leaderKid = topPerformer || rankedKidsList[0] || null;
   const isMyKidLeading = leaderKid && leaderKid.name.toLowerCase() === currentKid.name.toLowerCase() && leaderKid.done > 0;
@@ -709,6 +755,44 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* Minion Piggy Bank / Allowance Card */}
+            <div className="bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-4 text-white shadow-md space-y-3">
+              <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-emerald-100">
+                <span className="flex items-center gap-1.5 bg-black/20 px-2.5 py-0.5 rounded-full">
+                  <Wallet className="w-3.5 h-3.5 text-emerald-200" />
+                  <span>My Chore Allowance</span>
+                </span>
+                <span className="font-extrabold text-white text-xs">
+                  ${kidAllowanceSummary.totalEarned}.00 Total Earned
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-black/15 p-2.5 rounded-2xl border border-white/10">
+                  <div className="text-[10px] uppercase font-bold text-emerald-200">Received</div>
+                  <div className="text-xl font-black text-white mt-0.5">${kidAllowanceSummary.totalPaid}.00</div>
+                  <div className="text-[10px] text-emerald-200/80">Paid in cash / bank</div>
+                </div>
+
+                <div className="bg-black/15 p-2.5 rounded-2xl border border-white/10">
+                  <div className="text-[10px] uppercase font-bold text-amber-200">Pending Payout</div>
+                  <div className="text-xl font-black text-amber-300 mt-0.5">${kidAllowanceSummary.pending}.00</div>
+                  <div className="text-[10px] text-amber-200/80">
+                    {kidAllowanceSummary.latestPayout?.paid ? "All clear!" : "Awaiting parent payout"}
+                  </div>
+                </div>
+              </div>
+
+              {kidAllowanceSummary.latestPayout && (
+                <div className="text-[11px] bg-black/20 px-3 py-1.5 rounded-xl border border-white/10 flex items-center justify-between">
+                  <span className="truncate">Latest: {kidAllowanceSummary.latestPayout.weekLabel}</span>
+                  <span className="font-bold shrink-0 ml-2">
+                    ${kidAllowanceSummary.latestPayout.finalAmount}.00 ({kidAllowanceSummary.latestPayout.paid ? "Paid ✓" : "Pending"})
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Minions Leaderboard Standings */}

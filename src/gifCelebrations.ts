@@ -127,3 +127,4 @@ export function preloadNextGoodJobGifs(count: number = 3): void {
     img.src = encodeURI(GOOD_JOB_GIFS[idx]);
   });
 }
+

@@ -145,3 +145,4 @@ export const GifCelebrationModal: React.FC<GifCelebrationModalProps> = ({
     </div>
   );
 };
+

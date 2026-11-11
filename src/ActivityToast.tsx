@@ -128,3 +128,4 @@ export const ActivityToast: React.FC<ActivityToastProps> = ({
     </div>
   );
 };
+

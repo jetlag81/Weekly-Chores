@@ -214,3 +214,4 @@ export function saveKidRewardProfile(profile: KidRewardProfile): void {
     console.warn("Could not save kid reward profile:", err);
   }
 }
+

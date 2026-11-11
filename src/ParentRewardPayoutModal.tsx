@@ -325,3 +325,4 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
     </div>
   );
 };
+

@@ -268,61 +268,63 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
 
       {/* Main Streamlined Mobile Content */}
       <main className="p-4 space-y-4 max-w-lg mx-auto w-full">
-        {/* Sunday Inspection Hero Banner */}
+        {/* Streamlined Sunday Inspection Action Bar */}
         <div
           onClick={onOpenInspection}
-          className={`p-4 rounded-3xl border transition cursor-pointer relative overflow-hidden shadow-xl ${
+          className={`p-3 rounded-2xl border transition cursor-pointer relative overflow-hidden shadow-md flex items-center justify-between gap-3 group ${
             signOffStatus.done
-              ? "bg-gradient-to-br from-emerald-950/80 via-slate-900 to-slate-900 border-emerald-500/40 text-emerald-100"
-              : "bg-gradient-to-br from-amber-950/80 via-orange-950/50 to-slate-900 border-amber-500/40 text-amber-100"
+              ? "bg-slate-800/90 border-emerald-500/30 hover:border-emerald-500/50"
+              : "bg-slate-800/90 border-amber-500/30 hover:border-amber-500/50"
           }`}
         >
-          <div className="flex items-start justify-between gap-3 relative z-10">
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shrink-0 ${
-                  signOffStatus.done
-                    ? "bg-emerald-500 text-white shadow-emerald-500/30"
-                    : "bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-orange-500/30"
-                }`}
-              >
-                {signOffStatus.done ? (
-                  <CheckCircle2 className="w-7 h-7" />
-                ) : (
-                  <ShieldCheck className="w-7 h-7" />
-                )}
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className={`inline-flex items-center text-[10.5px] font-black uppercase tracking-wide px-3 py-1 rounded-xl shadow-2xs ${
-                      signOffStatus.done
-                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                        : "bg-amber-500/20 text-amber-300 border border-amber-500/35"
-                    }`}
-                  >
-                    {signOffStatus.done ? "Sunday Verified ✓" : "Pending Sunday Sign-Off"}
-                  </span>
-                  <span className="text-[11px] text-slate-400 font-medium">
-                    {weekLabel}
-                  </span>
-                </div>
-                <h2 className="text-base font-black text-white mt-1 leading-snug">
-                  {signOffStatus.done
-                    ? "Weekly Inspection Approved (✓ TV / MV)"
-                    : "Sunday Room Inspection & Sign-Off"}
-                </h2>
-                <p className="text-xs text-slate-300/80 mt-0.5">
-                  {signOffStatus.done
-                    ? "Allowances finalized and archived in the ledger."
-                    : "Walk bedrooms & laundry, verify checklists, then stamp sign-off."}
-                </p>
-              </div>
+          <div className="flex items-center gap-2.5 min-w-0">
+            {/* Status Icon */}
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-sm shrink-0 transition group-hover:scale-105 ${
+                signOffStatus.done
+                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                  : "bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 font-black shadow-orange-500/20"
+              }`}
+            >
+              {signOffStatus.done ? (
+                <CheckCircle2 className="w-5 h-5" />
+              ) : (
+                <ShieldCheck className="w-5 h-5 text-slate-950" />
+              )}
             </div>
 
-            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center shrink-0 self-center">
-              <ArrowRight className="w-4 h-4 text-white" />
+            {/* Title & Status */}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-extrabold text-xs text-white tracking-tight">
+                  Sunday Inspection
+                </span>
+                <span
+                  className={`inline-flex items-center text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded-lg border ${
+                    signOffStatus.done
+                      ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                      : "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                  }`}
+                >
+                  {signOffStatus.done ? "Verified ✓" : "Pending Sign-Off"}
+                </span>
+              </div>
+              <div className="text-[10px] text-slate-400 font-medium truncate mt-0.5">
+                {weekLabel}
+              </div>
             </div>
+          </div>
+
+          {/* Action Trigger Button */}
+          <div
+            className={`py-1.5 px-3 rounded-xl text-xs font-black flex items-center gap-1.5 shrink-0 transition shadow-xs ${
+              signOffStatus.done
+                ? "bg-slate-700/70 text-emerald-300 border border-emerald-500/30 group-hover:bg-slate-700"
+                : "bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black shadow-orange-500/20 group-hover:brightness-105"
+            }`}
+          >
+            <span>{signOffStatus.done ? "Review" : "Sign Off"}</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </div>
         </div>
 

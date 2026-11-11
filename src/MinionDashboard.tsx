@@ -423,44 +423,6 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     activeDate.getDate()
   );
 
-  // Check for pending parent photo request on initial load or date switch
-  useEffect(() => {
-    const allReqs = getStoredPhotoRequests();
-    const pending = allReqs.find(
-      r =>
-        !r.fulfilled &&
-        r.dateKey === activeDateKey &&
-        isPhotoRequestForThisKid(r.kidName, currentKid.name) &&
-        !dismissedPhotoRequestsRef.current.has(r.id) &&
-        Date.now() - r.requestedAt < 2 * 60 * 60 * 1000 // within last 2 hours
-    );
-    if (pending) {
-      setIncomingPhotoRequest(pending);
-    }
-  }, [currentKid.name, activeDateKey, photoRequestsVersion]);
-
-  // Check for recent unacknowledged parent nudge on initial load
-  useEffect(() => {
-    const recentNudges = getStoredParentNudges();
-    const pending = recentNudges.find(
-      n =>
-        n.targetKid?.toLowerCase() === currentKid.name.toLowerCase() &&
-        !n.acknowledged &&
-        Date.now() - n.timestamp < 30 * 60 * 1000
-    );
-    if (pending) {
-      setActiveCelebration({
-        gifUrl: pending.gifUrl,
-        taskTitle: pending.headline,
-        variant: pending.type,
-        headline: pending.headline,
-        message: pending.message,
-        fromSender: pending.fromParent,
-        nudgeId: pending.id
-      });
-    }
-  }, [currentKid.name]);
-
   useEffect(() => {
     return subscribeSpeechState(speaking => setIsSpeakingAudio(speaking));
   }, []);

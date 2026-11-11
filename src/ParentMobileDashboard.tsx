@@ -294,11 +294,9 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
       }
     };
 
-    const timer = setInterval(runAutoNudgeCheck, 45000);
-    const initialTimer = setTimeout(runAutoNudgeCheck, 3000);
+    const timer = setInterval(runAutoNudgeCheck, 300000);
     return () => {
       clearInterval(timer);
-      clearTimeout(initialTimer);
     };
   }, [monthSchedule, hubMasterChores, familyMembers]);
 

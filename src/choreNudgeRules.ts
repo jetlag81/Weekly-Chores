@@ -27,40 +27,40 @@ export interface AutoNudgeLogEntry {
 const STORAGE_KEY_NUDGE_RULES = "weekly_chores_nudge_rules_v1";
 const STORAGE_KEY_NUDGE_LOG = "weekly_chores_nudge_sent_log_v1";
 
-// Default sensible rules pre-configured for the household
+// Default sensible rules pre-configured for the household (opt-in by default to prevent unwanted popups on page reload)
 export const DEFAULT_CHORE_NUDGE_RULES: Record<string, ChoreNudgeConfig> = {
   empty_dishwasher: {
-    enabled: true,
+    enabled: false,
     time: "16:30",
     targetWindow: "After School (3:30 PM – 5:30 PM)",
     message: "Friendly reminder to empty the dishwasher before supper! 🍽️"
   },
   empty_the_dishwasher: {
-    enabled: true,
+    enabled: false,
     time: "16:30",
     targetWindow: "After School (3:30 PM – 5:30 PM)",
     message: "Friendly reminder to empty the dishwasher before supper! 🍽️"
   },
   tidy_bedrooms: {
-    enabled: true,
+    enabled: false,
     time: "17:00",
     targetWindow: "Before Dinner (5:00 PM)",
     message: "Time for a quick bedroom check! Make sure floors and bed are tidy. 🛏️"
   },
   clean_basement: {
-    enabled: true,
+    enabled: false,
     time: "18:00",
     targetWindow: "Evening (6:00 PM)",
     message: "Don't forget to pick up the basement before settling in for the evening! 🧸"
   },
   curbside_waste_recycling: {
-    enabled: true,
+    enabled: false,
     time: "19:00",
     targetWindow: "Thursday Evening (7:00 PM)",
     message: "Time to bring the curbside bins out to the curb! 🗑️"
   },
   feed_the_herd: {
-    enabled: true,
+    enabled: false,
     time: "17:30",
     targetWindow: "Dinner Time (5:30 PM)",
     message: "Herd feeding station check: please feed pets and refresh water! 🐾"

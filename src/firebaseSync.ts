@@ -659,17 +659,28 @@ export function subscribeToRealtimeSync(
   }
 
   // Cross-browser bridge (syncs Chrome, Edge, and mobile via local dev server)
-  let lastSeq = 0;
+  // Initialize with null so initial poll captures current server sequence without replaying old historical messages on page reload!
+  let lastSeq: number | null = null;
+  const subscribedAt = Date.now();
   let intervalId: any = null;
   if (typeof window !== "undefined") {
     intervalId = setInterval(async () => {
       try {
-        const res = await fetch(`/__sync-chores?sinceSeq=${lastSeq}`);
+        const url = lastSeq === null ? "/__sync-chores" : `/__sync-chores?sinceSeq=${lastSeq}`;
+        const res = await fetch(url);
         if (res.ok) {
           const json = await res.json();
+          if (lastSeq === null) {
+            // First baseline poll on page load: sync to current sequence without replaying past history
+            lastSeq = typeof json.lastSeq === "number" ? json.lastSeq : 0;
+            return;
+          }
           if (json.updates && json.updates.length > 0) {
             json.updates.forEach((u: any) => {
-              onUpdate(u);
+              // Ensure we only process truly live events dispatched after this page session began
+              if (!u.timestamp || u.timestamp >= subscribedAt - 1500) {
+                onUpdate(u);
+              }
             });
           }
           if (typeof json.lastSeq === "number" && json.lastSeq > lastSeq) {

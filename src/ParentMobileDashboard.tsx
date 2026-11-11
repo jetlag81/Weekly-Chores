@@ -302,7 +302,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                         : "bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse"
                     }`}
                   >
-                    {signOffStatus.done ? "Sunday Verified ✓" : "Sunday Walk Pending"}
+                    {signOffStatus.done ? "Sunday Verified ✓" : "Pending Sunday Sign-Off"}
                   </span>
                   <span className="text-[11px] text-slate-400 font-medium">
                     {weekLabel}

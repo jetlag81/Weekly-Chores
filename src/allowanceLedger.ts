@@ -13,7 +13,7 @@ export interface KidPayoutDetail {
   roomApproved: boolean;
   paid: boolean;
   paidAt?: number;
-  paymentMethod?: "Cash" | "Savings" | "Bank" | "Venmo" | "Other";
+  paymentMethod?: "Cash" | "Savings" | "Bank" | "Venmo" | "Gift Card" | "Other";
 }
 
 export interface AllowancePayoutRecord {

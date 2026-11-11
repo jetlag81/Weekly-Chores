@@ -22,9 +22,11 @@ import {
   AlertCircle,
   Pizza,
   ArrowRight,
-  UserCheck
+  UserCheck,
+  Gift
 } from "lucide-react";
 import { getChoreCanonicalKey, normalizeTaskName } from "./choreUtils";
+import { getKidRewardProfile } from "./rewardAccounts";
 
 interface FamilyMember {
   name: string;
@@ -60,6 +62,7 @@ interface ParentMobileDashboardProps {
   onOpenInspection: () => void;
   onOpenLedger: () => void;
   onOpenNudgeModal: (kidName?: string, type?: "praise" | "nudge") => void;
+  onOpenRewardModal?: (kidName?: string) => void;
   onOpenActivityFeed: () => void;
   onSwitchToMinionMode: (kidName?: string) => void;
   onToggleDesktopView: () => void;
@@ -89,6 +92,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   onOpenInspection,
   onOpenLedger,
   onOpenNudgeModal,
+  onOpenRewardModal,
   onOpenActivityFeed,
   onSwitchToMinionMode,
   onToggleDesktopView,
@@ -327,45 +331,58 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
           </div>
         </div>
 
-        {/* Quick Command Tiles (Nudge, Ledger, Leaderboard) */}
-        <div className="grid grid-cols-3 gap-2.5">
+        {/* Quick Command Tiles (Nudge, Ledger, Rewards, Minion Mode) */}
+        <div className="grid grid-cols-4 gap-2">
           {/* Nudge & Feedback (Meh & Good Job GIFs) */}
           <button
             type="button"
             onClick={() => onOpenNudgeModal()}
-            className="p-3 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center text-center transition cursor-pointer shadow-md group"
+            className="p-2.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center text-center transition cursor-pointer shadow-md group"
           >
-            <div className="w-10 h-10 rounded-xl bg-orange-500/15 text-orange-400 border border-orange-500/20 flex items-center justify-center mb-1.5 group-hover:scale-105 transition">
-              <Sparkles className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-xl bg-orange-500/15 text-orange-400 border border-orange-500/20 flex items-center justify-center mb-1 group-hover:scale-105 transition">
+              <Sparkles className="w-4 h-4" />
             </div>
-            <span className="text-xs font-black text-white leading-tight">Nudges</span>
-            <span className="text-[10px] text-orange-300 font-semibold mt-0.5">Meh & Praise</span>
+            <span className="text-[11px] font-black text-white leading-tight">Nudges</span>
+            <span className="text-[9px] text-orange-300 font-semibold mt-0.5">Praise</span>
           </button>
 
           {/* Allowance Ledger */}
           <button
             type="button"
             onClick={onOpenLedger}
-            className="p-3 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center text-center transition cursor-pointer shadow-md group"
+            className="p-2.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center text-center transition cursor-pointer shadow-md group"
           >
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mb-1.5 group-hover:scale-105 transition">
-              <Wallet className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mb-1 group-hover:scale-105 transition">
+              <Wallet className="w-4 h-4" />
             </div>
-            <span className="text-xs font-black text-white leading-tight">Ledger</span>
-            <span className="text-[10px] text-emerald-300 font-semibold mt-0.5">Payouts</span>
+            <span className="text-[11px] font-black text-white leading-tight">Ledger</span>
+            <span className="text-[9px] text-emerald-300 font-semibold mt-0.5">Payouts</span>
+          </button>
+
+          {/* Digital Rewards & Gift Cards */}
+          <button
+            type="button"
+            onClick={() => onOpenRewardModal?.()}
+            className="p-2.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center text-center transition cursor-pointer shadow-md group"
+          >
+            <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/20 flex items-center justify-center mb-1 group-hover:scale-105 transition">
+              <Gift className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-black text-white leading-tight">Rewards</span>
+            <span className="text-[9px] text-amber-300 font-semibold mt-0.5">Gift Cards</span>
           </button>
 
           {/* Switch to Kid Minion Mode */}
           <button
             type="button"
             onClick={() => onSwitchToMinionMode()}
-            className="p-3 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center text-center transition cursor-pointer shadow-md group"
+            className="p-2.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center text-center transition cursor-pointer shadow-md group"
           >
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mb-1.5 group-hover:scale-105 transition">
-              <Users className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mb-1 group-hover:scale-105 transition">
+              <Users className="w-4 h-4" />
             </div>
-            <span className="text-xs font-black text-white leading-tight">Minion Mode</span>
-            <span className="text-[10px] text-indigo-300 font-semibold mt-0.5">Kids View</span>
+            <span className="text-[11px] font-black text-white leading-tight">Minions</span>
+            <span className="text-[9px] text-indigo-300 font-semibold mt-0.5">Kids View</span>
           </button>
         </div>
 
@@ -496,7 +513,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                     </div>
                   </div>
 
-                  {/* Quick Praise ⭐ and Nudge 🧹 Buttons for this Kid */}
+                  {/* Quick Praise ⭐, Nudge 🧹, and Digital Cards 🎁 Buttons */}
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       type="button"
@@ -516,6 +533,17 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                       <Bell className="w-3 h-3 text-orange-400" />
                       <span className="hidden xs:inline">Nudge</span>
                     </button>
+                    {onOpenRewardModal && (
+                      <button
+                        type="button"
+                        onClick={() => onOpenRewardModal(kidName)}
+                        className="px-2 py-1 rounded-xl text-[11px] font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition flex items-center gap-1 cursor-pointer"
+                        title={`Digital Cards & Reward Accounts for ${kidName}`}
+                      >
+                        <Gift className="w-3 h-3 text-amber-400" />
+                        <span className="hidden xs:inline">Cards</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => toggleKidExpanded(kidName)}
@@ -535,6 +563,28 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                     style={{ width: `${pct}%` }}
                   />
                 </div>
+
+                {/* Top Wish Summary Strip (if kid has a wish) */}
+                {(() => {
+                  const kProfile = getKidRewardProfile(kidName);
+                  if (!kProfile?.topWish) return null;
+                  return (
+                    <div
+                      onClick={() => onOpenRewardModal?.(kidName)}
+                      className="mx-3 my-2 py-1.5 px-2.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-purple-500/10 border border-amber-500/20 text-[11px] text-amber-300 font-semibold flex items-center justify-between cursor-pointer hover:border-amber-400/40 transition"
+                      title="Click to view linked accounts and send digital gift card"
+                    >
+                      <span className="truncate flex items-center gap-1.5">
+                        <span className="text-xs">🎁</span>
+                        <span className="font-extrabold text-white">Wish:</span> {kProfile.topWish}
+                      </span>
+                      <span className="text-amber-400 font-mono font-bold shrink-0 ml-1.5 flex items-center gap-0.5 text-[10px] bg-amber-500/20 px-1.5 py-0.5 rounded-md">
+                        <span>Send Card</span>
+                        <span>↗</span>
+                      </span>
+                    </div>
+                  );
+                })()}
 
                 {/* Expandable Chore List */}
                 {isExpanded && (

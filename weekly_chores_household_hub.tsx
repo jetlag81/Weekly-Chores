@@ -61,6 +61,7 @@ import { InstallPwaModal } from "./src/InstallPwaModal";
 import { ParentInspectionModal } from "./src/ParentInspectionModal";
 import { AllowanceLedgerModal } from "./src/AllowanceLedgerModal";
 import { ParentNudgeModal } from "./src/ParentNudgeModal";
+import { ParentRewardPayoutModal } from "./src/ParentRewardPayoutModal";
 import { ParentMobileDashboard } from "./src/ParentMobileDashboard";
 import { HouseholdActivityDrawer } from "./src/HouseholdActivityDrawer";
 import { ActivityToast } from "./src/ActivityToast";
@@ -1795,6 +1796,8 @@ function App({
   const [showAllowanceLedger, setShowAllowanceLedger] = useState(false);
   const [showNudgeModal, setShowNudgeModal] = useState(false);
   const [nudgeModalTarget, setNudgeModalTarget] = useState<{ kid?: string; type?: "praise" | "nudge" } | null>(null);
+  const [showRewardPayoutModal, setShowRewardPayoutModal] = useState(false);
+  const [rewardPayoutKid, setRewardPayoutKid] = useState<string>("Sydney");
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
 
   // Parent View Mode Preference: "mobile" vs "table" (stored in localStorage)
@@ -5646,6 +5649,10 @@ function App({
             setNudgeModalTarget(kName ? { kid: kName, type: type || "nudge" } : null);
             setShowNudgeModal(true);
           }}
+          onOpenRewardModal={(kName) => {
+            setRewardPayoutKid(kName || allKidsList[0] || "Sydney");
+            setShowRewardPayoutModal(true);
+          }}
           onOpenActivityFeed={() => setShowActivityDrawer(true)}
           onSwitchToMinionMode={(kName) => {
             const target = kName || allKidsList[0] || "Sydney";
@@ -5711,6 +5718,29 @@ function App({
             isOpen={showAllowanceLedger}
             onClose={() => setShowAllowanceLedger(false)}
             familyMembers={familyMembers}
+            onOpenRewardModal={(kName) => {
+              setShowAllowanceLedger(false);
+              setRewardPayoutKid(kName || allKidsList[0] || "Sydney");
+              setShowRewardPayoutModal(true);
+            }}
+          />
+        )}
+
+        {/* Parent Digital Reward & Payout Modal */}
+        {showRewardPayoutModal && (
+          <ParentRewardPayoutModal
+            isOpen={showRewardPayoutModal}
+            onClose={() => setShowRewardPayoutModal(false)}
+            allKidsList={allKidsList}
+            initialKid={rewardPayoutKid}
+            onOpenLedger={() => {
+              setShowRewardPayoutModal(false);
+              setShowAllowanceLedger(true);
+            }}
+            onPayoutRecorded={(kName, amt, platform) => {
+              setNotice(`🎁 Recorded $${amt} ${platform} digital gift card payout for ${kName}!`);
+              setTimeout(() => setNotice(null), 4000);
+            }}
           />
         )}
 
@@ -5881,6 +5911,18 @@ function App({
             >
               <DollarSign className="w-3.5 h-3.5 text-emerald-700" />
               <span>Allowance Ledger</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setRewardPayoutKid(allKidsList[0] || "Sydney");
+                setShowRewardPayoutModal(true);
+              }}
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 rounded-lg transition cursor-pointer shadow-2xs"
+              title="Open Kid Reward Accounts & 1-Click Digital Gift Card Payouts"
+            >
+              <Gift className="w-3.5 h-3.5 text-purple-600" />
+              <span>Digital Rewards</span>
             </button>
             <button
               type="button"
@@ -6962,6 +7004,29 @@ function App({
           isOpen={showAllowanceLedger}
           onClose={() => setShowAllowanceLedger(false)}
           familyMembers={familyMembers}
+          onOpenRewardModal={(kName) => {
+            setShowAllowanceLedger(false);
+            setRewardPayoutKid(kName || allKidsList[0] || "Sydney");
+            setShowRewardPayoutModal(true);
+          }}
+        />
+      )}
+
+      {/* Parent Digital Reward & Payout Modal */}
+      {showRewardPayoutModal && (
+        <ParentRewardPayoutModal
+          isOpen={showRewardPayoutModal}
+          onClose={() => setShowRewardPayoutModal(false)}
+          allKidsList={allKidsList}
+          initialKid={rewardPayoutKid}
+          onOpenLedger={() => {
+            setShowRewardPayoutModal(false);
+            setShowAllowanceLedger(true);
+          }}
+          onPayoutRecorded={(kName, amt, platform) => {
+            setNotice(`🎁 Recorded $${amt} ${platform} digital gift card payout for ${kName}!`);
+            setTimeout(() => setNotice(null), 4000);
+          }}
         />
       )}
 

@@ -33,12 +33,14 @@ interface AllowanceLedgerModalProps {
   isOpen: boolean;
   onClose: () => void;
   familyMembers?: Array<{ name: string; color?: string; age?: number }>;
+  onOpenRewardModal?: (kidName: string) => void;
 }
 
 export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
   isOpen,
   onClose,
-  familyMembers = []
+  familyMembers = [],
+  onOpenRewardModal
 }) => {
   const [records, setRecords] = useState<AllowancePayoutRecord[]>(() => getStoredAllowanceLedger());
   const [expandedWeekId, setExpandedWeekId] = useState<string | null>(() => {
@@ -305,7 +307,19 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
                                     </button>
                                   </div>
                                 ) : (
-                                  <div className="flex items-center gap-1.5">
+                                  <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
+                                    {onOpenRewardModal && (
+                                      <button
+                                        type="button"
+                                        onClick={() => onOpenRewardModal(item.kidName)}
+                                        className="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[11px] rounded-lg shadow-2xs transition cursor-pointer flex items-center gap-1"
+                                        title={`Open Digital Gift Card / Reward Hub for ${item.kidName}`}
+                                      >
+                                        <span>🎁</span>
+                                        <span>Gift Card</span>
+                                      </button>
+                                    )}
+
                                     <select
                                       defaultValue="Cash"
                                       id={`method-${rec.id}-${item.kidName}`}
@@ -315,6 +329,7 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
                                       <option value="Savings">Savings</option>
                                       <option value="Bank">Bank</option>
                                       <option value="Venmo">Venmo</option>
+                                      <option value="Gift Card">Gift Card 🎁</option>
                                     </select>
 
                                     <button

@@ -72,6 +72,12 @@ import {
   subscribeSpeechState,
   isSpeechSupported
 } from "./voiceSpeech";
+import { KidRewardAccountsModal } from "./KidRewardAccountsModal";
+import {
+  getKidRewardProfile,
+  REWARD_PLATFORMS,
+  type KidRewardProfile
+} from "./rewardAccounts";
 
 interface MinionDashboardProps {
   kidName: string;
@@ -171,7 +177,9 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
-  const [activeNavTab, setActiveNavTab] = useState<"chores" | "leaderboard">("chores");
+  const [activeNavTab, setActiveNavTab] = useState<"chores" | "leaderboard" | "rewards">("chores");
+  const [showKidRewardModal, setShowKidRewardModal] = useState(false);
+  const [rewardProfile, setRewardProfile] = useState<KidRewardProfile>(() => getKidRewardProfile(kidName));
 
   // Interactive Chore Celebration, Goal "Almost", and Parent Nudge/Praise State
   const [activeCelebration, setActiveCelebration] = useState<{
@@ -748,33 +756,33 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
       {/* Navigation Tab Bar */}
       <div className="max-w-xl mx-auto px-4 pt-3 pb-1">
-        <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-black shadow-2xs">
+        <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-black shadow-2xs gap-1">
           <button
             type="button"
             onClick={() => setActiveNavTab("chores")}
-            className={`flex-1 py-2 px-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2 px-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
               activeNavTab === "chores"
                 ? "bg-white text-indigo-700 shadow-xs"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>My Daily Chores</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="truncate">Chores</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700 font-mono">
               {completedTodayCount}/{dailyChoresForKid.length}
             </span>
           </button>
           <button
             type="button"
             onClick={() => setActiveNavTab("leaderboard")}
-            className={`flex-1 py-2 px-3 rounded-xl transition cursor-pointer flex items-center justify-center gap-2 ${
+            className={`flex-1 py-2 px-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
               activeNavTab === "leaderboard"
                 ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <Trophy className="w-4 h-4 text-amber-200" />
-            <span>Leaderboard &amp; Prize</span>
+            <Trophy className="w-4 h-4 text-amber-200 shrink-0" />
+            <span className="truncate">Prize Race</span>
             {isMyKidLeading ? (
               <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-600 text-white font-black shadow-2xs">
                 #1
@@ -784,6 +792,18 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                 #{myRank}
               </span>
             )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveNavTab("rewards")}
+            className={`flex-1 py-2 px-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeNavTab === "rewards"
+                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Gift className="w-4 h-4 text-purple-200 shrink-0" />
+            <span className="truncate">Rewards</span>
           </button>
         </div>
       </div>
@@ -1012,9 +1032,151 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
               </div>
             </div>
           </div>
+        ) : activeNavTab === "rewards" ? (
+          /* REWARDS & WISHLIST VIEW */
+          <div className="space-y-4">
+            {/* Hero Top Wish Card */}
+            <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-amber-500 rounded-3xl p-5 text-white shadow-md space-y-4">
+              <div className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-purple-100">
+                <span className="flex items-center gap-1.5 bg-black/20 px-3 py-1 rounded-full">
+                  <Gift className="w-4 h-4 text-amber-200" />
+                  <span>My Reward Wishlist</span>
+                </span>
+                <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-black font-mono">
+                  {kidName}
+                </span>
+              </div>
+
+              <div>
+                <div className="text-xs text-purple-100 font-medium">Your Current Top Wish:</div>
+                <div className="text-lg font-black text-white leading-snug mt-0.5">
+                  {rewardProfile.topWish || "No specific wish added yet!"}
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs bg-amber-400 text-slate-950 font-black px-2.5 py-0.5 rounded-lg shadow-xs">
+                    Target Goal: ${rewardProfile.targetGoalAmount || 15}
+                  </span>
+                  <span className="text-xs text-purple-100 font-medium">
+                    Seen by Parents Thom &amp; Meghan
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowKidRewardModal(true)}
+                  className="w-full py-2.5 bg-white text-indigo-900 font-black rounded-2xl shadow-sm hover:bg-purple-50 transition flex items-center justify-center gap-2 text-xs cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4 text-purple-600" />
+                  <span>Edit Wish &amp; Connected Accounts</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Connected Accounts & Gaming Tags List */}
+            <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div>
+                  <h3 className="font-black text-sm text-slate-900">
+                    Connected Accounts &amp; Tags
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    Parents use these to send digital gift cards &amp; Robux
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowKidRewardModal(true)}
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+                >
+                  + Add / Edit
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                {REWARD_PLATFORMS.map((platform) => {
+                  const val = rewardProfile.platforms?.[platform.id];
+                  return (
+                    <div
+                      key={platform.id}
+                      className={`p-3 rounded-2xl border transition flex items-center justify-between gap-2 ${
+                        val
+                          ? "bg-slate-50 border-slate-200"
+                          : "bg-slate-50/50 border-dashed border-slate-200"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-xl shrink-0">{platform.iconEmoji}</span>
+                        <div className="min-w-0">
+                          <div className="text-xs font-black text-slate-800 truncate">
+                            {platform.name}
+                          </div>
+                          <div className="text-[11px] text-slate-500 font-mono truncate">
+                            {val || "Not linked yet"}
+                          </div>
+                        </div>
+                      </div>
+
+                      {val ? (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full shrink-0">
+                          ✓ Linked
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setShowKidRewardModal(true)}
+                          className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-lg shrink-0 cursor-pointer"
+                        >
+                          + Link
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Back to Chores button */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setActiveNavTab("chores")}
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-2xl shadow-xs transition flex items-center justify-center gap-2 text-xs cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>Back to My Daily Chores</span>
+              </button>
+            </div>
+          </div>
         ) : (
           /* CHORES VIEW (Default) */
           <>
+            {/* Wish Motivation Strip */}
+            {rewardProfile.topWish && (
+              <div
+                onClick={() => setActiveNavTab("rewards")}
+                className="bg-purple-50/80 hover:bg-purple-100/80 border border-purple-200 rounded-2xl p-3 flex items-center justify-between gap-3 text-xs cursor-pointer transition shadow-2xs"
+                title="View your connected accounts & rewards"
+              >
+                <div className="flex items-center gap-2.5 truncate">
+                  <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
+                    🎁
+                  </div>
+                  <div className="truncate">
+                    <div className="text-[10px] text-purple-700 font-bold uppercase tracking-wider">
+                      Your Chore Reward Goal:
+                    </div>
+                    <div className="text-xs font-black text-purple-950 truncate">
+                      {rewardProfile.topWish}
+                    </div>
+                  </div>
+                </div>
+                <span className="text-[11px] font-bold text-purple-700 shrink-0 bg-white border border-purple-200 px-2 py-0.5 rounded-lg shadow-2xs">
+                  ${rewardProfile.targetGoalAmount || 15} ↗
+                </span>
+              </div>
+            )}
             {/* Interactive Monthly Incentive Reward Card */}
             <div
               onClick={() => setActiveNavTab("leaderboard")}
@@ -1516,6 +1678,20 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         onClose={() => setActiveToastEvent(null)}
         onOpenFeed={() => setShowActivityDrawer(true)}
       />
+      {/* Kid Reward Accounts & Wishlist Modal */}
+      {showKidRewardModal && (
+        <KidRewardAccountsModal
+          isOpen={showKidRewardModal}
+          onClose={() => {
+            setShowKidRewardModal(false);
+            setRewardProfile(getKidRewardProfile(kidName));
+          }}
+          kidName={kidName}
+          onProfileSaved={(p) => {
+            setRewardProfile(p);
+          }}
+        />
+      )}
     </div>
   );
 };

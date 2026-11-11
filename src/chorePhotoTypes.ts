@@ -178,3 +178,85 @@ export function getPendingPhotoProofsCount(): number {
   return all.filter(p => !p.verified && !p.redoRequested).length;
 }
 
+export interface ChorePhotoRequest {
+  id: string;
+  dateKey: string;
+  choreIndex: number;
+  kidName: string;
+  taskTitle: string;
+  requestedBy: string; // e.g. "Thom & Meghan"
+  requestedAt: number;
+  message?: string;
+  fulfilled?: boolean;
+}
+
+const STORAGE_KEY_PHOTO_REQUESTS = "weekly_chores_photo_requests_v1";
+
+export function getStoredPhotoRequests(): ChorePhotoRequest[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_PHOTO_REQUESTS);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function savePhotoRequest(req: ChorePhotoRequest): ChorePhotoRequest[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const current = getStoredPhotoRequests();
+    const filtered = current.filter(
+      r => !(
+        r.dateKey === req.dateKey &&
+        r.choreIndex === req.choreIndex &&
+        r.kidName.toLowerCase() === req.kidName.toLowerCase()
+      )
+    );
+    const updated = [req, ...filtered].slice(0, 50);
+    localStorage.setItem(STORAGE_KEY_PHOTO_REQUESTS, JSON.stringify(updated));
+    return updated;
+  } catch {
+    return [];
+  }
+}
+
+export function hasPendingPhotoRequest(
+  dateKey: string,
+  choreIndex: number,
+  kidName: string
+): boolean {
+  const reqs = getStoredPhotoRequests();
+  return reqs.some(
+    r =>
+      r.dateKey === dateKey &&
+      r.choreIndex === choreIndex &&
+      r.kidName.toLowerCase() === kidName.toLowerCase() &&
+      !r.fulfilled
+  );
+}
+
+export function markPhotoRequestFulfilled(
+  dateKey: string,
+  choreIndex: number,
+  kidName: string
+): void {
+  if (typeof window === "undefined") return;
+  try {
+    const reqs = getStoredPhotoRequests();
+    const updated = reqs.map(r => {
+      if (
+        r.dateKey === dateKey &&
+        r.choreIndex === choreIndex &&
+        r.kidName.toLowerCase() === kidName.toLowerCase()
+      ) {
+        return { ...r, fulfilled: true };
+      }
+      return r;
+    });
+    localStorage.setItem(STORAGE_KEY_PHOTO_REQUESTS, JSON.stringify(updated));
+  } catch {}
+}
+

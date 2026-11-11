@@ -31,13 +31,17 @@ import { getChoreCanonicalKey, normalizeTaskName } from "./choreUtils";
 import { getKidRewardProfile } from "./rewardAccounts";
 import { ThemeToggle } from "./ThemeToggle";
 import { HouseholdSettingsModal, type SettingsTab } from "./HouseholdSettingsModal";
-import { unpairKid } from "./firebaseSync";
+import { unpairKid, broadcastLocalUpdate } from "./firebaseSync";
+import { saveActivityEvent, playHouseholdRemoteChime } from "./activityFeed";
 import { ParentPhotoReviewModal } from "./ParentPhotoReviewModal";
 import { ParentPhotoInboxModal } from "./ParentPhotoInboxModal";
 import {
   getPhotoProofForChore,
   getPendingPhotoProofsCount,
-  type ChorePhotoProof
+  hasPendingPhotoRequest,
+  savePhotoRequest,
+  type ChorePhotoProof,
+  type ChorePhotoRequest
 } from "./chorePhotoTypes";
 
 interface FamilyMember {
@@ -137,7 +141,36 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>("appearance");
   const [selectedReviewProof, setSelectedReviewProof] = useState<ChorePhotoProof | null>(null);
   const [showPhotoInbox, setShowPhotoInbox] = useState<boolean>(false);
+  const [photoRequestsVersion, setPhotoRequestsVersion] = useState<number>(0);
   const pendingPhotoCount = getPendingPhotoProofsCount();
+
+  const handleRequestPhoto = (kidName: string, taskTitle: string, choreIndex: number, dateKey: string) => {
+    const req: ChorePhotoRequest = {
+      id: `req-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      dateKey,
+      choreIndex,
+      kidName,
+      taskTitle,
+      requestedBy: "Thom & Meghan",
+      requestedAt: Date.now(),
+      fulfilled: false
+    };
+    savePhotoRequest(req);
+    broadcastLocalUpdate({
+      type: "PHOTO_REQUESTED",
+      request: req
+    });
+    saveActivityEvent({
+      id: `act-req-${Date.now()}`,
+      timestamp: Date.now(),
+      kidName,
+      taskTitle: `Requested live photo proof for "${taskTitle}"! 📸`,
+      action: "signoff",
+      dateKey
+    });
+    playHouseholdRemoteChime();
+    setPhotoRequestsVersion(v => v + 1);
+  };
 
   const toggleKidExpanded = (kidName: string) => {
     setExpandedKids(prev => ({ ...prev, [kidName]: !prev[kidName] }));
@@ -686,7 +719,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                             </div>
 
                             <div className="flex items-center gap-1.5 shrink-0">
-                              {proof && (
+                              {proof ? (
                                 <button
                                   type="button"
                                   onClick={(e) => {
@@ -705,7 +738,33 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                                   <Camera className="w-3 h-3" />
                                   <span>{proof.verified ? "Photo ⭐" : proof.redoRequested ? "Redo 🔄" : "Photo 📸"}</span>
                                 </button>
-                              )}
+                              ) : item.done ? (
+                                (() => {
+                                  const isRequested = hasPendingPhotoRequest(activeDay.dateKey, item.choreIndex, kidName);
+                                  return isRequested ? (
+                                    <span
+                                      className="px-2 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0"
+                                      title="Photo proof requested from kid"
+                                    >
+                                      <Camera className="w-3 h-3 text-amber-400" />
+                                      <span>Photo Asked ⏳</span>
+                                    </span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRequestPhoto(kidName, item.taskTitle, item.choreIndex, activeDay.dateKey);
+                                      }}
+                                      className="px-2 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-1 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition cursor-pointer shrink-0"
+                                      title="Request a live photo proof from kid"
+                                    >
+                                      <Camera className="w-3 h-3 text-amber-400" />
+                                      <span>Request Photo</span>
+                                    </button>
+                                  );
+                                })()
+                              ) : null}
                               <span
                                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
                                   item.done

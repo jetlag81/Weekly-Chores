@@ -42,6 +42,8 @@ import { ParentPhotoReviewModal } from "./ParentPhotoReviewModal";
 import {
   getPhotoProofForChore,
   saveChorePhotoProof,
+  hasPendingPhotoRequest,
+  markPhotoRequestFulfilled,
   type ChorePhotoProof
 } from "./chorePhotoTypes";
 import { HouseholdSettingsModal, type SettingsTab } from "./HouseholdSettingsModal";
@@ -204,6 +206,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     existingProof?: ChorePhotoProof | null;
   } | null>(null);
   const [viewingProof, setViewingProof] = useState<ChorePhotoProof | null>(null);
+  const [photoRequestsVersion, setPhotoRequestsVersion] = useState(0);
 
   // Interactive Chore Celebration, Goal "Almost", and Parent Nudge/Praise State
   const [activeCelebration, setActiveCelebration] = useState<{
@@ -312,6 +315,27 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             nudgeId: nudge.id
           });
         }
+      }
+
+      // Live Photo Request from Parents
+      if (msg.type === "PHOTO_REQUESTED" && msg.request) {
+        const req = msg.request;
+        if (req.kidName?.toLowerCase() === currentKid.name.toLowerCase()) {
+          setPhotoRequestsVersion(v => v + 1);
+          playHouseholdRemoteChime();
+          setActiveToastEvent({
+            id: `toast-${Date.now()}`,
+            timestamp: Date.now(),
+            kidName: currentKid.name,
+            taskTitle: `📸 Parents requested a live photo proof for "${req.taskTitle}"!`,
+            action: "signoff",
+            dateKey: req.dateKey
+          });
+        }
+      }
+
+      if (msg.type === "PHOTO_PROOF_SUBMITTED" || msg.type === "PHOTO_PROOF_VERIFIED") {
+        setPhotoRequestsVersion(v => v + 1);
       }
     });
   }, [currentKid.name]);
@@ -1501,6 +1525,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                     const mainTitle = titleLines[0] || chore.task;
                     const subTitle = titleLines.slice(1).join(" ") || chore.notes;
                     const photoProof = getPhotoProofForChore(activeDateKey, choreIndex, currentKid.name);
+                    const isPhotoRequested = hasPendingPhotoRequest(activeDateKey, choreIndex, currentKid.name);
 
                     return (
                       <div
@@ -1541,6 +1566,25 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                               }`}>
                                 {subTitle}
                               </p>
+                            )}
+                            {isPhotoRequested && !photoProof && (
+                              <div
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setPhotoUploadTarget({
+                                    choreIndex,
+                                    taskTitle: chore.task,
+                                    existingProof: null
+                                  });
+                                }}
+                                className="mt-2 px-2.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-400 dark:border-amber-600/70 flex items-center justify-between gap-2 text-amber-900 dark:text-amber-200 animate-pulse hover:bg-amber-500/25 transition cursor-pointer"
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <Camera className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                                  <span className="text-xs font-bold truncate">📸 Parents asked for a live photo! Tap to snap</span>
+                                </div>
+                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-lg bg-amber-500 text-white shrink-0 shadow-2xs">Snap 📷</span>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -1628,6 +1672,8 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                   const wIndex = wChore.index_ !== undefined ? wChore.index_ : wIdx;
                   const statusMap = getWeeklyKidsStatus(wIndex, wChore.task);
                   const isDone = !!statusMap[currentKid.name];
+                  const weeklyProof = getPhotoProofForChore(activeDateKey, wIndex, currentKid.name);
+                  const isWeeklyPhotoRequested = hasPendingPhotoRequest(activeDateKey, wIndex, currentKid.name);
 
                   return (
                     <div
@@ -1649,7 +1695,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                         >
                           {isLaundry ? <Shirt className="w-5 h-5" /> : <BedDouble className="w-5 h-5" />}
                         </div>
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <div className="font-bold text-sm text-slate-900 dark:text-white leading-snug">
                             {wChore.task}
                           </div>
@@ -1658,10 +1704,65 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                               ? "Wash, dry, fold & put away your clothes"
                               : "Pick up floor, dust, vacuum & organize room"}
                           </p>
+                          {isWeeklyPhotoRequested && !weeklyProof && (
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPhotoUploadTarget({
+                                  choreIndex: wIndex,
+                                  taskTitle: wChore.task,
+                                  existingProof: null
+                                });
+                              }}
+                              className="mt-2 px-2.5 py-1.5 rounded-xl bg-amber-500/15 border border-amber-400 dark:border-amber-600/70 flex items-center justify-between gap-2 text-amber-900 dark:text-amber-200 animate-pulse hover:bg-amber-500/25 transition cursor-pointer"
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <Camera className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                                <span className="text-xs font-bold truncate">📸 Parents asked for a live photo! Tap to snap</span>
+                              </div>
+                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-lg bg-amber-500 text-white shrink-0 shadow-2xs">Snap 📷</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
                       <div className="shrink-0 flex items-center gap-1.5">
+                        {weeklyProof ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setViewingProof(weeklyProof);
+                            }}
+                            className={`flex items-center gap-1 px-2 py-1 rounded-xl border text-[11px] font-bold shadow-2xs transition cursor-pointer ${
+                              weeklyProof.verified
+                                ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300"
+                                : weeklyProof.redoRequested
+                                ? "bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300"
+                                : "bg-purple-50 dark:bg-purple-950/60 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-100"
+                            }`}
+                            title="Click to view photo proof sent to parents"
+                          >
+                            <Camera className="w-3.5 h-3.5" />
+                            <span>{weeklyProof.verified ? "Photo ⭐" : weeklyProof.redoRequested ? "Redo 🔄" : "Photo 📸"}</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPhotoUploadTarget({
+                                choreIndex: wIndex,
+                                taskTitle: wChore.task,
+                                existingProof: null
+                              });
+                            }}
+                            className="p-1.5 rounded-xl text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 transition cursor-pointer"
+                            title="Attach photo proof of completed chore"
+                          >
+                            <Camera className="w-4 h-4" />
+                          </button>
+                        )}
                         {isSpeechSupported() && (
                           <button
                             type="button"
@@ -1831,6 +1932,8 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
           existingProof={photoUploadTarget.existingProof}
           onSubmitProof={(proof) => {
             saveChorePhotoProof(proof);
+            markPhotoRequestFulfilled(activeDateKey, proof.choreIndex, currentKid.name);
+            setPhotoRequestsVersion(v => v + 1);
             onUpdateChore(
               activeDateKey,
               proof.choreIndex,

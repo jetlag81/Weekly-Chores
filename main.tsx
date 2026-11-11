@@ -1461,6 +1461,11 @@ const isStandaloneCsvView =
   typeof window !== 'undefined' &&
   new URLSearchParams(window.location.search).get('view') === 'csv-map';
 
+const isDevInspectorEnabled =
+  typeof window !== 'undefined' &&
+  (new URLSearchParams(window.location.search).get('dev') === 'true' ||
+   new URLSearchParams(window.location.search).get('inspect') === 'true');
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     {isStandaloneCsvView ? (
@@ -1468,7 +1473,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     ) : (
       <>
         <AppWrapper />
-        <CodeInspectorOverlay />
+        {isDevInspectorEnabled && <CodeInspectorOverlay />}
       </>
     )}
   </React.StrictMode>

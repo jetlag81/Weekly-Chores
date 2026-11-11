@@ -40,7 +40,8 @@ import {
   ShieldCheck,
   Bell,
   DollarSign,
-  X
+  X,
+  Camera
 } from 'lucide-react';
 import {
   getStoredDeviceSession,
@@ -64,6 +65,13 @@ import { AllowanceLedgerModal } from "./src/AllowanceLedgerModal";
 import { ParentNudgeModal } from "./src/ParentNudgeModal";
 import { ParentRewardPayoutModal } from "./src/ParentRewardPayoutModal";
 import { ParentMobileDashboard } from "./src/ParentMobileDashboard";
+import { ParentPhotoReviewModal } from "./src/ParentPhotoReviewModal";
+import { ParentPhotoInboxModal } from "./src/ParentPhotoInboxModal";
+import {
+  getPhotoProofForChore,
+  getPendingPhotoProofsCount,
+  type ChorePhotoProof
+} from "./src/chorePhotoTypes";
 import { ThemeToggle } from "./src/ThemeToggle";
 import { HouseholdSettingsModal } from "./src/HouseholdSettingsModal";
 import { HouseholdActivityDrawer } from "./src/HouseholdActivityDrawer";
@@ -1802,6 +1810,8 @@ function App({
   const [showRewardPayoutModal, setShowRewardPayoutModal] = useState(false);
   const [rewardPayoutKid, setRewardPayoutKid] = useState<string>("Sydney");
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showPhotoInboxModal, setShowPhotoInboxModal] = useState(false);
+  const [selectedReviewProof, setSelectedReviewProof] = useState<ChorePhotoProof | null>(null);
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
 
   // Parent View Mode Preference: "mobile" vs "table" (stored in localStorage)
@@ -5927,6 +5937,20 @@ function App({
             </button>
             <button
               type="button"
+              onClick={() => setShowPhotoInboxModal(true)}
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-lg transition cursor-pointer shadow-2xs relative"
+              title="Review chore completion photos submitted by kids"
+            >
+              <Camera className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Photo Proofs</span>
+              {getPendingPhotoProofsCount() > 0 && (
+                <span className="text-[10px] font-black px-1.5 py-0.2 rounded-full bg-rose-500 text-white font-mono animate-pulse">
+                  {getPendingPhotoProofsCount()}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
               onClick={() => setShowAllowanceLedger(true)}
               className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg transition cursor-pointer shadow-2xs"
               title="Open Household Allowance Ledger & Payment History"
@@ -6198,11 +6222,12 @@ function App({
             var _a2, _b2;
             const choreTitle = cr.task || cr.row?.[0] || "";
             const status = getChoreStatus(dateKey, cr.index_, choreTitle);
+            const proof = getPhotoProofForChore(dateKey, cr.index_);
             const assignee = getMember(status.who);
             const freq = getChoreFreq(cr);
             return <div key={cr.index_} className={`group text-[11px] p-1 rounded-md border flex flex-col gap-1 transition ${status.done ? "bg-emerald-50/70 border-emerald-200 text-slate-500" : freq.frequency === "weekly" ? "bg-purple-50/60 border-purple-200 text-purple-950 shadow-2xs" : "bg-white border-slate-200 hover:border-slate-300 text-slate-800 shadow-2xs"}`}><div className="flex items-center justify-between gap-1 w-full"><div className="flex items-center gap-1 min-w-0 flex-1"><button onClick={() => handleUpdateChore(dateKey, cr.index_, {
               done: !status.done
-            })} className="shrink-0 text-slate-400 hover:text-emerald-600 focus:outline-none">{status.done ? <SquareCheckBig className="w-3.5 h-3.5 text-emerald-600" /> : <Square className="w-3.5 h-3.5 hover:text-slate-600" />}</button><span className={`truncate text-[10px] font-medium leading-tight ${status.done ? "line-through" : ""}`}>{choreTitle}</span></div><div className="flex items-center gap-1 shrink-0">{freq.frequency === "weekly" && <span className="text-[8px] font-bold px-1 py-0.2 rounded bg-purple-100 text-purple-700 uppercase" title="Once-a-week task">1x/wk</span>}{getSpecificKidForChore(choreTitle) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold" style={{
+            })} className="shrink-0 text-slate-400 hover:text-emerald-600 focus:outline-none">{status.done ? <SquareCheckBig className="w-3.5 h-3.5 text-emerald-600" /> : <Square className="w-3.5 h-3.5 hover:text-slate-600" />}</button><span className={`truncate text-[10px] font-medium leading-tight ${status.done ? "line-through" : ""}`}>{choreTitle}</span></div><div className="flex items-center gap-1 shrink-0">{proof && <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedReviewProof(proof); }} className="shrink-0 p-0.5 rounded text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50" title="View submitted chore photo proof"><Camera className="w-3 h-3" /></button>}{freq.frequency === "weekly" && <span className="text-[8px] font-bold px-1 py-0.2 rounded bg-purple-100 text-purple-700 uppercase" title="Once-a-week task">1x/wk</span>}{getSpecificKidForChore(choreTitle) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold" style={{
               backgroundColor: ((_a2 = getMember(getSpecificKidForChore(choreTitle))) == null ? void 0 : _a2.bg) || "#FCE7F3",
               color: ((_b2 = getMember(getSpecificKidForChore(choreTitle))) == null ? void 0 : _b2.text) || "#BE185D"
             }}>{getSpecificKidForChore(choreTitle)}</span> : isBedroomChore(choreTitle) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold bg-pink-100 text-pink-700" title="Each child cleans own bedroom">Own Rooms</span> : status.who ? <span className="shrink-0 text-[9px] px-1 py-0.2 rounded font-semibold" style={{
@@ -6675,9 +6700,10 @@ function App({
               if (freq.frequency === "biweekly") return dayOfWeekIdx === freq.dayOfWeek && parsed && isCurbsideActiveOnDate(taskTitleStr, parsed.year, parsed.month, parsed.day);
               return false;
             })();
+            const proof = getPhotoProofForChore(activeDayModal, cr.index_);
             return <div key={cr.index_} className={`p-2.5 rounded-xl border flex flex-col gap-2 transition ${status.done ? "bg-emerald-50/60 border-emerald-200" : freq.frequency === "weekly" && isScheduledForToday ? "bg-purple-50/60 border-purple-200" : "bg-white border-slate-200 hover:border-slate-300"}`}><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2.5 flex-1 min-w-0"><button onClick={() => handleUpdateChore(activeDayModal, cr.index_, {
               done: !status.done
-            })} className="text-slate-400 hover:text-emerald-600 focus:outline-none">{status.done ? <SquareCheckBig className="w-5 h-5 text-emerald-600" /> : <Square className="w-5 h-5" />}</button><div className="flex items-center gap-1.5 min-w-0"><span className={`text-xs font-semibold truncate ${status.done ? "line-through text-slate-500" : "text-slate-800"}`}>{cr.task || cr.row[0]}</span>{freq.frequency === "weekly" && <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${isScheduledForToday ? "bg-purple-100 text-purple-700 border border-purple-200" : "bg-slate-100 text-slate-500"}`}>{isScheduledForToday ? "1x/wk (Today)" : `1x/wk (${(_b2 = DAY_STYLES[freq.dayOfWeek]) == null ? void 0 : _b2.short})`}</span>}</div></div>{getSpecificKidForChore(cr.task || cr.row[0]) ? <div className="text-[11px] font-bold px-2 py-1 rounded border shrink-0" style={{
+            })} className="text-slate-400 hover:text-emerald-600 focus:outline-none">{status.done ? <SquareCheckBig className="w-5 h-5 text-emerald-600" /> : <Square className="w-5 h-5" />}</button><div className="flex items-center gap-1.5 min-w-0"><span className={`text-xs font-semibold truncate ${status.done ? "line-through text-slate-500" : "text-slate-800"}`}>{cr.task || cr.row[0]}</span>{freq.frequency === "weekly" && <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${isScheduledForToday ? "bg-purple-100 text-purple-700 border border-purple-200" : "bg-slate-100 text-slate-500"}`}>{isScheduledForToday ? "1x/wk (Today)" : `1x/wk (${(_b2 = DAY_STYLES[freq.dayOfWeek]) == null ? void 0 : _b2.short})`}</span>}</div></div><div className="flex items-center gap-1.5 shrink-0">{proof && <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedReviewProof(proof); }} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition cursor-pointer" title="View submitted chore photo proof"><Camera className="w-3 h-3" /><span>{proof.verified ? "Photo ⭐" : "Photo 📸"}</span></button>}{getSpecificKidForChore(cr.task || cr.row[0]) ? <div className="text-[11px] font-bold px-2 py-1 rounded border shrink-0" style={{
               backgroundColor: ((_c2 = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _c2.bg) || "#FCE7F3",
               color: ((_d = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _d.text) || "#BE185D",
               borderColor: (((_e = getMember(getSpecificKidForChore(cr.task || cr.row[0]))) == null ? void 0 : _e.color) || "#ec4899") + "50"
@@ -6745,7 +6771,7 @@ function App({
               color: "#0f172a",
               backgroundColor: "#FFFFFF",
               fontWeight: "600"
-            }}>{status.who}</option>}</select>}</div>{isBedroomChore(cr.task || cr.row[0]) && !getSpecificKidForChore(cr.task || cr.row[0]) && <div className="bg-pink-50/70 border border-pink-200 rounded-lg p-2 mt-1"><div className="text-[11px] font-bold text-pink-900 mb-1.5 flex items-center justify-between"><span>Individual Bedrooms to Clean:</span><span className="text-[10px] text-pink-600 font-normal">Each child cleans own space</span></div><div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">{getKidsPresentOnDate(activeDayModal).map(kidName => {
+            }}>{status.who}</option>}</select>}</div></div>{isBedroomChore(cr.task || cr.row[0]) && !getSpecificKidForChore(cr.task || cr.row[0]) && <div className="bg-pink-50/70 border border-pink-200 rounded-lg p-2 mt-1"><div className="text-[11px] font-bold text-pink-900 mb-1.5 flex items-center justify-between"><span>Individual Bedrooms to Clean:</span><span className="text-[10px] text-pink-600 font-normal">Each child cleans own space</span></div><div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">{getKidsPresentOnDate(activeDayModal).map(kidName => {
               var _a3;
               const isKidDone = !!((_a3 = status.kidsDone) == null ? void 0 : _a3[kidName]);
               const kidMember = getMember(kidName);
@@ -7129,6 +7155,30 @@ function App({
           onUnpairDevice={(kName) => {
             setNotice(`Unpaired ${kName}'s device`);
             setTimeout(() => setNotice(null), 3500);
+          }}
+        />
+      )}
+
+      {/* Parent Photo Proofs Review Modal (Detail View) */}
+      {selectedReviewProof && (
+        <ParentPhotoReviewModal
+          isOpen={!!selectedReviewProof}
+          onClose={() => setSelectedReviewProof(null)}
+          proof={selectedReviewProof}
+          parentName="Thom & Meghan"
+          onProofUpdated={(updated) => setSelectedReviewProof(updated)}
+        />
+      )}
+
+      {/* Parent Photo Proofs Inbox Modal (Batch Review) */}
+      {showPhotoInboxModal && (
+        <ParentPhotoInboxModal
+          isOpen={showPhotoInboxModal}
+          onClose={() => setShowPhotoInboxModal(false)}
+          allKidsList={allKidsList}
+          familyMembers={familyMembers}
+          onSelectProofForDetail={(p) => {
+            setSelectedReviewProof(p);
           }}
         />
       )}

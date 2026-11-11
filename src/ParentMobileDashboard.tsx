@@ -24,13 +24,21 @@ import {
   ArrowRight,
   UserCheck,
   Gift,
-  Settings
+  Settings,
+  Camera
 } from "lucide-react";
 import { getChoreCanonicalKey, normalizeTaskName } from "./choreUtils";
 import { getKidRewardProfile } from "./rewardAccounts";
 import { ThemeToggle } from "./ThemeToggle";
 import { HouseholdSettingsModal, type SettingsTab } from "./HouseholdSettingsModal";
 import { unpairKid } from "./firebaseSync";
+import { ParentPhotoReviewModal } from "./ParentPhotoReviewModal";
+import { ParentPhotoInboxModal } from "./ParentPhotoInboxModal";
+import {
+  getPhotoProofForChore,
+  getPendingPhotoProofsCount,
+  type ChorePhotoProof
+} from "./chorePhotoTypes";
 
 interface FamilyMember {
   name: string;
@@ -127,6 +135,9 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   const [expandedWeeklyChecklist, setExpandedWeeklyChecklist] = useState<boolean>(true);
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
   const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>("appearance");
+  const [selectedReviewProof, setSelectedReviewProof] = useState<ChorePhotoProof | null>(null);
+  const [showPhotoInbox, setShowPhotoInbox] = useState<boolean>(false);
+  const pendingPhotoCount = getPendingPhotoProofsCount();
 
   const toggleKidExpanded = (kidName: string) => {
     setExpandedKids(prev => ({ ...prev, [kidName]: !prev[kidName] }));
@@ -265,6 +276,21 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
               {activitiesCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-indigo-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 font-mono shadow-xs">
                   {activitiesCount > 99 ? "99+" : activitiesCount}
+                </span>
+              )}
+            </button>
+
+            {/* Chore Photo Proofs Inbox Button */}
+            <button
+              type="button"
+              onClick={() => setShowPhotoInbox(true)}
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition cursor-pointer relative"
+              title="Chore Photo Proofs Inbox"
+            >
+              <Camera className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
+              {pendingPhotoCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-rose-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 font-mono shadow-xs animate-pulse">
+                  {pendingPhotoCount}
                 </span>
               )}
             </button>
@@ -619,54 +645,80 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                         No assigned chores for {kidName} on this day.
                       </div>
                     ) : (
-                      kidChores.map(item => (
-                        <div
-                          key={`${item.choreIndex}_${item.taskTitle}`}
-                          onClick={() =>
-                            onToggleKidChore(
-                              activeDay.dateKey,
-                              item.choreIndex,
-                              kidName,
-                              item.taskTitle,
-                              selectedDayIdx
-                            )
-                          }
-                          className={`p-2.5 rounded-xl border transition cursor-pointer flex items-center justify-between gap-3 ${
-                            item.done
-                              ? "bg-emerald-950/20 border-emerald-500/30 text-emerald-200"
-                              : "bg-slate-900/40 border-slate-700/60 hover:border-slate-600 text-slate-200"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div
-                              className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition ${
-                                item.done
-                                  ? "bg-emerald-500 text-slate-950 font-black"
-                                  : "border-2 border-slate-500 hover:border-amber-400"
-                              }`}
-                            >
-                              {item.done && <Check className="w-4 h-4 stroke-[3]" />}
-                            </div>
-                            <span
-                              className={`text-xs font-semibold truncate ${
-                                item.done ? "line-through text-slate-400" : "text-white"
-                              }`}
-                            >
-                              {item.taskTitle}
-                            </span>
-                          </div>
+                      kidChores.map(item => {
+                        const proof = getPhotoProofForChore(activeDay.dateKey, item.choreIndex, kidName);
 
-                          <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                        return (
+                          <div
+                            key={`${item.choreIndex}_${item.taskTitle}`}
+                            onClick={() =>
+                              onToggleKidChore(
+                                activeDay.dateKey,
+                                item.choreIndex,
+                                kidName,
+                                item.taskTitle,
+                                selectedDayIdx
+                              )
+                            }
+                            className={`p-2.5 rounded-xl border transition cursor-pointer flex items-center justify-between gap-3 ${
                               item.done
-                                ? "bg-emerald-500/20 text-emerald-300"
-                                : "bg-slate-700/50 text-slate-400"
+                                ? "bg-emerald-950/20 border-emerald-500/30 text-emerald-200"
+                                : "bg-slate-900/40 border-slate-700/60 hover:border-slate-600 text-slate-200"
                             }`}
                           >
-                            {item.done ? "Done ✓" : "Pending"}
-                          </span>
-                        </div>
-                      ))
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div
+                                className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition ${
+                                  item.done
+                                    ? "bg-emerald-500 text-slate-950 font-black"
+                                    : "border-2 border-slate-500 hover:border-amber-400"
+                                }`}
+                              >
+                                {item.done && <Check className="w-4 h-4 stroke-[3]" />}
+                              </div>
+                              <span
+                                className={`text-xs font-semibold truncate ${
+                                  item.done ? "line-through text-slate-400" : "text-white"
+                                }`}
+                              >
+                                {item.taskTitle}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {proof && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedReviewProof(proof);
+                                  }}
+                                  className={`px-2 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-1 border transition cursor-pointer shrink-0 ${
+                                    proof.verified
+                                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                                      : proof.redoRequested
+                                      ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                                      : "bg-indigo-500/20 text-indigo-300 border-indigo-500/40 hover:bg-indigo-500/30"
+                                  }`}
+                                  title="Click to view and approve photo proof"
+                                >
+                                  <Camera className="w-3 h-3" />
+                                  <span>{proof.verified ? "Photo ⭐" : proof.redoRequested ? "Redo 🔄" : "Photo 📸"}</span>
+                                </button>
+                              )}
+                              <span
+                                className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                                  item.done
+                                    ? "bg-emerald-500/20 text-emerald-300"
+                                    : "bg-slate-700/50 text-slate-400"
+                                }`}
+                              >
+                                {item.done ? "Done ✓" : "Pending"}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })
                     )}
                   </div>
                 )}
@@ -825,6 +877,30 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
           }}
           onUnpairDevice={(kName) => {
             unpairKid(kName);
+          }}
+        />
+      )}
+
+      {/* Parent Photo Proofs Review Modal (Detail View) */}
+      {selectedReviewProof && (
+        <ParentPhotoReviewModal
+          isOpen={!!selectedReviewProof}
+          onClose={() => setSelectedReviewProof(null)}
+          proof={selectedReviewProof}
+          parentName="Thom & Meghan"
+          onProofUpdated={(updated) => setSelectedReviewProof(updated)}
+        />
+      )}
+
+      {/* Parent Photo Proofs Inbox Modal (Batch Review) */}
+      {showPhotoInbox && (
+        <ParentPhotoInboxModal
+          isOpen={showPhotoInbox}
+          onClose={() => setShowPhotoInbox(false)}
+          allKidsList={allKidsList}
+          familyMembers={familyMembers}
+          onSelectProofForDetail={(p) => {
+            setSelectedReviewProof(p);
           }}
         />
       )}

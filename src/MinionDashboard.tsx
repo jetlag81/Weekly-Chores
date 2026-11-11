@@ -31,11 +31,19 @@ import {
   Bell,
   Wallet,
   Settings,
-  QrCode
+  QrCode,
+  Camera
 } from "lucide-react";
 import { isStandalone, subscribeInstallable } from "./pwaManager";
 import { InstallPwaModal } from "./InstallPwaModal";
 import { SiblingChoreDetailModal } from "./SiblingChoreDetailModal";
+import { ChorePhotoUploadModal } from "./ChorePhotoUploadModal";
+import { ParentPhotoReviewModal } from "./ParentPhotoReviewModal";
+import {
+  getPhotoProofForChore,
+  saveChorePhotoProof,
+  type ChorePhotoProof
+} from "./chorePhotoTypes";
 import { HouseholdSettingsModal, type SettingsTab } from "./HouseholdSettingsModal";
 import { ParentInspectionModal } from "./ParentInspectionModal";
 import { GifCelebrationModal, type GifModalVariant } from "./GifCelebrationModal";
@@ -95,7 +103,7 @@ interface MinionDashboardProps {
   topPerformer?: any;
   selectedYear: number;
   selectedMonth: number;
-  onUpdateChore: (dateKey: string, choreIndex: number, updates: { done?: boolean; who?: string }, taskTitle?: string) => void;
+  onUpdateChore: (dateKey: string, choreIndex: number, updates: { done?: boolean; who?: string; photoProof?: any; [key: string]: any }, taskTitle?: string) => void;
   onToggleWeeklyKidChore: (choreIndex: number, kidName: string, taskTitle: string) => void;
   getWeeklyKidsStatus: (choreIndex: number, taskTitle: string) => Record<string, boolean>;
   onExitMinionMode: () => void;
@@ -190,6 +198,12 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     color?: string;
     id?: string;
   } | null>(null);
+  const [photoUploadTarget, setPhotoUploadTarget] = useState<{
+    choreIndex: number;
+    taskTitle: string;
+    existingProof?: ChorePhotoProof | null;
+  } | null>(null);
+  const [viewingProof, setViewingProof] = useState<ChorePhotoProof | null>(null);
 
   // Interactive Chore Celebration, Goal "Almost", and Parent Nudge/Praise State
   const [activeCelebration, setActiveCelebration] = useState<{
@@ -1486,6 +1500,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                     const titleLines = String(chore.task || "Chore").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
                     const mainTitle = titleLines[0] || chore.task;
                     const subTitle = titleLines.slice(1).join(" ") || chore.notes;
+                    const photoProof = getPhotoProofForChore(activeDateKey, choreIndex, currentKid.name);
 
                     return (
                       <div
@@ -1531,6 +1546,44 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                         </div>
 
                         <div className="shrink-0 flex items-center gap-1.5">
+                          {/* Photo Proof Button / Status Badge */}
+                          {photoProof ? (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setViewingProof(photoProof);
+                              }}
+                              className={`flex items-center gap-1 px-2 py-1 rounded-xl border text-[11px] font-bold shadow-2xs transition cursor-pointer ${
+                                photoProof.verified
+                                  ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300"
+                                  : photoProof.redoRequested
+                                  ? "bg-rose-50 dark:bg-rose-950/60 border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300"
+                                  : "bg-indigo-50 dark:bg-indigo-950/60 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900"
+                              }`}
+                              title="Click to view photo proof sent to parents"
+                            >
+                              <Camera className="w-3.5 h-3.5" />
+                              <span>{photoProof.verified ? "Photo ⭐" : photoProof.redoRequested ? "Redo 🔄" : "Photo 📸"}</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPhotoUploadTarget({
+                                  choreIndex,
+                                  taskTitle: chore.task,
+                                  existingProof: null
+                                });
+                              }}
+                              className="p-1.5 rounded-xl text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 transition cursor-pointer"
+                              title="Attach photo proof of completed chore"
+                            >
+                              <Camera className="w-4 h-4" />
+                            </button>
+                          )}
+
                           {isSpeechSupported() && (
                             <button
                               type="button"
@@ -1763,6 +1816,57 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
           currentKidName={currentKid.name}
           dateKey={activeDateKey}
           chores={getMemberChoresForDay(inspectingSibling.name, activeDateKey)}
+        />
+      )}
+
+      {/* Minion Chore Photo Proof Upload Modal */}
+      {photoUploadTarget && (
+        <ChorePhotoUploadModal
+          isOpen={!!photoUploadTarget}
+          onClose={() => setPhotoUploadTarget(null)}
+          kidName={currentKid.name}
+          taskTitle={photoUploadTarget.taskTitle}
+          choreIndex={photoUploadTarget.choreIndex}
+          dateKey={activeDateKey}
+          existingProof={photoUploadTarget.existingProof}
+          onSubmitProof={(proof) => {
+            saveChorePhotoProof(proof);
+            onUpdateChore(
+              activeDateKey,
+              proof.choreIndex,
+              {
+                done: true,
+                who: currentKid.name,
+                photoProof: proof
+              },
+              proof.taskTitle
+            );
+            logHouseholdActivity({
+              kidName: currentKid.name,
+              taskTitle: `Photo proof attached for "${proof.taskTitle}"! 📸`,
+              action: "completed",
+              dateKey: activeDateKey
+            });
+            broadcastLocalUpdate({
+              type: "PHOTO_PROOF_SUBMITTED",
+              proof
+            });
+            setPhotoUploadTarget(null);
+          }}
+        />
+      )}
+
+      {/* Viewing Photo Proof Modal (for Kid) */}
+      {viewingProof && (
+        <ParentPhotoReviewModal
+          isOpen={!!viewingProof}
+          onClose={() => setViewingProof(null)}
+          proof={viewingProof}
+          parentName="Parents"
+          onProofUpdated={(updated) => {
+            saveChorePhotoProof(updated);
+            setViewingProof(updated);
+          }}
         />
       )}
     </div>

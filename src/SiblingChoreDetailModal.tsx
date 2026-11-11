@@ -14,10 +14,13 @@ import {
   Flame,
   Clock,
   Heart,
-  Gift
+  Gift,
+  Camera
 } from "lucide-react";
 import { getKidRewardProfile } from "./rewardAccounts";
 import { playHouseholdRemoteChime, saveActivityEvent } from "./activityFeed";
+import { getPhotoProofForChore, type ChorePhotoProof } from "./chorePhotoTypes";
+import { ParentPhotoReviewModal } from "./ParentPhotoReviewModal";
 
 export interface SiblingChoreItem {
   task: string;
@@ -50,6 +53,7 @@ export const SiblingChoreDetailModal: React.FC<SiblingChoreDetailModalProps> = (
   chores
 }) => {
   const [cheerSent, setCheerSent] = useState<boolean>(false);
+  const [selectedProof, setSelectedProof] = useState<ChorePhotoProof | null>(null);
 
   if (!isOpen) return null;
 
@@ -262,22 +266,39 @@ export const SiblingChoreDetailModal: React.FC<SiblingChoreDetailModalProps> = (
                 ))}
 
                 {/* Completed Chores */}
-                {doneChores.map((item, idx) => (
-                  <div
-                    key={`done-${item.choreIndex}-${idx}`}
-                    className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between gap-2.5 opacity-80"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                      <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 line-through truncate">
-                        {item.task}
-                      </span>
+                {doneChores.map((item, idx) => {
+                  const proof = getPhotoProofForChore(dateKey, item.choreIndex, sibling.name);
+
+                  return (
+                    <div
+                      key={`done-${item.choreIndex}-${idx}`}
+                      className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between gap-2.5 opacity-80"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                        <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 line-through truncate">
+                          {item.task}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {proof && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedProof(proof)}
+                            className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 border border-indigo-200 dark:border-indigo-800 px-2 py-0.5 rounded-md flex items-center gap-1 transition cursor-pointer"
+                            title="View photo proof"
+                          >
+                            <Camera className="w-3 h-3" />
+                            <span>Photo</span>
+                          </button>
+                        )}
+                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md shrink-0">
+                          Done
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md shrink-0">
-                      Done
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -326,6 +347,17 @@ export const SiblingChoreDetailModal: React.FC<SiblingChoreDetailModalProps> = (
             Close
           </button>
         </div>
+
+        {/* Selected Photo Proof Modal */}
+        {selectedProof && (
+          <ParentPhotoReviewModal
+            isOpen={!!selectedProof}
+            onClose={() => setSelectedProof(null)}
+            proof={selectedProof}
+            parentName={currentKidName}
+            onProofUpdated={(updated) => setSelectedProof(updated)}
+          />
+        )}
       </div>
     </div>
   );

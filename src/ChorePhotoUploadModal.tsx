@@ -6,14 +6,13 @@ import React, { useState, useRef } from "react";
 import confetti from "canvas-confetti";
 import {
   Camera,
-  Image as ImageIcon,
   X,
   CheckCircle2,
   Sparkles,
-  Upload,
   RefreshCw,
   Send,
-  Loader2
+  Loader2,
+  ShieldCheck
 } from "lucide-react";
 import { compressImageFile, type ChorePhotoProof } from "./chorePhotoTypes";
 import { playChoreCompletionSound } from "./firebaseSync";
@@ -47,7 +46,6 @@ export const ChorePhotoUploadModal: React.FC<ChorePhotoUploadModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
@@ -169,19 +167,12 @@ export const ChorePhotoUploadModal: React.FC<ChorePhotoUploadModalProps> = ({
           </button>
         </div>
 
-        {/* Hidden Camera & File Inputs */}
+        {/* Hidden Live Camera Input (Rear/Environment Camera) */}
         <input
           type="file"
           ref={cameraInputRef}
           accept="image/*"
           capture="environment"
-          onChange={handleFileChange}
-          className="hidden"
-        />
-        <input
-          type="file"
-          ref={galleryInputRef}
-          accept="image/*"
           onChange={handleFileChange}
           className="hidden"
         />
@@ -204,23 +195,15 @@ export const ChorePhotoUploadModal: React.FC<ChorePhotoUploadModalProps> = ({
                   className="w-full max-h-72 object-contain mx-auto bg-slate-900"
                 />
 
-                {/* Retake / Change Button overlay */}
+                {/* Retake Live Photo Button overlay */}
                 <div className="absolute bottom-2.5 right-2.5 flex items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => cameraInputRef.current?.click()}
-                    className="px-2.5 py-1.5 rounded-xl bg-black/75 hover:bg-black text-white text-xs font-bold flex items-center gap-1.5 shadow-md backdrop-blur-xs transition cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl bg-black/80 hover:bg-black text-white text-xs font-bold flex items-center gap-1.5 shadow-md backdrop-blur-xs transition cursor-pointer"
                   >
                     <RefreshCw className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>Retake</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => galleryInputRef.current?.click()}
-                    className="px-2.5 py-1.5 rounded-xl bg-black/75 hover:bg-black text-white text-xs font-bold flex items-center gap-1.5 shadow-md backdrop-blur-xs transition cursor-pointer"
-                  >
-                    <ImageIcon className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>Gallery</span>
+                    <span>Retake Live Photo</span>
                   </button>
                 </div>
               </div>
@@ -231,30 +214,27 @@ export const ChorePhotoUploadModal: React.FC<ChorePhotoUploadModalProps> = ({
                 </div>
                 <div>
                   <h4 className="font-extrabold text-sm text-slate-800 dark:text-slate-200">
-                    Snap a photo of your completed chore!
+                    Snap a live photo of your completed chore!
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
-                    Show Thom &amp; Meghan your great work to earn approval stars and keep the streak going.
+                    Take a picture right now to verify completion and send it to Thom &amp; Meghan in real time.
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                <div className="pt-1">
                   <button
                     type="button"
                     onClick={() => cameraInputRef.current?.click()}
-                    className="flex-1 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+                    className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-sm transition flex items-center justify-center gap-2.5 shadow-md active:scale-[0.99] cursor-pointer"
                   >
-                    <Camera className="w-4 h-4" />
-                    <span>Take Photo 📷</span>
+                    <Camera className="w-5 h-5 text-indigo-200" />
+                    <span>Take Live Photo 📷</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => galleryInputRef.current?.click()}
-                    className="flex-1 py-3 px-4 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-extrabold text-xs transition flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <ImageIcon className="w-4 h-4" />
-                    <span>Choose Picture 🖼️</span>
-                  </button>
+                </div>
+
+                <div className="flex items-center justify-center gap-1 text-[11px] text-slate-400 font-medium pt-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>Live camera capture required for verification</span>
                 </div>
               </div>
             )}
@@ -311,3 +291,4 @@ export const ChorePhotoUploadModal: React.FC<ChorePhotoUploadModalProps> = ({
     </div>
   );
 };
+

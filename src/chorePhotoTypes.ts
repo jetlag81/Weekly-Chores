@@ -177,3 +177,4 @@ export function getPendingPhotoProofsCount(): number {
   const all = getAllChorePhotoProofs();
   return all.filter(p => !p.verified && !p.redoRequested).length;
 }
+

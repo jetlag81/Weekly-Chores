@@ -88,12 +88,18 @@ const ALMOST_SEARCH_TERMS = [
 ];
 
 const NUDGE_SEARCH_TERMS = [
-  "playful reminder cartoon",
-  "come on funny cartoon",
-  "wake up playful cartoon",
-  "chore time funny",
-  "cleaning up cartoon",
-  "let's do this cartoon"
+  "meh reaction",
+  "unimpressed reaction",
+  "eye roll funny",
+  "disappointed funny",
+  "whatever reaction",
+  "facepalm reaction",
+  "shrug idk funny",
+  "kermit shaking head",
+  "disappointed dog funny",
+  "bored reaction funny",
+  "do better funny",
+  "seriously reaction funny"
 ];
 
 // In-memory rotating queues for 0ms instantaneous celebration popups
@@ -220,13 +226,20 @@ export async function preloadGiphyCelebrations(): Promise<void> {
 }
 
 /**
- * Synchronously retrieves a G-rated celebration GIF URL.
- * Pops from the preloaded Giphy queue if available; otherwise returns the curated local GIF.
- * Never blocks the UI and never fails!
+ * Synchronously retrieves a celebration or nudge GIF URL.
+ * For "meh" / "nudge", prioritizes the hilarious original local Meh folder by default
+ * to preserve the classic unimpressed tone unless Giphy is explicitly requested.
+ * For "goodJob" and "almost", pops from the preloaded Giphy queue or falls back to local GIFs.
  */
 export function getRandomGiphyOrFallbackGif(
-  category: "goodJob" | "almost" | "meh" | "nudge" = "goodJob"
+  category: "goodJob" | "almost" | "meh" | "nudge" = "goodJob",
+  preferGiphyForMeh: boolean = false
 ): string {
+  // Stay true to the original Meh folder for nudges unless parent specifically requests Giphy
+  if ((category === "meh" || category === "nudge") && !preferGiphyForMeh) {
+    return getRandomMehGif();
+  }
+
   const qKey = category === "almost" ? "almost" : category === "goodJob" ? "goodJob" : "nudge";
   const queue = giphyQueues[qKey];
 

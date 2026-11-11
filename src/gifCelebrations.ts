@@ -76,6 +76,32 @@ export const MEH_GIFS: string[] = [
   "/gifs/Meh/Spider Man Whatever GIF by Dave Bell (1).gif"
 ];
 
+export interface OriginalMehGifItem {
+  id: string;
+  name: string;
+  url: string;
+}
+
+export const ORIGINAL_MEH_ITEMS: OriginalMehGifItem[] = [
+  { id: "al-bundy", name: "Al Bundy Bored", url: "/gifs/Meh/Bored Married With Children GIF.gif" },
+  { id: "disappointed-dog", name: "Disappointed Dog", url: "/gifs/Meh/Disappointed Dog GIF.gif" },
+  { id: "disappointed-monkey", name: "Disappointed Monkey", url: "/gifs/Meh/Disappointed Monkey GIF by Justin.gif" },
+  { id: "do-better", name: "Do Better", url: "/gifs/Meh/Do Better Level Up GIF by Digi 995.gif" },
+  { id: "no-way", name: "No Way", url: "/gifs/Meh/Im Not No Way GIF.gif" },
+  { id: "kermit-no", name: "Kermit Shaking Head", url: "/gifs/Meh/Kermit The Frog No GIF by Muppet Wiki (1).gif" },
+  { id: "mark-wahlberg", name: "Mark Wahlberg Wow", url: "/gifs/Meh/Mark Wahlberg Wow GIF by Daddy's Home.gif" },
+  { id: "meh-haha", name: "Meh Ha Ha", url: "/gifs/Meh/meh ha ha GIF by VICE En Español.gif" },
+  { id: "nicksplat", name: "NickSplat", url: "/gifs/Meh/nicksplat GIF.gif" },
+  { id: "no-way-cat", name: "No Way Cat", url: "/gifs/Meh/No Way Cat GIF.gif" },
+  { id: "not-funny", name: "Not Funny No", url: "/gifs/Meh/Not Funny No GIF.gif" },
+  { id: "deal-with-it", name: "Deal With It", url: "/gifs/Meh/Oh No Deal With It GIF by DreamWorks Animation.gif" },
+  { id: "star-wars-sad", name: "Star Wars Sad", url: "/gifs/Meh/Sad Its Over GIF by Star Wars.gif" },
+  { id: "sad-reels", name: "Sad Reels", url: "/gifs/Meh/Sad Reels GIF.gif" },
+  { id: "friends-whatever", name: "Friends Whatever", url: "/gifs/Meh/Season 4 Whatever GIF by Friends.gif" },
+  { id: "paramount-idk", name: "Paramount Idk", url: "/gifs/Meh/Season 5 Idk GIF by Paramount+.gif" },
+  { id: "spiderman-whatever", name: "Spider-Man Whatever", url: "/gifs/Meh/Spider Man Whatever GIF by Dave Bell (1).gif" }
+];
+
 // Fisher-Yates shuffle generator
 function createShuffledIndices(length: number): number[] {
   const indices = Array.from({ length }, (_, i) => i);

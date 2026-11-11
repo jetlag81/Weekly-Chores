@@ -257,7 +257,7 @@ export const KidRewardAccountsModal: React.FC<KidRewardAccountsModalProps> = ({
             <span className="text-base shrink-0">🛡️</span>
             <div>
               <strong className="text-white font-bold">Safe & Private: </strong>
-              Never enter account passwords. Only public gamertags, friend codes, and wishlist links are saved so parents can dispatch digital gift cards to you.
+              Never enter account passwords. Only public gamertags, usernames, and wishlist links are saved so parents can dispatch digital gift cards to you.
             </div>
           </div>
 

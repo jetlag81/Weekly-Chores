@@ -225,8 +225,8 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     category: "gaming",
     iconEmoji: "⬛",
     badgeColor: "bg-slate-700/50 text-slate-300 border-slate-600/50",
-    placeholder: "Friend Code or Profile URL",
-    helpText: "Steam Friend Code for PC gaming & digital gift cards",
+    placeholder: "Steam Username / Account Name (e.g. KodaGaming)",
+    helpText: "Steam Username or Account Name (required to send digital gift cards)",
     officialUrl: () => "https://store.steampowered.com/digitalgiftcards/",
     amazonUrl: (_handle, _amount, region = "US") =>
       region === "CA"

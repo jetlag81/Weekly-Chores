@@ -32,6 +32,8 @@ import {
 import { isStandalone, subscribeInstallable } from "./pwaManager";
 import { InstallPwaModal } from "./InstallPwaModal";
 import { ParentInspectionModal } from "./ParentInspectionModal";
+import { GifCelebrationModal } from "./GifCelebrationModal";
+import { getRandomGoodJobGif, preloadNextGoodJobGifs } from "./gifCelebrations";
 import {
   playChoreCompletionSound,
   saveDeviceSession,
@@ -150,6 +152,21 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const [pinError, setPinError] = useState("");
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
   const [activeNavTab, setActiveNavTab] = useState<"chores" | "leaderboard">("chores");
+
+  // Chore completion Good Job GIF celebration popup state
+  const [activeCelebrationGif, setActiveCelebrationGif] = useState<string | null>(null);
+  const [celebrationTaskTitle, setCelebrationTaskTitle] = useState<string>("");
+
+  useEffect(() => {
+    preloadNextGoodJobGifs(3);
+  }, []);
+
+  const triggerGoodJobCelebration = (task: string) => {
+    const gif = getRandomGoodJobGif();
+    setActiveCelebrationGif(gif);
+    setCelebrationTaskTitle(task);
+    preloadNextGoodJobGifs(3);
+  };
 
   useEffect(() => {
     return subscribeSpeechState(speaking => setIsSpeakingAudio(speaking));
@@ -322,6 +339,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         // Confetti fallback
       }
       speakChoreCelebration(currentKid.name, taskTitle || "Chore");
+      triggerGoodJobCelebration(taskTitle || "Chore");
     }
   };
 
@@ -339,6 +357,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         // Confetti fallback
       }
       speakChoreCelebration(currentKid.name, taskTitle);
+      triggerGoodJobCelebration(taskTitle);
     }
   };
 
@@ -1173,6 +1192,17 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
       {showInstallModal && (
         <InstallPwaModal onClose={() => setShowInstallModal(false)} />
+      )}
+
+      {/* Randomized Good Job Chore Completion GIF Celebration Modal */}
+      {activeCelebrationGif && (
+        <GifCelebrationModal
+          isOpen={!!activeCelebrationGif}
+          gifUrl={activeCelebrationGif}
+          kidName={currentKid.name}
+          taskTitle={celebrationTaskTitle}
+          onClose={() => setActiveCelebrationGif(null)}
+        />
       )}
     </div>
   );

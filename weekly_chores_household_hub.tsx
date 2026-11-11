@@ -48,6 +48,7 @@ import {
   subscribeToFirestoreSchedule,
   getStoredFirebaseConfig,
   redeemKidInvite,
+  playChoreCompletionSound,
   type DeviceSession
 } from "./src/firebaseSync";
 import { MinionDashboard } from "./src/MinionDashboard";
@@ -56,6 +57,8 @@ import { KidPairingScreen } from "./src/KidPairingScreen";
 import { FirebaseSettingsModal } from "./src/FirebaseSettingsModal";
 import { InstallPwaModal } from "./src/InstallPwaModal";
 import { ParentInspectionModal } from "./src/ParentInspectionModal";
+import { GifCelebrationModal } from "./src/GifCelebrationModal";
+import { getRandomGoodJobGif, preloadNextGoodJobGifs } from "./src/gifCelebrations";
 import { isStandalone } from "./src/pwaManager";
 import { getChoreCanonicalKey, normalizeTaskName } from "./src/choreUtils";
 import {
@@ -1778,6 +1781,21 @@ function App({
   const [showPwaModal, setShowPwaModal] = useState(false);
   const [showInspectionModal, setShowInspectionModal] = useState(false);
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
+
+  // Good Job GIF Celebration state
+  const [activeCelebrationGif, setActiveCelebrationGif] = useState(null);
+  const [celebrationDetails, setCelebrationDetails] = useState({ kidName: "", taskTitle: "" });
+
+  useEffect(() => {
+    preloadNextGoodJobGifs(3);
+  }, []);
+
+  const triggerGoodJobCelebration = (kidName, taskTitle) => {
+    const gif = getRandomGoodJobGif();
+    setActiveCelebrationGif(gif);
+    setCelebrationDetails({ kidName: kidName || "Kid", taskTitle: taskTitle || "Chore" });
+    preloadNextGoodJobGifs(3);
+  };
 
   useEffect(() => {
     return subscribeSpeechState(speaking => setIsSpeakingAudio(speaking));
@@ -3540,6 +3558,10 @@ function App({
   const handleToggleWeeklyKidChore = (choreIndex, kidName, taskTitle) => {
     const currentKidsDone = getWeeklyKidsStatus(choreIndex, taskTitle);
     const newKidState = !currentKidsDone[kidName];
+    if (newKidState) {
+      playChoreCompletionSound();
+      triggerGoodJobCelebration(kidName, taskTitle || "Weekly Checklist");
+    }
     const updatedKids = {
       ...{
         ...currentKidsDone
@@ -3928,6 +3950,10 @@ function App({
     const current = getChoreStatus(dateKey, choreIndex, taskTitle);
     const prevKids = current.kidsDone || {};
     const newKidState = !prevKids[kidName];
+    if (newKidState) {
+      playChoreCompletionSound();
+      triggerGoodJobCelebration(kidName, taskTitle || "Chore");
+    }
     const updatedKids = {
       ...{
         ...prevKids
@@ -6566,6 +6592,16 @@ function App({
           monthlyIncentive={monthlyIncentive}
           monthlyGoalTarget={monthlyGoalTarget || 25}
           topPerformer={topPerformer}
+        />
+      )}
+      {/* Good Job GIF Chore Completion Celebration Popup */}
+      {activeCelebrationGif && (
+        <GifCelebrationModal
+          isOpen={!!activeCelebrationGif}
+          gifUrl={activeCelebrationGif}
+          kidName={celebrationDetails.kidName}
+          taskTitle={celebrationDetails.taskTitle}
+          onClose={() => setActiveCelebrationGif(null)}
         />
       )}
     </div>

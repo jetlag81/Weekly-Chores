@@ -1,5 +1,5 @@
 // Minion Chore Photo Proof Upload & Camera Capture Modal
-// Allows kids to snap a picture of their completed chore, add an optional note,
+// Allows kids to take a picture of their completed chore, add an optional note,
 // and transmit it directly to the Parent Command Hub with celebratory effects.
 
 import React, { useState, useRef } from "react";
@@ -214,7 +214,7 @@ export const ChorePhotoUploadModal: React.FC<ChorePhotoUploadModalProps> = ({
                 </div>
                 <div>
                   <h4 className="font-extrabold text-sm text-slate-800 dark:text-slate-200">
-                    Snap a live photo of your completed chore!
+                    Take a live pic of your completed chore!
                   </h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
                     Take a picture right now to verify completion and send it to Thom &amp; Meghan in real time.
@@ -228,7 +228,7 @@ export const ChorePhotoUploadModal: React.FC<ChorePhotoUploadModalProps> = ({
                     className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-sm transition flex items-center justify-center gap-2.5 shadow-md active:scale-[0.99] cursor-pointer"
                   >
                     <Camera className="w-5 h-5 text-indigo-200" />
-                    <span>Take Live Photo 📷</span>
+                    <span>Take Live Pic 📷</span>
                   </button>
                 </div>
 

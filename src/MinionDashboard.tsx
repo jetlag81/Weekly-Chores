@@ -1848,9 +1848,9 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                               >
                                 <div className="flex items-center gap-1.5 min-w-0">
                                   <Camera className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                                  <span className="text-xs font-bold truncate">📸 Parents asked for a live photo! Tap to snap</span>
+                                  <span className="text-xs font-bold truncate">📸 Parents asked for a PIC! Tap to take pic</span>
                                 </div>
-                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-lg bg-amber-500 text-white shrink-0 shadow-2xs">Snap 📷</span>
+                                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-lg bg-amber-500 text-white shrink-0 shadow-2xs">Pic 📷</span>
                               </div>
                             )}
                           </div>
@@ -1998,9 +1998,9 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                             >
                               <div className="flex items-center gap-1.5 min-w-0">
                                 <Camera className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-                                <span className="text-xs font-bold truncate">📸 Parents asked for a live photo! Tap to snap</span>
+                                <span className="text-xs font-bold truncate">📸 Parents asked for a PIC! Tap to take pic</span>
                               </div>
-                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-lg bg-amber-500 text-white shrink-0 shadow-2xs">Snap 📷</span>
+                              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-lg bg-amber-500 text-white shrink-0 shadow-2xs">Pic 📷</span>
                             </div>
                           )}
                         </div>
@@ -2275,10 +2275,10 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
               <div>
                 <h4 className="text-base font-extrabold text-slate-900 dark:text-white">
-                  Parents want a quick photo!
+                  Parents asked for a PIC! 📸
                 </h4>
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                  Please snap a live photo of your completed chore:
+                  Please take a quick pic of your completed chore:
                 </p>
                 <div className="mt-2.5 p-3 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 font-bold text-sm text-indigo-700 dark:text-indigo-300">
                   {incomingPhotoRequest.taskTitle}
@@ -2300,7 +2300,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                   className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-extrabold text-sm shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2 transform active:scale-[0.98] transition cursor-pointer animate-pulse"
                 >
                   <Camera className="w-5 h-5" />
-                  <span>Take Live Photo Now 📸</span>
+                  <span>Take Live Pic Now 📸</span>
                 </button>
 
                 <button
@@ -2311,7 +2311,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                   }}
                   className="w-full py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition cursor-pointer"
                 >
-                  I'll snap it in a minute
+                  I'll take a pic in a minute
                 </button>
               </div>
             </div>

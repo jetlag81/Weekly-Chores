@@ -184,7 +184,30 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
     }
   }, [lastInspectedKid]);
 
-  const [expandedWeeklyChecklist, setExpandedWeeklyChecklist] = useState<boolean>(true);
+  // Weekly Checklist Routine Accordion State:
+  // - Minimized (false) by default when first opening the Parent Command Hub
+  // - Retains session state memory when toggled or returning from child views
+  const [expandedWeeklyChecklist, setExpandedWeeklyChecklist] = useState<boolean>(() => {
+    try {
+      if (typeof sessionStorage !== "undefined") {
+        const saved = sessionStorage.getItem("weekly_chores_expanded_weekly_checklist");
+        if (saved !== null) return saved === "true";
+      }
+    } catch {}
+    return false;
+  });
+
+  const toggleWeeklyChecklist = () => {
+    setExpandedWeeklyChecklist(prev => {
+      const next = !prev;
+      try {
+        if (typeof sessionStorage !== "undefined") {
+          sessionStorage.setItem("weekly_chores_expanded_weekly_checklist", String(next));
+        }
+      } catch {}
+      return next;
+    });
+  };
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
   const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>("appearance");
   const [selectedReviewProof, setSelectedReviewProof] = useState<ChorePhotoProof | null>(null);
@@ -916,7 +939,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
         {/* Weekly Household Checklists (Tidy Bedrooms, Laundry, Pets) */}
         <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl overflow-hidden shadow-md">
           <div
-            onClick={() => setExpandedWeeklyChecklist(!expandedWeeklyChecklist)}
+            onClick={toggleWeeklyChecklist}
             className="p-3.5 flex items-center justify-between cursor-pointer bg-slate-800/50"
           >
             <div className="flex items-center gap-2.5">

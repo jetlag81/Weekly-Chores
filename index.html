@@ -23,6 +23,23 @@
       }
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class'
+      };
+      // Zero-flash Theme Initializer (System is Default)
+      (function() {
+        try {
+          var stored = localStorage.getItem('weekly_chores_theme_mode_v1') || 'system';
+          var isDark = stored === 'dark' || (stored === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <style>
       html, body, #root {
         height: 100%;

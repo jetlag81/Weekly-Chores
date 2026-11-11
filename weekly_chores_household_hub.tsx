@@ -63,6 +63,7 @@ import { AllowanceLedgerModal } from "./src/AllowanceLedgerModal";
 import { ParentNudgeModal } from "./src/ParentNudgeModal";
 import { ParentRewardPayoutModal } from "./src/ParentRewardPayoutModal";
 import { ParentMobileDashboard } from "./src/ParentMobileDashboard";
+import { ThemeToggle } from "./src/ThemeToggle";
 import { HouseholdActivityDrawer } from "./src/HouseholdActivityDrawer";
 import { ActivityToast } from "./src/ActivityToast";
 import {
@@ -5783,9 +5784,9 @@ function App({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors">
       {notice && (
-        <div className="no-print bg-emerald-600 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-between shadow-md transition-all">
+        <div className="no-print bg-emerald-600 dark:bg-emerald-700 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-between shadow-md transition-all">
           <div className="flex items-center gap-2">
             <CircleCheck className="w-4 h-4 text-emerald-200" />
             <span>{notice}</span>
@@ -5795,7 +5796,7 @@ function App({
           </button>
         </div>
       )}
-      <header className="no-print bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
+      <header className="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm sticky top-0 z-30 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 via-amber-500 to-teal-500 flex items-center justify-center text-white shadow-md">
@@ -5803,39 +5804,39 @@ function App({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold tracking-tight text-slate-900">Chore Schedule</h1>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Chore Schedule</h1>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                   Monthly Template & Sync
                 </span>
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {"Interactive Chore Calendar w/ Printable Sheet \u2022 Week of "}
                 {activeSyncWeek}
               </p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
-            <div className="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200">
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1 border border-slate-200 dark:border-slate-700">
               <button
                 onClick={handlePrevMonth}
-                className="p-1.5 hover:bg-white rounded-md text-slate-600 hover:text-slate-900 transition-colors shadow-sm"
+                className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-md text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shadow-sm"
                 title="Previous Month"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <div className="px-3 text-sm font-semibold text-slate-800 min-w-[130px] text-center select-none">
+              <div className="px-3 text-sm font-semibold text-slate-800 dark:text-slate-200 min-w-[130px] text-center select-none">
                 {MONTH_NAMES[selectedMonth]} {selectedYear}
               </div>
               <button
                 onClick={handleNextMonth}
-                className="p-1.5 hover:bg-white rounded-md text-slate-600 hover:text-slate-900 transition-colors shadow-sm"
+                className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-md text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shadow-sm"
                 title="Next Month"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
               <button
                 onClick={handleCurrentMonth}
-                className="ml-1 text-xs px-2 py-1 rounded bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 font-medium transition"
+                className="ml-1 text-xs px-2 py-1 rounded bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 font-medium transition"
               >
                 Today
               </button>
@@ -5942,6 +5943,7 @@ function App({
               <Smartphone className="w-3.5 h-3.5 text-indigo-700" />
               <span>Mobile View</span>
             </button>
+            <ThemeToggle variant="pill" />
             {isSpeechSupported() && (
               <button
                 type="button"

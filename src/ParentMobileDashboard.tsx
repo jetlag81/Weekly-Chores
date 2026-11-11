@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { getChoreCanonicalKey, normalizeTaskName } from "./choreUtils";
 import { getKidRewardProfile } from "./rewardAccounts";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface FamilyMember {
   name: string;
@@ -206,32 +207,35 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   }, [getWeeklyKidsStatus]);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col font-sans pb-24">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans pb-24 transition-colors">
       {/* Sticky Mobile Parent App Bar */}
-      <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 shadow-lg">
-        <div className="flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-4 py-3 shadow-xs dark:shadow-lg transition-colors">
+        <div className="flex items-center justify-between gap-2 sm:gap-3">
           {/* Brand & Parent Persona */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center shadow-md shadow-orange-500/20 text-white shrink-0">
-              <ShieldCheck className="w-6 h-6" />
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center shadow-md shadow-orange-500/20 text-white shrink-0">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <h1 className="text-sm font-black text-white tracking-tight leading-tight">
+            <div className="min-w-0">
+              <h1 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight leading-tight truncate">
                 Thom & Meghan
               </h1>
-              <div className="text-[11px] text-slate-400 font-medium">
+              <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
                 Parent Command Hub
               </div>
             </div>
           </div>
 
-          {/* Top Actions: View Switcher Pill & Activity Feed */}
-          <div className="flex items-center gap-2">
+          {/* Top Actions: Theme Toggle, View Switcher Pill & Activity Feed */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Theme Toggle (System / Light / Dark) */}
+            <ThemeToggle variant="compact" />
+
             {/* View Mode Toggle Pill: Mobile vs Desktop Table */}
-            <div className="flex items-center bg-slate-800 p-0.5 rounded-xl border border-slate-700 shadow-inner">
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
               <button
                 type="button"
-                className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500 text-slate-950 shadow-xs flex items-center gap-1"
+                className="px-2 py-1 rounded-lg text-[11px] font-bold bg-amber-500 text-slate-950 shadow-xs flex items-center gap-1"
                 title="Current: Mobile Streamlined View"
               >
                 <Smartphone className="w-3.5 h-3.5" />
@@ -240,7 +244,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
               <button
                 type="button"
                 onClick={onToggleDesktopView}
-                className="px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-400 hover:text-white transition flex items-center gap-1 cursor-pointer"
+                className="px-2 py-1 rounded-lg text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center gap-1 cursor-pointer"
                 title="Switch to Full Spreadsheet View"
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -252,12 +256,12 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
             <button
               type="button"
               onClick={onOpenActivityFeed}
-              className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center justify-center transition cursor-pointer relative"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition cursor-pointer relative"
               title="Open Household Activity Feed"
             >
-              <Bell className="w-4 h-4 text-amber-400" />
+              <Bell className="w-4 h-4 text-amber-500 dark:text-amber-400" />
               {activitiesCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-indigo-500 text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-slate-900 font-mono shadow-xs">
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-indigo-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-white dark:border-slate-900 font-mono shadow-xs">
                   {activitiesCount > 99 ? "99+" : activitiesCount}
                 </span>
               )}

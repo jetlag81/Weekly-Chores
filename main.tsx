@@ -2,7 +2,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import AppWrapper, { INITIAL_SHEET_DATA } from './weekly_chores_household_hub';
+import { applyTheme } from './src/themeManager';
 import rawSource from './weekly_chores_household_hub.tsx?raw';
+
+// Apply stored theme (System by default)
+applyTheme();
 
 const SOURCE_LINES = rawSource.split(/\r?\n/);
 const SHEET_DATA_END_LINE = (() => {

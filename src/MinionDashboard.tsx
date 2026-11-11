@@ -78,6 +78,7 @@ import {
   REWARD_PLATFORMS,
   type KidRewardProfile
 } from "./rewardAccounts";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface MinionDashboardProps {
   kidName: string;
@@ -620,23 +621,23 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const completedTodayCount = dailyChoresForKid.filter(c => c.done).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-16 font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-16 font-sans transition-colors">
       {/* Top Mobile Bar */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 py-3 shadow-xs">
+      <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 shadow-xs dark:shadow-md transition-colors">
         <div className="max-w-xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
-              className="w-11 h-11 rounded-2xl flex items-center justify-center font-black text-white text-base shadow-sm ring-2 ring-white"
+              className="w-11 h-11 rounded-2xl flex items-center justify-center font-black text-white text-base shadow-sm ring-2 ring-white dark:ring-slate-700"
               style={{ backgroundColor: currentKid.color || "#6366F1" }}
             >
               {currentKid.name.slice(0, 2).toUpperCase()}
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="font-extrabold text-base text-slate-900 leading-tight">
+                <h1 className="font-extrabold text-base text-slate-900 dark:text-white leading-tight">
                   {currentKid.name}
                 </h1>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
                   🎒 Minion Mode
                 </span>
               </div>
@@ -720,14 +721,17 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
               </span>
             </button>
 
+            {/* Theme Toggle (System / Light / Dark) */}
+            <ThemeToggle variant="compact" />
+
             {/* Live Household Activity Feed Button */}
             <button
               type="button"
               onClick={() => setShowActivityDrawer(true)}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition flex items-center justify-center cursor-pointer shadow-2xs relative"
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition flex items-center justify-center cursor-pointer shadow-2xs relative"
               title="Live Household Activity Feed"
             >
-              <Bell className="w-4 h-4 text-slate-600" />
+              <Bell className="w-4 h-4 text-slate-600 dark:text-slate-300" />
               {activities.length > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-indigo-600 text-white text-[9px] font-mono font-black flex items-center justify-center px-1 shadow-xs">
                   {activities.length > 9 ? "9+" : activities.length}
@@ -744,10 +748,10 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                 setPinAction("menu");
                 setShowExitPinModal(true);
               }}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition flex items-center gap-1 text-xs font-semibold cursor-pointer shadow-2xs"
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition flex items-center gap-1 text-xs font-semibold cursor-pointer shadow-2xs"
               title="Parent Admin Unlock (PIN: 1234)"
             >
-              <Lock className="w-4 h-4 text-slate-500" />
+              <Lock className="w-4 h-4 text-slate-500 dark:text-slate-400" />
               <span className="hidden sm:inline">Parent Mode</span>
             </button>
           </div>
@@ -756,7 +760,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
       {/* Navigation Tab Bar */}
       <div className="max-w-xl mx-auto px-4 pt-3 pb-1">
-        <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-black shadow-2xs gap-1">
+        <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-black shadow-2xs gap-1">
           <button
             type="button"
             onClick={() => setActiveNavTab("chores")}

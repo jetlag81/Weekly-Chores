@@ -6162,181 +6162,289 @@ function App({
         </div>
       )}
       <header className="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm sticky top-0 z-30 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 via-amber-500 to-teal-500 flex items-center justify-center text-white shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+          {/* Left: Brand Identity & Active Parent Switcher */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-rose-500 via-amber-500 to-teal-500 flex items-center justify-center text-white shadow-md shrink-0">
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  {activeParentAdmin}'s Admin Hub
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">
+                  {activeParentAdmin}&apos;s Admin Hub
                 </h1>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                  👑 {activeParentAdmin === "Thom" ? "Supreme Overlord" : "Overseer Supreme"}
-                </span>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                  Monthly Template & Sync
+                
+                {/* Active Parent Switcher Toggle */}
+                <div className="inline-flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                  {(["Thom", "Meghan"] as const).map(parent => (
+                    <button
+                      key={parent}
+                      type="button"
+                      onClick={() => handleSwitchActiveParent(parent)}
+                      className={`px-2 py-0.5 rounded-md text-[11px] font-black transition cursor-pointer flex items-center gap-1 ${
+                        activeParentAdmin === parent
+                          ? "bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-2xs"
+                          : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                      }`}
+                      title={`Switch to ${parent}'s Admin Hub`}
+                    >
+                      <span>👑</span>
+                      <span>{parent}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hidden sm:inline">
+                  Monthly Sync
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {"Interactive Chore Calendar w/ Printable Sheet \u2022 Week of "}
-                {activeSyncWeek}
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                Chore Hub • Week of {activeSyncWeek}
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1 border border-slate-200 dark:border-slate-700">
+
+          {/* Right: Core Parent Actions & Controls */}
+          <div className="flex flex-wrap items-center gap-2 justify-end">
+            {/* Month Navigator */}
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800/90 rounded-xl p-1 border border-slate-200 dark:border-slate-700/80 shadow-2xs">
               <button
                 onClick={handlePrevMonth}
-                className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-md text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shadow-sm"
+                className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                 title="Previous Month"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <div className="px-3 text-sm font-semibold text-slate-800 dark:text-slate-200 min-w-[130px] text-center select-none">
+              <div className="px-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 min-w-[110px] text-center select-none">
                 {MONTH_NAMES[selectedMonth]} {selectedYear}
               </div>
               <button
                 onClick={handleNextMonth}
-                className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-md text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shadow-sm"
+                className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                 title="Next Month"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
               <button
                 onClick={handleCurrentMonth}
-                className="ml-1 text-xs px-2 py-1 rounded bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 font-medium transition"
+                className="ml-1 text-[11px] px-2 py-0.5 rounded-md bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 font-bold transition shadow-2xs cursor-pointer"
               >
                 Today
               </button>
             </div>
-            <button
-              onClick={() => setShowFirebaseModal(true)}
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200 rounded-lg transition cursor-pointer shadow-2xs"
-              title="Configure live Firebase Cloud Sync across internet"
-            >
-              <Cloud className="w-3.5 h-3.5 text-amber-600" />
-              <span>{getStoredFirebaseConfig() ? "Cloud Sync: Live" : "Cloud Sync (Setup)"}</span>
-            </button>
-            <button
-              onClick={() => setShowInviteModal(true)}
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition cursor-pointer shadow-2xs"
-              title="Generate a 6-character invite code to pair a kid's phone, tablet, or PC"
-            >
-              <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Invite Kid Device</span>
-            </button>
-            {!isStandalone() && (
-              <button
-                type="button"
-                onClick={() => setShowPwaModal(true)}
-                className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-gradient-to-r from-purple-50 to-indigo-50 text-indigo-900 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition cursor-pointer shadow-2xs"
-                title="Install Weekly Chores Hub to your Home Screen or Desktop"
-              >
-                <Download className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Install App</span>
-              </button>
-            )}
+
+            {/* Sunday Inspection */}
             <button
               type="button"
               onClick={() => setShowInspectionModal(true)}
-              className={`flex items-center gap-1.5 text-xs font-bold px-3 py-2 border rounded-lg transition cursor-pointer shadow-2xs ${
+              className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 border rounded-xl transition cursor-pointer shadow-2xs ${
                 signOffStatus.done
-                  ? "bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100"
-                  : "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
+                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60"
+                  : "bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-700/60 hover:bg-amber-100 dark:hover:bg-amber-900/60"
               }`}
               title="Conduct Sunday room inspection and sign off weekly allowances"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
-              <span>Sunday Inspection</span>
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Inspection</span>
               <span
-                className={`text-[10px] font-black px-1.5 py-0.2 rounded font-mono ${
+                className={`text-[9px] font-black px-1.5 py-0.2 rounded font-mono ${
                   signOffStatus.done
-                    ? "bg-emerald-200 text-emerald-950"
-                    : "bg-amber-200 text-amber-950"
+                    ? "bg-emerald-200 dark:bg-emerald-900/80 text-emerald-950 dark:text-emerald-100"
+                    : "bg-amber-200 dark:bg-amber-900/80 text-amber-950 dark:text-amber-100"
                 }`}
               >
-                {signOffStatus.done ? "✓ TV / MV" : "Pending"}
+                {signOffStatus.done ? "✓ Done" : "Pending"}
               </span>
             </button>
-            <button
-              type="button"
-              onClick={() => setShowActivityDrawer(true)}
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200 rounded-lg transition cursor-pointer shadow-2xs relative"
-              title="Open Live Household Activity Feed & Chime Settings"
-            >
-              <Bell className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Activity</span>
-              {activities.length > 0 && (
-                <span className="text-[10px] font-black px-1.5 py-0.2 rounded-full bg-indigo-600 text-white font-mono">
-                  {activities.length > 99 ? "99+" : activities.length}
-                </span>
-              )}
-            </button>
+
+            {/* Photo Proofs */}
             <button
               type="button"
               onClick={() => setShowPhotoInboxModal(true)}
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-lg transition cursor-pointer shadow-2xs relative"
+              className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-900 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 rounded-xl transition cursor-pointer shadow-2xs relative"
               title="Review chore completion photos submitted by kids"
             >
-              <Camera className="w-3.5 h-3.5 text-indigo-600" />
+              <Camera className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span>Photo Proofs</span>
               {getPendingPhotoProofsCount() > 0 && (
-                <span className="text-[10px] font-black px-1.5 py-0.2 rounded-full bg-rose-500 text-white font-mono animate-pulse">
+                <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-rose-500 text-white font-mono animate-pulse">
                   {getPendingPhotoProofsCount()}
                 </span>
               )}
             </button>
+
+            {/* Nudge */}
+            <button
+              type="button"
+              onClick={() => setShowNudgeModal(true)}
+              className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-orange-50 dark:bg-orange-950/40 hover:bg-orange-100 dark:hover:bg-orange-900/60 text-orange-900 dark:text-orange-300 border border-orange-300 dark:border-orange-700/60 rounded-xl transition cursor-pointer shadow-2xs"
+              title="Send Remote Nudge or Praise to Kids"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+              <span>Nudge</span>
+            </button>
+
+            {/* Ledger */}
             <button
               type="button"
               onClick={() => setShowAllowanceLedger(true)}
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg transition cursor-pointer shadow-2xs"
+              className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 rounded-xl transition cursor-pointer shadow-2xs"
               title="Open Household Allowance Ledger & Payment History"
             >
-              <DollarSign className="w-3.5 h-3.5 text-emerald-700" />
-              <span>Allowance Ledger</span>
+              <DollarSign className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Ledger</span>
             </button>
+
+            {/* Rewards */}
             <button
               type="button"
               onClick={() => {
                 setRewardPayoutKid(allKidsList[0] || "Sydney");
                 setShowRewardPayoutModal(true);
               }}
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-300 rounded-lg transition cursor-pointer shadow-2xs"
+              className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-900 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 rounded-xl transition cursor-pointer shadow-2xs"
               title="Open Kid Reward Accounts & 1-Click Digital Gift Card Payouts"
             >
-              <Gift className="w-3.5 h-3.5 text-purple-600" />
-              <span>Digital Rewards</span>
+              <Gift className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+              <span>Rewards</span>
             </button>
+
+            {/* Subtle Divider */}
+            <div className="h-5 w-px bg-slate-200 dark:bg-slate-700 mx-0.5 hidden sm:block" />
+
+            {/* Activity Feed Bell */}
             <button
               type="button"
-              onClick={() => setShowNudgeModal(true)}
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-300 rounded-lg transition cursor-pointer shadow-2xs"
-              title="Send Remote Nudge (Meh GIF) or Praise (Good Job GIF) to Kids"
+              onClick={() => setShowActivityDrawer(true)}
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer shadow-2xs relative"
+              title="Open Live Household Activity Feed"
             >
-              <Sparkles className="w-3.5 h-3.5 text-orange-600" />
-              <span>Nudge & Feedback</span>
+              <Bell className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              {activities.length > 0 && (
+                <span className="absolute -top-1 -right-1 text-[9px] font-black px-1.5 py-0.2 rounded-full bg-indigo-600 text-white font-mono shadow-xs">
+                  {activities.length > 99 ? "99+" : activities.length}
+                </span>
+              )}
             </button>
+
+            {/* Cloud Sync Status */}
+            <button
+              type="button"
+              onClick={() => setShowFirebaseModal(true)}
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer shadow-2xs"
+              title={getStoredFirebaseConfig() ? "Cloud Sync: Connected & Live" : "Cloud Sync: Setup"}
+            >
+              <Cloud className={`w-4 h-4 ${getStoredFirebaseConfig() ? "text-emerald-500" : "text-amber-500"}`} />
+            </button>
+
+            {/* Mobile View Toggle */}
             <button
               type="button"
               onClick={toggleParentViewMode}
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-300 rounded-lg transition cursor-pointer shadow-2xs"
-              title="Switch to Streamlined Mobile Parent View"
+              className="flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl transition cursor-pointer shadow-2xs"
+              title="Switch to Mobile Parent View"
             >
-              <Smartphone className="w-3.5 h-3.5 text-indigo-700" />
-              <span>Mobile View</span>
+              <Smartphone className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span className="hidden sm:inline">Mobile</span>
             </button>
+
+            {/* Settings */}
             <button
               type="button"
               onClick={() => setShowSettingsModal(true)}
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-slate-700 rounded-lg transition cursor-pointer shadow-2xs"
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer shadow-2xs"
               title="Household Settings & Preferences"
             >
-              <Settings className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
-              <span>Settings</span>
+              <Settings className="w-4 h-4 text-slate-600 dark:text-slate-300" />
             </button>
+
+            {/* Theme Toggle */}
             <ThemeToggle variant="pill" />
+          </div>
+        </div>
+
+        {/* Sub-bar: Views & Tools */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 flex flex-wrap items-center justify-between gap-3 text-sm">
+          <div className="flex items-center gap-1 overflow-x-auto">
+            <button
+              onClick={() => setActiveTab("month")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                activeTab === "month"
+                  ? "bg-slate-900 dark:bg-indigo-600 text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+              }`}
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+              <span>Monthly Calendar</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("matrix")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                activeTab === "matrix"
+                  ? "bg-slate-900 dark:bg-indigo-600 text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Weekly Schedule</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("stats")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                activeTab === "stats"
+                  ? "bg-slate-900 dark:bg-indigo-600 text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+              }`}
+            >
+              <Award className="w-3.5 h-3.5" />
+              <span>Leaderboard & Stats</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("roster")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                activeTab === "roster"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "text-indigo-700 dark:text-indigo-300 bg-indigo-50/70 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/60 dark:border-indigo-800/60"
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Household Hub ({familyMembers.length})</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowAutoAssignModal(true)}
+              className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/60 rounded-lg transition cursor-pointer shadow-2xs"
+              title="Auto-Assign chores across family members"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Auto-Assign</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowInviteModal(true)}
+              className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800/60 rounded-lg transition cursor-pointer shadow-2xs"
+              title="Generate a 6-character invite code to pair a kid's phone, tablet, or PC"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span className="hidden sm:inline">Invite Device</span>
+            </button>
+
+            {!isStandalone() && (
+              <button
+                type="button"
+                onClick={() => setShowPwaModal(true)}
+                className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800/60 rounded-lg transition cursor-pointer shadow-2xs"
+                title="Install Weekly Chores Hub to your Home Screen or Desktop"
+              >
+                <Download className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <span className="hidden sm:inline">Install</span>
+              </button>
+            )}
+
             {isSpeechSupported() && (
               <button
                 type="button"
@@ -6352,74 +6460,29 @@ function App({
                     );
                   }
                 }}
-                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition cursor-pointer shadow-2xs ${
+                className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition cursor-pointer shadow-2xs ${
                   isSpeakingAudio
-                    ? "bg-rose-100 text-rose-700 border border-rose-300 animate-pulse"
-                    : "bg-teal-50 text-teal-800 hover:bg-teal-100 border border-teal-200"
+                    ? "bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse"
+                    : "bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/60 border border-teal-200 dark:border-teal-800/60"
                 }`}
                 title={isSpeakingAudio ? "Stop voice narration" : "Speak household chore summary aloud"}
               >
-                {isSpeakingAudio ? <VolumeX className="w-3.5 h-3.5 text-rose-600" /> : <Volume2 className="w-3.5 h-3.5 text-teal-600" />}
-                <span>{isSpeakingAudio ? "Stop Voice" : "Voice Summary"}</span>
+                {isSpeakingAudio ? <VolumeX className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" /> : <Volume2 className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />}
+                <span className="hidden sm:inline">{isSpeakingAudio ? "Stop Voice" : "Voice"}</span>
               </button>
             )}
+
             <a
               href="/Workflow_Diagrams_Export.html"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300 rounded-lg transition cursor-pointer shadow-2xs no-underline"
-              title="Open, copy, or download Architecture & Workflow diagrams as PNG/SVG"
+              className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition cursor-pointer shadow-2xs no-underline"
+              title="Open Architecture & Workflow diagrams"
             >
               <span>📊</span>
-              <span>Diagrams</span>
+              <span className="hidden sm:inline">Diagrams</span>
             </a>
-            <button
-              onClick={() => setShowAutoAssignModal(true)}
-              className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 rounded-lg transition"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>Auto-Assign</span>
-            </button>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-sm">
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setActiveTab("month")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === "month" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                }`}
-            >
-              <CalendarDays className="w-3.5 h-3.5" />
-              <span>Monthly Calendar</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("matrix")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === "matrix" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                }`}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Weekly Schedule</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("stats")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === "stats" ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                }`}
-            >
-              <Award className="w-3.5 h-3.5" />
-              <span>Leaderboard & Stats</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("roster")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${activeTab === "roster"
-                ? "bg-indigo-600 text-white shadow-sm"
-                : "text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100 border border-indigo-200/60"
-                }`}
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>Household Hub ({familyMembers.length})</span>
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
+
             <button
               onClick={() => {
                 const firstKid = familyMembers.find(m => m.active !== false && m.role !== "Supreme Overlord" && m.role !== "Overseer Supreme")?.name || "Sydney";
@@ -6427,66 +6490,58 @@ function App({
                 saveDeviceSession(kidSession);
                 setDeviceSession(kidSession);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition cursor-pointer shadow-2xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 transition cursor-pointer shadow-2xs"
               title="Preview or switch to the Kid Interface (Minion Mode)"
             >
               <span>🎒</span>
               <span>Minion Mode</span>
             </button>
-            <button
-              onClick={() => setShowPairingScreen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 transition cursor-pointer"
-              title="Open Device Pairing Setup (Device Onboarding)"
-            >
-              <Smartphone className="w-3.5 h-3.5 text-slate-500" />
-              <span className="hidden sm:inline">Pair Device</span>
-            </button>
           </div>
         </div>
       </header>
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6"><div className="no-print bg-white rounded-xl border border-slate-200 p-3 mb-4 shadow-2xs space-y-2.5 text-xs"><div className="flex flex-wrap items-center gap-3"><div className="flex items-center gap-1.5 font-bold text-slate-800 min-w-[130px]"><Users className="w-4 h-4 text-indigo-600 shrink-0" /><span>Household Roster:</span></div><div className="flex flex-wrap items-center gap-1.5"><span className="text-[10px] font-bold text-amber-700 uppercase bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">Supreme Overlords:</span>{familyMembers.filter(m => m.active !== false && (m.role === "Supreme Overlord" || m.role === "Overseer Supreme")).map(m => <span key={m.id} className="px-2 py-0.5 rounded-full font-semibold text-[11px] border border-amber-300" style={{
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6"><div className="no-print bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3 mb-4 shadow-2xs space-y-2.5 text-xs transition-colors"><div className="flex flex-wrap items-center gap-3"><div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 min-w-[130px]"><Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" /><span>Household Roster:</span></div><div className="flex flex-wrap items-center gap-1.5"><span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">Supreme Overlords:</span>{familyMembers.filter(m => m.active !== false && (m.role === "Supreme Overlord" || m.role === "Overseer Supreme")).map(m => <span key={m.id} className="px-2 py-0.5 rounded-full font-semibold text-[11px] border border-amber-300 dark:border-amber-700" style={{
         backgroundColor: m.bg,
         color: m.text
-      }} title="Supreme Overlord (= Parent \u2022 Included in Daily Chores)">{m.name}</span>)}<span className="text-slate-300 mx-1">{"\u2022"}</span><span className="text-[10px] font-bold text-indigo-700 uppercase bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">Minions:</span>{familyMembers.filter(m => m.active !== false && m.role !== "Supreme Overlord" && m.role !== "Overseer Supreme").map(m => <span key={m.id} className="px-2 py-0.5 rounded-full font-medium text-[11px] border" style={{
+      }} title="Supreme Overlord (= Parent • Included in Daily Chores)">{m.name}</span>)}<span className="text-slate-300 dark:text-slate-600 mx-1">{"•"}</span><span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase bg-indigo-50 dark:bg-indigo-950/50 px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-800/60">Minions:</span>{familyMembers.filter(m => m.active !== false && m.role !== "Supreme Overlord" && m.role !== "Overseer Supreme").map(m => <span key={m.id} className="px-2 py-0.5 rounded-full font-medium text-[11px] border" style={{
         backgroundColor: m.bg,
         color: m.text,
         borderColor: m.type === "biweekly" ? "#F8B4BD" : m.type === "casual" ? "#A6D2ED" : "#E2E8F0"
-      }} title={`${m.name} (${m.residency} Minion = Kid)`}>{m.name}</span>)}</div></div><div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100"><div className="flex items-center gap-1.5 font-bold text-slate-800 min-w-[130px]"><span className="w-4 text-center shrink-0">{"\u{1F43E}"}</span><span>{"\"The Herd\":"}</span></div><div className="flex flex-wrap items-center gap-1.5"><span className="text-[10px] font-bold text-amber-800 uppercase bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">Dogs:</span>{rosterPets.filter(p => p.active !== false && p.type.toLowerCase().includes("dog")).map(p => <span key={`${p.index_}-${p.name}`} className="px-2 py-0.5 rounded-full font-semibold text-[11px] border" style={{
+      }} title={`${m.name} (${m.residency} Minion = Kid)`}>{m.name}</span>)}</div></div><div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-800"><div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 min-w-[130px]"><span className="w-4 text-center shrink-0">{"\u{1F43E}"}</span><span>{"\"The Herd\":"}</span></div><div className="flex flex-wrap items-center gap-1.5"><span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 uppercase bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">Dogs:</span>{rosterPets.filter(p => p.active !== false && p.type.toLowerCase().includes("dog")).map(p => <span key={`${p.index_}-${p.name}`} className="px-2 py-0.5 rounded-full font-semibold text-[11px] border" style={{
         backgroundColor: p.bg,
         color: p.text,
         borderColor: p.border
-      }} title={`${p.name} (${p.type} \u2022 ${p.routine})`}>{p.icon}{" "}{p.name}</span>)}<span className="text-slate-300 mx-1">{"\u2022"}</span><span className="text-[10px] font-bold text-orange-800 uppercase bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200">Cats:</span>{rosterPets.filter(p => p.active !== false && p.type.toLowerCase().includes("cat")).map(p => <span key={`${p.index_}-${p.name}`} className="px-2 py-0.5 rounded-full font-medium text-[11px] border" style={{
+      }} title={`${p.name} (${p.type} • ${p.routine})`}>{p.icon}{" "}{p.name}</span>)}<span className="text-slate-300 dark:text-slate-600 mx-1">{"•"}</span><span className="text-[10px] font-bold text-orange-800 dark:text-orange-300 uppercase bg-orange-50 dark:bg-orange-950/50 px-1.5 py-0.5 rounded border border-orange-200 dark:border-orange-800/60">Cats:</span>{rosterPets.filter(p => p.active !== false && p.type.toLowerCase().includes("cat")).map(p => <span key={`${p.index_}-${p.name}`} className="px-2 py-0.5 rounded-full font-medium text-[11px] border" style={{
         backgroundColor: p.bg,
         color: p.text,
         borderColor: p.border
-      }} title={`${p.name} (${p.type} \u2022 ${p.routine})`}>{p.icon}{" "}{p.name}</span>)}{rosterPets.some(p => p.active !== false && !p.type.toLowerCase().includes("dog") && !p.type.toLowerCase().includes("cat")) && <><span className="text-slate-300 mx-1">{"\u2022"}</span><span className="text-[10px] font-bold text-emerald-800 uppercase bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Other Pets:</span>{rosterPets.filter(p => p.active !== false && !p.type.toLowerCase().includes("dog") && !p.type.toLowerCase().includes("cat")).map(p => <span key={`${p.index_}-${p.name}`} className="px-2 py-0.5 rounded-full font-medium text-[11px] border" style={{
+      }} title={`${p.name} (${p.type} • ${p.routine})`}>{p.icon}{" "}{p.name}</span>)}{rosterPets.some(p => p.active !== false && !p.type.toLowerCase().includes("dog") && !p.type.toLowerCase().includes("cat")) && <><span className="text-slate-300 dark:text-slate-600 mx-1">{"•"}</span><span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60">Other Pets:</span>{rosterPets.filter(p => p.active !== false && !p.type.toLowerCase().includes("dog") && !p.type.toLowerCase().includes("cat")).map(p => <span key={`${p.index_}-${p.name}`} className="px-2 py-0.5 rounded-full font-medium text-[11px] border" style={{
         backgroundColor: p.bg,
         color: p.text,
         borderColor: p.border
-      }} title={`${p.name} (${p.type} \u2022 ${p.routine})`}>{p.icon}{" "}{p.name}</span>)}</>}</div></div></div><div className="no-print bg-white rounded-xl border border-slate-200 p-4 mb-5 shadow-sm flex flex-wrap items-center justify-between gap-4"><div className="flex items-center gap-6"><div><p className="text-xs text-slate-500 font-medium">Month Overview</p><div className="flex items-baseline gap-2 mt-0.5"><span className="text-xl font-bold text-slate-900">{monthStats.totalCompleted}{" / "}{monthStats.totalScheduled}</span><span className="text-xs text-slate-500">completed</span></div></div><div className="hidden sm:block w-36"><div className="flex justify-between text-xs text-slate-600 mb-1 font-medium"><span>Progress</span><span>{monthStats.completionRate}%</span></div><div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden"><div className="bg-emerald-500 h-2 rounded-full transition-all duration-500" style={{
+      }} title={`${p.name} (${p.type} • ${p.routine})`}>{p.icon}{" "}{p.name}</span>)}</>}</div></div></div><div className="no-print bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 mb-5 shadow-sm flex flex-wrap items-center justify-between gap-4 transition-colors"><div className="flex items-center gap-6"><div><p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Month Overview</p><div className="flex items-baseline gap-2 mt-0.5"><span className="text-xl font-bold text-slate-900 dark:text-white">{monthStats.totalCompleted}{" / "}{monthStats.totalScheduled}</span><span className="text-xs text-slate-500 dark:text-slate-400">completed</span></div></div><div className="hidden sm:block w-36"><div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-1 font-medium"><span>Progress</span><span>{monthStats.completionRate}%</span></div><div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden"><div className="bg-emerald-500 h-2 rounded-full transition-all duration-500" style={{
         width: `${monthStats.completionRate}%`
-      }} /></div></div></div><div className="flex items-center gap-3 text-xs"><div className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-800 px-3 py-1.5 rounded-lg"><span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /><span>{"Active Week: "}<strong>{activeSyncWeek}</strong>{" \u2022 "}{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || "Cadence & Mason arrive Sun Oct 18 @ 5 PM"}</span></div><button onClick={() => {
+      }} /></div></div></div><div className="flex items-center gap-3 text-xs"><div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-blue-800 dark:text-blue-300 px-3 py-1.5 rounded-lg"><span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /><span>{"Active Week: "}<strong>{activeSyncWeek}</strong>{" • "}{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || "Cadence & Mason arrive Sun Oct 18 @ 5 PM"}</span></div><button onClick={() => {
         const cur = getCurrentWeekMonday();
         const currentWeek = getWeekDaysForDate(cur.year, cur.month, cur.day);
         handleSetSyncWeek(currentWeek);
         handleAutoAssignCurrentWeek();
         setActiveTab("matrix");
-      }} className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold rounded-lg transition" title={`Sync and distribute chores for current week (${activeSyncWeek})`}>Sync & Distribute Week</button></div></div>{activeTab === "month" && <div className="space-y-4"><div className="grid grid-cols-7 gap-2 text-center">{DAY_STYLES.map((day, idx) => <div key={day.name} className="py-2.5 px-1 rounded-t-lg font-bold text-xs uppercase tracking-wider text-white shadow-sm flex flex-col items-center justify-center" style={{
+      }} className="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-bold rounded-lg transition" title={`Sync and distribute chores for current week (${activeSyncWeek})`}>Sync & Distribute Week</button></div></div>{activeTab === "month" && <div className="space-y-4"><div className="grid grid-cols-7 gap-2 text-center">{DAY_STYLES.map((day, idx) => <div key={day.name} className="py-2.5 px-1 rounded-t-lg font-bold text-xs uppercase tracking-wider text-white shadow-sm flex flex-col items-center justify-center" style={{
         backgroundColor: day.color
       }}><span>{day.name}</span><span className="text-[10px] font-normal opacity-90 hidden sm:inline">{"Day "}{idx + 1}</span></div>)}</div><div className="space-y-3">{calendarWeeks.map((week, weekIdx) => {
         const synced = isWeekSyncedToSheet(week);
         const isCurrentCalendarWeek = week[0].dateKey === currentWeekInfo.dateKey;
-        return <div key={weekIdx} id={synced ? "active-calendar-week" : void 0} className={`bg-white rounded-xl border transition-all ${synced ? "border-rose-400 ring-2 ring-rose-200 shadow-md" : "border-slate-200 shadow-sm hover:border-slate-300"}`}><div className="bg-slate-50/80 px-3 py-1.5 border-b border-slate-100 rounded-t-xl flex items-center justify-between text-xs"><div className="flex items-center gap-2"><span className="font-semibold text-slate-700">{"Week "}{weekIdx + 1}</span><span className="text-slate-400">{"\u2022"}</span><span className="text-slate-500">{week[0].month + 1}/{week[0].day}{" \u2013 "}{week[6].month + 1}/{week[6].day}</span>{isCurrentCalendarWeek && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-300">Current Week</span>}{(() => {
+        return <div key={weekIdx} id={synced ? "active-calendar-week" : void 0} className={`bg-white dark:bg-slate-900 rounded-xl border transition-all ${synced ? "border-rose-400 ring-2 ring-rose-200 dark:ring-rose-950/60 shadow-md" : "border-slate-200 dark:border-slate-800 shadow-sm hover:border-slate-300 dark:hover:border-slate-700"}`}><div className="bg-slate-50/80 dark:bg-slate-800/70 px-3 py-1.5 border-b border-slate-100 dark:border-slate-800 rounded-t-xl flex items-center justify-between text-xs"><div className="flex items-center gap-2"><span className="font-semibold text-slate-700 dark:text-slate-200">{"Week "}{weekIdx + 1}</span><span className="text-slate-400">{"•"}</span><span className="text-slate-500 dark:text-slate-400">{week[0].month + 1}/{week[0].day}{" – "}{week[6].month + 1}/{week[6].day}</span>{isCurrentCalendarWeek && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-800">Current Week</span>}{(() => {
           const summary = getWeekBiWeeklySummary(week, biWeeklyNamesString);
           if (!summary) return null;
           return <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${summary.badgeBg}`}>{summary.text}</span>;
-        })()}{synced ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full border border-rose-300"><span className="w-1.5 h-1.5 rounded-full bg-rose-600" />Live Synced with Sheet</span> : <button onClick={() => handleSetSyncWeek(week)} className="text-[11px] font-medium text-slate-500 hover:text-indigo-600 hover:underline flex items-center gap-1">Set as Sheet Week</button>}</div><div className="text-[11px] text-slate-500">{week.reduce((acc, d) => {
+        })()}{synced ? <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 px-2 py-0.5 rounded-full border border-rose-300 dark:border-rose-800"><span className="w-1.5 h-1.5 rounded-full bg-rose-600 dark:bg-rose-400" />Live Synced with Sheet</span> : <button onClick={() => handleSetSyncWeek(week)} className="text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline flex items-center gap-1">Set as Sheet Week</button>}</div><div className="text-[11px] text-slate-500 dark:text-slate-400">{week.reduce((acc, d) => {
           const count = choreRows.filter(cr => {
             var _a2, _b2;
             return (_b2 = (_a2 = monthSchedule[d.dateKey]) == null ? void 0 : _a2[cr.index_]) == null ? void 0 : _b2.done;
           }).length;
           return acc + count;
-        }, 0)}{" "}chores completed</div></div><div className="grid grid-cols-7 divide-x divide-slate-100">{week.map((dayObj, dayIdx) => {
+        }, 0)}{" "}chores completed</div></div><div className="grid grid-cols-7 divide-x divide-slate-100 dark:divide-slate-800">{week.map((dayObj, dayIdx) => {
           const {
             dateKey,
             day,
@@ -6549,12 +6604,12 @@ function App({
             return (_b2 = (_a2 = monthSchedule[dateKey]) == null ? void 0 : _a2[cr.index_]) == null ? void 0 : _b2.done;
           }).length;
           const isAllDone = dayChores.length > 0 && doneCount === dayChores.length;
-          return <div key={dateKey} className={`min-h-[160px] p-2 flex flex-col justify-between transition-colors ${isCurrentMonth ? "bg-white" : "bg-slate-50/80 border-dashed border-slate-200"}`}><div><div className="flex items-center justify-between mb-1.5"><span className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${isCurrentMonth ? "bg-slate-100 text-slate-800" : "bg-slate-200/70 text-slate-700"}`}>{day}</span><div className="flex items-center gap-1">{dayChores.length > 0 && <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${isAllDone ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>{doneCount}/{dayChores.length}</span>}<button onClick={() => setActiveDayModal(dateKey)} className="p-1 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-100 transition" title="Open day details"><Pen className="w-2.5 h-2.5" /></button></div></div>{(() => {
+          return <div key={dateKey} className={`min-h-[160px] p-2 flex flex-col justify-between transition-colors ${isCurrentMonth ? "bg-white dark:bg-slate-900" : "bg-slate-50/80 dark:bg-slate-950/60 border-dashed border-slate-200 dark:border-slate-800"}`}><div><div className="flex items-center justify-between mb-1.5"><span className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${isCurrentMonth ? "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200" : "bg-slate-200/70 dark:bg-slate-850 text-slate-700 dark:text-slate-400"}`}>{day}</span><div className="flex items-center gap-1">{dayChores.length > 0 && <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${isAllDone ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"}`}>{doneCount}/{dayChores.length}</span>}<button onClick={() => setActiveDayModal(dateKey)} className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Open day details"><Pen className="w-2.5 h-2.5" /></button></div></div>{(() => {
             const status = getBiWeeklyStatus(dayObj.year, dayObj.month, dayObj.day);
             if (status.isArrivalDay) {
-              return <div className="text-[9px] font-semibold text-pink-700 bg-pink-50 border border-pink-200 rounded px-1.5 py-0.5 mb-1.5 flex items-center gap-1 leading-tight shadow-2xs" title="Cadence & Mason arrive today at 5:00 PM for their bi-weekly stay"><span>{"\u{1F3E0} Cadence & Mason arrive 5 PM"}</span></div>;
+              return <div className="text-[9px] font-semibold text-pink-700 dark:text-pink-300 bg-pink-50 dark:bg-pink-950/50 border border-pink-200 dark:border-pink-800/60 rounded px-1.5 py-0.5 mb-1.5 flex items-center gap-1 leading-tight shadow-2xs" title="Cadence & Mason arrive today at 5:00 PM for their bi-weekly stay"><span>{"\u{1F3E0} Cadence & Mason arrive 5 PM"}</span></div>;
             } else if (status.isDepartureDay) {
-              return <div className="text-[9px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mb-1.5 flex items-center gap-1 leading-tight shadow-2xs" title="Cadence & Mason depart today at 5:00 PM"><span>{"\u{1F44B} Cadence & Mason leave 5 PM"}</span></div>;
+              return <div className="text-[9px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 rounded px-1.5 py-0.5 mb-1.5 flex items-center gap-1 leading-tight shadow-2xs" title="Cadence & Mason depart today at 5:00 PM"><span>{"\u{1F44B} Cadence & Mason leave 5 PM"}</span></div>;
             }
             return null;
           })()}<div className="space-y-1">{dayChores.slice(0, 3).map(cr => {
@@ -6567,28 +6622,28 @@ function App({
             const specificKid = getSpecificKidForChore(choreTitle);
             const targetKidName = specificKid || status.who || "All Kids";
             const isPhotoRequested = targetKidName ? hasPendingPhotoRequest(dateKey, cr.index_, targetKidName) : false;
-            return <div key={cr.index_} className={`group text-[11px] p-1 rounded-md border flex flex-col gap-1 transition ${status.done ? "bg-emerald-50/70 border-emerald-200 text-slate-500" : freq.frequency === "weekly" ? "bg-purple-50/60 border-purple-200 text-purple-950 shadow-2xs" : "bg-white border-slate-200 hover:border-slate-300 text-slate-800 shadow-2xs"}`}><div className="flex items-center justify-between gap-1 w-full"><div className="flex items-center gap-1 min-w-0 flex-1"><button onClick={() => handleUpdateChore(dateKey, cr.index_, {
+            return <div key={cr.index_} className={`group text-[11px] p-1 rounded-md border flex flex-col gap-1 transition ${status.done ? "bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/60 text-slate-500 dark:text-slate-400" : freq.frequency === "weekly" ? "bg-purple-50/60 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800/60 text-purple-950 dark:text-purple-200 shadow-2xs" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-800 dark:text-slate-200 shadow-2xs"}`}><div className="flex items-center justify-between gap-1 w-full"><div className="flex items-center gap-1 min-w-0 flex-1"><button onClick={() => handleUpdateChore(dateKey, cr.index_, {
               done: !status.done
-            })} className="shrink-0 text-slate-400 hover:text-emerald-600 focus:outline-none">{status.done ? <SquareCheckBig className="w-3.5 h-3.5 text-emerald-600" /> : <Square className="w-3.5 h-3.5 hover:text-slate-600" />}</button><span className={`truncate text-[10px] font-medium leading-tight ${status.done ? "line-through" : ""}`}>{choreTitle}</span></div><div className="flex items-center gap-1 shrink-0">{proof ? <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedReviewProof(proof); }} className="shrink-0 p-0.5 rounded text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50" title="View submitted chore photo proof"><Camera className="w-3 h-3" /></button> : status.done && targetKidName ? (isPhotoRequested ? <span className="shrink-0 text-[8px] font-bold px-1 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200" title={`Photo proof requested from ${targetKidName}`}>📸 Asked</span> : <button type="button" onClick={(e) => { e.stopPropagation(); handleRequestPhoto(targetKidName, choreTitle, cr.index_, dateKey); }} className="shrink-0 text-[8px] font-bold px-1 py-0.2 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition cursor-pointer" title={`Request live photo proof from ${targetKidName}`}>📸 Ask</button>) : null}{freq.frequency === "weekly" && <span className="text-[8px] font-bold px-1 py-0.2 rounded bg-purple-100 text-purple-700 uppercase" title="Once-a-week task">1x/wk</span>}{getSpecificKidForChore(choreTitle) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold" style={{
+            })} className="shrink-0 text-slate-400 dark:text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none">{status.done ? <SquareCheckBig className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Square className="w-3.5 h-3.5 hover:text-slate-600 dark:hover:text-slate-300" />}</button><span className={`truncate text-[10px] font-medium leading-tight ${status.done ? "line-through text-slate-400 dark:text-slate-500" : ""}`}>{choreTitle}</span></div><div className="flex items-center gap-1 shrink-0">{proof ? <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedReviewProof(proof); }} className="shrink-0 p-0.5 rounded text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50" title="View submitted chore photo proof"><Camera className="w-3 h-3" /></button> : status.done && targetKidName ? (isPhotoRequested ? <span className="shrink-0 text-[8px] font-bold px-1 py-0.2 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60" title={`Photo proof requested from ${targetKidName}`}>📸 Asked</span> : <button type="button" onClick={(e) => { e.stopPropagation(); handleRequestPhoto(targetKidName, choreTitle, cr.index_, dateKey); }} className="shrink-0 text-[8px] font-bold px-1 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition cursor-pointer" title={`Request live photo proof from ${targetKidName}`}>📸 Ask</button>) : null}{freq.frequency === "weekly" && <span className="text-[8px] font-bold px-1 py-0.2 rounded bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 uppercase" title="Once-a-week task">1x/wk</span>}{getSpecificKidForChore(choreTitle) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold" style={{
               backgroundColor: ((_a2 = getMember(getSpecificKidForChore(choreTitle))) == null ? void 0 : _a2.bg) || "#FCE7F3",
               color: ((_b2 = getMember(getSpecificKidForChore(choreTitle))) == null ? void 0 : _b2.text) || "#BE185D"
-            }}>{getSpecificKidForChore(choreTitle)}</span> : isBedroomChore(choreTitle) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold bg-pink-100 text-pink-700" title="Each child cleans own bedroom">Own Rooms</span> : status.who ? <span className="shrink-0 text-[9px] px-1 py-0.2 rounded font-semibold" style={{
+            }}>{getSpecificKidForChore(choreTitle)}</span> : isBedroomChore(choreTitle) ? <span className="shrink-0 text-[8px] px-1 py-0.2 rounded font-bold bg-pink-100 dark:bg-pink-950/60 text-pink-700 dark:text-pink-300" title="Each child cleans own bedroom">Own Rooms</span> : status.who ? <span className="shrink-0 text-[9px] px-1 py-0.2 rounded font-semibold" style={{
               backgroundColor: (assignee == null ? void 0 : assignee.bg) || "#F1F5F9",
               color: (assignee == null ? void 0 : assignee.text) || "#475569"
-            }} title={String(status.who)}>{String(status.who).slice(0, 2)}</span> : <button onClick={() => setActiveDayModal(dateKey)} className="shrink-0 text-[9px] text-slate-400 hover:text-indigo-600 px-0.5" title="Assign person">+</button>}</div></div>{isBedroomChore(choreTitle) && !getSpecificKidForChore(choreTitle) && <div className="pt-0.5 border-t border-purple-200/60 flex flex-wrap gap-1">{getKidsPresentOnDate(dateKey).map(kidName => {
+            }} title={String(status.who)}>{String(status.who).slice(0, 2)}</span> : <button onClick={() => setActiveDayModal(dateKey)} className="shrink-0 text-[9px] text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 px-0.5" title="Assign person">+</button>}</div></div>{isBedroomChore(choreTitle) && !getSpecificKidForChore(choreTitle) && <div className="pt-0.5 border-t border-purple-200/60 dark:border-purple-800/40 flex flex-wrap gap-1">{getKidsPresentOnDate(dateKey).map(kidName => {
               var _a3;
               const isKidDone = !!((_a3 = status.kidsDone) == null ? void 0 : _a3[kidName]);
               const kidMember = getMember(kidName);
               return <button key={kidName} type="button" onClick={e => {
                 e.stopPropagation();
                 handleToggleKidBedroom(dateKey, cr.index_, kidName);
-              }} className={`text-[8.5px] px-1 py-0.5 rounded font-semibold flex items-center gap-0.5 border transition ${isKidDone ? "bg-emerald-100 text-emerald-800 border-emerald-300 line-through" : "bg-white/90 text-slate-700 border-slate-300 hover:border-pink-300"}`} title={`Click to toggle ${kidName}'s room`}><span className="w-1.5 h-1.5 rounded-full inline-block" style={{
+              }} className={`text-[8.5px] px-1 py-0.5 rounded font-semibold flex items-center gap-0.5 border transition ${isKidDone ? "bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 line-through" : "bg-white/90 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:border-pink-300"}`} title={`Click to toggle ${kidName}'s room`}><span className="w-1.5 h-1.5 rounded-full inline-block" style={{
                 backgroundColor: (kidMember == null ? void 0 : kidMember.color) || "#888"
               }} /><span>{kidName}</span>{isKidDone ? "\u2713" : ""}</button>;
             })}</div>}</div>;
-          })}{dayChores.length > 3 && <button onClick={() => setActiveDayModal(dateKey)} className="w-full text-center text-[10px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline pt-0.5">+{dayChores.length - 3}{" more"}</button>}{dayChores.length === 0 && <div className="text-[10px] text-slate-400 italic py-2 text-center">No chores</div>}</div></div><button onClick={() => setActiveDayModal(dateKey)} className="mt-2 w-full py-1 text-[10px] text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded text-center font-semibold transition">Manage Day</button></div>;
+          })}{dayChores.length > 3 && <button onClick={() => setActiveDayModal(dateKey)} className="w-full text-center text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline pt-0.5">+{dayChores.length - 3}{" more"}</button>}{dayChores.length === 0 && <div className="text-[10px] text-slate-400 dark:text-slate-500 italic py-2 text-center">No chores</div>}</div></div><button onClick={() => setActiveDayModal(dateKey)} className="mt-2 w-full py-1 text-[10px] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/60 dark:border-slate-700 rounded text-center font-semibold transition">Manage Day</button></div>;
         })}</div></div>;
-      })}</div></div>}{activeTab === "matrix" && <div className="space-y-4"><div id="printable-schedule-card" className="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden"><div className="no-print p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><h2 className="text-base font-bold text-slate-900">Weekly Schedule</h2><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-pink-50 text-pink-700 border border-pink-200 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />{"Active Week: "}{activeSyncWeek}{" \u2022 "}{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || "Cadence & Mason arrive Sun Oct 18 @ 5 PM"}</span></div><p className="text-xs text-slate-500 mt-0.5">{"Single-page Letter Landscape Layout - Printed.pdf"}</p></div><div className="flex flex-wrap items-center gap-2"><div className="relative"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" /><input type="text" placeholder="Search schedule chores..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div><button onClick={() => {
+      })}</div></div>}{activeTab === "matrix" && <div className="space-y-4"><div id="printable-schedule-card" className="bg-white dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-800 shadow-sm overflow-hidden"><div className="no-print p-4 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><h2 className="text-base font-bold text-slate-900 dark:text-white">Weekly Schedule</h2><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-pink-50 dark:bg-pink-950/50 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-800/60 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />{"Active Week: "}{activeSyncWeek}{" • "}{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || "Cadence & Mason arrive Sun Oct 18 @ 5 PM"}</span></div><p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{"Single-page Letter Landscape Layout - Printed.pdf"}</p></div><div className="flex flex-wrap items-center gap-2"><div className="relative"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" /><input type="text" placeholder="Search schedule chores..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div><button onClick={() => {
         const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr) || { year: 2026, month: 9, day: 19 };
         const weekDays = getWeekDaysForDate(parsedStart.year, parsedStart.month, parsedStart.day);
         setMonthSchedule(prev => {
@@ -6619,7 +6674,7 @@ function App({
         }
         setNotice("Cleared daily & weekly WHO/DONE assignments for a blank printable template!");
         setTimeout(() => setNotice(null), 3000);
-      }} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 transition shadow-2xs" title="Clear WHO/DONE cells to print a blank fill-in sheet"><span>Clear Names (Blank Sheet)</span></button><button onClick={handleAutoAssignCurrentWeek} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-amber-50 text-amber-900 border border-amber-300 rounded-lg hover:bg-amber-100 transition shadow-2xs" title="Automatically distribute chores across active members for current week"><Sparkles className="w-3.5 h-3.5 text-amber-600" /><span>Distribute Current Week</span></button><button onClick={() => window.print()} className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition shadow-2xs cursor-pointer" title="Print 1-page Letter Landscape schedule"><span>🖨️ Print Schedule</span></button></div></div><div className="overflow-x-auto"><table id="printable-schedule-table" className="w-full table-fixed border-collapse text-left text-xs" style={{ borderColor: "#C55A11" }}><colgroup><col style={{ width: "21%" }} />{DAY_STYLES.map(d => <React.Fragment key={`col-${d.name}`}><col style={{ width: "7.5%" }} /><col style={{ width: "3.78%" }} /></React.Fragment>)}</colgroup><thead><tr style={{ backgroundColor: "#002060", borderBottom: "3px solid #FFFFFF" }}><th colSpan={15} className="py-2 px-3 text-left text-xl font-bold text-white tracking-tight">Chore Schedule</th></tr><tr><th className="p-0 align-top bg-white" style={{ borderRight: "2px solid #FFFFFF" }}><div className="text-[10px] text-slate-500 font-semibold py-1.5 text-center uppercase tracking-wider bg-white">FOR THE WEEK OF:</div><div className="text-lg font-bold py-1.5 text-center text-white" style={{ backgroundColor: "#002060" }}>{(() => {
+      }} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/80 transition shadow-2xs cursor-pointer" title="Clear WHO/DONE cells to print a blank fill-in sheet"><span>Clear Names (Blank Sheet)</span></button><button onClick={handleAutoAssignCurrentWeek} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/60 transition shadow-2xs cursor-pointer" title="Automatically distribute chores across active members for current week"><Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /><span>Distribute Current Week</span></button><button onClick={() => window.print()} className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-lg hover:bg-slate-800 dark:hover:bg-white transition shadow-2xs cursor-pointer" title="Print 1-page Letter Landscape schedule"><span>🖨️ Print Schedule</span></button></div></div><div className="overflow-x-auto"><table id="printable-schedule-table" className="w-full table-fixed border-collapse text-left text-xs" style={{ borderColor: "#C55A11" }}><colgroup><col style={{ width: "21%" }} />{DAY_STYLES.map(d => <React.Fragment key={`col-${d.name}`}><col style={{ width: "7.5%" }} /><col style={{ width: "3.78%" }} /></React.Fragment>)}</colgroup><thead><tr style={{ backgroundColor: "#002060", borderBottom: "3px solid #FFFFFF" }}><th colSpan={15} className="py-2 px-3 text-left text-xl font-bold text-white tracking-tight">Chore Schedule</th></tr><tr><th className="p-0 align-top bg-white" style={{ borderRight: "2px solid #FFFFFF" }}><div className="text-[10px] text-slate-500 font-semibold py-1.5 text-center uppercase tracking-wider bg-white">FOR THE WEEK OF:</div><div className="text-lg font-bold py-1.5 text-center text-white" style={{ backgroundColor: "#002060" }}>{(() => {
         const p = parseDateKey(activeSyncWeek || sheetStartDateStr);
         return p ? `${p.month + 1}/${p.day}/${p.year}` : activeSyncWeek || sheetStartDateStr || "10/19/2026";
       })()}</div></th>{DAY_STYLES.map((d, dayIdx) => {
@@ -6747,11 +6802,11 @@ function App({
       })}{/* Decorative 7-Day Color Band matching Weekly Chores Original - Printed.pdf */}
           <tr className="h-14 print:h-5 color-band-row"><td style={{ backgroundColor: "#002060" }} />{DAY_STYLES.map(d => <td key={`band-${d.name}`} colSpan={2} style={{ backgroundColor: d.color }} />)}</tr>
           {/* Weekly Sign-Off Row matching Weekly Chores Original - Printed.pdf */}
-          <tr className="sign-off-row bg-white text-slate-900" style={{ borderTop: "1px solid #475569", borderBottom: "2.5px solid #C55A11" }}><td className="py-2 px-2.5 font-semibold text-xs text-slate-900 bg-white" style={{ borderLeft: "1px solid #C55A11", borderRight: "1.5px solid #475569" }}>Weekly Sign-Off</td><td colSpan={12} className="py-2 px-3 text-right font-semibold text-xs text-slate-900 bg-white" style={{ borderRight: "1.5px solid #475569" }}>Parent Initials:</td><td colSpan={2} className="py-2 px-2 text-center bg-white" style={{ borderRight: "1px solid #C55A11" }}><button type="button" onClick={() => setShowInspectionModal(true)} className="inline-flex items-center justify-center w-full cursor-pointer font-semibold text-xs text-slate-900 hover:opacity-80 transition" title="Click to open Parent Sunday Inspection & Sign-Off"><span className={`inline-block min-w-[56px] border-b border-slate-800 ${signOffStatus.done ? "text-emerald-700 font-bold" : "text-transparent select-none"}`}>{signOffStatus.done ? "\u2713 TV / MV" : "_________"}</span></button></td></tr></tbody></table></div></div><div className="no-print grid grid-cols-1 md:grid-cols-3 gap-4 text-xs"><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-indigo-900">HOUSEHOLD ROSTER</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div><strong className="text-slate-900">{"\u2022 Full-Time:"}</strong>{" "}{familyMembers.filter(m => m.type === "regular").map(m => m.name).join(", ") || "Sydney, Thom, Meghan"}</div><div><strong className="text-pink-900">{"\u2022 Bi-Weekly:"}</strong>{" "}{familyMembers.filter(m => m.type === "biweekly").map(m => m.name).join(" & ") || "Cadence & Mason"}</div><div><strong className="text-sky-900">{"\u2022 Casual:"}</strong>{" "}{familyMembers.filter(m => m.type === "casual").map(m => m.name).join(", ") || "Koda, Keyanna"}</div></div></div><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-pink-900">BI-WEEKLY SCHEDULE</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div>{"\u2022 Cadence & Mason: Alternating bi-weekly schedule"}</div><div>{"\u2022 Status this week: Not here \u2022 Arrive Sunday, Oct. 18 @ 5:00 PM"}</div><div>{"\u2022 Transitions: Sundays @ 5:00 PM (alternating bi-weekly from Oct 18)"}</div><div>{"\u2022 Off-weeks (This week): Chores split among full-time roster (Thom, Meghan, Sydney)"}</div><div>{"\u2022 On-weeks (Starts Oct 19): Included in daily chore rotations"}</div></div></div><div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm space-y-2"><div className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-amber-900">{'PET CARE ROUTINE ("FEED THE HERD")'}</span><span className="text-[10px] text-slate-400 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 text-[11px] leading-relaxed"><div>{"\u2022 Cats (Litter Crew): Morning & evening feeding, scoop litter box daily"}</div><div>{"\u2022 Family Dog(s): Morning & evening feeding, outdoor routine, fresh water"}</div><div>{"\u2022 Herd Feeding Station: Refill all water bowls daily, wipe station, dispose waste"}</div><div>{"\u2022 Routine: Daily feeding, fresh water & station cleanup"}</div></div></div></div></div>}{activeTab === "stats" && <div className="max-w-4xl mx-auto space-y-6"><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Scheduled Chores</span><Calendar className="w-4 h-4 text-slate-400" /></div><div className="text-2xl font-bold text-slate-900 mt-2">{monthStats.totalScheduled}</div><p className="text-xs text-slate-500 mt-1">{"Total across "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</p></div><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Completed Chores</span><CircleCheck className="w-4 h-4 text-emerald-500" /></div><div className="text-2xl font-bold text-emerald-600 mt-2">{monthStats.totalCompleted}</div><p className="text-xs text-slate-500 mt-1">{monthStats.completionRate}% completion rate</p></div><div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500">Active Tasks</span><ListTodo className="w-4 h-4 text-indigo-500" /></div><div className="text-2xl font-bold text-indigo-600 mt-2">{choreRows.length}</div><p className="text-xs text-slate-500 mt-1">Daily & weekly routines</p></div><div className="bg-gradient-to-br from-amber-50 to-orange-50/70 p-4 rounded-xl border border-amber-300 shadow-sm"><div className="flex items-center justify-between"><span className="text-xs font-bold text-amber-900">Current Top Performer</span><Crown className="w-4 h-4 text-amber-600" /></div><div className="text-xl font-black text-amber-950 mt-2 truncate">{topPerformer ? topPerformer.name : "TBD"}</div><p className="text-xs text-amber-800 mt-1 truncate">{topPerformer ? `${topPerformer.done} chores finished` : "Track chores to rank"}</p></div></div><div className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 rounded-2xl text-white p-5 shadow-md"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-white/20"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 shadow-inner"><Trophy className="w-6 h-6 text-amber-200" /></div><div><div className="flex items-center gap-2"><span className="text-xs font-extrabold uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full">Monthly Incentive Prize</span><span className="text-xs opacity-90">{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</span></div><h3 className="text-base font-extrabold mt-0.5">Top Performer Reward & Recognition</h3></div></div><div className="flex items-center gap-2"><button onClick={() => {
+          <tr className="sign-off-row bg-white text-slate-900" style={{ borderTop: "1px solid #475569", borderBottom: "2.5px solid #C55A11" }}><td className="py-2 px-2.5 font-semibold text-xs text-slate-900 bg-white" style={{ borderLeft: "1px solid #C55A11", borderRight: "1.5px solid #475569" }}>Weekly Sign-Off</td><td colSpan={12} className="py-2 px-3 text-right font-semibold text-xs text-slate-900 bg-white" style={{ borderRight: "1.5px solid #475569" }}>Parent Initials:</td><td colSpan={2} className="py-2 px-2 text-center bg-white" style={{ borderRight: "1px solid #C55A11" }}><button type="button" onClick={() => setShowInspectionModal(true)} className="inline-flex items-center justify-center w-full cursor-pointer font-semibold text-xs text-slate-900 hover:opacity-80 transition" title="Click to open Parent Sunday Inspection & Sign-Off"><span className={`inline-block min-w-[56px] border-b border-slate-800 ${signOffStatus.done ? "text-emerald-700 font-bold" : "text-transparent select-none"}`}>{signOffStatus.done ? "✓ TV / MV" : "_________"}</span></button></td></tr></tbody></table></div></div><div className="no-print grid grid-cols-1 md:grid-cols-3 gap-4 text-xs"><div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm space-y-2 transition-colors"><div className="font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-indigo-900 dark:text-indigo-300">HOUSEHOLD ROSTER</span><span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 dark:text-slate-300 text-[11px] leading-relaxed"><div><strong className="text-slate-900 dark:text-white">{"• Full-Time:"}</strong>{" "}{familyMembers.filter(m => m.type === "regular").map(m => m.name).join(", ") || "Sydney, Thom, Meghan"}</div><div><strong className="text-pink-900 dark:text-pink-300">{"• Bi-Weekly:"}</strong>{" "}{familyMembers.filter(m => m.type === "biweekly").map(m => m.name).join(" & ") || "Cadence & Mason"}</div><div><strong className="text-sky-900 dark:text-sky-300">{"• Casual:"}</strong>{" "}{familyMembers.filter(m => m.type === "casual").map(m => m.name).join(", ") || "Koda, Keyanna"}</div></div></div><div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm space-y-2 transition-colors"><div className="font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-pink-900 dark:text-pink-300">BI-WEEKLY SCHEDULE</span><span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 dark:text-slate-300 text-[11px] leading-relaxed"><div>{"• Cadence & Mason: Alternating bi-weekly schedule"}</div><div>{"• Status this week: Not here • Arrive Sunday, Oct. 18 @ 5:00 PM"}</div><div>{"• Transitions: Sundays @ 5:00 PM (alternating bi-weekly from Oct 18)"}</div><div>{"• Off-weeks (This week): Chores split among full-time roster (Thom, Meghan, Sydney)"}</div><div>{"• On-weeks (Starts Oct 19): Included in daily chore rotations"}</div></div></div><div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm space-y-2 transition-colors"><div className="font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2 flex items-center justify-between"><span className="uppercase tracking-wider text-[11px] text-amber-900 dark:text-amber-300">{'PET CARE ROUTINE ("FEED THE HERD")'}</span><span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">Sheet Row 19–22</span></div><div className="space-y-1.5 text-slate-700 dark:text-slate-300 text-[11px] leading-relaxed"><div>{"• Cats (Litter Crew): Morning & evening feeding, scoop litter box daily"}</div><div>{"• Family Dog(s): Morning & evening feeding, outdoor routine, fresh water"}</div><div>{"• Herd Feeding Station: Refill all water bowls daily, wipe station, dispose waste"}</div><div>{"• Routine: Daily feeding, fresh water & station cleanup"}</div></div></div></div></div>}{activeTab === "stats" && <div className="max-w-4xl mx-auto space-y-6"><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5"><div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Scheduled Chores</span><Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" /></div><div className="text-2xl font-bold text-slate-900 dark:text-white mt-2">{monthStats.totalScheduled}</div><p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{"Total across "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</p></div><div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Completed Chores</span><CircleCheck className="w-4 h-4 text-emerald-500" /></div><div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">{monthStats.totalCompleted}</div><p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{monthStats.completionRate}% completion rate</p></div><div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Active Tasks</span><ListTodo className="w-4 h-4 text-indigo-500 dark:text-indigo-400" /></div><div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-2">{choreRows.length}</div><p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Daily & weekly routines</p></div><div className="bg-gradient-to-br from-amber-50 dark:from-amber-950/40 to-orange-50/70 dark:to-orange-950/30 p-4 rounded-xl border border-amber-300 dark:border-amber-800 shadow-sm transition-colors"><div className="flex items-center justify-between"><span className="text-xs font-bold text-amber-900 dark:text-amber-300">Current Top Performer</span><Crown className="w-4 h-4 text-amber-600 dark:text-amber-400" /></div><div className="text-xl font-black text-amber-950 dark:text-amber-100 mt-2 truncate">{topPerformer ? topPerformer.name : "TBD"}</div><p className="text-xs text-amber-800 dark:text-amber-300 mt-1 truncate">{topPerformer ? `${topPerformer.done} chores finished` : "Track chores to rank"}</p></div></div><div className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 rounded-2xl text-white p-5 shadow-md"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-white/20"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0 shadow-inner"><Trophy className="w-6 h-6 text-amber-200" /></div><div><div className="flex items-center gap-2"><span className="text-xs font-extrabold uppercase tracking-wider bg-white/25 px-2 py-0.5 rounded-full">Monthly Incentive Prize</span><span className="text-xs opacity-90">{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}</span></div><h3 className="text-base font-extrabold mt-0.5">Top Performer Reward & Recognition</h3></div></div><div className="flex items-center gap-2"><button onClick={() => {
             setIsEditingIncentive(prev => !prev);
             setIncentiveDraft(monthlyIncentive);
             setTargetDraft(monthlyGoalTarget || 25);
-          }} className="text-xs font-bold px-3 py-1.5 bg-white text-amber-900 hover:bg-amber-50 rounded-lg shadow-sm transition flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-amber-700" /><span>{isEditingIncentive ? "Cancel Edit" : "Customize Incentive & Goal"}</span></button></div></div>{!isEditingIncentive ? <div className="pt-3 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"><div className="space-y-1"><div className="text-amber-100 font-medium">Incentive for Highest Monthly Chore Completions:</div><div className="text-sm font-black text-white flex items-center gap-2"><Gift className="w-4 h-4 text-amber-200 shrink-0" /><span>{monthlyIncentive}</span><span className="text-xs font-bold bg-white/20 px-2 py-0.5 rounded-full text-amber-100">Target: {monthlyGoalTarget} Chores</span></div></div>{topPerformer && <div className="bg-white/15 px-3 py-2 rounded-xl backdrop-blur-xs flex items-center gap-2.5 self-start md:self-auto border border-white/20"><Crown className="w-4 h-4 text-amber-200 shrink-0" /><div><div className="text-[10px] text-amber-100 uppercase tracking-wider font-bold">Leading Candidate</div><div className="font-extrabold text-xs text-white">{topPerformer.name}{" ("}{topPerformer.done}{" finished \u2022 "}{topPerformer.pct}%)</div></div></div>}</div> : <div className="pt-3 space-y-3 text-xs bg-black/15 p-3 rounded-xl mt-3 border border-white/20"><div className="grid grid-cols-1 md:grid-cols-3 gap-2"><div className="md:col-span-2 space-y-1"><label className="block font-bold text-white text-[11px]">Set Monthly Reward / Incentive Prize for the Top Performer:</label><input type="text" value={incentiveDraft} onChange={e => setIncentiveDraft(e.target.value)} placeholder="e.g. $15 Allowance Bonus, Pizza Night Pick, 1-Day Chore Pass..." className="w-full p-2 bg-white text-slate-900 font-semibold rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-300" /></div><div className="space-y-1"><label className="block font-bold text-white text-[11px]">Monthly Goal Target (Chores):</label><input type="number" min="5" max="100" value={targetDraft} onChange={e => setTargetDraft(Math.max(1, Number(e.target.value) || 25))} className="w-full p-2 bg-white text-slate-900 font-bold rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-300" /></div></div><div className="flex justify-end gap-2 pt-1"><button onClick={() => {
+          }} className="text-xs font-bold px-3 py-1.5 bg-white text-amber-900 hover:bg-amber-50 rounded-lg shadow-sm transition flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-amber-700" /><span>{isEditingIncentive ? "Cancel Edit" : "Customize Incentive & Goal"}</span></button></div></div>{!isEditingIncentive ? <div className="pt-3 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"><div className="space-y-1"><div className="text-amber-100 font-medium">Incentive for Highest Monthly Chore Completions:</div><div className="text-sm font-black text-white flex items-center gap-2"><Gift className="w-4 h-4 text-amber-200 shrink-0" /><span>{monthlyIncentive}</span><span className="text-xs font-bold bg-white/20 px-2 py-0.5 rounded-full text-amber-100">Target: {monthlyGoalTarget} Chores</span></div></div>{topPerformer && <div className="bg-white/15 px-3 py-2 rounded-xl backdrop-blur-xs flex items-center gap-2.5 self-start md:self-auto border border-white/20"><Crown className="w-4 h-4 text-amber-200 shrink-0" /><div><div className="text-[10px] text-amber-100 uppercase tracking-wider font-bold">Leading Candidate</div><div className="font-extrabold text-xs text-white">{topPerformer.name}{" ("}{topPerformer.done}{" finished • "}{topPerformer.pct}%)</div></div></div>}</div> : <div className="pt-3 space-y-3 text-xs bg-black/15 p-3 rounded-xl mt-3 border border-white/20"><div className="grid grid-cols-1 md:grid-cols-3 gap-2"><div className="md:col-span-2 space-y-1"><label className="block font-bold text-white text-[11px]">Set Monthly Reward / Incentive Prize for the Top Performer:</label><input type="text" value={incentiveDraft} onChange={e => setIncentiveDraft(e.target.value)} placeholder="e.g. $15 Allowance Bonus, Pizza Night Pick, 1-Day Chore Pass..." className="w-full p-2 bg-white text-slate-900 font-semibold rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-300" /></div><div className="space-y-1"><label className="block font-bold text-white text-[11px]">Monthly Goal Target (Chores):</label><input type="number" min="5" max="100" value={targetDraft} onChange={e => setTargetDraft(Math.max(1, Number(e.target.value) || 25))} className="w-full p-2 bg-white text-slate-900 font-bold rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-amber-300" /></div></div><div className="flex justify-end gap-2 pt-1"><button onClick={() => {
             if (incentiveDraft.trim()) {
               const cleaned = incentiveDraft.trim();
               const targetNum = targetDraft || 25;
@@ -6770,16 +6825,16 @@ function App({
               setNotice(`Updated Monthly Incentive: "${cleaned}" (${targetNum} chores target)`);
               setTimeout(() => setNotice(null), 3e3);
             }
-          }} className="px-4 py-2 bg-white text-amber-900 font-extrabold rounded-lg hover:bg-amber-50 transition cursor-pointer shadow-xs">Save Prize &amp; Goal</button></div><div className="flex flex-wrap items-center gap-1.5 text-[11px] pt-1"><span className="opacity-80">Quick ideas:</span><button onClick={() => { setIncentiveDraft("$15 Allowance Bonus & Pizza Night Pick"); setTargetDraft(25); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">{"$15 + Pizza Night (25)"}</button><button onClick={() => { setIncentiveDraft("1-Day Chore Exemption Pass & Movie Pick"); setTargetDraft(30); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">1-Day Chore Pass (30)</button><button onClick={() => { setIncentiveDraft("$20 Gift Card & Weekend Treat"); setTargetDraft(35); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">{"$20 Gift Card (35)"}</button><button onClick={() => { setIncentiveDraft("Family Ice Cream Outing of Their Choice"); setTargetDraft(20); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">Ice Cream Outing (20)</button></div></div>}</div><div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-200"><div><div className="flex items-center gap-2"><h3 className="text-base font-bold text-slate-900">Family Members Completion</h3><span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Kids & Minions ({rankedMembers.length}{" Members)"}</span></div><p className="text-xs text-slate-500 mt-0.5">{"Monthly Total Tracker ranked by total chores completed for "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}. Kids and minions completion leaderboard competing for the monthly reward.</p></div><div className="flex items-center gap-2 text-xs text-slate-500"><Award className="w-4 h-4 text-amber-500" /><span className="font-semibold text-slate-700">Ranked by Monthly Completions</span></div></div><div className="space-y-3">{rankedMembers.map((m, idx) => {
+          }} className="px-4 py-2 bg-white text-amber-900 font-extrabold rounded-lg hover:bg-amber-50 transition cursor-pointer shadow-xs">Save Prize &amp; Goal</button></div><div className="flex flex-wrap items-center gap-1.5 text-[11px] pt-1"><span className="opacity-80">Quick ideas:</span><button onClick={() => { setIncentiveDraft("$15 Allowance Bonus & Pizza Night Pick"); setTargetDraft(25); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">{"$15 + Pizza Night (25)"}</button><button onClick={() => { setIncentiveDraft("1-Day Chore Exemption Pass & Movie Pick"); setTargetDraft(30); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">1-Day Chore Pass (30)</button><button onClick={() => { setIncentiveDraft("$20 Gift Card & Weekend Treat"); setTargetDraft(35); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">{"$20 Gift Card (35)"}</button><button onClick={() => { setIncentiveDraft("Family Ice Cream Outing of Their Choice"); setTargetDraft(20); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">Ice Cream Outing (20)</button></div></div>}</div><div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm transition-colors"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-200 dark:border-slate-800"><div><div className="flex items-center gap-2"><h3 className="text-base font-bold text-slate-900 dark:text-white">Family Members Completion</h3><span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">Kids & Minions ({rankedMembers.length}{" Members)"}</span></div><p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{"Monthly Total Tracker ranked by total chores completed for "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}. Kids and minions completion leaderboard competing for the monthly reward.</p></div><div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><Award className="w-4 h-4 text-amber-500" /><span className="font-semibold text-slate-700 dark:text-slate-300">Ranked by Monthly Completions</span></div></div><div className="space-y-3">{rankedMembers.map((m, idx) => {
             const isFirst = idx === 0 && m.done > 0;
             const isSecond = idx === 1 && m.done > 0;
             const isThird = idx === 2 && m.done > 0;
-            return <div key={m.id} className={`p-3.5 rounded-xl border transition-all ${isFirst ? "border-amber-400 bg-amber-50/40 ring-1 ring-amber-300 shadow-sm" : "border-slate-200 bg-slate-50/40 hover:bg-white hover:border-slate-300"}`}><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5"><div className="flex items-center gap-3"><div className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${isFirst ? "bg-amber-500 text-white shadow-xs" : isSecond ? "bg-slate-300 text-slate-800" : isThird ? "bg-amber-700/80 text-white" : "bg-slate-100 text-slate-500"}`}>{isFirst ? <Crown className="w-4 h-4" /> : `#${idx + 1}`}</div><div className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full shrink-0" style={{
+            return <div key={m.id} className={`p-3.5 rounded-xl border transition-all ${isFirst ? "border-amber-400 bg-amber-50/40 dark:bg-amber-950/30 ring-1 ring-amber-300 dark:ring-amber-900/60 shadow-sm" : "border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700"}`}><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5"><div className="flex items-center gap-3"><div className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${isFirst ? "bg-amber-500 text-white shadow-xs" : isSecond ? "bg-slate-300 text-slate-800" : isThird ? "bg-amber-700/80 text-white" : "bg-slate-100 text-slate-500"}`}>{isFirst ? <Crown className="w-4 h-4" /> : `#${idx + 1}`}</div><div className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full shrink-0" style={{
               backgroundColor: m.color
-            }} /><span className="font-bold text-sm text-slate-900">{m.name}</span>{m.role && <span className="text-xs text-slate-500 font-normal">({m.role}{" = "}{m.role === "Supreme Overlord" ? "Parent" : "Kid"})</span>}<span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${m.type === "biweekly" ? "bg-pink-50 text-pink-700 border-pink-200" : m.type === "casual" ? "bg-sky-50 text-sky-700 border-sky-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}>{m.residency}</span>{isFirst && <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs"><span>{"\u{1F3C6}"}</span><span>{"Top Performer \u2022 Incentive Winner"}</span></span>}</div></div><div className="flex items-center gap-3 self-end sm:self-auto text-xs"><div className="text-right"><span className="font-extrabold text-sm text-slate-900">{m.done}</span><span className="text-slate-500">{" / "}{m.total}{" completed"}</span></div><span className={`font-black text-xs px-2 py-0.5 rounded-md ${m.pct >= 80 ? "bg-emerald-100 text-emerald-800" : m.pct >= 50 ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-600"}`}>{m.pct}%</span></div></div><div className="w-full bg-slate-200/80 rounded-full h-2.5 overflow-hidden"><div className="h-2.5 rounded-full transition-all duration-500" style={{
+            }} /><span className="font-bold text-sm text-slate-900 dark:text-white">{m.name}</span>{m.role && <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">({m.role}{" = "}{m.role === "Supreme Overlord" ? "Parent" : "Kid"})</span>}<span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${m.type === "biweekly" ? "bg-pink-50 text-pink-700 border-pink-200" : m.type === "casual" ? "bg-sky-50 text-sky-700 border-sky-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}>{m.residency}</span>{isFirst && <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs"><span>{"\u{1F3C6}"}</span><span>{"Top Performer • Incentive Winner"}</span></span>}</div></div><div className="flex items-center gap-3 self-end sm:self-auto text-xs"><div className="text-right"><span className="font-extrabold text-sm text-slate-900 dark:text-white">{m.done}</span><span className="text-slate-500 dark:text-slate-400">{" / "}{m.total}{" completed"}</span></div><span className={`font-black text-xs px-2 py-0.5 rounded-md ${m.pct >= 80 ? "bg-emerald-100 text-emerald-800" : m.pct >= 50 ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-600"}`}>{m.pct}%</span></div></div><div className="w-full bg-slate-200/80 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden"><div className="h-2.5 rounded-full transition-all duration-500" style={{
               width: `${m.pct}%`,
               backgroundColor: isFirst ? "#D97706" : m.color
-            }} /></div>{isFirst && <div className="mt-2 pt-2 border-t border-amber-200/60 flex items-center justify-between text-[11px] text-amber-900 font-medium"><div className="flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-amber-700 shrink-0" /><span>{"Qualifying Reward: "}<strong>{monthlyIncentive}</strong></span></div><span className="font-bold text-amber-700">{"Rank #1 in "}{MONTH_NAMES[selectedMonth]}</span></div>}</div>;
+            }} /></div>{isFirst && <div className="mt-2 pt-2 border-t border-amber-200/60 dark:border-amber-900/60 flex items-center justify-between text-[11px] text-amber-900 dark:text-amber-300 font-medium"><div className="flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 shrink-0" /><span>{"Qualifying Reward: "}<strong>{monthlyIncentive}</strong></span></div><span className="font-bold text-amber-700 dark:text-amber-400">{"Rank #1 in "}{MONTH_NAMES[selectedMonth]}</span></div>}</div>;
           })}</div></div></div>}{activeTab === "roster" && <div className="max-w-5xl mx-auto space-y-6"><div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200"><div><div className="flex items-center gap-2"><h2 className="text-lg font-bold text-slate-900">Household Hub Master Data</h2><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Linked: Monthly Calendar & Printable Weekly Schedule</span></div><p className="text-xs text-slate-500 mt-0.5">Centralized household administration: Family member roster & occupancy, pet care routines, and chore allocation master files.</p></div><div className="flex flex-wrap items-center gap-2"><span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 font-semibold rounded-lg border border-slate-200">{"Selected Week: "}<strong>{activeSyncWeek || hubScheduleConfig.activeWeekStart}</strong></span><span className="text-xs px-2.5 py-1 bg-pink-50 text-pink-700 font-semibold rounded-lg border border-pink-200">{"Kids Week: "}<strong>{isBiWeeklyHereThisWeek ? "Active" : "Inactive"}</strong></span><button type="button" onClick={handleSaveAsDefault} className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 shadow-2xs transition cursor-pointer" title="Save current browser setup as the permanent default in code (.tsx) and weekly-chores-config.json"><span>💾</span><span>Save as Default</span></button><button type="button" onClick={handleExportConfig} className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 shadow-2xs transition cursor-pointer" title="Download / export current configuration backup file (.json)"><span>⬇️</span><span>Export Config</span></button><label className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 shadow-2xs transition cursor-pointer" title="Import / restore a configuration file (.json)"><span>⬆️</span><span>Import Config</span><input type="file" accept=".json" onChange={handleImportConfigFile} className="hidden" /></label></div></div><div className="my-5 p-4 rounded-xl bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/50 border border-indigo-200 shadow-2xs space-y-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-indigo-600" /><h3 className="text-xs font-bold uppercase tracking-wider text-indigo-950">Special Rules & Parameters</h3></div><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">Live Analytical Summary</span></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">{(() => {
             const activeOverlords = familyMembers.filter(m => m.active !== false && (m.role === "Supreme Overlord" || m.role === "Overseer Supreme")).map(m => m.name);
             const overlordsLabel = activeOverlords.length > 0 ? activeOverlords.join(" & ") : "None";

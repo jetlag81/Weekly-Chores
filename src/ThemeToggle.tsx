@@ -57,7 +57,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
         <button
           type="button"
           onClick={() => handleSelectMode("light")}
-          className={`px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+          className={`flex-1 justify-center px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
             mode === "light"
               ? "bg-white text-amber-600 shadow-xs dark:bg-slate-700 dark:text-amber-400"
               : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -65,14 +65,14 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
           title="Light Theme"
         >
           <Sun className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Light</span>
+          <span>Light</span>
         </button>
 
         {/* System (Default) */}
         <button
           type="button"
           onClick={() => handleSelectMode("system")}
-          className={`px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+          className={`flex-1 justify-center px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
             mode === "system"
               ? "bg-white text-indigo-600 shadow-xs dark:bg-slate-700 dark:text-indigo-400"
               : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -80,14 +80,14 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
           title="Auto / System Theme (Matches device settings)"
         >
           <Laptop className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">System</span>
+          <span>System</span>
         </button>
 
         {/* Dark */}
         <button
           type="button"
           onClick={() => handleSelectMode("dark")}
-          className={`px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+          className={`flex-1 justify-center px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
             mode === "dark"
               ? "bg-white text-indigo-400 shadow-xs dark:bg-slate-900 dark:text-indigo-300"
               : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -95,7 +95,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
           title="Dark Theme"
         >
           <Moon className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Dark</span>
+          <span>Dark</span>
         </button>
       </div>
     );

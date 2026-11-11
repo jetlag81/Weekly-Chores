@@ -1931,6 +1931,7 @@ function App({
   const [showRewardPayoutModal, setShowRewardPayoutModal] = useState(false);
   const [rewardPayoutKid, setRewardPayoutKid] = useState<string>("Sydney");
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [showPhotoInboxModal, setShowPhotoInboxModal] = useState(false);
   const [selectedReviewProof, setSelectedReviewProof] = useState<ChorePhotoProof | null>(null);
   const [photoRequestsVersion, setPhotoRequestsVersion] = useState(0);
@@ -6451,18 +6452,58 @@ function App({
               <span className="hidden sm:inline">Mobile</span>
             </button>
 
-            {/* Settings */}
-            <button
-              type="button"
-              onClick={() => setShowSettingsModal(true)}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer shadow-2xs"
-              title="Household Settings & Preferences"
-            >
-              <Settings className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-            </button>
+            {/* Settings & Theme Menu Dropdown */}
+            <div className="relative inline-block text-left">
+              <button
+                type="button"
+                onClick={() => setShowSettingsMenu((prev) => !prev)}
+                className={`p-2 rounded-xl border transition cursor-pointer shadow-2xs ${
+                  showSettingsMenu
+                    ? "bg-indigo-50 dark:bg-indigo-950/60 border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400"
+                    : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                }`}
+                title="Household Settings & Theme"
+                aria-expanded={showSettingsMenu}
+              >
+                <Settings className="w-4 h-4" />
+              </button>
 
-            {/* Theme Toggle */}
-            <ThemeToggle variant="pill" />
+              {showSettingsMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setShowSettingsMenu(false)}
+                  />
+                  <div className="absolute right-0 mt-2 z-40 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-2.5 space-y-2.5 animate-fadeIn">
+                    <div className="px-1 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                      Theme
+                    </div>
+
+                    {/* Nested Theme Buttons */}
+                    <div>
+                      <ThemeToggle variant="pill" className="w-full flex" />
+                    </div>
+
+                    <div className="border-t border-slate-100 dark:border-slate-800" />
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSettingsMenu(false);
+                        setShowSettingsModal(true);
+                      }}
+                      className="w-full px-2.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 flex items-center justify-between transition cursor-pointer text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Settings2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                        <span>All Household Settings</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 

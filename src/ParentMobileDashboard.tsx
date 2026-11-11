@@ -539,58 +539,54 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
           </div>
         </div>
 
-        {/* Quick Command Tiles (Nudge, Ledger, Rewards, Minion Mode) */}
+        {/* Quick Command Tiles (Nudge, Ledger, Rewards, Minions) */}
         <div className="grid grid-cols-4 gap-2">
-          {/* Nudge & Feedback (Meh & Good Job GIFs) */}
+          {/* Nudge */}
           <button
             type="button"
             onClick={() => onOpenNudgeModal()}
-            className="p-2.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center text-center transition cursor-pointer shadow-md group"
+            className="py-3 px-2 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center justify-center text-center transition cursor-pointer shadow-md group"
           >
-            <div className="w-8 h-8 rounded-xl bg-orange-500/15 text-orange-400 border border-orange-500/20 flex items-center justify-center mb-1 group-hover:scale-105 transition">
-              <Sparkles className="w-4 h-4" />
+            <div className="w-10 h-10 rounded-2xl bg-orange-500/15 text-orange-400 border border-orange-500/20 flex items-center justify-center mb-1.5 group-hover:scale-105 transition">
+              <Sparkles className="w-5 h-5" />
             </div>
-            <span className="text-[11px] font-black text-white leading-tight">Nudges</span>
-            <span className="text-[9px] text-orange-300 font-semibold mt-0.5">Praise</span>
+            <span className="text-xs font-black text-white leading-tight">Nudge</span>
           </button>
 
           {/* Allowance Ledger */}
           <button
             type="button"
             onClick={onOpenLedger}
-            className="p-2.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center text-center transition cursor-pointer shadow-md group"
+            className="py-3 px-2 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center justify-center text-center transition cursor-pointer shadow-md group"
           >
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mb-1 group-hover:scale-105 transition">
-              <Wallet className="w-4 h-4" />
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mb-1.5 group-hover:scale-105 transition">
+              <Wallet className="w-5 h-5" />
             </div>
-            <span className="text-[11px] font-black text-white leading-tight">Ledger</span>
-            <span className="text-[9px] text-emerald-300 font-semibold mt-0.5">Payouts</span>
+            <span className="text-xs font-black text-white leading-tight">Ledger</span>
           </button>
 
-          {/* Digital Rewards & Gift Cards */}
+          {/* Digital Rewards */}
           <button
             type="button"
             onClick={() => onOpenRewardModal?.()}
-            className="p-2.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center text-center transition cursor-pointer shadow-md group"
+            className="py-3 px-2 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center justify-center text-center transition cursor-pointer shadow-md group"
           >
-            <div className="w-8 h-8 rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/20 flex items-center justify-center mb-1 group-hover:scale-105 transition">
-              <Gift className="w-4 h-4" />
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-400 border border-amber-500/20 flex items-center justify-center mb-1.5 group-hover:scale-105 transition">
+              <Gift className="w-5 h-5" />
             </div>
-            <span className="text-[11px] font-black text-white leading-tight">Rewards</span>
-            <span className="text-[9px] text-amber-300 font-semibold mt-0.5">Gift Cards</span>
+            <span className="text-xs font-black text-white leading-tight">Rewards</span>
           </button>
 
-          {/* Switch to Kid Minion Mode */}
+          {/* Switch to Kid Minions Mode */}
           <button
             type="button"
             onClick={() => onSwitchToMinionMode()}
-            className="p-2.5 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center text-center transition cursor-pointer shadow-md group"
+            className="py-3 px-2 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center justify-center text-center transition cursor-pointer shadow-md group"
           >
-            <div className="w-8 h-8 rounded-xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mb-1 group-hover:scale-105 transition">
-              <Users className="w-4 h-4" />
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mb-1.5 group-hover:scale-105 transition">
+              <Users className="w-5 h-5" />
             </div>
-            <span className="text-[11px] font-black text-white leading-tight">Minions</span>
-            <span className="text-[9px] text-indigo-300 font-semibold mt-0.5">Kids View</span>
+            <span className="text-xs font-black text-white leading-tight">Minions</span>
           </button>
         </div>
 

@@ -107,7 +107,7 @@
         {
           "index_": 5,
           "row": [
-            "Empty the Litter Box \n(Morning & Evening)",
+            "Empty the Litter Box (Morning & Evening)",
             "Meghan",
             false,
             "Sydney",
@@ -129,8 +129,8 @@
           "row": [
             "Feed the Herd (Breakfast & Supper)",
             "Sydney",
-            false,
-            "Cadence",
+            true,
+            "Sydney",
             false,
             "Mason",
             false,
@@ -148,7 +148,7 @@
           "index_": 7,
           "row": [
             "Empty Dishwasher",
-            "Cadence",
+            "Put away clean dishes, Load any dirty dishes",
             false,
             "Mason",
             false,
@@ -168,7 +168,7 @@
           "index_": 8,
           "row": [
             "Make Supper: Plan Ahead!",
-            "Mason",
+            "Think of a menu, make a list if items are needed, prepare & serve (try to have a plan in place by at least the day before)",
             false,
             "Thom",
             false,
@@ -421,7 +421,7 @@
         {
           "index_": 5,
           "row": [
-            "Thom",
+            "Thom Voth",
             "Supreme Overlord",
             "Full-Time",
             "Parents, Non-Casual, All",
@@ -438,7 +438,7 @@
         {
           "index_": 6,
           "row": [
-            "Meghan",
+            "Meghan Ginter",
             "Supreme Overlord",
             "Full-Time",
             "Parents, Non-Casual, All",
@@ -483,7 +483,7 @@
             "Daily",
             "Mon – Sun",
             "Think of a menu, make a list if items are needed, prepare & serve (try to have a plan in place by at least the day before)",
-            null
+            "Kitchen"
           ]
         },
         {
@@ -880,6 +880,6 @@
       ]
     }
   ],
-  "savedAt": "2026-11-11T22:37:04.948Z",
+  "savedAt": "2026-11-11T22:46:35.445Z",
   "version": "5.0"
 }

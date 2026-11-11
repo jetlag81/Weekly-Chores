@@ -1,7 +1,7 @@
 // Parent Reward & Digital Gift Card Payout Modal
 // Allows Parents (Thom & Meghan) to view kids' linked gaming/shopping handles,
-// 1-click copy gamertags, jump to digital gift card stores (Roblox, Nintendo, Xbox, Apple, Amazon),
-// and record digital gift card payouts directly in the household ledger.
+// 1-click copy gamertags, jump to guaranteed-working digital gift card stores (Roblox, Nintendo, Xbox, Apple, Amazon),
+// toggle between US & Canadian regional retailers, and record payouts directly into the household ledger.
 
 import React, { useState, useEffect } from "react";
 import {
@@ -15,15 +15,21 @@ import {
   Wallet,
   Gamepad2,
   DollarSign,
-  Send,
-  Edit2
+  Edit2,
+  Globe,
+  ShoppingCart,
+  CheckCircle2,
+  Save
 } from "lucide-react";
 import {
   REWARD_PLATFORMS,
   getKidRewardProfile,
-  getStoredKidRewardProfiles,
   saveKidRewardProfile,
-  type KidRewardProfile
+  getStoredRewardRegion,
+  saveStoredRewardRegion,
+  type KidRewardProfile,
+  type RewardRegion,
+  type RewardPlatformConfig
 } from "./rewardAccounts";
 import { updateKidPayoutPayment, getStoredAllowanceLedger } from "./allowanceLedger";
 
@@ -46,9 +52,16 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
 }) => {
   const [selectedKid, setSelectedKid] = useState<string>(() => initialKid || allKidsList[0] || "Sydney");
   const [profile, setProfile] = useState<KidRewardProfile>(() => getKidRewardProfile(selectedKid));
+  const [region, setRegion] = useState<RewardRegion>(() => getStoredRewardRegion());
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [recordSuccess, setRecordSuccess] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [customAmount, setCustomAmount] = useState<number>(15);
+  const [lastOpenedPlatform, setLastOpenedPlatform] = useState<string | null>(null);
+
+  // Inline handle editing
+  const [editingPlatformId, setEditingPlatformId] = useState<string | null>(null);
+  const [editingHandleValue, setEditingHandleValue] = useState<string>("");
 
   useEffect(() => {
     if (isOpen) {
@@ -58,6 +71,8 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
       setProfile(p);
       setCustomAmount(p.targetGoalAmount || 15);
       setRecordSuccess(null);
+      setNotice(null);
+      setEditingPlatformId(null);
     }
   }, [isOpen, initialKid, allKidsList]);
 
@@ -67,36 +82,96 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
     setProfile(p);
     setCustomAmount(p.targetGoalAmount || 15);
     setRecordSuccess(null);
+    setNotice(null);
+    setEditingPlatformId(null);
+  };
+
+  const handleSwitchRegion = (newRegion: RewardRegion) => {
+    setRegion(newRegion);
+    saveStoredRewardRegion(newRegion);
   };
 
   const handleCopyHandle = (key: string, val: string) => {
     if (!val) return;
-    navigator.clipboard.writeText(val);
-    setCopiedKey(key);
-    setTimeout(() => setCopiedKey(null), 2000);
+    try {
+      navigator.clipboard.writeText(val);
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    } catch {}
+  };
+
+  const handleOpenStoreLink = (platform: RewardPlatformConfig, url: string, handle?: string) => {
+    // High-Efficiency Auto-Copy: automatically put the kid's tag in clipboard
+    if (handle && !handle.startsWith("http")) {
+      try {
+        navigator.clipboard.writeText(handle);
+        setCopiedKey(platform.id);
+        setNotice(`📋 Copied ${selectedKid}'s tag "${handle}" to clipboard! Opening ${platform.name}...`);
+      } catch {
+        setNotice(`Opening ${platform.name}...`);
+      }
+    } else {
+      setNotice(`Opening ${platform.name}...`);
+    }
+
+    // Safely open in a new tab
+    try {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      window.location.href = url;
+    }
+
+    setLastOpenedPlatform(platform.id);
+    setTimeout(() => setNotice(null), 4000);
+  };
+
+  const handleStartEdit = (platformId: string, currentVal: string) => {
+    setEditingPlatformId(platformId);
+    setEditingHandleValue(currentVal || "");
+  };
+
+  const handleSaveEdit = (platformId: string) => {
+    const clean = editingHandleValue.trim();
+    const updatedPlatforms = { ...profile.platforms };
+    if (clean) {
+      updatedPlatforms[platformId] = clean;
+    } else {
+      delete updatedPlatforms[platformId];
+    }
+    const updatedProfile: KidRewardProfile = {
+      ...profile,
+      platforms: updatedPlatforms,
+      lastUpdated: Date.now()
+    };
+    saveKidRewardProfile(updatedProfile);
+    setProfile(updatedProfile);
+    setEditingPlatformId(null);
+    setNotice(`Updated ${selectedKid}'s ${platformId} handle! ✓`);
+    setTimeout(() => setNotice(null), 3000);
   };
 
   const handleRecordLedgerPayout = (platformName: string) => {
     const ledger = getStoredAllowanceLedger();
     if (ledger.length === 0) {
-      alert("No active allowance ledger record found. Complete a Sunday Inspection first!");
+      alert("No active allowance ledger record found. Complete a Sunday Inspection first to create a week record, or check Ledger.");
       return;
     }
     const latestRecord = ledger[0];
-    updateKidPayoutPayment(latestRecord.id, selectedKid, true, "Other"); // Recorded as gift card
-    setRecordSuccess(`Recorded $${customAmount} ${platformName} payout in ledger!`);
+    updateKidPayoutPayment(latestRecord.id, selectedKid, true, "Other"); // Recorded as digital card payout
+    setRecordSuccess(`Recorded $${customAmount} ${platformName} payout in ledger for ${selectedKid}!`);
     onPayoutRecorded?.(selectedKid, customAmount, platformName);
-    setTimeout(() => setRecordSuccess(null), 3500);
+    setTimeout(() => setRecordSuccess(null), 4000);
   };
 
   if (!isOpen) return null;
 
-  const linkedPlatforms = REWARD_PLATFORMS.filter(
-    (p) => Boolean(profile.platforms?.[p.id]?.trim())
-  );
+  // Show both linked platforms and allow adding unlinked platforms
+  const allPlatforms = REWARD_PLATFORMS;
+  const linkedPlatforms = allPlatforms.filter(p => Boolean(profile.platforms?.[p.id]?.trim()));
+  const unlinkedPlatforms = allPlatforms.filter(p => !profile.platforms?.[p.id]?.trim());
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       <div className="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="p-4 sm:p-5 bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 text-white flex items-center justify-between shrink-0 shadow-md">
@@ -114,7 +189,7 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
                 </span>
               </div>
               <p className="text-[11px] text-white/80 font-medium">
-                Send digital gift cards & top-ups to Sydney, Cadence & Mason
+                1-Click buy cards & record payouts for {allKidsList.join(", ")}
               </p>
             </div>
           </div>
@@ -128,31 +203,65 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
           </button>
         </div>
 
-        {/* Kid Selector Tabs */}
-        <div className="px-4 pt-3 pb-2 bg-slate-900/90 border-b border-slate-800 flex items-center gap-2 shrink-0">
-          {allKidsList.map((kid) => {
-            const isSelected = kid === selectedKid;
-            const kProfile = getKidRewardProfile(kid);
-            const hasAccounts = Object.keys(kProfile.platforms || {}).length > 0;
+        {/* Kid Selector Tabs & Store Region Switcher */}
+        <div className="px-4 py-2.5 bg-slate-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
+            {allKidsList.map((kid) => {
+              const isSelected = kid === selectedKid;
+              const kProfile = getKidRewardProfile(kid);
+              const hasAccounts = Object.keys(kProfile.platforms || {}).length > 0;
 
-            return (
-              <button
-                key={kid}
-                type="button"
-                onClick={() => handleSelectKid(kid)}
-                className={`flex-1 py-2 px-3 rounded-xl font-extrabold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer ${
-                  isSelected
-                    ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
-                    : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/80"
-                }`}
-              >
-                <span>{kid}</span>
-                {hasAccounts && (
-                  <span className={`w-2 h-2 rounded-full ${isSelected ? "bg-slate-950" : "bg-emerald-400"}`} />
-                )}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={kid}
+                  type="button"
+                  onClick={() => handleSelectKid(kid)}
+                  className={`flex-1 py-1.5 px-2.5 rounded-xl font-extrabold text-xs transition flex items-center justify-center gap-1 cursor-pointer ${
+                    isSelected
+                      ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
+                      : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/80"
+                  }`}
+                >
+                  <span>{kid}</span>
+                  {hasAccounts && (
+                    <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? "bg-slate-950" : "bg-emerald-400"}`} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Region Switcher */}
+          <div className="flex items-center gap-1 bg-slate-800 p-0.5 rounded-xl border border-slate-700 shrink-0">
+            <span className="text-[10px] text-slate-400 font-bold px-1.5 flex items-center gap-1">
+              <Globe className="w-3 h-3 text-slate-400" />
+              <span className="hidden xs:inline">Store:</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => handleSwitchRegion("US")}
+              className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                region === "US"
+                  ? "bg-amber-500 text-slate-950 shadow-2xs"
+                  : "text-slate-400 hover:text-white"
+              }`}
+              title="Amazon.com (United States Store)"
+            >
+              🇺🇸 US
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchRegion("CA")}
+              className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition cursor-pointer ${
+                region === "CA"
+                  ? "bg-amber-500 text-slate-950 shadow-2xs"
+                  : "text-slate-400 hover:text-white"
+              }`}
+              title="Amazon.ca (Canadian Store)"
+            >
+              🇨🇦 CA
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Content */}
@@ -162,6 +271,23 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
             <div className="bg-emerald-500/20 border border-emerald-500/40 rounded-2xl p-3 flex items-center gap-2 text-emerald-300 font-bold animate-in fade-in duration-200">
               <Check className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>{recordSuccess}</span>
+            </div>
+          )}
+
+          {/* Real-Time Auto-Copy Feedback Toast */}
+          {notice && (
+            <div className="bg-indigo-600/30 border border-indigo-500/50 rounded-2xl p-3 flex items-center justify-between gap-2 text-indigo-200 font-bold animate-in fade-in duration-200 shadow-lg">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
+                <span className="text-[11px]">{notice}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNotice(null)}
+                className="text-indigo-300 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
             </div>
           )}
 
@@ -183,7 +309,7 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
               {profile.topWish || "No specific wish added yet."}
             </p>
 
-            <div className="flex items-center gap-2 pt-1">
+            <div className="flex flex-wrap items-center gap-2 pt-1">
               <span className="text-[11px] text-slate-400 font-medium">Payout Amount:</span>
               {[10, 15, 20, 25, 50].map((amt) => (
                 <button
@@ -202,15 +328,15 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
             </div>
           </div>
 
-          {/* Linked Platforms List */}
-          <div className="space-y-2.5">
+          {/* Connected Accounts & 1-Click Cards */}
+          <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
               <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
                 <Gamepad2 className="w-4 h-4 text-indigo-400" />
-                <span>Connected Accounts & 1-Click Cards</span>
+                <span>Connected Accounts & Purchase Portals</span>
               </h3>
               <span className="text-[10px] text-slate-400 font-medium">
-                {linkedPlatforms.length} active
+                Auto-copies gamertag on click
               </span>
             </div>
 
@@ -221,83 +347,215 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
                   {selectedKid} hasn&apos;t linked any gaming or shopping tags yet.
                 </p>
                 <p className="text-slate-500 text-[11px]">
-                  They can add their Roblox, Switch, or Amazon tags from their Minion Dashboard.
+                  You can click below to link their Roblox, Switch, or Amazon tags immediately.
                 </p>
               </div>
             ) : (
               linkedPlatforms.map((platform) => {
-                const handle = profile.platforms[platform.id];
+                const handle = profile.platforms[platform.id] || "";
                 const isCopied = copiedKey === platform.id;
-                const buyUrl = platform.giftCardUrl(handle);
+                const isEditing = editingPlatformId === platform.id;
+                const isCustomUrl = handle.startsWith("http://") || handle.startsWith("https://");
+                const officialUrl = platform.officialUrl(handle, customAmount);
+                const amazonUrl = platform.amazonUrl(handle, customAmount, region);
+                const isHighlighted = lastOpenedPlatform === platform.id;
 
                 return (
                   <div
                     key={platform.id}
-                    className="bg-slate-800/80 border border-slate-700/80 rounded-2xl p-3.5 space-y-2.5 hover:border-slate-600 transition"
+                    className={`bg-slate-800/80 border rounded-2xl p-3.5 space-y-2.5 transition shadow-sm ${
+                      isHighlighted
+                        ? "border-amber-500 ring-2 ring-amber-500/30"
+                        : "border-slate-700/80 hover:border-slate-600"
+                    }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xl">{platform.iconEmoji}</span>
-                        <div>
-                          <div className="font-black text-xs text-white">
-                            {platform.name}
+                    {/* Platform Header & Handle */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <span className="text-xl shrink-0">{platform.iconEmoji}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-xs text-white truncate">
+                              {platform.name}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleStartEdit(platform.id, handle)}
+                              className="text-slate-400 hover:text-amber-300 p-0.5 rounded transition cursor-pointer"
+                              title="Edit handle / link"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </button>
                           </div>
-                          <div className="font-mono text-amber-300 text-[11px] font-semibold flex items-center gap-1.5 mt-0.5">
-                            <span>{handle}</span>
-                          </div>
+
+                          {isEditing ? (
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <input
+                                type="text"
+                                value={editingHandleValue}
+                                onChange={(e) => setEditingHandleValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleSaveEdit(platform.id);
+                                  if (e.key === "Escape") setEditingPlatformId(null);
+                                }}
+                                placeholder={platform.placeholder}
+                                className="w-full bg-slate-900 border border-indigo-400 rounded-lg px-2 py-1 text-[11px] font-mono text-white focus:outline-none"
+                                autoFocus
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleSaveEdit(platform.id)}
+                                className="p-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition cursor-pointer"
+                                title="Save"
+                              >
+                                <Save className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingPlatformId(null)}
+                                className="p-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 transition cursor-pointer"
+                                title="Cancel"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="font-mono text-amber-300 text-[11px] font-semibold flex items-center gap-1.5 mt-0.5 truncate">
+                              <span className="truncate">{handle}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
-                      {/* 1-Click Copy Tag */}
-                      <button
-                        type="button"
-                        onClick={() => handleCopyHandle(platform.id, handle)}
-                        className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition flex items-center gap-1 cursor-pointer ${
-                          isCopied
-                            ? "bg-emerald-500 text-white"
-                            : "bg-slate-700 text-slate-200 hover:bg-slate-600"
-                        }`}
-                        title="Copy handle"
-                      >
-                        {isCopied ? (
-                          <>
-                            <Check className="w-3.5 h-3.5" />
-                            <span>Copied!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3.5 h-3.5" />
-                            <span>Copy Tag</span>
-                          </>
-                        )}
-                      </button>
+                      {/* 1-Click Copy Button */}
+                      {!isEditing && (
+                        <button
+                          type="button"
+                          onClick={() => handleCopyHandle(platform.id, handle)}
+                          className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition flex items-center gap-1 cursor-pointer shrink-0 ${
+                            isCopied
+                              ? "bg-emerald-500 text-white"
+                              : "bg-slate-700 text-slate-200 hover:bg-slate-600"
+                          }`}
+                          title="Copy gamertag/link"
+                        >
+                          {isCopied ? (
+                            <>
+                              <Check className="w-3.5 h-3.5" />
+                              <span>Copied!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copy Tag</span>
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
 
-                    {/* Action Row: Buy Digital Gift Card + Record in Ledger */}
-                    <div className="flex items-center gap-2 pt-1">
-                      <a
-                        href={buyUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 py-2 px-3 rounded-xl font-bold text-[11px] bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white flex items-center justify-center gap-1.5 shadow-md transition"
-                      >
-                        <span>{platform.giftCardLabel}</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
+                    {/* Action Row: Direct Reliable Purchase Links + 1-Click Record Paid */}
+                    <div className="space-y-1.5 pt-0.5">
+                      <div className="flex items-center gap-2">
+                        {isCustomUrl ? (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenStoreLink(platform, handle, handle)}
+                            className="flex-1 py-2 px-3 rounded-xl font-black text-[11px] bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white flex items-center justify-center gap-1.5 shadow-md transition cursor-pointer"
+                          >
+                            <span>Open Wishlist Link</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </button>
+                        ) : platform.id === "cashapp" ? (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenStoreLink(platform, officialUrl, handle)}
+                            className="flex-1 py-2 px-3 rounded-xl font-black text-[11px] bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center gap-1.5 shadow-md transition cursor-pointer"
+                          >
+                            <span>Open Cash App Pay</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </button>
+                        ) : (
+                          <>
+                            {/* Primary Button: Official Direct Store */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenStoreLink(platform, officialUrl, handle)}
+                              className="flex-1 py-2 px-2.5 rounded-xl font-black text-[11px] bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white flex items-center justify-center gap-1.5 shadow-md transition cursor-pointer text-center"
+                              title={`Open Official ${platform.name} portal (Copies tag automatically)`}
+                            >
+                              <span>Official Store</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </button>
 
-                      <button
-                        type="button"
-                        onClick={() => handleRecordLedgerPayout(platform.name)}
-                        className="py-2 px-3 rounded-xl font-bold text-[11px] bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1 shadow-md transition cursor-pointer"
-                        title="Mark this amount as paid via digital gift card in the Ledger"
-                      >
-                        <CreditCard className="w-3 h-3" />
-                        <span>Record Paid (${customAmount})</span>
-                      </button>
+                            {/* Secondary Button: Amazon Digital Code Search with Amount */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenStoreLink(platform, amazonUrl, handle)}
+                              className="py-2 px-2.5 rounded-xl font-black text-[11px] bg-slate-700 hover:bg-slate-600 text-amber-300 flex items-center justify-center gap-1 shadow-md transition cursor-pointer shrink-0"
+                              title={`Search Amazon ${region} for $${customAmount} ${platform.name} digital codes`}
+                            >
+                              <ShoppingCart className="w-3 h-3 text-amber-400" />
+                              <span>Amazon ({region})</span>
+                              <ExternalLink className="w-2.5 h-2.5 text-slate-400" />
+                            </button>
+                          </>
+                        )}
+
+                        {/* 1-Click Record in Allowance Ledger */}
+                        <button
+                          type="button"
+                          onClick={() => handleRecordLedgerPayout(platform.name)}
+                          className="py-2 px-3 rounded-xl font-bold text-[11px] bg-emerald-600 hover:bg-emerald-500 text-white flex items-center gap-1 shadow-md transition cursor-pointer shrink-0"
+                          title="Record payout in Allowance Ledger"
+                        >
+                          <CreditCard className="w-3 h-3" />
+                          <span>Record Paid (${customAmount})</span>
+                        </button>
+                      </div>
+
+                      {/* Post-Open Quick Follow-up Helper */}
+                      {isHighlighted && (
+                        <div className="p-2 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-between gap-2 text-amber-200 text-[11px] font-semibold animate-in fade-in duration-150">
+                          <span className="flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span>Store opened & tag copied. Did you finish checkout?</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRecordLedgerPayout(platform.name)}
+                            className="px-2 py-0.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-lg text-[10px] transition cursor-pointer shrink-0"
+                          >
+                            Mark Paid (${customAmount})
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
               })
+            )}
+
+            {/* Quick-Add for Unlinked Platforms */}
+            {unlinkedPlatforms.length > 0 && (
+              <div className="pt-2">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">
+                  Add Other Platform Handles for {selectedKid}:
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {unlinkedPlatforms.map(platform => (
+                    <button
+                      key={platform.id}
+                      type="button"
+                      onClick={() => handleStartEdit(platform.id, "")}
+                      className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/80 text-[11px] font-bold flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      <span>{platform.iconEmoji}</span>
+                      <span>+ {platform.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         </div>
@@ -325,4 +583,3 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
     </div>
   );
 };
-

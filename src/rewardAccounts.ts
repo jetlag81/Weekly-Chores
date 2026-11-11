@@ -3,6 +3,26 @@
 // shopping (Amazon Wishlist, Apple ID), and wallet accounts so parents can send
 // digital gift cards, top-ups, and wish items as chore rewards.
 
+export type RewardRegion = "US" | "CA";
+
+const STORAGE_KEY_REWARD_REGION = "weekly_chores_reward_store_region";
+
+export function getStoredRewardRegion(): RewardRegion {
+  if (typeof window === "undefined") return "US";
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_REWARD_REGION);
+    return saved === "CA" ? "CA" : "US";
+  } catch {
+    return "US";
+  }
+}
+
+export function saveStoredRewardRegion(region: RewardRegion) {
+  try {
+    localStorage.setItem(STORAGE_KEY_REWARD_REGION, region);
+  } catch {}
+}
+
 export interface RewardPlatformConfig {
   id: string;
   name: string;
@@ -11,7 +31,9 @@ export interface RewardPlatformConfig {
   badgeColor: string;
   placeholder: string;
   helpText: string;
-  giftCardUrl: (handle?: string) => string;
+  giftCardUrl: (handle?: string, amount?: number, region?: RewardRegion) => string;
+  officialUrl: (handle?: string, amount?: number) => string;
+  amazonUrl: (handle?: string, amount?: number, region?: RewardRegion) => string;
   giftCardLabel: string;
 }
 
@@ -24,8 +46,16 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     badgeColor: "bg-red-500/15 text-red-400 border-red-500/30",
     placeholder: "Username (e.g. SydneyStar23)",
     helpText: "Username to send Robux or digital Roblox gift cards",
-    giftCardUrl: () => "https://www.amazon.com/dp/B07RN5DTM4?th=1", // Amazon Roblox Digital Card
-    giftCardLabel: "Buy Roblox Card"
+    officialUrl: () => "https://www.roblox.com/giftcards",
+    amazonUrl: (_handle, amount = 15, region = "US") =>
+      region === "CA"
+        ? `https://www.amazon.ca/s?k=roblox+${amount}+gift+card+digital+code&i=gift-cards`
+        : `https://www.amazon.com/s?k=roblox+${amount}+gift+card+digital+code&i=gift-cards`,
+    giftCardUrl: (handle, amount = 15, region = "US") => {
+      if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
+      return "https://www.roblox.com/giftcards";
+    },
+    giftCardLabel: "Roblox Gift Card"
   },
   {
     id: "nintendo",
@@ -35,8 +65,16 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     badgeColor: "bg-rose-500/15 text-rose-400 border-rose-500/30",
     placeholder: "Friend Code (e.g. SW-1234-5678-9012)",
     helpText: "Switch Friend Code or Nintendo Network ID",
-    giftCardUrl: () => "https://www.amazon.com/dp/B01LXU5V3N", // Nintendo eShop Digital Code
-    giftCardLabel: "Buy eShop Card"
+    officialUrl: () => "https://www.nintendo.com/us/store/products/nintendo-eshop-gift-cards/",
+    amazonUrl: (_handle, amount = 15, region = "US") =>
+      region === "CA"
+        ? `https://www.amazon.ca/s?k=nintendo+eshop+${amount}+digital+code&i=gift-cards`
+        : `https://www.amazon.com/s?k=nintendo+eshop+${amount}+digital+code&i=gift-cards`,
+    giftCardUrl: (handle) => {
+      if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
+      return "https://www.nintendo.com/us/store/products/nintendo-eshop-gift-cards/";
+    },
+    giftCardLabel: "Nintendo eShop Card"
   },
   {
     id: "xbox",
@@ -46,8 +84,16 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     badgeColor: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
     placeholder: "GamerTag (e.g. MasterMinion)",
     helpText: "Xbox Live Gamertag for Game Pass or Store credit",
-    giftCardUrl: () => "https://www.amazon.com/dp/B00F4CF390", // Xbox Digital Code
-    giftCardLabel: "Buy Xbox Card"
+    officialUrl: () => "https://www.microsoft.com/en-us/p/xbox-gift-card-digital-code/cfq7ttc0k64f",
+    amazonUrl: (_handle, amount = 15, region = "US") =>
+      region === "CA"
+        ? `https://www.amazon.ca/s?k=xbox+gift+card+${amount}+digital+code&i=gift-cards`
+        : `https://www.amazon.com/s?k=xbox+gift+card+${amount}+digital+code&i=gift-cards`,
+    giftCardUrl: (handle) => {
+      if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
+      return "https://www.microsoft.com/en-us/p/xbox-gift-card-digital-code/cfq7ttc0k64f";
+    },
+    giftCardLabel: "Xbox Gift Card"
   },
   {
     id: "playstation",
@@ -57,8 +103,16 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     badgeColor: "bg-blue-500/15 text-blue-400 border-blue-500/30",
     placeholder: "PSN Online ID (e.g. MinionGamer)",
     helpText: "PlayStation Network Online ID for PS Store credit",
-    giftCardUrl: () => "https://www.amazon.com/dp/B004RMK4BC", // PlayStation Store Card
-    giftCardLabel: "Buy PSN Card"
+    officialUrl: () => "https://direct.playstation.com/en-us/buy-accessories/playstation-store-gift-card-digital-code",
+    amazonUrl: (_handle, amount = 15, region = "US") =>
+      region === "CA"
+        ? `https://www.amazon.ca/s?k=playstation+store+gift+card+${amount}+digital+code&i=gift-cards`
+        : `https://www.amazon.com/s?k=playstation+store+gift+card+${amount}+digital+code&i=gift-cards`,
+    giftCardUrl: (handle) => {
+      if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
+      return "https://direct.playstation.com/en-us/buy-accessories/playstation-store-gift-card-digital-code";
+    },
+    giftCardLabel: "PlayStation Store Card"
   },
   {
     id: "steam",
@@ -68,8 +122,16 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     badgeColor: "bg-slate-700/50 text-slate-300 border-slate-600/50",
     placeholder: "Friend Code or Profile URL",
     helpText: "Steam Friend Code for PC gaming & digital gift cards",
-    giftCardUrl: () => "https://store.steampowered.com/digitalgiftcards/",
-    giftCardLabel: "Send Steam Card"
+    officialUrl: () => "https://store.steampowered.com/digitalgiftcards/",
+    amazonUrl: (_handle, _amount, region = "US") =>
+      region === "CA"
+        ? "https://www.amazon.ca/s?k=steam+gift+card&i=gift-cards"
+        : "https://www.amazon.com/s?k=steam+gift+card&i=gift-cards",
+    giftCardUrl: (handle) => {
+      if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
+      return "https://store.steampowered.com/digitalgiftcards/";
+    },
+    giftCardLabel: "Steam Digital Card"
   },
   {
     id: "apple",
@@ -79,8 +141,16 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     badgeColor: "bg-slate-500/15 text-slate-300 border-slate-500/30",
     placeholder: "Apple ID email (e.g. kid@icloud.com)",
     helpText: "Apple ID email for App Store, iTunes & Apple Arcade cards",
-    giftCardUrl: () => "https://www.apple.com/shop/buy-giftcard/giftcard",
-    giftCardLabel: "Send Apple Card"
+    officialUrl: () => "https://www.apple.com/shop/buy-giftcard/giftcard",
+    amazonUrl: (_handle, _amount, region = "US") =>
+      region === "CA"
+        ? "https://www.amazon.ca/s?k=apple+gift+card&i=gift-cards"
+        : "https://www.amazon.com/s?k=apple+gift+card&i=gift-cards",
+    giftCardUrl: (handle) => {
+      if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
+      return "https://www.apple.com/shop/buy-giftcard/giftcard";
+    },
+    giftCardLabel: "Apple Gift Card"
   },
   {
     id: "amazon",
@@ -90,11 +160,17 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     badgeColor: "bg-amber-500/15 text-amber-400 border-amber-500/30",
     placeholder: "Amazon Wishlist Link or Email",
     helpText: "Amazon Public Wishlist link for surprise physical rewards",
-    giftCardUrl: (handle) => {
-      if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) {
-        return handle;
-      }
+    officialUrl: (handle, _amount = 15) => {
+      if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
       return "https://www.amazon.com/gift-cards/";
+    },
+    amazonUrl: (handle, _amount = 15, region = "US") => {
+      if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
+      return region === "CA" ? "https://www.amazon.ca/gift-cards/" : "https://www.amazon.com/gift-cards/";
+    },
+    giftCardUrl: (handle, _amount, region = "US") => {
+      if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
+      return region === "CA" ? "https://www.amazon.ca/gift-cards/" : "https://www.amazon.com/gift-cards/";
     },
     giftCardLabel: "Open Wishlist / Send Card"
   },
@@ -106,6 +182,14 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     badgeColor: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
     placeholder: "$Cashtag (e.g. $SydneyChores)",
     helpText: "Cash App $cashtag or debit card username",
+    officialUrl: (handle) => {
+      const clean = handle ? handle.replace(/^\$/, "") : "";
+      return clean ? `https://cash.app/$${clean}` : "https://cash.app/";
+    },
+    amazonUrl: (handle) => {
+      const clean = handle ? handle.replace(/^\$/, "") : "";
+      return clean ? `https://cash.app/$${clean}` : "https://cash.app/";
+    },
     giftCardUrl: (handle) => {
       const clean = handle ? handle.replace(/^\$/, "") : "";
       return clean ? `https://cash.app/$${clean}` : "https://cash.app/";

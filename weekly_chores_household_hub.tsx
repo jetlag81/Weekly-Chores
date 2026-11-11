@@ -7126,6 +7126,10 @@ function App({
             setRewardPayoutKid(kName || allKidsList[0] || "Sydney");
             setShowRewardPayoutModal(true);
           }}
+          onUnpairDevice={(kName) => {
+            setNotice(`Unpaired ${kName}'s device`);
+            setTimeout(() => setNotice(null), 3500);
+          }}
         />
       )}
     </div>

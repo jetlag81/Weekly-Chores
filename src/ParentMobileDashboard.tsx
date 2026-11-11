@@ -30,6 +30,7 @@ import { getChoreCanonicalKey, normalizeTaskName } from "./choreUtils";
 import { getKidRewardProfile } from "./rewardAccounts";
 import { ThemeToggle } from "./ThemeToggle";
 import { HouseholdSettingsModal, type SettingsTab } from "./HouseholdSettingsModal";
+import { unpairKid } from "./firebaseSync";
 
 interface FamilyMember {
   name: string;
@@ -821,6 +822,9 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
           onOpenRewardPayoutModal={(kName) => {
             setShowSettingsModal(false);
             onOpenRewardModal?.(kName);
+          }}
+          onUnpairDevice={(kName) => {
+            unpairKid(kName);
           }}
         />
       )}

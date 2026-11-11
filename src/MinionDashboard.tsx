@@ -173,13 +173,9 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     return new Date(selectedYear, selectedMonth, now.getDate() <= 31 ? now.getDate() : 19, 12, 0, 0);
   });
 
-  const [showExitPinModal, setShowExitPinModal] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [showInspectionModal, setShowInspectionModal] = useState(false);
-  const [pinAction, setPinAction] = useState<"menu" | "inspection" | "exit">("menu");
   const [canInstallPwa, setCanInstallPwa] = useState(false);
-  const [pinInput, setPinInput] = useState("");
-  const [pinError, setPinError] = useState("");
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
   const [activeNavTab, setActiveNavTab] = useState<"chores" | "leaderboard" | "rewards">("chores");
   const [showKidRewardModal, setShowKidRewardModal] = useState(false);
@@ -682,19 +678,6 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     }
   };
 
-  const handleExitPinSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pinInput === "1234" || pinInput === "0000") {
-      setShowExitPinModal(false);
-      if (pinAction === "inspection") {
-        setShowInspectionModal(true);
-      } else {
-        onExitMinionMode();
-      }
-    } else {
-      setPinError("Incorrect Parent PIN (Default is 1234)");
-    }
-  };
 
   const completedTodayCount = dailyChoresForKid.filter(c => c.done).length;
 
@@ -775,21 +758,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
               <Settings className="w-4 h-4 text-slate-600 dark:text-slate-300" />
             </button>
 
-            {/* Parent Mode / Exit Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setPinInput("");
-                setPinError("");
-                setPinAction("menu");
-                setShowExitPinModal(true);
-              }}
-              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition flex items-center gap-1 text-xs font-semibold cursor-pointer shadow-2xs"
-              title="Parent Mode Unlock (PIN: 1234)"
-            >
-              <Lock className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-              <span className="hidden sm:inline">Parent</span>
-            </button>
+
           </div>
         </div>
       </header>
@@ -1614,138 +1583,6 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     )}
   </main>
 
-      {/* Parent PIN Unlock Modal for Inspections & Admin Access */}
-      {showExitPinModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xs w-full p-5 shadow-2xl border border-slate-200 space-y-4">
-            <div className="text-center space-y-1">
-              <div
-                className={`w-11 h-11 rounded-2xl mx-auto flex items-center justify-center ${
-                  pinAction === "inspection"
-                    ? "bg-amber-100 text-amber-700"
-                    : "bg-slate-100 text-slate-700"
-                }`}
-              >
-                {pinAction === "inspection" ? (
-                  <ShieldCheck className="w-6 h-6" />
-                ) : (
-                  <Lock className="w-5 h-5" />
-                )}
-              </div>
-              <h3 className="font-extrabold text-base text-slate-900">
-                {pinAction === "inspection"
-                  ? "Sunday Inspection"
-                  : "Parent Admin Unlock"}
-              </h3>
-              <p className="text-xs text-slate-500">
-                {pinAction === "inspection"
-                  ? "Enter Parent PIN to inspect rooms and sign off weekly allowances:"
-                  : "Enter Parent PIN to access inspection or return to Admin Hub:"}
-              </p>
-            </div>
-
-            <form onSubmit={handleExitPinSubmit} className="space-y-3">
-              <input
-                type="password"
-                maxLength={4}
-                autoFocus
-                placeholder="PIN (Default 1234)"
-                value={pinInput}
-                onChange={e => {
-                  setPinInput(e.target.value);
-                  setPinError("");
-                }}
-                className="w-full text-center text-xl tracking-widest font-mono font-bold py-2 px-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
-              />
-
-              {pinError && (
-                <div className="text-xs text-rose-600 font-semibold text-center">
-                  {pinError}
-                </div>
-              )}
-
-              {pinAction === "inspection" ? (
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowExitPinModal(false)}
-                    className="py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="py-2.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl transition cursor-pointer shadow-xs"
-                  >
-                    Inspect Rooms
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-2 pt-1">
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (pinInput === "1234" || pinInput === "0000") {
-                          setShowExitPinModal(false);
-                          setShowInspectionModal(true);
-                        } else {
-                          setPinError("Enter Parent PIN (1234) first");
-                        }
-                      }}
-                      className="py-2.5 px-2 text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-xl transition cursor-pointer flex items-center justify-center gap-1 border border-amber-300"
-                    >
-                      <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
-                      <span>Inspect</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (pinInput === "1234" || pinInput === "0000") {
-                          setShowExitPinModal(false);
-                          onExitMinionMode();
-                        } else {
-                          setPinError("Enter Parent PIN (1234) first");
-                        }
-                      }}
-                      className="py-2.5 px-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition cursor-pointer shadow-xs"
-                    >
-                      Admin Hub
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowExitPinModal(false)}
-                    className="w-full py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-
-              <div className="pt-2 border-t border-slate-100 text-center">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (pinInput === "1234" || pinInput === "0000") {
-                      unpairKid(currentKid.name);
-                      setShowExitPinModal(false);
-                      onExitMinionMode();
-                    } else {
-                      setPinError("Enter Parent PIN (1234) first to unpair");
-                    }
-                  }}
-                  className="w-full py-1 text-[11px] font-bold text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
-                >
-                  Unpair This Device ({currentKid.name})
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Parent Room Inspection & Weekly Sign-Off Modal */}
       {showInspectionModal && (
@@ -1835,6 +1672,15 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
           initialTab={settingsInitialTab}
           onUnlockParentMode={() => {
             setShowSettingsModal(false);
+            onExitMinionMode();
+          }}
+          onOpenInspectionModal={() => {
+            setShowSettingsModal(false);
+            setShowInspectionModal(true);
+          }}
+          onUnpairDevice={(kName) => {
+            setShowSettingsModal(false);
+            unpairKid(kName || currentKid.name);
             onExitMinionMode();
           }}
           onSwitchToKid={(kName) => {

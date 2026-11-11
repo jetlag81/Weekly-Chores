@@ -42,7 +42,8 @@ import {
   playChoreCompletionSound,
   type DeviceSession,
   getStoredDeviceSession,
-  saveDeviceSession
+  saveDeviceSession,
+  unpairKid
 } from "./firebaseSync";
 import {
   isSpeechSupported,
@@ -78,6 +79,8 @@ interface HouseholdSettingsModalProps {
   activeSyncWeek?: string;
   initialTab?: SettingsTab;
   onUnlockParentMode?: () => void;
+  onOpenInspectionModal?: () => void;
+  onUnpairDevice?: (kidName: string) => void;
   onSwitchToKid?: (kidName: string) => void;
   onOpenRewardPayoutModal?: (kidName?: string) => void;
 }
@@ -93,6 +96,8 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
   activeSyncWeek = "2026-10-19",
   initialTab = "appearance",
   onUnlockParentMode,
+  onOpenInspectionModal,
+  onUnpairDevice,
   onSwitchToKid,
   onOpenRewardPayoutModal
 }) => {
@@ -129,6 +134,8 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
   // Parent Access & PIN
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [showUnpairConfirm, setShowUnpairConfirm] = useState(false);
   const [parentPin, setParentPin] = useState("1234");
   const [newPinInput, setNewPinInput] = useState("");
   const [pinUpdatedNotice, setPinUpdatedNotice] = useState(false);
@@ -147,6 +154,8 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
       setSelectedKidForQr(currentKidName);
       setPinInput("");
       setPinError("");
+      setIsUnlocked(false);
+      setShowUnpairConfirm(false);
       setRewardsSaved(false);
 
       const sess = getStoredDeviceSession();
@@ -265,14 +274,34 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
     }
   };
 
-  // Parent PIN Verification in Minion Mode
-  const handleVerifyParentPin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pinInput === parentPin || pinInput === "1234" || pinInput === "0000") {
-      onClose();
-      onUnlockParentMode?.();
+  // Parent Action Handlers in Minion Mode
+  const handleActionWithPin = (action: "admin" | "inspect" | "unpair") => {
+    const isValid = isUnlocked || pinInput === parentPin || pinInput === "1234" || pinInput === "0000";
+    if (isValid) {
+      setIsUnlocked(true);
+      setPinError("");
+      if (action === "admin") {
+        onClose();
+        onUnlockParentMode?.();
+      } else if (action === "inspect") {
+        onClose();
+        onOpenInspectionModal?.();
+      } else if (action === "unpair") {
+        setShowUnpairConfirm(true);
+      }
     } else {
       setPinError("Incorrect Parent PIN (Default is 1234)");
+    }
+  };
+
+  const handleExecuteUnpair = (targetKid?: string) => {
+    const kName = targetKid || currentKidName;
+    unpairKid(kName);
+    onClose();
+    if (onUnpairDevice) {
+      onUnpairDevice(kName);
+    } else if (onUnlockParentMode) {
+      onUnlockParentMode();
     }
   };
 
@@ -915,69 +944,216 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
             <div className="space-y-4">
               <div>
                 <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                  {viewMode === "minion" ? "Parent Access Unlock" : "Security &amp; Parent PIN"}
+                  {viewMode === "minion" ? "Parent Access & Controls" : "Security & Parent PIN"}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   {viewMode === "minion"
-                    ? "Enter your 4-digit Parent PIN to exit Minion Mode and manage chores."
-                    : "Manage your household PIN and switch between parent and kid views."}
+                    ? "Enter your 4-digit Parent PIN to access the Admin Hub, Sunday Room Inspection, or unpair this device."
+                    : "Manage your household PIN, unpair kid devices, and switch between parent and kid views."}
                 </p>
               </div>
 
               {viewMode === "minion" ? (
-                /* Unlock form for Minion Mode */
-                <form onSubmit={handleVerifyParentPin} className="space-y-4 pt-1">
-                  <div className="bg-slate-50 dark:bg-slate-800/60 p-5 rounded-3xl border border-slate-200 dark:border-slate-700 space-y-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                        <Lock className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-black text-slate-900 dark:text-white">
-                          Parent Mode Locked
+                /* Enhanced Parent Access for Minion Mode */
+                <div className="space-y-4 pt-1">
+                  {/* PIN Entry & Verification Card */}
+                  <div className="bg-slate-50 dark:bg-slate-800/60 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-700 space-y-3.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+                            isUnlocked
+                              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                              : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                          }`}
+                        >
+                          {isUnlocked ? <Unlock className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
                         </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                          Default PIN is <code className="font-black text-indigo-600 dark:text-indigo-400">1234</code>
+                        <div>
+                          <div className="text-xs font-black text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <span>{isUnlocked ? "Parent Access Unlocked" : "Parent Verification Required"}</span>
+                            {isUnlocked && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                                ✓ Verified
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                            {isUnlocked
+                              ? "Select an action below to proceed"
+                              : <>Default PIN is <code className="font-mono font-black text-indigo-600 dark:text-indigo-400">1234</code></>}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="pt-2">
-                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                        Enter 4-Digit Parent PIN:
-                      </label>
-                      <input
-                        type="password"
-                        maxLength={4}
-                        pattern="[0-9]*"
-                        inputMode="numeric"
-                        autoFocus
-                        value={pinInput}
-                        onChange={e => {
-                          setPinInput(e.target.value);
-                          setPinError("");
-                        }}
-                        placeholder="••••"
-                        className="w-full text-center tracking-widest text-2xl font-mono py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-                      />
-                      {pinError && (
-                        <p className="text-xs font-bold text-rose-600 dark:text-rose-400 mt-1.5 text-center">
-                          {pinError}
-                        </p>
+                      {isUnlocked && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsUnlocked(false);
+                            setPinInput("");
+                            setShowUnpairConfirm(false);
+                          }}
+                          className="text-[11px] font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
+                        >
+                          Lock Again
+                        </button>
                       )}
                     </div>
 
-                    <button
-                      type="submit"
-                      className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
-                    >
-                      <Unlock className="w-4 h-4" />
-                      <span>Unlock Parent Command Hub</span>
-                    </button>
+                    {!isUnlocked && (
+                      <div className="space-y-2 pt-1">
+                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                          Enter 4-Digit Parent PIN:
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="password"
+                            maxLength={4}
+                            pattern="[0-9]*"
+                            inputMode="numeric"
+                            autoFocus
+                            value={pinInput}
+                            onChange={e => {
+                              const val = e.target.value;
+                              setPinInput(val);
+                              setPinError("");
+                              if (val === parentPin || val === "1234" || val === "0000") {
+                                setIsUnlocked(true);
+                                setPinError("");
+                              }
+                            }}
+                            onKeyDown={e => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleActionWithPin("admin");
+                              }
+                            }}
+                            placeholder="••••"
+                            className="flex-1 text-center tracking-widest text-2xl font-mono py-2 px-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleActionWithPin("admin")}
+                            className="py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 shrink-0 shadow-xs"
+                          >
+                            <Unlock className="w-4 h-4" />
+                            <span>Verify</span>
+                          </button>
+                        </div>
+                        {pinError && (
+                          <p className="text-xs font-bold text-rose-600 dark:text-rose-400 text-center">
+                            {pinError}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </form>
+
+                  {/* Available Parent Actions */}
+                  <div className="space-y-2.5">
+                    <div className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-1">
+                      Parent Actions
+                    </div>
+
+                    {/* Action 1: Unlock Parent Command Hub */}
+                    <button
+                      type="button"
+                      onClick={() => handleActionWithPin("admin")}
+                      className="w-full p-3.5 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-slate-800 dark:to-slate-800/80 hover:from-indigo-100 hover:to-blue-100 dark:hover:from-slate-700 dark:hover:to-slate-700 border border-indigo-200 dark:border-slate-700 rounded-2xl flex items-center justify-between transition cursor-pointer text-left shadow-2xs group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                          <Laptop className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-black text-slate-900 dark:text-white">
+                            Parent Command Hub
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                            Exit Minion Mode and manage all chores, allowances &amp; schedules
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                    </button>
+
+                    {/* Action 2: Sunday Room Inspection */}
+                    <button
+                      type="button"
+                      onClick={() => handleActionWithPin("inspect")}
+                      className="w-full p-3.5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-800 dark:to-slate-800/80 hover:from-amber-100 hover:to-orange-100 dark:hover:from-slate-700 dark:hover:to-slate-700 border border-amber-200 dark:border-slate-700 rounded-2xl flex items-center justify-between transition cursor-pointer text-left shadow-2xs group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                          <ShieldCheck className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-black text-slate-900 dark:text-white">
+                            Sunday Room Inspection
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                            Inspect rooms and sign off weekly allowance payouts
+                          </div>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                    </button>
+
+                    {/* Action 3: Unpair This Device */}
+                    <div className="p-3.5 bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/40 rounded-2xl space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                            <RotateCcw className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-black text-rose-900 dark:text-rose-200">
+                              Unpair This Device ({currentKidName})
+                            </div>
+                            <div className="text-[11px] text-rose-700/80 dark:text-rose-300/70">
+                              Removes {currentKidName}'s profile from this device and resets to the setup screen.
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {showUnpairConfirm ? (
+                        <div className="pt-2 border-t border-rose-200/60 dark:border-rose-900/60 space-y-2">
+                          <p className="text-[11px] font-bold text-rose-800 dark:text-rose-300">
+                            ⚠️ Are you sure you want to unpair {currentKidName}'s device?
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleExecuteUnpair(currentKidName)}
+                              className="flex-1 py-1.5 px-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition cursor-pointer"
+                            >
+                              Yes, Unpair Device
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setShowUnpairConfirm(false)}
+                              className="py-1.5 px-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs transition cursor-pointer"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleActionWithPin("unpair")}
+                          className="w-full py-1.5 px-3 bg-white dark:bg-slate-900 hover:bg-rose-100 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-300 dark:border-rose-800 rounded-xl text-xs font-bold transition cursor-pointer text-center"
+                        >
+                          Unpair This Device
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               ) : (
-                /* Parent PIN Management in Parent Mode */
+                /* Parent PIN Management & Device Pairing in Parent Mode */
                 <div className="space-y-4 pt-1">
                   <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
                     <div className="flex items-center justify-between">
@@ -1036,6 +1212,32 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
                           className="py-2 px-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-slate-700 border border-indigo-200 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 text-xs font-bold transition cursor-pointer text-center"
                         >
                           {kName}'s View 🎒
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Manage Paired Devices / Unpair in Parent Mode */}
+                  <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2">
+                    <div className="text-xs font-black text-slate-900 dark:text-white">
+                      Manage Paired Kid Devices:
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Unpair a kid's tablet or phone to reset their device pairing token.
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 pt-1">
+                      {allKidsList.map(kName => (
+                        <button
+                          key={kName}
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(`Unpair ${kName}'s device? They will need to scan their QR code again.`)) {
+                              handleExecuteUnpair(kName);
+                            }
+                          }}
+                          className="py-1.5 px-2 rounded-xl bg-white dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-slate-200 dark:border-slate-700 text-xs font-bold transition cursor-pointer text-center"
+                        >
+                          Unpair {kName}
                         </button>
                       ))}
                     </div>

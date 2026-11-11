@@ -27,6 +27,7 @@ import {
   saveKidRewardProfile,
   getStoredRewardRegion,
   saveStoredRewardRegion,
+  isRegionAutoDetected,
   fetchRewardProfilesFromServer,
   type KidRewardProfile,
   type RewardRegion,
@@ -55,6 +56,7 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
   const [selectedKid, setSelectedKid] = useState<string>(() => initialKid || allKidsList[0] || "Sydney");
   const [profile, setProfile] = useState<KidRewardProfile>(() => getKidRewardProfile(selectedKid));
   const [region, setRegion] = useState<RewardRegion>(() => getStoredRewardRegion());
+  const [isAutoDetected, setIsAutoDetected] = useState<boolean>(() => isRegionAutoDetected());
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [recordSuccess, setRecordSuccess] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -72,6 +74,8 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
       const p = getKidRewardProfile(kid);
       setProfile(p);
       setCustomAmount(p.targetGoalAmount || 15);
+      setRegion(getStoredRewardRegion());
+      setIsAutoDetected(isRegionAutoDetected());
       setRecordSuccess(null);
       setNotice(null);
       setEditingPlatformId(null);
@@ -164,6 +168,7 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
   const handleSwitchRegion = (newRegion: RewardRegion) => {
     setRegion(newRegion);
     saveStoredRewardRegion(newRegion);
+    setIsAutoDetected(false);
   };
 
   const handleCopyHandle = (key: string, val: string) => {
@@ -306,7 +311,7 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
             })}
           </div>
 
-          {/* Region Switcher */}
+          {/* Region Switcher with Auto-Country Detection */}
           <div className="flex items-center gap-1 bg-slate-800 p-0.5 rounded-xl border border-slate-700 shrink-0">
             <span className="text-[10px] text-slate-400 font-bold px-1.5 flex items-center gap-1">
               <Globe className="w-3 h-3 text-slate-400" />
@@ -314,27 +319,37 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
             </span>
             <button
               type="button"
-              onClick={() => handleSwitchRegion("US")}
-              className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition cursor-pointer ${
-                region === "US"
-                  ? "bg-amber-500 text-slate-950 shadow-2xs"
-                  : "text-slate-400 hover:text-white"
-              }`}
-              title="Amazon.com (United States Store)"
-            >
-              🇺🇸 US
-            </button>
-            <button
-              type="button"
               onClick={() => handleSwitchRegion("CA")}
-              className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition cursor-pointer ${
+              className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition cursor-pointer flex items-center gap-1 ${
                 region === "CA"
                   ? "bg-amber-500 text-slate-950 shadow-2xs"
                   : "text-slate-400 hover:text-white"
               }`}
-              title="Amazon.ca (Canadian Store)"
+              title="Canadian Stores (CAD) - Official & Amazon.ca"
             >
-              🇨🇦 CA
+              <span>🇨🇦 CA</span>
+              {region === "CA" && isAutoDetected && (
+                <span className="text-[8px] bg-slate-950/25 text-slate-900 px-1 rounded-sm uppercase tracking-tighter font-extrabold">
+                  Auto
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchRegion("US")}
+              className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition cursor-pointer flex items-center gap-1 ${
+                region === "US"
+                  ? "bg-amber-500 text-slate-950 shadow-2xs"
+                  : "text-slate-400 hover:text-white"
+              }`}
+              title="United States Stores (USD) - Official & Amazon.com"
+            >
+              <span>🇺🇸 US</span>
+              {region === "US" && isAutoDetected && (
+                <span className="text-[8px] bg-slate-950/25 text-slate-900 px-1 rounded-sm uppercase tracking-tighter font-extrabold">
+                  Auto
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -431,7 +446,7 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
                 const isCopied = copiedKey === platform.id;
                 const isEditing = editingPlatformId === platform.id;
                 const isCustomUrl = handle.startsWith("http://") || handle.startsWith("https://");
-                const officialUrl = platform.officialUrl(handle, customAmount);
+                const officialUrl = platform.officialUrl(handle, customAmount, region);
                 const amazonUrl = platform.amazonUrl(handle, customAmount, region);
                 const isHighlighted = lastOpenedPlatform === platform.id;
 

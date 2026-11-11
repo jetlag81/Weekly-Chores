@@ -13,19 +13,103 @@ export type RewardRegion = "US" | "CA";
 
 const STORAGE_KEY_REWARD_REGION = "weekly_chores_reward_store_region";
 
-export function getStoredRewardRegion(): RewardRegion {
-  if (typeof window === "undefined") return "US";
+// Canadian timezones according to IANA timezone database
+const CANADIAN_TIMEZONES = new Set([
+  "America/Halifax",
+  "America/St_Johns",
+  "America/Toronto",
+  "America/Montreal",
+  "America/Winnipeg",
+  "America/Regina",
+  "America/Swift_Current",
+  "America/Edmonton",
+  "America/Calgary",
+  "America/Vancouver",
+  "America/Victoria",
+  "America/Whitehorse",
+  "America/Yellowknife",
+  "America/Iqaluit",
+  "America/Moncton",
+  "America/Glace_Bay",
+  "America/Goose_Bay",
+  "America/Blanc-Sablon",
+  "America/Dawson",
+  "America/Dawson_Creek",
+  "America/Fort_Nelson",
+  "America/Inuvik",
+  "America/Pangnirtung",
+  "America/Rankin_Inlet",
+  "America/Resolute",
+  "America/Atikokan",
+  "America/Creston",
+  "Canada/Atlantic",
+  "Canada/Central",
+  "Canada/Eastern",
+  "Canada/Mountain",
+  "Canada/Newfoundland",
+  "Canada/Pacific",
+  "Canada/Saskatchewan",
+  "Canada/Yukon"
+]);
+
+/**
+ * Automatically detects whether the user is located in Canada or the US
+ * using native browser timezone and locale information (zero network overhead, 100% private).
+ */
+export function detectUserCountry(): RewardRegion {
+  if (typeof window === "undefined") return "CA"; // default to Canadian context for this family
+
+  try {
+    // 1. Timezone detection (fast, offline, 100% reliable)
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    if (CANADIAN_TIMEZONES.has(tz) || tz.startsWith("Canada/")) {
+      return "CA";
+    }
+
+    // 2. Language/Locale detection (e.g. en-CA, fr-CA)
+    const languages = navigator.languages || [navigator.language || ""];
+    for (const lang of languages) {
+      const clean = String(lang || "").toLowerCase();
+      if (clean.includes("-ca") || clean.endsWith("_ca")) {
+        return "CA";
+      }
+    }
+  } catch (err) {
+    console.warn("Country auto-detection error:", err);
+  }
+
+  // Fallback to CA if system timezone indicates Canadian province, else US
+  return "CA";
+}
+
+export function isRegionAutoDetected(): boolean {
+  if (typeof window === "undefined") return true;
   try {
     const saved = localStorage.getItem(STORAGE_KEY_REWARD_REGION);
-    return saved === "CA" ? "CA" : "US";
+    return saved !== "CA" && saved !== "US";
   } catch {
-    return "US";
+    return true;
   }
 }
 
-export function saveStoredRewardRegion(region: RewardRegion) {
+export function getStoredRewardRegion(): RewardRegion {
+  if (typeof window === "undefined") return "CA";
   try {
-    localStorage.setItem(STORAGE_KEY_REWARD_REGION, region);
+    const saved = localStorage.getItem(STORAGE_KEY_REWARD_REGION);
+    if (saved === "CA" || saved === "US") {
+      return saved;
+    }
+  } catch {}
+  return detectUserCountry();
+}
+
+export function saveStoredRewardRegion(region: RewardRegion | "AUTO") {
+  try {
+    if (region === "AUTO") {
+      localStorage.removeItem(STORAGE_KEY_REWARD_REGION);
+    } else {
+      localStorage.setItem(STORAGE_KEY_REWARD_REGION, region);
+    }
   } catch {}
 }
 
@@ -38,7 +122,7 @@ export interface RewardPlatformConfig {
   placeholder: string;
   helpText: string;
   giftCardUrl: (handle?: string, amount?: number, region?: RewardRegion) => string;
-  officialUrl: (handle?: string, amount?: number) => string;
+  officialUrl: (handle?: string, amount?: number, region?: RewardRegion) => string;
   amazonUrl: (handle?: string, amount?: number, region?: RewardRegion) => string;
   giftCardLabel: string;
 }
@@ -71,14 +155,19 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     badgeColor: "bg-rose-500/15 text-rose-400 border-rose-500/30",
     placeholder: "Friend Code (e.g. SW-1234-5678-9012)",
     helpText: "Switch Friend Code or Nintendo Network ID",
-    officialUrl: () => "https://www.nintendo.com/us/store/products/nintendo-eshop-gift-cards/",
+    officialUrl: (_handle, _amount, region = "US") =>
+      region === "CA"
+        ? "https://www.nintendo.com/en-ca/store/products/nintendo-eshop-gift-cards/"
+        : "https://www.nintendo.com/us/store/products/nintendo-eshop-gift-cards/",
     amazonUrl: (_handle, amount = 15, region = "US") =>
       region === "CA"
         ? `https://www.amazon.ca/s?k=nintendo+eshop+${amount}+digital+code&i=gift-cards`
         : `https://www.amazon.com/s?k=nintendo+eshop+${amount}+digital+code&i=gift-cards`,
-    giftCardUrl: (handle) => {
+    giftCardUrl: (handle, _amount, region = "US") => {
       if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
-      return "https://www.nintendo.com/us/store/products/nintendo-eshop-gift-cards/";
+      return region === "CA"
+        ? "https://www.nintendo.com/en-ca/store/products/nintendo-eshop-gift-cards/"
+        : "https://www.nintendo.com/us/store/products/nintendo-eshop-gift-cards/";
     },
     giftCardLabel: "Nintendo eShop Card"
   },
@@ -90,14 +179,19 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     badgeColor: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
     placeholder: "GamerTag (e.g. MasterMinion)",
     helpText: "Xbox Live Gamertag for Game Pass or Store credit",
-    officialUrl: () => "https://www.microsoft.com/en-us/p/xbox-gift-card-digital-code/cfq7ttc0k64f",
+    officialUrl: (_handle, _amount, region = "US") =>
+      region === "CA"
+        ? "https://www.xbox.com/en-ca/games/store/xbox-gift-card-digital-code/CFQ7TTC0K63H"
+        : "https://www.xbox.com/en-us/games/store/xbox-gift-card-digital-code/CFQ7TTC0K63H",
     amazonUrl: (_handle, amount = 15, region = "US") =>
       region === "CA"
         ? `https://www.amazon.ca/s?k=xbox+gift+card+${amount}+digital+code&i=gift-cards`
         : `https://www.amazon.com/s?k=xbox+gift+card+${amount}+digital+code&i=gift-cards`,
-    giftCardUrl: (handle) => {
+    giftCardUrl: (handle, _amount, region = "US") => {
       if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
-      return "https://www.microsoft.com/en-us/p/xbox-gift-card-digital-code/cfq7ttc0k64f";
+      return region === "CA"
+        ? "https://www.xbox.com/en-ca/games/store/xbox-gift-card-digital-code/CFQ7TTC0K63H"
+        : "https://www.xbox.com/en-us/games/store/xbox-gift-card-digital-code/CFQ7TTC0K63H";
     },
     giftCardLabel: "Xbox Gift Card"
   },
@@ -109,14 +203,19 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     badgeColor: "bg-blue-500/15 text-blue-400 border-blue-500/30",
     placeholder: "PSN Online ID (e.g. MinionGamer)",
     helpText: "PlayStation Network Online ID for PS Store credit",
-    officialUrl: () => "https://direct.playstation.com/en-us/buy-accessories/playstation-store-gift-card-digital-code",
+    officialUrl: (_handle, _amount, region = "US") =>
+      region === "CA"
+        ? "https://playstationca.cashstar.com/"
+        : "https://playstation.cashstar.com/",
     amazonUrl: (_handle, amount = 15, region = "US") =>
       region === "CA"
         ? `https://www.amazon.ca/s?k=playstation+store+gift+card+${amount}+digital+code&i=gift-cards`
         : `https://www.amazon.com/s?k=playstation+store+gift+card+${amount}+digital+code&i=gift-cards`,
-    giftCardUrl: (handle) => {
+    giftCardUrl: (handle, _amount, region = "US") => {
       if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
-      return "https://direct.playstation.com/en-us/buy-accessories/playstation-store-gift-card-digital-code";
+      return region === "CA"
+        ? "https://playstationca.cashstar.com/"
+        : "https://playstation.cashstar.com/";
     },
     giftCardLabel: "PlayStation Store Card"
   },
@@ -147,14 +246,19 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     badgeColor: "bg-slate-500/15 text-slate-300 border-slate-500/30",
     placeholder: "Apple ID email (e.g. kid@icloud.com)",
     helpText: "Apple ID email for App Store, iTunes & Apple Arcade cards",
-    officialUrl: () => "https://www.apple.com/shop/buy-giftcard/giftcard",
-    amazonUrl: (_handle, _amount, region = "US") =>
+    officialUrl: (_handle, _amount, region = "US") =>
       region === "CA"
-        ? "https://www.amazon.ca/s?k=apple+gift+card&i=gift-cards"
-        : "https://www.amazon.com/s?k=apple+gift+card&i=gift-cards",
-    giftCardUrl: (handle) => {
+        ? "https://www.apple.com/ca/shop/buy-giftcard/giftcard"
+        : "https://www.apple.com/shop/buy-giftcard/giftcard",
+    amazonUrl: (_handle, amount = 15, region = "US") =>
+      region === "CA"
+        ? `https://www.amazon.ca/s?k=apple+gift+card+${amount}+email+delivery&i=gift-cards`
+        : `https://www.amazon.com/s?k=apple+gift+card+${amount}+email+delivery&i=gift-cards`,
+    giftCardUrl: (handle, _amount, region = "US") => {
       if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
-      return "https://www.apple.com/shop/buy-giftcard/giftcard";
+      return region === "CA"
+        ? "https://www.apple.com/ca/shop/buy-giftcard/giftcard"
+        : "https://www.apple.com/shop/buy-giftcard/giftcard";
     },
     giftCardLabel: "Apple Gift Card"
   },
@@ -166,17 +270,23 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     badgeColor: "bg-amber-500/15 text-amber-400 border-amber-500/30",
     placeholder: "Amazon Wishlist Link or Email",
     helpText: "Amazon Public Wishlist link for surprise physical rewards",
-    officialUrl: (handle, _amount = 15) => {
+    officialUrl: (handle, amount = 15, region = "US") => {
       if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
-      return "https://www.amazon.com/gift-cards/";
+      return region === "CA"
+        ? `https://www.amazon.ca/s?k=amazon+gift+card+${amount}+email+delivery&i=gift-cards`
+        : `https://www.amazon.com/s?k=amazon+gift+card+${amount}+email+delivery&i=gift-cards`;
     },
-    amazonUrl: (handle, _amount = 15, region = "US") => {
+    amazonUrl: (handle, amount = 15, region = "US") => {
       if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
-      return region === "CA" ? "https://www.amazon.ca/gift-cards/" : "https://www.amazon.com/gift-cards/";
+      return region === "CA"
+        ? `https://www.amazon.ca/s?k=amazon+gift+card+${amount}+email+delivery&i=gift-cards`
+        : `https://www.amazon.com/s?k=amazon+gift+card+${amount}+email+delivery&i=gift-cards`;
     },
-    giftCardUrl: (handle, _amount, region = "US") => {
+    giftCardUrl: (handle, amount = 15, region = "US") => {
       if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
-      return region === "CA" ? "https://www.amazon.ca/gift-cards/" : "https://www.amazon.com/gift-cards/";
+      return region === "CA"
+        ? `https://www.amazon.ca/s?k=amazon+gift+card+${amount}+email+delivery&i=gift-cards`
+        : `https://www.amazon.com/s?k=amazon+gift+card+${amount}+email+delivery&i=gift-cards`;
     },
     giftCardLabel: "Open Wishlist / Send Card"
   },

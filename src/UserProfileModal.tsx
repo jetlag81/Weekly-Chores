@@ -90,8 +90,9 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   const [favoriteColor, setFavoriteColor] = useState(profile.favoriteColor || "#4F46E5");
   const [savedNotice, setSavedNotice] = useState(false);
 
-  // Sync when target member changes
+  // Sync when target member changes or modal opens
   useEffect(() => {
+    if (!isOpen) return;
     const current = initialProfileProp || getUserProfile(effectiveMemberName, allMembers.find(m => m.name?.toLowerCase() === effectiveMemberName.toLowerCase()));
     setProfile(current);
     setFirstName(current.firstName || "");
@@ -102,7 +103,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     setBio(current.bio || "");
     setFavoriteColor(current.favoriteColor || "#4F46E5");
     setSavedNotice(false);
-  }, [effectiveMemberName, initialProfileProp, allMembers, isOpen]);
+  }, [effectiveMemberName, isOpen]);
 
   if (!isOpen) return null;
 

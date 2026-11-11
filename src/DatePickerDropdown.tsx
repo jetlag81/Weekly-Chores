@@ -1,4 +1,4 @@
-// Dropdown Calendar Date Picker with Automatic Slash Formatting & Quick Month/Year Selectors
+// Dropdown Calendar Date Picker with Automatic Slash Formatting & Quick Month/Day/Year Selectors
 // Supports direct MM/DD/YYYY typing (with auto-slash insertion) and interactive dropdown calendar.
 // Outputs standard ISO YYYY-MM-DD format for storage and age calculations.
 
@@ -80,46 +80,71 @@ export const DatePickerDropdown: React.FC<DatePickerDropdownProps> = ({
   const [textValue, setTextValue] = useState(() => isoToDisplayDate(value));
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Parse existing value parts if available
+  const parsedDate = React.useMemo(() => {
+    if (!value) return null;
+    const parts = value.split("-").map(Number);
+    if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+      return { year: parts[0], month: parts[1] - 1, day: parts[2] };
+    }
+    return null;
+  }, [value]);
+
   // Active view date for calendar navigation
   const [viewYear, setViewYear] = useState(() => {
-    if (value) {
-      const parts = value.split("-").map(Number);
-      if (parts[0]) return parts[0];
-    }
+    if (parsedDate) return parsedDate.year;
     return new Date().getFullYear() - 12; // default to sensible youth/teen year
   });
 
   const [viewMonth, setViewMonth] = useState(() => {
-    if (value) {
-      const parts = value.split("-").map(Number);
-      if (parts[1]) return parts[1] - 1;
-    }
+    if (parsedDate) return parsedDate.month;
     return new Date().getMonth();
   });
 
-  // Sync when prop value changes
+  const [selectedDay, setSelectedDay] = useState<number | null>(() => {
+    return parsedDate ? parsedDate.day : null;
+  });
+
+  // Keep display and view state in sync when prop `value` changes
   useEffect(() => {
-    setTextValue(isoToDisplayDate(value));
-    if (value) {
-      const parts = value.split("-").map(Number);
-      if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-        setViewYear(parts[0]);
-        setViewMonth(parts[1] - 1);
-      }
+    const formatted = isoToDisplayDate(value);
+    setTextValue(formatted);
+    if (parsedDate) {
+      setViewYear(parsedDate.year);
+      setViewMonth(parsedDate.month);
+      setSelectedDay(parsedDate.day);
+    } else {
+      setSelectedDay(null);
     }
-  }, [value]);
+  }, [value, parsedDate]);
 
   // Click outside listener to close dropdown
   useEffect(() => {
     if (!isOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, [isOpen]);
+
+  // Apply a year, month, day selection immediately
+  const applyDateSelection = (year: number, month: number, day: number) => {
+    const safeDay = Math.min(day, new Date(year, month + 1, 0).getDate());
+    const iso = `${String(year).padStart(4, "0")}-${String(month + 1).padStart(2, "0")}-${String(safeDay).padStart(2, "0")}`;
+    const display = isoToDisplayDate(iso);
+    setTextValue(display);
+    setViewYear(year);
+    setViewMonth(month);
+    setSelectedDay(safeDay);
+    onChange(iso);
+  };
 
   // Handle typing with automatic slash assumption
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,8 +158,10 @@ export const DatePickerDropdown: React.FC<DatePickerDropdownProps> = ({
       const parts = iso.split("-").map(Number);
       setViewYear(parts[0]);
       setViewMonth(parts[1] - 1);
+      setSelectedDay(parts[2]);
     } else if (formatted === "") {
       onChange("");
+      setSelectedDay(null);
     }
   };
 
@@ -201,21 +228,14 @@ export const DatePickerDropdown: React.FC<DatePickerDropdownProps> = ({
   }, [viewYear, viewMonth]);
 
   const handleSelectDay = (cell: { iso: string; day: number; month: number; year: number }) => {
-    onChange(cell.iso);
-    setTextValue(isoToDisplayDate(cell.iso));
-    setViewYear(cell.year);
-    setViewMonth(cell.month);
+    applyDateSelection(cell.year, cell.month, cell.day);
     setIsOpen(false);
   };
 
   const handleSetToday = (e: React.MouseEvent) => {
     e.stopPropagation();
     const now = new Date();
-    const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-    onChange(iso);
-    setTextValue(isoToDisplayDate(iso));
-    setViewYear(now.getFullYear());
-    setViewMonth(now.getMonth());
+    applyDateSelection(now.getFullYear(), now.getMonth(), now.getDate());
     setIsOpen(false);
   };
 
@@ -223,6 +243,7 @@ export const DatePickerDropdown: React.FC<DatePickerDropdownProps> = ({
     e.stopPropagation();
     onChange("");
     setTextValue("");
+    setSelectedDay(null);
     setIsOpen(false);
   };
 
@@ -234,6 +255,16 @@ export const DatePickerDropdown: React.FC<DatePickerDropdownProps> = ({
     }
     return list;
   }, [minYear, maxYear]);
+
+  // Generate Day options for currently selected viewMonth & viewYear
+  const dayOptions = React.useMemo(() => {
+    const daysCount = new Date(viewYear, viewMonth + 1, 0).getDate();
+    const list: number[] = [];
+    for (let d = 1; d <= daysCount; d++) {
+      list.push(d);
+    }
+    return list;
+  }, [viewYear, viewMonth]);
 
   return (
     <div ref={containerRef} className={`relative inline-block w-full ${className}`}>
@@ -250,7 +281,7 @@ export const DatePickerDropdown: React.FC<DatePickerDropdownProps> = ({
           placeholder={placeholder}
           maxLength={10}
           autoFocus={autoFocus}
-          className="w-full py-2.5 pl-3 pr-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono text-xs font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 transition"
+          className="w-full py-2.5 pl-3 pr-10 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono text-xs font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 transition shadow-2xs"
         />
         <button
           type="button"
@@ -259,7 +290,7 @@ export const DatePickerDropdown: React.FC<DatePickerDropdownProps> = ({
           }}
           disabled={disabled}
           className="absolute right-2 p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition cursor-pointer disabled:opacity-50"
-          title="Open calendar picker"
+          title="Open calendar dropdown"
         >
           <CalendarIcon className="w-4 h-4" />
         </button>
@@ -267,24 +298,36 @@ export const DatePickerDropdown: React.FC<DatePickerDropdownProps> = ({
 
       {/* Dropdown Calendar Popover */}
       {isOpen && (
-        <div className="absolute left-0 mt-2 z-50 w-72 sm:w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3.5 space-y-3 animate-fadeIn">
-          {/* Header Controls: Month & Year Dropdowns */}
+        <div
+          onMouseDown={e => e.stopPropagation()}
+          onTouchStart={e => e.stopPropagation()}
+          className="absolute left-0 mt-2 z-50 w-72 sm:w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-3.5 space-y-3 animate-fadeIn"
+        >
+          {/* Header Controls: Month, Day & Year Select Dropdowns */}
           <div className="flex items-center justify-between gap-1 pb-2 border-b border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={handlePrevMonth}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              className="p-1 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
               title="Previous Month"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            {/* Month & Year Selects */}
-            <div className="flex items-center gap-1.5 min-w-0">
+            {/* Quick Dropdown Selectors for Month, Day, and Year */}
+            <div className="flex items-center gap-1 min-w-0">
+              {/* Month Select */}
               <select
                 value={viewMonth}
-                onChange={e => setViewMonth(Number(e.target.value))}
-                className="py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                onChange={e => {
+                  const m = Number(e.target.value);
+                  setViewMonth(m);
+                  if (selectedDay !== null) {
+                    applyDateSelection(viewYear, m, selectedDay);
+                  }
+                }}
+                className="py-1 px-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 cursor-pointer max-w-[95px] sm:max-w-[110px]"
+                title="Select month"
               >
                 {MONTH_NAMES.map((mName, idx) => (
                   <option key={mName} value={idx}>
@@ -293,10 +336,35 @@ export const DatePickerDropdown: React.FC<DatePickerDropdownProps> = ({
                 ))}
               </select>
 
+              {/* Day Select */}
+              <select
+                value={selectedDay !== null ? selectedDay : 1}
+                onChange={e => {
+                  const d = Number(e.target.value);
+                  applyDateSelection(viewYear, viewMonth, d);
+                }}
+                className="py-1 px-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 cursor-pointer w-12"
+                title="Select day"
+              >
+                {dayOptions.map(dNum => (
+                  <option key={dNum} value={dNum}>
+                    {dNum}
+                  </option>
+                ))}
+              </select>
+
+              {/* Year Select */}
               <select
                 value={viewYear}
-                onChange={e => setViewYear(Number(e.target.value))}
-                className="py-1 px-2 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                onChange={e => {
+                  const y = Number(e.target.value);
+                  setViewYear(y);
+                  if (selectedDay !== null) {
+                    applyDateSelection(y, viewMonth, selectedDay);
+                  }
+                }}
+                className="py-1 px-1.5 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-900 dark:text-white focus:ring-1 focus:ring-indigo-500 cursor-pointer w-16"
+                title="Select year"
               >
                 {yearOptions.map(yr => (
                   <option key={yr} value={yr}>
@@ -309,7 +377,7 @@ export const DatePickerDropdown: React.FC<DatePickerDropdownProps> = ({
             <button
               type="button"
               onClick={handleNextMonth}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              className="p-1 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer shrink-0"
               title="Next Month"
             >
               <ChevronRight className="w-4 h-4" />
@@ -340,8 +408,15 @@ export const DatePickerDropdown: React.FC<DatePickerDropdownProps> = ({
                 <button
                   key={cell.iso}
                   type="button"
-                  onClick={() => handleSelectDay(cell)}
-                  className={`h-8 rounded-lg text-xs font-bold transition flex items-center justify-center relative cursor-pointer ${
+                  onMouseDown={e => {
+                    e.stopPropagation();
+                    handleSelectDay(cell);
+                  }}
+                  onClick={e => {
+                    e.stopPropagation();
+                    handleSelectDay(cell);
+                  }}
+                  className={`h-8 rounded-lg text-xs font-bold transition flex items-center justify-center relative cursor-pointer select-none ${
                     isSelected
                       ? "bg-indigo-600 text-white shadow-xs font-extrabold"
                       : cell.isCurrentMonth
@@ -349,16 +424,16 @@ export const DatePickerDropdown: React.FC<DatePickerDropdownProps> = ({
                       : "text-slate-300 dark:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
                   } ${isToday && !isSelected ? "ring-1 ring-indigo-400 font-extrabold" : ""}`}
                 >
-                  <span>{cell.day}</span>
+                  <span className="pointer-events-none">{cell.day}</span>
                   {isToday && !isSelected && (
-                    <span className="absolute bottom-1 w-1 h-1 rounded-full bg-indigo-500" />
+                    <span className="absolute bottom-1 w-1 h-1 rounded-full bg-indigo-500 pointer-events-none" />
                   )}
                 </button>
               );
             })}
           </div>
 
-          {/* Footer Controls: Today & Clear */}
+          {/* Footer Controls: Today, Clear & Done */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
             <button
               type="button"
@@ -389,4 +464,3 @@ export const DatePickerDropdown: React.FC<DatePickerDropdownProps> = ({
     </div>
   );
 };
-

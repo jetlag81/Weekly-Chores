@@ -205,8 +205,8 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     helpText: "PlayStation Network Online ID for PS Store credit",
     officialUrl: (_handle, _amount, region = "US") =>
       region === "CA"
-        ? "https://store.playstation.com/en-ca/"
-        : "https://store.playstation.com/en-us/",
+        ? "https://playstation-ca.cashstar.com/store-v2?locale=en-ca"
+        : "https://playstation.cashstar.com/store-v2?locale=en-us",
     amazonUrl: (_handle, amount = 15, region = "US") =>
       region === "CA"
         ? `https://www.amazon.ca/s?k=playstation+store+gift+card+${amount}+digital+code&i=gift-cards`
@@ -214,8 +214,8 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     giftCardUrl: (handle, _amount, region = "US") => {
       if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
       return region === "CA"
-        ? "https://store.playstation.com/en-ca/"
-        : "https://store.playstation.com/en-us/";
+        ? "https://playstation-ca.cashstar.com/store-v2?locale=en-ca"
+        : "https://playstation.cashstar.com/store-v2?locale=en-us";
     },
     giftCardLabel: "PlayStation Store Card"
   },

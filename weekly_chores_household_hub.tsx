@@ -61,6 +61,7 @@ import { InstallPwaModal } from "./src/InstallPwaModal";
 import { ParentInspectionModal } from "./src/ParentInspectionModal";
 import { AllowanceLedgerModal } from "./src/AllowanceLedgerModal";
 import { ParentNudgeModal } from "./src/ParentNudgeModal";
+import { ParentMobileDashboard } from "./src/ParentMobileDashboard";
 import { GifCelebrationModal } from "./src/GifCelebrationModal";
 import {
   getRandomGoodJobGif,
@@ -1801,7 +1802,32 @@ function App({
   const [showInspectionModal, setShowInspectionModal] = useState(false);
   const [showAllowanceLedger, setShowAllowanceLedger] = useState(false);
   const [showNudgeModal, setShowNudgeModal] = useState(false);
+  const [nudgeModalTarget, setNudgeModalTarget] = useState<{ kid?: string; type?: "praise" | "nudge" } | null>(null);
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
+
+  // Parent View Mode Preference: "mobile" vs "table" (stored in localStorage)
+  const [parentViewPreference, setParentViewPreference] = useState<"mobile" | "table">(() => {
+    try {
+      const saved = localStorage.getItem("parent_view_mode_preference");
+      if (saved === "table" || saved === "mobile") return saved;
+      if (typeof window !== "undefined" && (window.innerWidth < 768 || isStandalone())) {
+        return "mobile";
+      }
+      return "table";
+    } catch {
+      return "table";
+    }
+  });
+
+  const toggleParentViewMode = () => {
+    setParentViewPreference(prev => {
+      const next = prev === "mobile" ? "table" : "mobile";
+      try {
+        localStorage.setItem("parent_view_mode_preference", next);
+      } catch {}
+      return next;
+    });
+  };
 
   // GIF Celebration & Nudge state
   const [activeCelebration, setActiveCelebration] = useState<{
@@ -5566,6 +5592,131 @@ function App({
     );
   }
 
+  // Streamlined Dedicated Mobile Parent Command Hub (when parent preference is mobile or on small screens)
+  if (parentViewPreference === "mobile") {
+    return (
+      <div className="min-h-screen bg-slate-900 text-slate-100 font-sans">
+        <ParentMobileDashboard
+          familyMembers={familyMembers}
+          allKidsList={allKidsList}
+          activeSyncWeek={activeSyncWeek}
+          activeWeekDays={activeWeekDays}
+          monthSchedule={monthSchedule}
+          hubMasterChores={hubMasterChores}
+          signOffStatus={signOffStatus}
+          onToggleWeeklySignOff={handleToggleWeeklySignOff}
+          onToggleKidChore={handleToggleKidChore}
+          onToggleWeeklyKidChore={handleToggleWeeklyKidChore}
+          getChoreStatus={getChoreStatus}
+          getWeeklyKidsStatus={getWeeklyKidsStatus}
+          monthlyIncentive={monthlyIncentive}
+          monthlyGoalTarget={monthlyGoalTarget || 25}
+          topPerformer={topPerformer}
+          onOpenInspection={() => setShowInspectionModal(true)}
+          onOpenLedger={() => setShowAllowanceLedger(true)}
+          onOpenNudgeModal={(kName, type) => {
+            setNudgeModalTarget(kName ? { kid: kName, type: type || "nudge" } : null);
+            setShowNudgeModal(true);
+          }}
+          onOpenActivityFeed={() => setShowActivityDrawer(true)}
+          onSwitchToMinionMode={(kName) => {
+            const target = kName || allKidsList[0] || "Sydney";
+            const kidSession = {
+              role: "kid",
+              kidName: target,
+              householdId: deviceSession.householdId || "household_family_hub",
+              deviceId: deviceSession.deviceId || "local_dev",
+              parentPin: "1234"
+            };
+            saveDeviceSession(kidSession);
+            setDeviceSession(kidSession);
+          }}
+          onToggleDesktopView={toggleParentViewMode}
+          activitiesCount={activities.length}
+        />
+
+        {/* Sunday Parent Inspection & Sign-off Modal */}
+        {showInspectionModal && (
+          <ParentInspectionModal
+            isOpen={showInspectionModal}
+            onClose={() => setShowInspectionModal(false)}
+            activeSyncWeek={activeSyncWeek}
+            activeWeekDays={activeWeekDays}
+            familyMembers={familyMembers}
+            allKidsList={allKidsList}
+            monthSchedule={monthSchedule}
+            signOffStatus={signOffStatus}
+            onToggleWeeklySignOff={handleToggleWeeklySignOff}
+            onToggleWeeklyKidChore={handleToggleWeeklyKidChore}
+            getWeeklyKidsStatus={getWeeklyKidsStatus}
+            onToggleKidChore={handleToggleKidChore}
+            monthlyIncentive={monthlyIncentive}
+            monthlyGoalTarget={monthlyGoalTarget || 25}
+            topPerformer={topPerformer}
+          />
+        )}
+
+        {/* Chore Completion & Goal GIF Celebration Popup */}
+        {activeCelebration && (
+          <GifCelebrationModal
+            isOpen={!!activeCelebration}
+            gifUrl={activeCelebration.gifUrl}
+            kidName={activeCelebration.kidName}
+            taskTitle={activeCelebration.taskTitle}
+            variant={activeCelebration.variant}
+            headline={activeCelebration.headline}
+            message={activeCelebration.message}
+            onClose={() => setActiveCelebration(null)}
+          />
+        )}
+
+        {/* Household Real-Time Activity Drawer */}
+        <HouseholdActivityDrawer
+          isOpen={showActivityDrawer}
+          onClose={() => setShowActivityDrawer(false)}
+          activities={activities}
+          onClearActivities={() => {
+            clearActivityLog();
+            setActivities([]);
+          }}
+          familyMembers={familyMembers}
+          allKidsList={allKidsList}
+        />
+
+        {/* Floating Real-Time Remote Activity Toast */}
+        <ActivityToast
+          event={activeToastEvent}
+          familyMembers={familyMembers}
+          onClose={() => setActiveToastEvent(null)}
+          onOpenFeed={() => setShowActivityDrawer(true)}
+        />
+
+        {/* Household Allowance Ledger & History Modal */}
+        {showAllowanceLedger && (
+          <AllowanceLedgerModal
+            isOpen={showAllowanceLedger}
+            onClose={() => setShowAllowanceLedger(false)}
+            familyMembers={familyMembers}
+          />
+        )}
+
+        {/* Parent Nudge & Feedback Modal */}
+        {showNudgeModal && (
+          <ParentNudgeModal
+            isOpen={showNudgeModal}
+            onClose={() => {
+              setShowNudgeModal(false);
+              setNudgeModalTarget(null);
+            }}
+            allKidsList={allKidsList}
+            initialKid={nudgeModalTarget?.kid}
+            initialType={nudgeModalTarget?.type}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
       {notice && (
@@ -5704,6 +5855,15 @@ function App({
             >
               <Sparkles className="w-3.5 h-3.5 text-orange-600" />
               <span>Nudge & Feedback</span>
+            </button>
+            <button
+              type="button"
+              onClick={toggleParentViewMode}
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-300 rounded-lg transition cursor-pointer shadow-2xs"
+              title="Switch to Streamlined Mobile Parent View"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-indigo-700" />
+              <span>Mobile View</span>
             </button>
             {isSpeechSupported() && (
               <button

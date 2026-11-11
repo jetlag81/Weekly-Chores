@@ -83,7 +83,7 @@ export const ParentPhotoInboxModal: React.FC<ParentPhotoInboxModalProps> = ({
         timestamp: Date.now(),
         kidName: proof.kidName,
         taskTitle: `Photo proof approved for "${proof.taskTitle}"! ⭐`,
-        action: "signoff",
+        action: "photo_approved",
         dateKey: proof.dateKey
       });
     }

@@ -104,7 +104,7 @@ export const SiblingChoreDetailModal: React.FC<SiblingChoreDetailModalProps> = (
       timestamp: Date.now(),
       kidName: currentKidName,
       taskTitle: `Sent a high-five cheer to ${sibling.name}! 🎉`,
-      action: "signoff",
+      action: "cheer",
       dateKey
     });
 

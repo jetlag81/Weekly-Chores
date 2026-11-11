@@ -2,7 +2,7 @@
 // Streamlines the parent experience on smartphones and tablets with a modern, touch-friendly interface
 // for Sunday inspections, chore verification, real-time nudges/praise, and allowance tracking.
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   ShieldCheck,
   CheckCircle2,
@@ -31,7 +31,7 @@ import { getChoreCanonicalKey, normalizeTaskName } from "./choreUtils";
 import { getKidRewardProfile } from "./rewardAccounts";
 import { ThemeToggle } from "./ThemeToggle";
 import { HouseholdSettingsModal, type SettingsTab } from "./HouseholdSettingsModal";
-import { unpairKid, broadcastLocalUpdate } from "./firebaseSync";
+import { unpairKid, broadcastLocalUpdate, subscribeToRealtimeSync } from "./firebaseSync";
 import { saveActivityEvent, playHouseholdRemoteChime } from "./activityFeed";
 import { ParentPhotoReviewModal } from "./ParentPhotoReviewModal";
 import { ParentPhotoInboxModal } from "./ParentPhotoInboxModal";
@@ -40,6 +40,7 @@ import {
   getPendingPhotoProofsCount,
   hasPendingPhotoRequest,
   savePhotoRequest,
+  saveChorePhotoProof,
   type ChorePhotoProof,
   type ChorePhotoRequest
 } from "./chorePhotoTypes";
@@ -165,12 +166,28 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
       timestamp: Date.now(),
       kidName,
       taskTitle: `Requested live photo proof for "${taskTitle}"! 📸`,
-      action: "signoff",
+      action: "photo_requested",
       dateKey
     });
     playHouseholdRemoteChime();
     setPhotoRequestsVersion(v => v + 1);
   };
+
+  useEffect(() => {
+    return subscribeToRealtimeSync((msg: any) => {
+      if (!msg) return;
+      if (msg.type === "PHOTO_REQUESTED" && msg.request) {
+        savePhotoRequest(msg.request);
+        setPhotoRequestsVersion(v => v + 1);
+      } else if (msg.type === "PHOTO_PROOF_SUBMITTED" && msg.proof) {
+        saveChorePhotoProof(msg.proof);
+        setPhotoRequestsVersion(v => v + 1);
+      } else if (msg.type === "PHOTO_PROOF_VERIFIED" && msg.proof) {
+        saveChorePhotoProof(msg.proof);
+        setPhotoRequestsVersion(v => v + 1);
+      }
+    });
+  }, []);
 
   const toggleKidExpanded = (kidName: string) => {
     setExpandedKids(prev => ({ ...prev, [kidName]: !prev[kidName] }));

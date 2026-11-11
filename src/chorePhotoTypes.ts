@@ -229,12 +229,17 @@ export function hasPendingPhotoRequest(
   kidName: string
 ): boolean {
   const reqs = getStoredPhotoRequests();
+  const target = (kidName || "").toLowerCase().trim();
   return reqs.some(
-    r =>
-      r.dateKey === dateKey &&
-      r.choreIndex === choreIndex &&
-      r.kidName.toLowerCase() === kidName.toLowerCase() &&
-      !r.fulfilled
+    r => {
+      if (r.dateKey !== dateKey || r.choreIndex !== choreIndex || r.fulfilled) return false;
+      const rKid = (r.kidName || "").toLowerCase().trim();
+      if (!target || !rKid) return true;
+      if (rKid === target) return true;
+      const isGroupR = ["all", "all kids", "each child", "all non-casual", "all non casual", "kid"].includes(rKid);
+      const isGroupT = ["all", "all kids", "each child", "all non-casual", "all non casual", "kid"].includes(target);
+      return isGroupR || isGroupT;
+    }
   );
 }
 
@@ -246,12 +251,13 @@ export function markPhotoRequestFulfilled(
   if (typeof window === "undefined") return;
   try {
     const reqs = getStoredPhotoRequests();
+    const target = (kidName || "").toLowerCase().trim();
     const updated = reqs.map(r => {
-      if (
-        r.dateKey === dateKey &&
-        r.choreIndex === choreIndex &&
-        r.kidName.toLowerCase() === kidName.toLowerCase()
-      ) {
+      const rKid = (r.kidName || "").toLowerCase().trim();
+      const matches = !target || !rKid || rKid === target ||
+        ["all", "all kids", "each child", "all non-casual", "all non casual", "kid"].includes(rKid) ||
+        ["all", "all kids", "each child", "all non-casual", "all non casual", "kid"].includes(target);
+      if (r.dateKey === dateKey && r.choreIndex === choreIndex && matches) {
         return { ...r, fulfilled: true };
       }
       return r;

@@ -14,7 +14,10 @@ import {
   Clock,
   Volume2,
   VolumeX,
-  Users
+  Users,
+  Camera,
+  MessageSquare,
+  Heart
 } from "lucide-react";
 import {
   type HouseholdActivityEvent,
@@ -224,6 +227,10 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
             filteredActivities.map((act, idx) => {
               const mem = familyMembers.find(m => m.name.toLowerCase() === act.kidName.toLowerCase());
               const isSignOff = act.action === "signoff";
+              const isPhotoReq = act.action === "photo_requested";
+              const isPhotoApproved = act.action === "photo_approved";
+              const isNudge = act.action === "nudge";
+              const isCheer = act.action === "cheer";
 
               return (
                 <div
@@ -231,6 +238,10 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
                   className={`p-3 rounded-2xl border transition shadow-2xs ${
                     isSignOff
                       ? "bg-amber-50/70 border-amber-300"
+                      : isPhotoReq
+                      ? "bg-amber-50/60 border-amber-300"
+                      : isPhotoApproved
+                      ? "bg-emerald-50/70 border-emerald-300"
                       : "bg-white border-slate-200 hover:border-slate-300"
                   }`}
                 >
@@ -238,11 +249,11 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
                     <div
                       className="w-9 h-9 rounded-xl font-black text-xs flex items-center justify-center shrink-0 shadow-xs"
                       style={{
-                        backgroundColor: isSignOff ? "#F59E0B" : mem?.color || "#6366F1",
+                        backgroundColor: isSignOff ? "#F59E0B" : isPhotoReq ? "#D97706" : isPhotoApproved ? "#10B981" : mem?.color || "#6366F1",
                         color: "#FFFFFF"
                       }}
                     >
-                      {isSignOff ? "✓" : act.kidName.slice(0, 2).toUpperCase()}
+                      {isSignOff ? "✓" : isPhotoReq ? "📸" : isPhotoApproved ? "⭐" : isCheer ? "🎉" : act.kidName.slice(0, 2).toUpperCase()}
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -260,6 +271,26 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
                           <>
                             <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
                             <span className="text-amber-900 font-bold truncate">{act.taskTitle}</span>
+                          </>
+                        ) : isPhotoReq ? (
+                          <>
+                            <Camera className="w-4 h-4 text-amber-600 shrink-0" />
+                            <span className="text-amber-900 font-bold truncate">{act.taskTitle}</span>
+                          </>
+                        ) : isPhotoApproved ? (
+                          <>
+                            <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                            <span className="text-emerald-900 font-bold truncate">{act.taskTitle}</span>
+                          </>
+                        ) : isNudge ? (
+                          <>
+                            <MessageSquare className="w-4 h-4 text-indigo-600 shrink-0" />
+                            <span className="text-indigo-900 font-semibold truncate">{act.taskTitle}</span>
+                          </>
+                        ) : isCheer ? (
+                          <>
+                            <Heart className="w-4 h-4 text-rose-500 shrink-0" />
+                            <span className="text-slate-800 font-medium truncate">{act.taskTitle}</span>
                           </>
                         ) : (
                           <>

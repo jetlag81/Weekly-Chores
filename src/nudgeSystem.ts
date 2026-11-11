@@ -111,7 +111,7 @@ export function sendParentNudge(params: {
     timestamp: nudge.timestamp,
     kidName: params.targetKid,
     taskTitle: params.type === "praise" ? `⭐ Praise from ${fromParent}: "${message}"` : `🧹 Nudge from ${fromParent}: "${message}"`,
-    action: "signoff" as const
+    action: "nudge" as const
   };
 
   // 3. Log to activity feed and broadcast activity event

@@ -71,7 +71,7 @@ export const ParentPhotoReviewModal: React.FC<ParentPhotoReviewModalProps> = ({
         timestamp: Date.now(),
         kidName: updated.kidName,
         taskTitle: `Photo proof approved for "${updated.taskTitle}"! ⭐`,
-        action: "signoff",
+        action: "photo_approved",
         dateKey: updated.dateKey
       });
     }

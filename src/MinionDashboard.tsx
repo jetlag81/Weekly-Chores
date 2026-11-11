@@ -1,6 +1,6 @@
 // Dedicated Mobile-First Minion Mode (Kid Interface)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import confetti from "canvas-confetti";
 import {
   Sparkles,
@@ -32,7 +32,8 @@ import {
   Wallet,
   Settings,
   QrCode,
-  Camera
+  Camera,
+  X
 } from "lucide-react";
 import { isStandalone, subscribeInstallable } from "./pwaManager";
 import { InstallPwaModal } from "./InstallPwaModal";
@@ -44,7 +45,10 @@ import {
   saveChorePhotoProof,
   hasPendingPhotoRequest,
   markPhotoRequestFulfilled,
-  type ChorePhotoProof
+  getStoredPhotoRequests,
+  savePhotoRequest,
+  type ChorePhotoProof,
+  type ChorePhotoRequest
 } from "./chorePhotoTypes";
 import { HouseholdSettingsModal, type SettingsTab } from "./HouseholdSettingsModal";
 import { ParentInspectionModal } from "./ParentInspectionModal";
@@ -207,6 +211,19 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   } | null>(null);
   const [viewingProof, setViewingProof] = useState<ChorePhotoProof | null>(null);
   const [photoRequestsVersion, setPhotoRequestsVersion] = useState(0);
+  const [incomingPhotoRequest, setIncomingPhotoRequest] = useState<ChorePhotoRequest | null>(null);
+  const dismissedPhotoRequestsRef = useRef<Set<string>>(new Set());
+
+  const isPhotoRequestForThisKid = (targetName?: string, kidName?: string): boolean => {
+    if (!targetName || !kidName) return false;
+    const t = targetName.toLowerCase().trim();
+    const k = kidName.toLowerCase().trim();
+    if (t === k) return true;
+    if (t === "all" || t === "all kids" || t === "each child" || t === "all non-casual" || t === "all non casual" || t === "kid") {
+      return true;
+    }
+    return false;
+  };
 
   // Interactive Chore Celebration, Goal "Almost", and Parent Nudge/Praise State
   const [activeCelebration, setActiveCelebration] = useState<{
@@ -319,26 +336,54 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
       // Live Photo Request from Parents
       if (msg.type === "PHOTO_REQUESTED" && msg.request) {
-        const req = msg.request;
-        if (req.kidName?.toLowerCase() === currentKid.name.toLowerCase()) {
-          setPhotoRequestsVersion(v => v + 1);
+        const req: ChorePhotoRequest = msg.request;
+        savePhotoRequest(req);
+        setPhotoRequestsVersion(v => v + 1);
+
+        if (isPhotoRequestForThisKid(req.kidName, currentKid.name)) {
           playHouseholdRemoteChime();
+          setIncomingPhotoRequest(req);
           setActiveToastEvent({
             id: `toast-${Date.now()}`,
             timestamp: Date.now(),
             kidName: currentKid.name,
             taskTitle: `📸 Parents requested a live photo proof for "${req.taskTitle}"!`,
-            action: "signoff",
+            action: "photo_requested",
             dateKey: req.dateKey
           });
         }
       }
 
       if (msg.type === "PHOTO_PROOF_SUBMITTED" || msg.type === "PHOTO_PROOF_VERIFIED") {
+        if (msg.proof) {
+          saveChorePhotoProof(msg.proof);
+        }
         setPhotoRequestsVersion(v => v + 1);
       }
     });
   }, [currentKid.name]);
+
+  const activeDateKey = formatDateKey(
+    activeDate.getFullYear(),
+    activeDate.getMonth(),
+    activeDate.getDate()
+  );
+
+  // Check for pending parent photo request on initial load or date switch
+  useEffect(() => {
+    const allReqs = getStoredPhotoRequests();
+    const pending = allReqs.find(
+      r =>
+        !r.fulfilled &&
+        r.dateKey === activeDateKey &&
+        isPhotoRequestForThisKid(r.kidName, currentKid.name) &&
+        !dismissedPhotoRequestsRef.current.has(r.id) &&
+        Date.now() - r.requestedAt < 2 * 60 * 60 * 1000 // within last 2 hours
+    );
+    if (pending) {
+      setIncomingPhotoRequest(pending);
+    }
+  }, [currentKid.name, activeDateKey, photoRequestsVersion]);
 
   // Check for recent unacknowledged parent nudge on initial load
   useEffect(() => {
@@ -369,12 +414,6 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   useEffect(() => {
     return subscribeInstallable(can => setCanInstallPwa(can));
   }, []);
-
-  const activeDateKey = formatDateKey(
-    activeDate.getFullYear(),
-    activeDate.getMonth(),
-    activeDate.getDate()
-  );
 
   const formattedDayName = activeDate.toLocaleDateString("en-US", { weekday: "long" });
   const formattedDateStr = activeDate.toLocaleDateString("en-US", {
@@ -1957,6 +1996,85 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             setPhotoUploadTarget(null);
           }}
         />
+      )}
+
+      {/* Real-time Parent Photo Request Modal for Kid */}
+      {incomingPhotoRequest && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-sm w-full shadow-2xl border-2 border-amber-400 dark:border-amber-500 overflow-hidden transform animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-4 bg-gradient-to-r from-amber-500 via-rose-500 to-amber-500 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-white animate-bounce" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm uppercase tracking-wider">Live Photo Requested!</h3>
+                  <p className="text-[11px] text-white/90">From {incomingPhotoRequest.requestedBy || "Thom & Meghan"}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  dismissedPhotoRequestsRef.current.add(incomingPhotoRequest.id);
+                  setIncomingPhotoRequest(null);
+                }}
+                className="w-7 h-7 rounded-full bg-black/15 hover:bg-black/30 text-white flex items-center justify-center transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-5 text-center space-y-3">
+              <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-700/60 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center shadow-inner">
+                <Camera className="w-9 h-9" />
+              </div>
+
+              <div>
+                <h4 className="text-base font-extrabold text-slate-900 dark:text-white">
+                  Parents want a quick photo!
+                </h4>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                  Please snap a live photo of your completed chore:
+                </p>
+                <div className="mt-2.5 p-3 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 font-bold text-sm text-indigo-700 dark:text-indigo-300">
+                  {incomingPhotoRequest.taskTitle}
+                </div>
+              </div>
+
+              <div className="pt-2 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const req = incomingPhotoRequest;
+                    setIncomingPhotoRequest(null);
+                    setPhotoUploadTarget({
+                      choreIndex: req.choreIndex,
+                      taskTitle: req.taskTitle,
+                      existingProof: null
+                    });
+                  }}
+                  className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-extrabold text-sm shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2 transform active:scale-[0.98] transition cursor-pointer animate-pulse"
+                >
+                  <Camera className="w-5 h-5" />
+                  <span>Take Live Photo Now 📸</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    dismissedPhotoRequestsRef.current.add(incomingPhotoRequest.id);
+                    setIncomingPhotoRequest(null);
+                  }}
+                  className="w-full py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition cursor-pointer"
+                >
+                  I'll snap it in a minute
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Viewing Photo Proof Modal (for Kid) */}

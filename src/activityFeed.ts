@@ -6,7 +6,7 @@ export interface HouseholdActivityEvent {
   timestamp: number;
   kidName: string;
   taskTitle: string;
-  action: "completed" | "uncompleted" | "signoff";
+  action: "completed" | "uncompleted" | "signoff" | "photo_requested" | "photo_approved" | "nudge" | "cheer";
   dateKey?: string;
   deviceId?: string;
 }
@@ -21,7 +21,24 @@ export function getStoredActivityLog(): HouseholdActivityEvent[] {
     const raw = localStorage.getItem(STORAGE_KEY_ACTIVITY_LOG);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((e: any) => {
+      if (e.action === "signoff" && typeof e.taskTitle === "string") {
+        if (e.taskTitle.includes("Requested live photo") || (typeof e.id === "string" && e.id.startsWith("act-req-"))) {
+          return { ...e, action: "photo_requested" as const };
+        }
+        if (e.taskTitle.includes("Photo proof approved") || (typeof e.id === "string" && e.id.startsWith("proof-approved-"))) {
+          return { ...e, action: "photo_approved" as const };
+        }
+        if (e.taskTitle.includes("Praise") || e.taskTitle.includes("Nudge")) {
+          return { ...e, action: "nudge" as const };
+        }
+        if (e.taskTitle.includes("cheer") || (typeof e.id === "string" && e.id.startsWith("cheer-"))) {
+          return { ...e, action: "cheer" as const };
+        }
+      }
+      return e;
+    });
   } catch {
     return [];
   }

@@ -466,6 +466,12 @@ export function broadcastLocalUpdate(data: unknown) {
       // Ignore broadcast errors
     }
   }
+  // Same-window dispatch so subscribers in the current tab receive it immediately
+  if (typeof window !== "undefined") {
+    try {
+      window.dispatchEvent(new CustomEvent("household_local_sync", { detail: data }));
+    } catch {}
+  }
   // Bridge across different browsers (Chrome, Edge) and local network devices
   if (typeof window !== "undefined") {
     fetch("/__sync-chores", {
@@ -571,8 +577,18 @@ export function subscribeToRealtimeSync(
     onUpdate(e.data);
   };
 
+  const localHandler = (e: Event) => {
+    try {
+      onUpdate((e as CustomEvent).detail);
+    } catch {}
+  };
+
   if (broadcastChannel) {
     broadcastChannel.addEventListener("message", handler);
+  }
+
+  if (typeof window !== "undefined") {
+    window.addEventListener("household_local_sync", localHandler);
   }
 
   // Cross-browser bridge (syncs Chrome, Edge, and mobile via local dev server)
@@ -599,7 +615,12 @@ export function subscribeToRealtimeSync(
 
   // Also hook window storage event for cross-tab localStorage changes
   const storageHandler = (e: StorageEvent) => {
-    if (e.key === "weekly_chores_month_schedule" || e.key === "weekly-chores-config") {
+    if (
+      e.key === "weekly_chores_month_schedule" ||
+      e.key === "weekly-chores-config" ||
+      e.key === "weekly_chores_photo_requests_v1" ||
+      e.key === "weekly_chores_photo_proofs_v1"
+    ) {
       onUpdate({ type: "STORAGE_SYNC", key: e.key });
     }
   };
@@ -608,6 +629,9 @@ export function subscribeToRealtimeSync(
   return () => {
     if (broadcastChannel) {
       broadcastChannel.removeEventListener("message", handler);
+    }
+    if (typeof window !== "undefined") {
+      window.removeEventListener("household_local_sync", localHandler);
     }
     window.removeEventListener("storage", storageHandler);
     if (intervalId) clearInterval(intervalId);

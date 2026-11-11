@@ -72,6 +72,7 @@ import {
   getPendingPhotoProofsCount,
   hasPendingPhotoRequest,
   savePhotoRequest,
+  saveChorePhotoProof,
   type ChorePhotoProof,
   type ChorePhotoRequest
 } from "./src/chorePhotoTypes";
@@ -2131,7 +2132,19 @@ function App({
         });
       } else if (msg.type === "ALL_DEVICES_RESET") {
         setDeviceSession((prev: any) => ({ role: "admin", householdId: "household_family_hub", deviceId: prev.deviceId, parentPin: "1234" }));
-      } else if (msg.type === "PHOTO_REQUESTED" || msg.type === "PHOTO_PROOF_SUBMITTED" || msg.type === "PHOTO_PROOF_VERIFIED") {
+      } else if (msg.type === "PHOTO_REQUESTED") {
+        if (msg.request) savePhotoRequest(msg.request);
+        setPhotoRequestsVersion(v => v + 1);
+      } else if (msg.type === "PHOTO_PROOF_SUBMITTED") {
+        if (msg.proof) {
+          saveChorePhotoProof(msg.proof);
+          setNotice(`📸 ${msg.proof.kidName} submitted photo proof for "${msg.proof.taskTitle}"!`);
+          setTimeout(() => setNotice(null), 4000);
+          playHouseholdRemoteChime();
+        }
+        setPhotoRequestsVersion(v => v + 1);
+      } else if (msg.type === "PHOTO_PROOF_VERIFIED") {
+        if (msg.proof) saveChorePhotoProof(msg.proof);
         setPhotoRequestsVersion(v => v + 1);
       }
     });
@@ -4222,7 +4235,7 @@ function App({
       timestamp: Date.now(),
       kidName,
       taskTitle: `Requested live photo proof for "${taskTitle}"! 📸`,
-      action: "signoff",
+      action: "photo_requested",
       dateKey
     });
     playHouseholdRemoteChime();
@@ -6262,7 +6275,7 @@ function App({
             const assignee = getMember(status.who);
             const freq = getChoreFreq(cr);
             const specificKid = getSpecificKidForChore(choreTitle);
-            const targetKidName = specificKid || status.who || "";
+            const targetKidName = specificKid || status.who || "All Kids";
             const isPhotoRequested = targetKidName ? hasPendingPhotoRequest(dateKey, cr.index_, targetKidName) : false;
             return <div key={cr.index_} className={`group text-[11px] p-1 rounded-md border flex flex-col gap-1 transition ${status.done ? "bg-emerald-50/70 border-emerald-200 text-slate-500" : freq.frequency === "weekly" ? "bg-purple-50/60 border-purple-200 text-purple-950 shadow-2xs" : "bg-white border-slate-200 hover:border-slate-300 text-slate-800 shadow-2xs"}`}><div className="flex items-center justify-between gap-1 w-full"><div className="flex items-center gap-1 min-w-0 flex-1"><button onClick={() => handleUpdateChore(dateKey, cr.index_, {
               done: !status.done
@@ -6741,7 +6754,7 @@ function App({
             })();
             const proof = getPhotoProofForChore(activeDayModal, cr.index_);
             const specificKid = getSpecificKidForChore(taskTitleStr);
-            const targetKidName = specificKid || status.who || "";
+            const targetKidName = specificKid || status.who || "All Kids";
             const isPhotoRequested = targetKidName ? hasPendingPhotoRequest(activeDayModal, cr.index_, targetKidName) : false;
             return <div key={cr.index_} className={`p-2.5 rounded-xl border flex flex-col gap-2 transition ${status.done ? "bg-emerald-50/60 border-emerald-200" : freq.frequency === "weekly" && isScheduledForToday ? "bg-purple-50/60 border-purple-200" : "bg-white border-slate-200 hover:border-slate-300"}`}><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2.5 flex-1 min-w-0"><button onClick={() => handleUpdateChore(activeDayModal, cr.index_, {
               done: !status.done

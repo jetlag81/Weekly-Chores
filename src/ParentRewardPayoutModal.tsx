@@ -283,9 +283,61 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
           </button>
         </div>
 
-        {/* Kid Selector Tabs & Store Region Switcher */}
-        <div className="px-4 py-2.5 bg-slate-900/90 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2 shrink-0">
-          <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
+        {/* Subheader: Top bar with Store Region Switcher & Dedicated Kid Selector Row */}
+        <div className="px-4 py-3 bg-slate-900 border-b border-slate-800 space-y-2.5 shrink-0">
+          {/* Top Bar: Kid count / instruction & Store Region Switcher */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-slate-400">Viewing:</span>
+              <span className="text-xs font-black text-amber-400 tracking-tight">{selectedKid}</span>
+              <span className="text-[10px] text-slate-500 font-medium">({allKidsList.length} kids)</span>
+            </div>
+
+            {/* Region Switcher with Auto-Country Detection */}
+            <div className="flex items-center gap-1 bg-slate-800/90 p-0.5 rounded-xl border border-slate-700/80">
+              <span className="text-[10px] text-slate-400 font-bold px-1.5 flex items-center gap-1">
+                <Globe className="w-3 h-3 text-slate-400" />
+                <span className="hidden xs:inline">Store:</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => handleSwitchRegion("CA")}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition cursor-pointer flex items-center gap-1 ${
+                  region === "CA"
+                    ? "bg-amber-500 text-slate-950 shadow-2xs"
+                    : "text-slate-400 hover:text-white"
+                }`}
+                title="Canadian Stores (CAD) - Official & Amazon.ca"
+              >
+                <span>🇨🇦 CA</span>
+                {region === "CA" && isAutoDetected && (
+                  <span className="text-[8px] bg-slate-950/25 text-slate-900 px-1 rounded-sm uppercase tracking-tighter font-extrabold">
+                    Auto
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSwitchRegion("US")}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition cursor-pointer flex items-center gap-1 ${
+                  region === "US"
+                    ? "bg-amber-500 text-slate-950 shadow-2xs"
+                    : "text-slate-400 hover:text-white"
+                }`}
+                title="United States Stores (USD) - Official & Amazon.com"
+              >
+                <span>🇺🇸 US</span>
+                {region === "US" && isAutoDetected && (
+                  <span className="text-[8px] bg-slate-950/25 text-slate-900 px-1 rounded-sm uppercase tracking-tighter font-extrabold">
+                    Auto
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Dedicated Kid Selector Tabs Row: Never covered, unclipped, smooth scrolling */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 -mx-1 px-1 scrollbar-none">
             {allKidsList.map((kid) => {
               const isSelected = kid === selectedKid;
               const kProfile = getKidRewardProfile(kid);
@@ -296,7 +348,7 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
                   key={kid}
                   type="button"
                   onClick={() => handleSelectKid(kid)}
-                  className={`flex-1 py-1.5 px-2.5 rounded-xl font-extrabold text-xs transition flex items-center justify-center gap-1 cursor-pointer ${
+                  className={`flex-1 min-w-[70px] py-1.5 px-3 rounded-xl font-extrabold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
                     isSelected
                       ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
                       : "bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white border border-slate-700/80"
@@ -309,48 +361,6 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
                 </button>
               );
             })}
-          </div>
-
-          {/* Region Switcher with Auto-Country Detection */}
-          <div className="flex items-center gap-1 bg-slate-800 p-0.5 rounded-xl border border-slate-700 shrink-0">
-            <span className="text-[10px] text-slate-400 font-bold px-1.5 flex items-center gap-1">
-              <Globe className="w-3 h-3 text-slate-400" />
-              <span className="hidden xs:inline">Store:</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => handleSwitchRegion("CA")}
-              className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition cursor-pointer flex items-center gap-1 ${
-                region === "CA"
-                  ? "bg-amber-500 text-slate-950 shadow-2xs"
-                  : "text-slate-400 hover:text-white"
-              }`}
-              title="Canadian Stores (CAD) - Official & Amazon.ca"
-            >
-              <span>🇨🇦 CA</span>
-              {region === "CA" && isAutoDetected && (
-                <span className="text-[8px] bg-slate-950/25 text-slate-900 px-1 rounded-sm uppercase tracking-tighter font-extrabold">
-                  Auto
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleSwitchRegion("US")}
-              className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition cursor-pointer flex items-center gap-1 ${
-                region === "US"
-                  ? "bg-amber-500 text-slate-950 shadow-2xs"
-                  : "text-slate-400 hover:text-white"
-              }`}
-              title="United States Stores (USD) - Official & Amazon.com"
-            >
-              <span>🇺🇸 US</span>
-              {region === "US" && isAutoDetected && (
-                <span className="text-[8px] bg-slate-950/25 text-slate-900 px-1 rounded-sm uppercase tracking-tighter font-extrabold">
-                  Auto
-                </span>
-              )}
-            </button>
           </div>
         </div>
 

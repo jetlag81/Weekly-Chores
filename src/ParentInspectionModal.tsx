@@ -60,6 +60,7 @@ interface ParentInspectionModalProps {
   monthlyIncentive?: string;
   monthlyGoalTarget?: number;
   topPerformer?: { name: string; done: number; total: number; pct: number } | null;
+  activeParentAdmin?: "Thom" | "Meghan";
 }
 
 const DEFAULT_BASE_ALLOWANCES: Record<string, number> = {
@@ -85,7 +86,8 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
   onToggleKidChore,
   monthlyIncentive = "$15 Allowance Bonus & Pizza Night Pick",
   monthlyGoalTarget = 25,
-  topPerformer
+  topPerformer,
+  activeParentAdmin = "Thom"
 }) => {
   // Local state for parent inspection room approval per child
   const [inspectedRooms, setInspectedRooms] = useState<Record<string, boolean>>(() => {
@@ -374,12 +376,12 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
                       : "bg-amber-200 text-amber-950"
                   }`}
                 >
-                  {signOffStatus.done ? "✓ TV / MV" : "Initials Needed"}
+                  {signOffStatus.done ? `✓ ${activeParentAdmin === "Meghan" ? "MV" : "TV"}` : "Initials Needed"}
                 </span>
               </div>
               <p className="text-[11px] opacity-80">
                 {signOffStatus.done
-                  ? "Parents Thom & Meghan verified all rooms and approved weekly allowances."
+                  ? `Parent ${activeParentAdmin} verified all rooms and approved weekly allowances.`
                   : "Walk bedrooms & laundry, verify checklists, then sign off below."}
               </p>
             </div>

@@ -6,7 +6,7 @@ import { redeemKidInvite, saveDeviceSession, getStoredDeviceSession, type Device
 
 interface KidPairingScreenProps {
   onPairedSuccess: (session: DeviceSession) => void;
-  onContinueAsParent: () => void;
+  onContinueAsParent: (parentName?: "Thom" | "Meghan") => void;
 }
 
 export const KidPairingScreen: React.FC<KidPairingScreenProps> = ({
@@ -141,17 +141,36 @@ export const KidPairingScreen: React.FC<KidPairingScreenProps> = ({
           </span>
         </div>
 
-        {/* Parent / Admin Mode Direct Access */}
-        <div className="text-center pt-1">
-          <button
-            type="button"
-            onClick={onContinueAsParent}
-            className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold rounded-xl text-xs transition flex items-center justify-center gap-2"
-          >
-            <Shield className="w-4 h-4 text-slate-600" />
-            <span>Continue as Parent / Admin (Full Schedule)</span>
-          </button>
-          <p className="text-[10px] text-slate-400 mt-2">
+        {/* Parent Command Pages Direct Access */}
+        <div className="space-y-2 pt-1 text-center">
+          <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+            Parent Command Pages
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => onContinueAsParent("Thom")}
+              className="py-2.5 px-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-950 font-extrabold rounded-xl text-xs transition flex flex-col items-center justify-center gap-0.5 cursor-pointer shadow-2xs"
+            >
+              <div className="flex items-center gap-1 font-black text-xs">
+                <span>👑</span>
+                <span>Thom's Page</span>
+              </div>
+              <span className="text-[10px] text-amber-800 font-medium">Supreme Overlord</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onContinueAsParent("Meghan")}
+              className="py-2.5 px-3 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-950 font-extrabold rounded-xl text-xs transition flex flex-col items-center justify-center gap-0.5 cursor-pointer shadow-2xs"
+            >
+              <div className="flex items-center gap-1 font-black text-xs">
+                <span>👑</span>
+                <span>Meghan's Page</span>
+              </div>
+              <span className="text-[10px] text-purple-800 font-medium">Overseer Supreme</span>
+            </button>
+          </div>
+          <p className="text-[10px] text-slate-400">
             Default parent PIN is <strong>1234</strong>
           </p>
         </div>

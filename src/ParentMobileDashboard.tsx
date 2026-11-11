@@ -352,7 +352,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
       {/* Sticky Mobile Parent App Bar */}
       <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-4 py-3 shadow-xs dark:shadow-lg transition-colors">
         <div className="flex items-center justify-between gap-2 sm:gap-3">
-          {/* Brand & Parent Persona with Active Admin Switcher */}
+          {/* Brand & Parent Persona (Dedicated to this parent) */}
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center shadow-md shadow-orange-500/20 text-white shrink-0">
               <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -363,34 +363,11 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                   {currentAdmin}'s Hub
                 </h1>
                 <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-md bg-amber-400/20 text-amber-700 dark:text-amber-400 border border-amber-400/30">
-                  👑 {currentAdmin === "Thom" ? "Overlord" : "Overseer"}
+                  👑 {currentAdmin === "Thom" ? "Supreme Overlord" : "Overseer Supreme"}
                 </span>
               </div>
-              <div className="flex items-center gap-1 mt-0.5">
-                <button
-                  type="button"
-                  onClick={() => handleSwitchAdmin("Thom")}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
-                    currentAdmin === "Thom"
-                      ? "bg-amber-500 text-slate-950 font-black shadow-2xs"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-200/60 dark:bg-slate-800"
-                  }`}
-                  title="Switch to Thom's Admin Hub"
-                >
-                  👑 Thom
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSwitchAdmin("Meghan")}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
-                    currentAdmin === "Meghan"
-                      ? "bg-amber-500 text-slate-950 font-black shadow-2xs"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-200/60 dark:bg-slate-800"
-                  }`}
-                  title="Switch to Meghan's Admin Hub"
-                >
-                  👑 Meghan
-                </button>
+              <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                Parent Command Page
               </div>
             </div>
           </div>

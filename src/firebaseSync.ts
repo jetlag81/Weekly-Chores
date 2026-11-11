@@ -30,6 +30,7 @@ export interface DeviceSession {
   householdId: string;
   kidName?: string;
   kidMemberId?: string;
+  parentName?: "Thom" | "Meghan";
   deviceId: string;
   parentPin?: string;
 }

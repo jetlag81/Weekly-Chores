@@ -1873,6 +1873,49 @@ function App({
     setTimeout(() => setNotice(null), 3000);
   };
 
+  const handleOpenParentPage = (parentName: string) => {
+    const cleanParent: "Thom" | "Meghan" = parentName.toLowerCase().includes("meghan") ? "Meghan" : "Thom";
+    setActiveParentAdmin(cleanParent);
+    saveActiveParentAdmin(cleanParent);
+    const adminSession: DeviceSession = {
+      role: "admin",
+      parentName: cleanParent,
+      householdId: deviceSession.householdId || "household_family_hub",
+      deviceId: deviceSession.deviceId || "local_dev",
+      parentPin: "1234"
+    };
+    saveDeviceSession(adminSession);
+    setDeviceSession(adminSession);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("kid");
+      url.searchParams.set("parent", cleanParent);
+      window.history.replaceState({}, document.title, url.toString());
+    } catch {}
+    setNotice(`Opened ${cleanParent}'s Admin Hub page! 👑`);
+    setTimeout(() => setNotice(null), 3000);
+  };
+
+  const handleOpenKidPage = (kidName: string) => {
+    const kidSession: DeviceSession = {
+      role: "kid",
+      kidName,
+      householdId: deviceSession.householdId || "household_family_hub",
+      deviceId: deviceSession.deviceId || "local_dev",
+      parentPin: deviceSession.parentPin || "1234"
+    };
+    saveDeviceSession(kidSession);
+    setDeviceSession(kidSession);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("parent");
+      url.searchParams.set("kid", kidName);
+      window.history.replaceState({}, document.title, url.toString());
+    } catch {}
+    setNotice(`Opened ${kidName}'s dedicated Minion page! 🎒`);
+    setTimeout(() => setNotice(null), 3000);
+  };
+
   // Parent View Mode Preference: "mobile" vs "table" (stored in localStorage)
   const [parentViewPreference, setParentViewPreference] = useState<"mobile" | "table">(() => {
     try {
@@ -1963,6 +2006,28 @@ function App({
       });
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
+    } else if (params.get("parent") || params.get("admin") || (modeParam === "parent" && params.get("user"))) {
+      const pParam = params.get("parent") || params.get("admin") || params.get("user") || "";
+      const cleanParent: "Thom" | "Meghan" = pParam.toLowerCase().includes("meghan") ? "Meghan" : "Thom";
+      setActiveParentAdmin(cleanParent);
+      saveActiveParentAdmin(cleanParent);
+      const cur = getStoredDeviceSession();
+      const newSession: DeviceSession = {
+        role: "admin",
+        parentName: cleanParent,
+        householdId: cur.householdId || "household_family_hub",
+        deviceId: cur.deviceId,
+        parentPin: "1234"
+      };
+      saveDeviceSession(newSession);
+      setDeviceSession(newSession);
+      setShowPairingScreen(false);
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("kid");
+        url.searchParams.set("parent", cleanParent);
+        window.history.replaceState({}, document.title, url.toString());
+      } catch {}
     } else if (kidParam) {
       const cur = getStoredDeviceSession();
       const newSession: DeviceSession = {
@@ -1977,13 +2042,17 @@ function App({
       setShowPairingScreen(false);
       try {
         const url = new URL(window.location.href);
+        url.searchParams.delete("parent");
         url.searchParams.set("kid", kidParam);
         window.history.replaceState({}, document.title, url.toString());
       } catch {}
     } else if (modeParam === "parent" || modeParam === "admin") {
       const cur = getStoredDeviceSession();
+      const activeAdmin: "Thom" | "Meghan" = cur.parentName || getStoredActiveParentAdmin() || "Thom";
+      setActiveParentAdmin(activeAdmin);
       const newSession: DeviceSession = {
         role: "admin",
+        parentName: activeAdmin,
         householdId: cur.householdId || "household_family_hub",
         deviceId: cur.deviceId,
         parentPin: "1234"
@@ -1991,8 +2060,12 @@ function App({
       saveDeviceSession(newSession);
       setDeviceSession(newSession);
       setShowPairingScreen(false);
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("kid");
+        url.searchParams.set("parent", activeAdmin);
+        window.history.replaceState({}, document.title, url.toString());
+      } catch {}
     }
   }, []);
 
@@ -5784,11 +5857,26 @@ function App({
           setDeviceSession(newSession);
           setShowPairingScreen(false);
         }}
-        onContinueAsParent={() => {
-          const adminSession = { role: "admin", householdId: "household_family_hub", deviceId: "local_dev", parentPin: "1234" };
+        onContinueAsParent={(parentName) => {
+          const chosen = parentName || activeParentAdmin || "Thom";
+          const adminSession: DeviceSession = {
+            role: "admin",
+            parentName: chosen,
+            householdId: "household_family_hub",
+            deviceId: "local_dev",
+            parentPin: "1234"
+          };
           saveDeviceSession(adminSession);
           setDeviceSession(adminSession);
+          setActiveParentAdmin(chosen);
+          saveActiveParentAdmin(chosen);
           setShowPairingScreen(false);
+          try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("kid");
+            url.searchParams.set("parent", chosen);
+            window.history.replaceState({}, document.title, url.toString());
+          } catch {}
         }}
       />
     );
@@ -5827,12 +5915,20 @@ function App({
           } catch {}
         }}
         onExitMinionMode={() => {
-          const adminSession = { role: "admin", householdId: deviceSession.householdId || "household_family_hub", deviceId: deviceSession.deviceId || "local_dev", parentPin: "1234" };
+          const chosen = activeParentAdmin || "Thom";
+          const adminSession: DeviceSession = {
+            role: "admin",
+            parentName: chosen,
+            householdId: deviceSession.householdId || "household_family_hub",
+            deviceId: deviceSession.deviceId || "local_dev",
+            parentPin: "1234"
+          };
           saveDeviceSession(adminSession);
           setDeviceSession(adminSession);
           try {
             const url = new URL(window.location.href);
             url.searchParams.delete("kid");
+            url.searchParams.set("parent", chosen);
             window.history.replaceState({}, document.title, url.toString());
           } catch {}
         }}
@@ -5912,6 +6008,7 @@ function App({
             monthlyIncentive={monthlyIncentive}
             monthlyGoalTarget={monthlyGoalTarget || 25}
             topPerformer={topPerformer}
+            activeParentAdmin={activeParentAdmin}
           />
         )}
 
@@ -6027,7 +6124,12 @@ function App({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Chore Schedule</h1>
+                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  {activeParentAdmin}'s Admin Hub
+                </h1>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                  👑 {activeParentAdmin === "Thom" ? "Supreme Overlord" : "Overseer Supreme"}
+                </span>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                   Monthly Template & Sync
                 </span>
@@ -6039,34 +6141,6 @@ function App({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Active Parent Admin Hub Selector */}
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-0.5 border border-slate-200 dark:border-slate-700 shadow-inner">
-              <button
-                type="button"
-                onClick={() => handleSwitchActiveAdmin("Thom")}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  activeParentAdmin === "Thom"
-                    ? "bg-amber-500 text-slate-950 shadow-xs font-black"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                }`}
-                title="Thom's Admin Hub (Supreme Overlord)"
-              >
-                👑 Thom's Hub
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSwitchActiveAdmin("Meghan")}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
-                  activeParentAdmin === "Meghan"
-                    ? "bg-amber-500 text-slate-950 shadow-xs font-black"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                }`}
-                title="Meghan's Admin Hub (Overseer Supreme)"
-              >
-                👑 Meghan's Hub
-              </button>
-            </div>
-
             <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-lg p-1 border border-slate-200 dark:border-slate-700">
               <button
                 onClick={handlePrevMonth}
@@ -6712,7 +6786,7 @@ function App({
             return <tr key={`${member.index_}-${member.name}`} className={`transition ${isEditingMember ? "bg-indigo-50/50" : "hover:bg-slate-50/70"}`}><td className="p-3 font-semibold text-slate-800"><div className="flex items-center gap-2.5"><button type="button" onClick={() => setProfileModalTarget(member.name)} className="relative w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 flex items-center justify-center text-sm shadow-2xs shrink-0 hover:scale-105 transition cursor-pointer" title="Edit avatar and profile"><span>{memberProfile.avatarEmoji || (member.role === "Supreme Overlord" || member.role === "Overseer Supreme" ? "👑" : "🌟")}</span><span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded bg-white text-slate-900 font-mono font-black text-[8px] border border-slate-200 shadow-2xs">{memberProfile.initials || generateInitials(member.name)}</span></button><div className="min-w-0">{isEditingMember ? <input type="text" value={memberEditName} onChange={e => setMemberEditName(e.target.value)} onKeyDown={e => { if (e.key === "Enter") saveMemberInlineEdit(); if (e.key === "Escape") setEditingMemberIndex(null); }} className="w-32 px-2 py-1 text-xs font-bold text-slate-900 bg-white border border-indigo-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" autoFocus /> : <button type="button" onClick={() => setProfileModalTarget(member.name)} className="font-bold text-slate-900 hover:text-indigo-600 transition flex items-center gap-1 text-left cursor-pointer truncate"><span>{memberProfile.firstName || member.name}</span>{memberProfile.lastName && <span className="text-slate-400 font-medium text-[11px]">{memberProfile.lastName}</span>}</button>}{memberProfile.bio && <div className="text-[10px] text-slate-500 italic truncate max-w-[140px]">"{memberProfile.bio}"</div>}</div></div></td><td className="p-3">{memberTier === "adult" ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-50 text-purple-800 border border-purple-200"><span>👑 Adult</span>{hasOverride && <span className="bg-purple-200/60 px-1 rounded text-[8px] font-bold">Override</span>}</span> : memberTier === "teen" ? <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200" title="Teen Autonomy (12+) • Profile & Email enabled"><span>⚡ Age {memberAge || "12+"} • Teen</span>{hasOverride && <span className="bg-indigo-200/60 px-1 rounded text-[8px] font-bold">Override</span>}</span> : <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-200" title="Junior Explorer (≤11) • High Visual Stimulation"><span>🌟 Age {memberAge || "≤11"} • Junior</span>{hasOverride && <span className="bg-amber-200/60 px-1 rounded text-[8px] font-bold">Override</span>}</span>}</td><td className="p-3">{memberProfile.birthday ? <button type="button" onClick={() => setProfileModalTarget(member.name)} className="text-left cursor-pointer group" title="Click to edit birthday"><div className="font-mono text-[11px] text-slate-700 group-hover:text-indigo-600 font-medium">{memberProfile.birthday}</div>{memberBdayDays !== null && <div className="text-[10px] font-bold text-pink-600 flex items-center gap-0.5"><span>🎂</span><span>{memberBdayDays === 0 ? "Today!" : `in ${memberBdayDays}d`}</span></div>}</button> : <button type="button" onClick={() => setProfileModalTarget(member.name)} className="text-[10px] font-bold text-slate-400 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 px-2 py-0.5 rounded-md border border-slate-200 transition cursor-pointer">+ Set Date</button>}</td><td className="p-3">{memberProfile.email ? <button type="button" onClick={() => setProfileModalTarget(member.name)} className="font-mono text-[11px] text-slate-700 hover:text-indigo-600 truncate max-w-[150px] text-left cursor-pointer block" title={`Click to edit email (${memberProfile.email})`}>{memberProfile.email}</button> : canManageEmail ? <button type="button" onClick={() => setProfileModalTarget(member.name)} className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded-md border border-indigo-200 transition cursor-pointer">+ Add Email</button> : <button type="button" onClick={() => setProfileModalTarget(member.name)} className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 transition cursor-pointer flex items-center gap-1" title="Restricted for junior minions (Parent managed in this modal)"><Lock className="w-3 h-3 text-slate-400" /><span>Parent Only</span></button>}</td><td className="p-3"><select value={roleVal} onChange={e => handleUpdateRosterMember(member.index_, { role: e.target.value })} className={`px-2.5 py-1 rounded-lg font-bold text-[11px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 ${roleVal === "Supreme Overlord" ? "bg-amber-100 text-amber-900 border border-amber-300" : "bg-indigo-50 text-indigo-800 border border-indigo-200"}`}><option value="Supreme Overlord">Supreme Overlord (Parent)</option><option value="Minion">Minion (Kid)</option></select></td><td className="p-3"><select value={resVal} onChange={e => handleUpdateRosterMember(member.index_, { residency: e.target.value })} className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 ${resVal === "Bi-Weekly" ? "bg-pink-50 text-pink-700 border border-pink-200" : resVal === "Casual" ? "bg-sky-50 text-sky-700 border border-sky-200" : "bg-slate-100 text-slate-700 border border-slate-200"}`}><option value="Full-Time">Full-Time</option><option value="Bi-Weekly">Bi-Weekly</option><option value="Casual">Casual</option></select></td><td className="p-3 relative"><button type="button" onClick={() => setOpenMemberGroupDropdown(isDropdownOpen ? null : member.index_)} className="w-full min-w-[180px] flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-[11px] font-medium text-slate-800 bg-white border border-slate-200 hover:border-indigo-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500"><span className="truncate">{selectedGroups.length > 0 ? selectedGroups.join(", ") : "None selected"}</span><ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${isDropdownOpen ? "rotate-180 text-indigo-600" : ""}`} /></button>{isDropdownOpen && <><div className="fixed inset-0 z-20" onClick={() => setOpenMemberGroupDropdown(null)} /><div className="absolute left-3 top-full mt-1 z-30 w-48 bg-white rounded-xl border border-slate-200 shadow-xl p-2 space-y-1"><div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">Rotation Groups</div>{allGroupTypes.map(grpType => {
               const isChecked = selectedGroups.includes(grpType);
               return <label key={grpType} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-indigo-50/70 cursor-pointer select-none transition"><input type="checkbox" checked={isChecked} onChange={() => toggleGroupType(grpType)} className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" /><span className={`text-xs ${isChecked ? "font-bold text-indigo-950" : "font-medium text-slate-700"}`}>{grpType}</span></label>;
-            })}</div></>}</td><td className="p-3 text-center"><select value={member.active ? "true" : "false"} onChange={e => handleUpdateRosterMember(member.index_, { active: e.target.value === "true" })} className={`px-2.5 py-1 rounded-full text-[11px] font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 ${member.active ? "text-emerald-700 bg-emerald-50 border border-emerald-200" : "text-slate-500 bg-slate-100 border border-slate-200"}`}><option value="true">{"\u2713 Active"}</option><option value="false">{"\u25CB Inactive"}</option></select></td><td className="p-3 text-right"><div className="inline-flex items-center justify-end gap-1"><button type="button" onClick={() => setProfileModalTarget(member.name)} className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition cursor-pointer" title={`Edit profile, birthday, email & avatar for ${member.name}`}>👤</button>{isEditingMember ? <><button type="button" onClick={saveMemberInlineEdit} className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition cursor-pointer" title="Save name"><Check className="w-3.5 h-3.5" /></button><button type="button" onClick={() => setEditingMemberIndex(null)} className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition cursor-pointer" title="Cancel"><X className="w-3.5 h-3.5" /></button></> : <button type="button" onClick={() => {
+            })}</div></>}</td><td className="p-3 text-center"><select value={member.active ? "true" : "false"} onChange={e => handleUpdateRosterMember(member.index_, { active: e.target.value === "true" })} className={`px-2.5 py-1 rounded-full text-[11px] font-bold cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 ${member.active ? "text-emerald-700 bg-emerald-50 border border-emerald-200" : "text-slate-500 bg-slate-100 border border-slate-200"}`}><option value="true">{"\u2713 Active"}</option><option value="false">{"\u25CB Inactive"}</option></select></td><td className="p-3 text-right"><div className="inline-flex items-center justify-end gap-1">{roleVal === "Supreme Overlord" ? (<button type="button" onClick={() => handleOpenParentPage(member.name)} className="px-2 py-1 text-[11px] font-extrabold text-amber-950 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg transition cursor-pointer flex items-center gap-1 shadow-2xs mr-1" title={`Open ${member.name}'s dedicated Admin Hub page`}><span>👑</span><span>Page ↗</span></button>) : (<button type="button" onClick={() => handleOpenKidPage(member.name)} className="px-2 py-1 text-[11px] font-extrabold text-indigo-950 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition cursor-pointer flex items-center gap-1 shadow-2xs mr-1" title={`Open ${member.name}'s dedicated Minion page`}><span>🎒</span><span>Page ↗</span></button>)}<button type="button" onClick={() => setProfileModalTarget(member.name)} className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition cursor-pointer" title={`Edit profile, birthday, email & avatar for ${member.name}`}>👤</button>{isEditingMember ? <><button type="button" onClick={saveMemberInlineEdit} className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition cursor-pointer" title="Save name"><Check className="w-3.5 h-3.5" /></button><button type="button" onClick={() => setEditingMemberIndex(null)} className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition cursor-pointer" title="Cancel"><X className="w-3.5 h-3.5" /></button></> : <button type="button" onClick={() => {
               setEditingMemberIndex(member.index_);
               setMemberEditName(member.name);
             }} className="p-1.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition cursor-pointer" title={`Rename ${member.name}`}><Pen className="w-3.5 h-3.5" /></button>}<button type="button" onClick={() => handleDeleteRosterMember(member.index_, member.name)} className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer" title={`Remove ${member.name} from Household Members`}><Trash2 className="w-3.5 h-3.5" /></button></div></td></tr>;
@@ -7699,6 +7773,7 @@ function App({
           monthlyIncentive={monthlyIncentive}
           monthlyGoalTarget={monthlyGoalTarget || 25}
           topPerformer={topPerformer}
+          activeParentAdmin={activeParentAdmin}
         />
       )}
       {/* Household Real-Time Activity Drawer */}

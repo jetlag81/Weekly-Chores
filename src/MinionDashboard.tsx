@@ -532,7 +532,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     return list;
   }, [activeWeekDays, activeDate, formatDateKey]);
 
-  const getKidCompletionForDay = (dateKey: string) => {
+  const getMemberCompletionForDay = (memberName: string, dateKey: string) => {
     const dayChores = monthSchedule[dateKey] || {};
     let done = 0;
     let total = 0;
@@ -552,15 +552,18 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
       const who = choreStatus.who || "";
       const isShared = (chore.assignedTo || []).includes("All") || (chore.assignedTo || []).length > 1;
-      const isDone = isShared && choreStatus.kidsDone ? !!choreStatus.kidsDone[currentKid.name] : !!choreStatus.done;
+      const isDone = isShared && choreStatus.kidsDone ? !!choreStatus.kidsDone[memberName] : !!choreStatus.done;
 
-      const isDirectlyAssigned = who.toLowerCase() === currentKid.name.toLowerCase();
+      const mem = familyMembers.find(f => f.name.toLowerCase() === memberName.toLowerCase());
+      const memType = mem?.type;
+
+      const isDirectlyAssigned = who.toLowerCase() === memberName.toLowerCase();
       const isGroupAssigned =
         who === "All Kids" ||
         who === "Each Child" ||
-        (who === "Non-Casual" && currentKid.type !== "casual") ||
-        (who === "All Non-Casual" && currentKid.type !== "casual") ||
-        (isShared && ((chore.assignedTo || []).includes("All") || (chore.assignedTo || []).includes(currentKid.name)));
+        (who === "Non-Casual" && memType !== "casual") ||
+        (who === "All Non-Casual" && memType !== "casual") ||
+        (isShared && ((chore.assignedTo || []).includes("All") || (chore.assignedTo || []).includes(memberName)));
 
       if (isDirectlyAssigned || isGroupAssigned || isDone) {
         total++;
@@ -569,6 +572,10 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     });
 
     return { done, total, allDone: total > 0 && done === total };
+  };
+
+  const getKidCompletionForDay = (dateKey: string) => {
+    return getMemberCompletionForDay(currentKid.name, dateKey);
   };
 
   const handleToggleDailyChore = (choreIndex: number, currentDone: boolean, taskTitle?: string) => {
@@ -701,8 +708,8 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <h1 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate">
-                  {currentKid.name}
+                <h1 className="font-black text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate">
+                  {currentKid.name}'s Chores
                 </h1>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0">
                   🎒 Minion
@@ -723,33 +730,6 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
           {/* Header Action Controls */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {kidMembers.length > 1 && (
-              <div className="relative">
-                <select
-                  value={currentKid.name}
-                  onChange={e => {
-                    const targetName = e.target.value;
-                    const cur = getStoredDeviceSession();
-                    const updatedSession: DeviceSession = {
-                      ...cur,
-                      role: "kid",
-                      kidName: targetName
-                    };
-                    saveDeviceSession(updatedSession);
-                    onKidSwitched?.(targetName);
-                  }}
-                  className="text-xs font-bold py-1.5 px-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none shadow-2xs"
-                  title="Switch minion"
-                >
-                  {kidMembers.map(m => (
-                    <option key={m.id || m.name} value={m.name}>
-                      {m.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
             {!isStandalone() && (
               <button
                 type="button"
@@ -799,8 +779,65 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         </div>
       </header>
 
+      {/* Kid Pages Segmented Switcher (Each Kid Has Their Own Dedicated Page) */}
+      {kidMembers.length > 1 && (
+        <div className="max-w-xl mx-auto px-4 pt-3 pb-0.5">
+          <div className="flex items-center gap-1.5 p-1 bg-slate-200/80 dark:bg-slate-900 rounded-2xl border border-slate-300/80 dark:border-slate-800 shadow-2xs">
+            {kidMembers.map(m => {
+              const isCurrent = m.name.toLowerCase() === currentKid.name.toLowerCase();
+              const mStats = getMemberCompletionForDay(m.name, activeDateKey);
+
+              return (
+                <button
+                  key={m.id || m.name}
+                  type="button"
+                  onClick={() => {
+                    if (!isCurrent) {
+                      const cur = getStoredDeviceSession();
+                      const updatedSession: DeviceSession = {
+                        ...cur,
+                        role: "kid",
+                        kidName: m.name
+                      };
+                      saveDeviceSession(updatedSession);
+                      try {
+                        const url = new URL(window.location.href);
+                        url.searchParams.set("kid", m.name);
+                        window.history.replaceState({}, document.title, url.toString());
+                      } catch {}
+                      onKidSwitched?.(m.name);
+                    }
+                  }}
+                  className={`flex-1 py-2 px-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 select-none ${
+                    isCurrent
+                      ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-black ring-1 ring-slate-300 dark:ring-slate-700"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60 font-bold"
+                  }`}
+                  title={`Open ${m.name}'s Chore Page`}
+                >
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-white/50"
+                    style={{ backgroundColor: m.color || "#6366F1" }}
+                  />
+                  <span className="text-xs truncate">{m.name}</span>
+                  <span
+                    className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
+                      isCurrent
+                        ? "bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300"
+                        : "bg-slate-300/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                    }`}
+                  >
+                    {mStats.done}/{mStats.total}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Navigation Tab Bar */}
-      <div className="max-w-xl mx-auto px-4 pt-3 pb-1">
+      <div className="max-w-xl mx-auto px-4 pt-2.5 pb-1">
         <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-black shadow-2xs gap-1">
           <button
             type="button"

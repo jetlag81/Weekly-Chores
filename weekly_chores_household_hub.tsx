@@ -1903,8 +1903,11 @@ function App({
       saveDeviceSession(newSession);
       setDeviceSession(newSession);
       setShowPairingScreen(false);
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set("kid", kidParam);
+        window.history.replaceState({}, document.title, url.toString());
+      } catch {}
     } else if (modeParam === "parent" || modeParam === "admin") {
       const cur = getStoredDeviceSession();
       const newSession: DeviceSession = {
@@ -5614,11 +5617,21 @@ function App({
         getChoreStatus={getChoreStatus}
         onKidSwitched={(kName) => {
           setDeviceSession(prev => ({ ...prev, role: "kid", kidName: kName }));
+          try {
+            const url = new URL(window.location.href);
+            url.searchParams.set("kid", kName);
+            window.history.replaceState({}, document.title, url.toString());
+          } catch {}
         }}
         onExitMinionMode={() => {
           const adminSession = { role: "admin", householdId: deviceSession.householdId || "household_family_hub", deviceId: deviceSession.deviceId || "local_dev", parentPin: "1234" };
           saveDeviceSession(adminSession);
           setDeviceSession(adminSession);
+          try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("kid");
+            window.history.replaceState({}, document.title, url.toString());
+          } catch {}
         }}
       />
     );
@@ -5666,6 +5679,11 @@ function App({
             };
             saveDeviceSession(kidSession);
             setDeviceSession(kidSession);
+            try {
+              const url = new URL(window.location.href);
+              url.searchParams.set("kid", target);
+              window.history.replaceState({}, document.title, url.toString());
+            } catch {}
           }}
           onToggleDesktopView={toggleParentViewMode}
           activitiesCount={activities.length}

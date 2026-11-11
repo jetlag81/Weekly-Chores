@@ -547,6 +547,15 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                     )}
                     <button
                       type="button"
+                      onClick={() => onSwitchToMinionMode(kidName)}
+                      className="px-2 py-1 rounded-xl text-[11px] font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 transition flex items-center gap-1 cursor-pointer"
+                      title={`Open ${kidName}'s Dedicated Minion Page`}
+                    >
+                      <Users className="w-3 h-3 text-indigo-400" />
+                      <span className="hidden xs:inline">Page ↗</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => toggleKidExpanded(kidName)}
                       className="w-7 h-7 rounded-lg text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer"
                     >

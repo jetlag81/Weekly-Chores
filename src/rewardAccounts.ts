@@ -157,7 +157,7 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     helpText: "Switch Friend Code or Nintendo Network ID",
     officialUrl: (_handle, _amount, region = "US") =>
       region === "CA"
-        ? "https://www.nintendo.com/en-ca/store/products/nintendo-eshop-gift-cards/"
+        ? "https://www.nintendo.com/en-ca/store/"
         : "https://www.nintendo.com/us/store/products/nintendo-eshop-gift-cards/",
     amazonUrl: (_handle, amount = 15, region = "US") =>
       region === "CA"
@@ -166,7 +166,7 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     giftCardUrl: (handle, _amount, region = "US") => {
       if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
       return region === "CA"
-        ? "https://www.nintendo.com/en-ca/store/products/nintendo-eshop-gift-cards/"
+        ? "https://www.nintendo.com/en-ca/store/"
         : "https://www.nintendo.com/us/store/products/nintendo-eshop-gift-cards/";
     },
     giftCardLabel: "Nintendo eShop Card"
@@ -205,8 +205,8 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     helpText: "PlayStation Network Online ID for PS Store credit",
     officialUrl: (_handle, _amount, region = "US") =>
       region === "CA"
-        ? "https://playstationca.cashstar.com/"
-        : "https://playstation.cashstar.com/",
+        ? "https://store.playstation.com/en-ca/"
+        : "https://store.playstation.com/en-us/",
     amazonUrl: (_handle, amount = 15, region = "US") =>
       region === "CA"
         ? `https://www.amazon.ca/s?k=playstation+store+gift+card+${amount}+digital+code&i=gift-cards`
@@ -214,8 +214,8 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     giftCardUrl: (handle, _amount, region = "US") => {
       if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
       return region === "CA"
-        ? "https://playstationca.cashstar.com/"
-        : "https://playstation.cashstar.com/";
+        ? "https://store.playstation.com/en-ca/"
+        : "https://store.playstation.com/en-us/";
     },
     giftCardLabel: "PlayStation Store Card"
   },

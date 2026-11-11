@@ -81,6 +81,7 @@ import {
   type DeviceSession
 } from "./firebaseSync";
 import { getChoreCanonicalKey, normalizeTaskName } from "./choreUtils";
+import { getChoreNudgeRule, formatTime24To12 } from "./choreNudgeRules";
 import {
   speakKidDailySummary,
   speakSingleChore,
@@ -1598,6 +1599,17 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                                   {chore.category}
                                 </span>
                               )}
+                              {(() => {
+                                const nudgeRule = getChoreNudgeRule(chore.task);
+                                if (!nudgeRule?.enabled) return null;
+                                return (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                    <Clock className="w-3 h-3 text-amber-500 shrink-0" />
+                                    <span>Target: By {formatTime24To12(nudgeRule.time)}</span>
+                                    {nudgeRule.targetWindow && <span className="opacity-80 hidden xs:inline">({nudgeRule.targetWindow})</span>}
+                                  </span>
+                                );
+                              })()}
                             </div>
                             {subTitle && (
                               <p className={`text-xs mt-1 leading-snug line-clamp-2 ${
@@ -1735,8 +1747,21 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                           {isLaundry ? <Shirt className="w-5 h-5" /> : <BedDouble className="w-5 h-5" />}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="font-bold text-sm text-slate-900 dark:text-white leading-snug">
-                            {wChore.task}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-sm text-slate-900 dark:text-white leading-snug">
+                              {wChore.task}
+                            </span>
+                            {(() => {
+                              const nudgeRule = getChoreNudgeRule(wChore.task);
+                              if (!nudgeRule?.enabled) return null;
+                              return (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                                  <Clock className="w-3 h-3 text-amber-500 shrink-0" />
+                                  <span>Target: By {formatTime24To12(nudgeRule.time)}</span>
+                                  {nudgeRule.targetWindow && <span className="opacity-80 hidden xs:inline">({nudgeRule.targetWindow})</span>}
+                                </span>
+                              );
+                            })()}
                           </div>
                           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
                             {isLaundry

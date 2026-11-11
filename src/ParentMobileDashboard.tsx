@@ -25,7 +25,8 @@ import {
   UserCheck,
   Gift,
   Settings,
-  Camera
+  Camera,
+  Clock
 } from "lucide-react";
 import { getChoreCanonicalKey, normalizeTaskName } from "./choreUtils";
 import { getKidRewardProfile } from "./rewardAccounts";
@@ -35,6 +36,11 @@ import { unpairKid, broadcastLocalUpdate, subscribeToRealtimeSync } from "./fire
 import { saveActivityEvent, playHouseholdRemoteChime } from "./activityFeed";
 import { ParentPhotoReviewModal } from "./ParentPhotoReviewModal";
 import { ParentPhotoInboxModal } from "./ParentPhotoInboxModal";
+import {
+  getChoreNudgeRule,
+  formatTime24To12,
+  evaluateAndDispatchAutoNudges
+} from "./choreNudgeRules";
 import {
   getPhotoProofForChore,
   getPendingPhotoProofsCount,
@@ -188,6 +194,49 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
       }
     });
   }, []);
+
+  // Periodic check for automated scheduled nudges
+  useEffect(() => {
+    const runAutoNudgeCheck = () => {
+      try {
+        const d = new Date();
+        const todayKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        const todayDayChores: Array<{ choreIndex: number; taskTitle: string; who: string; done: boolean; kidsDone?: Record<string, boolean> }> = [];
+
+        const todaySchedule = monthSchedule[todayKey] || {};
+        hubMasterChores.forEach((cr: any, idx: number) => {
+          const taskTitle = cr.task || (cr.row ? cr.row[0] : "") || "";
+          const cIndex = cr.index_ !== undefined ? cr.index_ : idx;
+          const cKey = getChoreCanonicalKey(taskTitle);
+          const status = todaySchedule[cIndex] || (taskTitle ? todaySchedule[taskTitle] : null) || (cKey ? todaySchedule[cKey] : null) || {};
+          todayDayChores.push({
+            choreIndex: cIndex,
+            taskTitle,
+            who: status.who || cr.rotationGroup || "",
+            done: Boolean(status.done),
+            kidsDone: status.kidsDone || {}
+          });
+        });
+
+        if (todayDayChores.length > 0) {
+          evaluateAndDispatchAutoNudges({
+            dateKey: todayKey,
+            dayChores: todayDayChores,
+            familyMembers: (familyMembers || []).map(m => ({ id: m.name, name: m.name, role: m.role, type: m.type }))
+          });
+        }
+      } catch (err) {
+        console.error("ParentMobileDashboard auto-nudge check error:", err);
+      }
+    };
+
+    const timer = setInterval(runAutoNudgeCheck, 45000);
+    const initialTimer = setTimeout(runAutoNudgeCheck, 3000);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(initialTimer);
+    };
+  }, [monthSchedule, hubMasterChores, familyMembers]);
 
   const toggleKidExpanded = (kidName: string) => {
     setExpandedKids(prev => ({ ...prev, [kidName]: !prev[kidName] }));
@@ -726,13 +775,28 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                               >
                                 {item.done && <Check className="w-4 h-4 stroke-[3]" />}
                               </div>
-                              <span
-                                className={`text-xs font-semibold truncate ${
-                                  item.done ? "line-through text-slate-400" : "text-white"
-                                }`}
-                              >
-                                {item.taskTitle}
-                              </span>
+                              <div className="flex flex-col min-w-0">
+                                <span
+                                  className={`text-xs font-semibold truncate ${
+                                    item.done ? "line-through text-slate-400" : "text-white"
+                                  }`}
+                                >
+                                  {item.taskTitle}
+                                </span>
+                                {(() => {
+                                  const nudgeRule = getChoreNudgeRule(item.taskTitle);
+                                  if (!nudgeRule?.enabled) return null;
+                                  return (
+                                    <span className="text-[10px] text-amber-300/90 font-medium flex items-center gap-1 mt-0.5">
+                                      <Clock className="w-2.5 h-2.5 text-amber-400" />
+                                      <span>Nudge: {formatTime24To12(nudgeRule.time)}</span>
+                                      {nudgeRule.targetWindow && (
+                                        <span className="text-slate-400 hidden xs:inline">• {nudgeRule.targetWindow}</span>
+                                      )}
+                                    </span>
+                                  );
+                                })()}
+                              </div>
                             </div>
 
                             <div className="flex items-center gap-1.5 shrink-0">

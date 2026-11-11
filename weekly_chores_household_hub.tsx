@@ -1844,6 +1844,7 @@ function App({
   const [profileModalTarget, setProfileModalTarget] = useState<string | null>(null);
   const [profilesVersion, setProfilesVersion] = useState(0);
   const [activeParentAdmin, setActiveParentAdmin] = useState<"Thom" | "Meghan">(() => getStoredActiveParentAdmin());
+  const [lastInspectedKid, setLastInspectedKid] = useState<string | null>(null);
 
   useEffect(() => {
     const handleProfileSync = () => {
@@ -1897,6 +1898,7 @@ function App({
   };
 
   const handleOpenKidPage = (kidName: string) => {
+    setLastInspectedKid(kidName);
     const parentAdmin = activeParentAdmin || deviceSession.parentName || "Thom";
     const kidSession: DeviceSession = {
       role: "kid",
@@ -5919,6 +5921,7 @@ function App({
         getChoreStatus={getChoreStatus}
         viewingAsParent={activeFromParent}
         onKidSwitched={(kName) => {
+          setLastInspectedKid(kName);
           setDeviceSession(prev => ({ ...prev, role: "kid", kidName: kName, viewingAsParent: activeFromParent }));
           try {
             const url = new URL(window.location.href);
@@ -5931,6 +5934,10 @@ function App({
         }}
         onExitMinionMode={() => {
           const chosen = activeFromParent || activeParentAdmin || "Thom";
+          const returnedKid = deviceSession.kidName;
+          if (returnedKid) {
+            setLastInspectedKid(returnedKid);
+          }
           const adminSession: DeviceSession = {
             role: "admin",
             parentName: chosen,
@@ -5989,6 +5996,7 @@ function App({
           onOpenActivityFeed={() => setShowActivityDrawer(true)}
           onSwitchToMinionMode={(kName) => {
             const target = kName || allKidsList[0] || "Sydney";
+            setLastInspectedKid(target);
             const parentAdmin = activeParentAdmin || deviceSession.parentName || "Thom";
             const kidSession: DeviceSession = {
               role: "kid",
@@ -6014,6 +6022,7 @@ function App({
           activitiesCount={activities.length}
           activeParentAdmin={activeParentAdmin}
           onSwitchParentAdmin={handleSwitchActiveAdmin}
+          lastInspectedKid={lastInspectedKid}
         />
 
         {/* Sunday Parent Inspection & Sign-off Modal */}
@@ -6108,6 +6117,7 @@ function App({
               setTimeout(() => setNotice(null), 4000);
             }}
             onSwitchToKid={(targetKid) => {
+              setLastInspectedKid(targetKid);
               const cur = getStoredDeviceSession();
               const parentAdmin = activeParentAdmin || cur.parentName || "Thom";
               const newSession: DeviceSession = {
@@ -7881,6 +7891,7 @@ function App({
             setTimeout(() => setNotice(null), 4000);
           }}
           onSwitchToKid={(targetKid) => {
+            setLastInspectedKid(targetKid);
             const cur = getStoredDeviceSession();
             const parentAdmin = activeParentAdmin || cur.parentName || "Thom";
             const newSession: DeviceSession = {

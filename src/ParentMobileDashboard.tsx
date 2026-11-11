@@ -93,6 +93,7 @@ interface ParentMobileDashboardProps {
   activitiesCount?: number;
   activeParentAdmin?: "Thom" | "Meghan";
   onSwitchParentAdmin?: (admin: "Thom" | "Meghan") => void;
+  lastInspectedKid?: string | null;
 }
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -124,7 +125,8 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   onToggleDesktopView,
   activitiesCount = 0,
   activeParentAdmin: activeParentAdminProp,
-  onSwitchParentAdmin
+  onSwitchParentAdmin,
+  lastInspectedKid
 }) => {
   const [internalAdmin, setInternalAdmin] = useState<"Thom" | "Meghan">(() => getStoredActiveParentAdmin());
   const currentAdmin = activeParentAdminProp || internalAdmin;
@@ -162,12 +164,25 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
 
   const activeDay = activeWeekDays[selectedDayIdx] || activeWeekDays[0];
 
-  // Accordion state for expanded kid chore lists (defaults to all expanded for quick parent glance)
+  // Accordion state for kid chore cards:
+  // - Minimized (all false) by default when first opening the Parent Command Hub
+  // - Retains state memory to keep the currently inspected kid's card maximized when returning from their page
   const [expandedKids, setExpandedKids] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
-    allKidsList.forEach(k => { init[k] = true; });
+    allKidsList.forEach(k => {
+      init[k] = Boolean(lastInspectedKid && k.toLowerCase() === lastInspectedKid.toLowerCase());
+    });
     return init;
   });
+
+  useEffect(() => {
+    if (lastInspectedKid) {
+      setExpandedKids(prev => ({
+        ...prev,
+        [lastInspectedKid]: true
+      }));
+    }
+  }, [lastInspectedKid]);
 
   const [expandedWeeklyChecklist, setExpandedWeeklyChecklist] = useState<boolean>(true);
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);

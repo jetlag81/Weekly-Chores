@@ -167,3 +167,4 @@ export function downloadAllowanceCsv(records?: AllowancePayoutRecord[]): void {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
+

@@ -90,10 +90,17 @@ function createShuffledIndices(length: number): number[] {
 let goodJobQueue: number[] = [];
 let lastPlayedGoodJobIndex: number | null = null;
 
+// State tracker for randomized, non-repeating Almost GIF queue
+let almostQueue: number[] = [];
+let lastPlayedAlmostIndex: number | null = null;
+
+// State tracker for randomized, non-repeating Meh GIF queue
+let mehQueue: number[] = [];
+let lastPlayedMehIndex: number | null = null;
+
 export function getRandomGoodJobGif(): string {
   if (goodJobQueue.length === 0) {
     goodJobQueue = createShuffledIndices(GOOD_JOB_GIFS.length);
-    // Prevent immediate back-to-back duplicate across reshuffle cycles
     if (goodJobQueue.length > 1 && goodJobQueue[0] === lastPlayedGoodJobIndex) {
       const temp = goodJobQueue[0];
       goodJobQueue[0] = goodJobQueue[1];
@@ -103,28 +110,64 @@ export function getRandomGoodJobGif(): string {
 
   const selectedIndex = goodJobQueue.shift()!;
   lastPlayedGoodJobIndex = selectedIndex;
-
-  const rawPath = GOOD_JOB_GIFS[selectedIndex];
-  return encodeURI(rawPath);
+  return encodeURI(GOOD_JOB_GIFS[selectedIndex]);
 }
 
 export function getRandomAlmostGif(): string {
-  const idx = Math.floor(Math.random() * ALMOST_GIFS.length);
-  return encodeURI(ALMOST_GIFS[idx]);
+  if (almostQueue.length === 0) {
+    almostQueue = createShuffledIndices(ALMOST_GIFS.length);
+    if (almostQueue.length > 1 && almostQueue[0] === lastPlayedAlmostIndex) {
+      const temp = almostQueue[0];
+      almostQueue[0] = almostQueue[1];
+      almostQueue[1] = temp;
+    }
+  }
+
+  const selectedIndex = almostQueue.shift()!;
+  lastPlayedAlmostIndex = selectedIndex;
+  return encodeURI(ALMOST_GIFS[selectedIndex]);
 }
 
 export function getRandomMehGif(): string {
-  const idx = Math.floor(Math.random() * MEH_GIFS.length);
-  return encodeURI(MEH_GIFS[idx]);
+  if (mehQueue.length === 0) {
+    mehQueue = createShuffledIndices(MEH_GIFS.length);
+    if (mehQueue.length > 1 && mehQueue[0] === lastPlayedMehIndex) {
+      const temp = mehQueue[0];
+      mehQueue[0] = mehQueue[1];
+      mehQueue[1] = temp;
+    }
+  }
+
+  const selectedIndex = mehQueue.shift()!;
+  lastPlayedMehIndex = selectedIndex;
+  return encodeURI(MEH_GIFS[selectedIndex]);
 }
 
-// Proactively preload the next few GIFs into browser cache so popups render instantly
+// Proactively preload GIFs into browser cache so popups render instantly
 export function preloadNextGoodJobGifs(count: number = 3): void {
   if (typeof window === "undefined") return;
   const targetIndices = goodJobQueue.slice(0, count);
   targetIndices.forEach(idx => {
     const img = new Image();
     img.src = encodeURI(GOOD_JOB_GIFS[idx]);
+  });
+}
+
+export function preloadNextAlmostGifs(count: number = 3): void {
+  if (typeof window === "undefined") return;
+  const targetIndices = almostQueue.slice(0, count);
+  targetIndices.forEach(idx => {
+    const img = new Image();
+    img.src = encodeURI(ALMOST_GIFS[idx]);
+  });
+}
+
+export function preloadNextMehGifs(count: number = 3): void {
+  if (typeof window === "undefined") return;
+  const targetIndices = mehQueue.slice(0, count);
+  targetIndices.forEach(idx => {
+    const img = new Image();
+    img.src = encodeURI(MEH_GIFS[idx]);
   });
 }
 

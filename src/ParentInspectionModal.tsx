@@ -22,13 +22,15 @@ import {
   ThumbsUp,
   Check,
   RotateCcw,
-  Wallet
+  Wallet,
+  Bell
 } from "lucide-react";
 import { playChoreCompletionSound } from "./firebaseSync";
 import { speakInspectionApproval, isSpeaking, stopSpeaking } from "./voiceSpeech";
 import { getChoreCanonicalKey } from "./choreUtils";
 import { saveAllowancePayout, type AllowancePayoutRecord } from "./allowanceLedger";
 import { AllowanceLedgerModal } from "./AllowanceLedgerModal";
+import { ParentNudgeModal } from "./ParentNudgeModal";
 
 interface ParentInspectionModalProps {
   isOpen: boolean;
@@ -114,6 +116,7 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
   });
 
   const [showLedgerModal, setShowLedgerModal] = useState(false);
+  const [nudgeModalTarget, setNudgeModalTarget] = useState<{ kid: string; type: "praise" | "nudge" } | null>(null);
 
   // Save room inspections when changed
   const handleToggleRoomInspection = (kidName: string) => {
@@ -318,6 +321,16 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={() => setNudgeModalTarget({ kid: allKidsList[0] || "Sydney", type: "nudge" })}
+              className="px-2.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="Send Nudge or Praise with Animated GIFs"
+            >
+              <Bell className="w-4 h-4 text-amber-200" />
+              <span className="hidden sm:inline">Nudge</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setShowLedgerModal(true)}
               className="px-2.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
               title="View Past Allowance Ledger & History"
@@ -472,28 +485,50 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
                       </div>
                     </div>
 
-                    {/* Room Inspection Pass / Fail Checkbox */}
-                    <button
-                      type="button"
-                      onClick={() => handleToggleRoomInspection(kidName)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer self-start sm:self-auto ${
-                        isRoomApproved
-                          ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                          : "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
-                      }`}
-                    >
-                      {isRoomApproved ? (
-                        <>
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                          <span>Room Inspected ✓</span>
-                        </>
-                      ) : (
-                        <>
-                          <Circle className="w-4 h-4 text-slate-400" />
-                          <span>Inspect Room</span>
-                        </>
-                      )}
-                    </button>
+                    {/* Room Inspection Pass / Fail Checkbox & Feedback Nudge Buttons */}
+                    <div className="flex items-center gap-1.5 self-start sm:self-auto flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleRoomInspection(kidName)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                          isRoomApproved
+                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                            : "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
+                        }`}
+                      >
+                        {isRoomApproved ? (
+                          <>
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span>Room Inspected ✓</span>
+                          </>
+                        ) : (
+                          <>
+                            <Circle className="w-4 h-4 text-slate-400" />
+                            <span>Inspect Room</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setNudgeModalTarget({ kid: kidName, type: "praise" })}
+                        className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition flex items-center gap-1 cursor-pointer"
+                        title="Send Praise (Good Job GIF)"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="hidden sm:inline">Praise</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setNudgeModalTarget({ kid: kidName, type: "nudge" })}
+                        className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 transition flex items-center gap-1 cursor-pointer"
+                        title="Send Nudge (Meh GIF)"
+                      >
+                        <Bell className="w-3.5 h-3.5 text-orange-600" />
+                        <span className="hidden sm:inline">Nudge</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Quick Inspection Checklist + Allowance Row */}
@@ -679,6 +714,17 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
           isOpen={showLedgerModal}
           onClose={() => setShowLedgerModal(false)}
           familyMembers={familyMembers}
+        />
+      )}
+
+      {/* Parent Remote Nudge & Feedback Modal */}
+      {nudgeModalTarget && (
+        <ParentNudgeModal
+          isOpen={!!nudgeModalTarget}
+          onClose={() => setNudgeModalTarget(null)}
+          allKidsList={allKidsList}
+          initialKid={nudgeModalTarget.kid}
+          initialType={nudgeModalTarget.type}
         />
       )}
     </div>

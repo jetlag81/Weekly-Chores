@@ -60,8 +60,15 @@ import { FirebaseSettingsModal } from "./src/FirebaseSettingsModal";
 import { InstallPwaModal } from "./src/InstallPwaModal";
 import { ParentInspectionModal } from "./src/ParentInspectionModal";
 import { AllowanceLedgerModal } from "./src/AllowanceLedgerModal";
+import { ParentNudgeModal } from "./src/ParentNudgeModal";
 import { GifCelebrationModal } from "./src/GifCelebrationModal";
-import { getRandomGoodJobGif, preloadNextGoodJobGifs } from "./src/gifCelebrations";
+import {
+  getRandomGoodJobGif,
+  getRandomAlmostGif,
+  preloadNextGoodJobGifs,
+  preloadNextAlmostGifs,
+  preloadNextMehGifs
+} from "./src/gifCelebrations";
 import { HouseholdActivityDrawer } from "./src/HouseholdActivityDrawer";
 import { ActivityToast } from "./src/ActivityToast";
 import {
@@ -1793,21 +1800,47 @@ function App({
   const [showPwaModal, setShowPwaModal] = useState(false);
   const [showInspectionModal, setShowInspectionModal] = useState(false);
   const [showAllowanceLedger, setShowAllowanceLedger] = useState(false);
+  const [showNudgeModal, setShowNudgeModal] = useState(false);
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
 
-  // Good Job GIF Celebration state
-  const [activeCelebrationGif, setActiveCelebrationGif] = useState(null);
-  const [celebrationDetails, setCelebrationDetails] = useState({ kidName: "", taskTitle: "" });
+  // GIF Celebration & Nudge state
+  const [activeCelebration, setActiveCelebration] = useState<{
+    gifUrl: string;
+    kidName: string;
+    taskTitle: string;
+    variant?: "good_job" | "almost" | "praise" | "nudge";
+    headline?: string;
+    message?: string;
+  } | null>(null);
 
   useEffect(() => {
     preloadNextGoodJobGifs(3);
+    preloadNextAlmostGifs(3);
+    preloadNextMehGifs(3);
   }, []);
 
-  const triggerGoodJobCelebration = (kidName, taskTitle) => {
-    const gif = getRandomGoodJobGif();
-    setActiveCelebrationGif(gif);
-    setCelebrationDetails({ kidName: kidName || "Kid", taskTitle: taskTitle || "Chore" });
-    preloadNextGoodJobGifs(3);
+  const triggerChoreCelebration = (kidName: string, taskTitle: string, isNearGoal: boolean = false, goalDescription?: string) => {
+    if (isNearGoal) {
+      const gif = getRandomAlmostGif();
+      setActiveCelebration({
+        gifUrl: gif,
+        kidName: kidName || "Kid",
+        taskTitle: taskTitle || "Chore",
+        variant: "almost",
+        headline: "So Close! 90% Goal Reached!",
+        message: goalDescription || "In the final stretch! Almost at 100%!"
+      });
+      preloadNextAlmostGifs(3);
+    } else {
+      const gif = getRandomGoodJobGif();
+      setActiveCelebration({
+        gifUrl: gif,
+        kidName: kidName || "Kid",
+        taskTitle: taskTitle || "Chore",
+        variant: "good_job"
+      });
+      preloadNextGoodJobGifs(3);
+    }
   };
 
   // Real-Time Household Activity State & Logging
@@ -3610,7 +3643,7 @@ function App({
     const newKidState = !currentKidsDone[kidName];
     if (newKidState) {
       playChoreCompletionSound();
-      triggerGoodJobCelebration(kidName, taskTitle || "Weekly Checklist");
+      triggerChoreCelebration(kidName, taskTitle || "Weekly Checklist");
       logHouseholdActivity({
         kidName,
         taskTitle: taskTitle || "Weekly Checklist",
@@ -4020,7 +4053,7 @@ function App({
     const newKidState = !prevKids[kidName];
     if (newKidState) {
       playChoreCompletionSound();
-      triggerGoodJobCelebration(kidName, taskTitle || "Chore");
+      triggerChoreCelebration(kidName, taskTitle || "Chore");
       logHouseholdActivity({
         kidName,
         taskTitle: taskTitle || "Chore",
@@ -5663,6 +5696,15 @@ function App({
               <DollarSign className="w-3.5 h-3.5 text-emerald-700" />
               <span>Allowance Ledger</span>
             </button>
+            <button
+              type="button"
+              onClick={() => setShowNudgeModal(true)}
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-orange-50 hover:bg-orange-100 text-orange-900 border border-orange-300 rounded-lg transition cursor-pointer shadow-2xs"
+              title="Send Remote Nudge (Meh GIF) or Praise (Good Job GIF) to Kids"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-orange-600" />
+              <span>Nudge & Feedback</span>
+            </button>
             {isSpeechSupported() && (
               <button
                 type="button"
@@ -6698,14 +6740,17 @@ function App({
           topPerformer={topPerformer}
         />
       )}
-      {/* Good Job GIF Chore Completion Celebration Popup */}
-      {activeCelebrationGif && (
+      {/* Chore Completion & Goal GIF Celebration Popup */}
+      {activeCelebration && (
         <GifCelebrationModal
-          isOpen={!!activeCelebrationGif}
-          gifUrl={activeCelebrationGif}
-          kidName={celebrationDetails.kidName}
-          taskTitle={celebrationDetails.taskTitle}
-          onClose={() => setActiveCelebrationGif(null)}
+          isOpen={!!activeCelebration}
+          gifUrl={activeCelebration.gifUrl}
+          kidName={activeCelebration.kidName}
+          taskTitle={activeCelebration.taskTitle}
+          variant={activeCelebration.variant}
+          headline={activeCelebration.headline}
+          message={activeCelebration.message}
+          onClose={() => setActiveCelebration(null)}
         />
       )}
       {/* Household Real-Time Activity Drawer */}
@@ -6735,6 +6780,15 @@ function App({
           isOpen={showAllowanceLedger}
           onClose={() => setShowAllowanceLedger(false)}
           familyMembers={familyMembers}
+        />
+      )}
+
+      {/* Parent Nudge & Feedback Modal */}
+      {showNudgeModal && (
+        <ParentNudgeModal
+          isOpen={showNudgeModal}
+          onClose={() => setShowNudgeModal(false)}
+          allKidsList={allKidsList}
         />
       )}
     </div>

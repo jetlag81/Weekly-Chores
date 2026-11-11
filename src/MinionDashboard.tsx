@@ -34,8 +34,15 @@ import {
 import { isStandalone, subscribeInstallable } from "./pwaManager";
 import { InstallPwaModal } from "./InstallPwaModal";
 import { ParentInspectionModal } from "./ParentInspectionModal";
-import { GifCelebrationModal } from "./GifCelebrationModal";
-import { getRandomGoodJobGif, preloadNextGoodJobGifs } from "./gifCelebrations";
+import { GifCelebrationModal, type GifModalVariant } from "./GifCelebrationModal";
+import {
+  getRandomGoodJobGif,
+  getRandomAlmostGif,
+  preloadNextGoodJobGifs,
+  preloadNextAlmostGifs,
+  preloadNextMehGifs
+} from "./gifCelebrations";
+import { getStoredParentNudges, markNudgeAcknowledged, type ParentNudgeEvent } from "./nudgeSystem";
 import { HouseholdActivityDrawer } from "./HouseholdActivityDrawer";
 import { ActivityToast } from "./ActivityToast";
 import { getStoredAllowanceLedger } from "./allowanceLedger";
@@ -166,19 +173,50 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
   const [activeNavTab, setActiveNavTab] = useState<"chores" | "leaderboard">("chores");
 
-  // Chore completion Good Job GIF celebration popup state
-  const [activeCelebrationGif, setActiveCelebrationGif] = useState<string | null>(null);
-  const [celebrationTaskTitle, setCelebrationTaskTitle] = useState<string>("");
+  // Interactive Chore Celebration, Goal "Almost", and Parent Nudge/Praise State
+  const [activeCelebration, setActiveCelebration] = useState<{
+    gifUrl: string;
+    taskTitle: string;
+    variant?: GifModalVariant;
+    headline?: string;
+    message?: string;
+    fromSender?: string;
+    nudgeId?: string;
+  } | null>(null);
 
   useEffect(() => {
     preloadNextGoodJobGifs(3);
+    preloadNextAlmostGifs(3);
+    preloadNextMehGifs(3);
   }, []);
 
-  const triggerGoodJobCelebration = (task: string) => {
-    const gif = getRandomGoodJobGif();
-    setActiveCelebrationGif(gif);
-    setCelebrationTaskTitle(task);
-    preloadNextGoodJobGifs(3);
+  const triggerCelebration = (task: string, isNearGoal: boolean = false, goalDescription?: string) => {
+    if (isNearGoal) {
+      const gif = getRandomAlmostGif();
+      setActiveCelebration({
+        gifUrl: gif,
+        taskTitle: task,
+        variant: "almost",
+        headline: "So Close! 90% Goal Reached!",
+        message: goalDescription || "You're in the final stretch! Almost at 100%!"
+      });
+      preloadNextAlmostGifs(3);
+    } else {
+      const gif = getRandomGoodJobGif();
+      setActiveCelebration({
+        gifUrl: gif,
+        taskTitle: task,
+        variant: "good_job"
+      });
+      preloadNextGoodJobGifs(3);
+    }
+  };
+
+  const handleCloseCelebration = () => {
+    if (activeCelebration?.nudgeId) {
+      markNudgeAcknowledged(activeCelebration.nudgeId);
+    }
+    setActiveCelebration(null);
   };
 
   // Household Real-Time Activity State
@@ -219,7 +257,53 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
           setActiveToastEvent(msg.event);
         }
       }
+
+      // Live Parent Feedback & Nudge Event
+      if (msg.type === "PARENT_NUDGE_SENT" && msg.nudge) {
+        const nudge: ParentNudgeEvent = msg.nudge;
+        if (nudge.targetKid?.toLowerCase() === currentKid.name.toLowerCase() && !nudge.acknowledged) {
+          if (nudge.type === "praise") {
+            playChoreCompletionSound();
+            try {
+              confetti({ particleCount: 70, spread: 75, origin: { y: 0.6 } });
+            } catch {}
+          } else {
+            playHouseholdRemoteChime();
+          }
+          setActiveCelebration({
+            gifUrl: nudge.gifUrl,
+            taskTitle: nudge.headline,
+            variant: nudge.type,
+            headline: nudge.headline,
+            message: nudge.message,
+            fromSender: nudge.fromParent,
+            nudgeId: nudge.id
+          });
+        }
+      }
     });
+  }, [currentKid.name]);
+
+  // Check for recent unacknowledged parent nudge on initial load
+  useEffect(() => {
+    const recentNudges = getStoredParentNudges();
+    const pending = recentNudges.find(
+      n =>
+        n.targetKid?.toLowerCase() === currentKid.name.toLowerCase() &&
+        !n.acknowledged &&
+        Date.now() - n.timestamp < 30 * 60 * 1000
+    );
+    if (pending) {
+      setActiveCelebration({
+        gifUrl: pending.gifUrl,
+        taskTitle: pending.headline,
+        variant: pending.type,
+        headline: pending.headline,
+        message: pending.message,
+        fromSender: pending.fromParent,
+        nudgeId: pending.id
+      });
+    }
   }, [currentKid.name]);
 
   useEffect(() => {
@@ -425,6 +509,25 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     );
 
     if (nextDone) {
+      // Check if approaching 90% goal milestone
+      const totalDaily = dailyChoresForKid.length;
+      const nextDoneCount = completedTodayCount + 1;
+      const dailyPct = totalDaily > 0 ? (nextDoneCount / totalDaily) * 100 : 0;
+
+      const totalMonthlyTarget = Math.max(1, monthlyGoalTarget);
+      const nextMonthlyCount = kidMonthlyCompletions + 1;
+      const monthlyPct = (nextMonthlyCount / totalMonthlyTarget) * 100;
+
+      const isNearDailyGoal = totalDaily >= 4 && ((dailyPct >= 85 && dailyPct < 100) || (totalDaily - nextDoneCount === 1));
+      const isNearMonthlyGoal = monthlyPct >= 88 && monthlyPct < 100;
+
+      const isNearGoal = isNearDailyGoal || isNearMonthlyGoal;
+      const goalNote = isNearMonthlyGoal
+        ? `90% Monthly Goal! ${nextMonthlyCount}/${monthlyGoalTarget} chores towards ${monthlyIncentive}!`
+        : isNearDailyGoal
+        ? `90% of today's chores done (${nextDoneCount}/${totalDaily})! Only 1 chore left!`
+        : undefined;
+
       // Confetti burst & cheerful melodic chime!
       playChoreCompletionSound();
       try {
@@ -437,7 +540,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         // Confetti fallback
       }
       speakChoreCelebration(currentKid.name, taskTitle || "Chore");
-      triggerGoodJobCelebration(taskTitle || "Chore");
+      triggerCelebration(taskTitle || "Chore", isNearGoal, goalNote);
       logHouseholdActivity({
         kidName: currentKid.name,
         taskTitle: taskTitle || "Chore",
@@ -457,6 +560,15 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const handleToggleWeekly = (choreIndex: number, taskTitle: string, currentDone: boolean) => {
     onToggleWeeklyKidChore(choreIndex, currentKid.name, taskTitle);
     if (!currentDone) {
+      const totalMonthlyTarget = Math.max(1, monthlyGoalTarget);
+      const nextMonthlyCount = kidMonthlyCompletions + 1;
+      const monthlyPct = (nextMonthlyCount / totalMonthlyTarget) * 100;
+      const isNearMonthlyGoal = monthlyPct >= 88 && monthlyPct < 100;
+
+      const goalNote = isNearMonthlyGoal
+        ? `90% Monthly Goal! ${nextMonthlyCount}/${monthlyGoalTarget} chores towards ${monthlyIncentive}!`
+        : "90% of weekly goal reached! Final push!";
+
       playChoreCompletionSound();
       try {
         confetti({
@@ -468,7 +580,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         // Confetti fallback
       }
       speakChoreCelebration(currentKid.name, taskTitle);
-      triggerGoodJobCelebration(taskTitle);
+      triggerCelebration(taskTitle, isNearMonthlyGoal, goalNote);
       logHouseholdActivity({
         kidName: currentKid.name,
         taskTitle,
@@ -1369,14 +1481,18 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         <InstallPwaModal onClose={() => setShowInstallModal(false)} />
       )}
 
-      {/* Randomized Good Job Chore Completion GIF Celebration Modal */}
-      {activeCelebrationGif && (
+      {/* Randomized Good Job / Almost 90% Goal / Parent Nudge & Praise GIF Modal */}
+      {activeCelebration && (
         <GifCelebrationModal
-          isOpen={!!activeCelebrationGif}
-          gifUrl={activeCelebrationGif}
+          isOpen={!!activeCelebration}
+          gifUrl={activeCelebration.gifUrl}
           kidName={currentKid.name}
-          taskTitle={celebrationTaskTitle}
-          onClose={() => setActiveCelebrationGif(null)}
+          taskTitle={activeCelebration.taskTitle}
+          variant={activeCelebration.variant}
+          headline={activeCelebration.headline}
+          message={activeCelebration.message}
+          fromSender={activeCelebration.fromSender}
+          onClose={handleCloseCelebration}
         />
       )}
 

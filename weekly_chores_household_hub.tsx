@@ -62,14 +62,6 @@ import { ParentInspectionModal } from "./src/ParentInspectionModal";
 import { AllowanceLedgerModal } from "./src/AllowanceLedgerModal";
 import { ParentNudgeModal } from "./src/ParentNudgeModal";
 import { ParentMobileDashboard } from "./src/ParentMobileDashboard";
-import { GifCelebrationModal } from "./src/GifCelebrationModal";
-import {
-  getRandomGoodJobGif,
-  getRandomAlmostGif,
-  preloadNextGoodJobGifs,
-  preloadNextAlmostGifs,
-  preloadNextMehGifs
-} from "./src/gifCelebrations";
 import { HouseholdActivityDrawer } from "./src/HouseholdActivityDrawer";
 import { ActivityToast } from "./src/ActivityToast";
 import {
@@ -1827,46 +1819,6 @@ function App({
       } catch {}
       return next;
     });
-  };
-
-  // GIF Celebration & Nudge state
-  const [activeCelebration, setActiveCelebration] = useState<{
-    gifUrl: string;
-    kidName: string;
-    taskTitle: string;
-    variant?: "good_job" | "almost" | "praise" | "nudge";
-    headline?: string;
-    message?: string;
-  } | null>(null);
-
-  useEffect(() => {
-    preloadNextGoodJobGifs(3);
-    preloadNextAlmostGifs(3);
-    preloadNextMehGifs(3);
-  }, []);
-
-  const triggerChoreCelebration = (kidName: string, taskTitle: string, isNearGoal: boolean = false, goalDescription?: string) => {
-    if (isNearGoal) {
-      const gif = getRandomAlmostGif();
-      setActiveCelebration({
-        gifUrl: gif,
-        kidName: kidName || "Kid",
-        taskTitle: taskTitle || "Chore",
-        variant: "almost",
-        headline: "So Close! 90% Goal Reached!",
-        message: goalDescription || "In the final stretch! Almost at 100%!"
-      });
-      preloadNextAlmostGifs(3);
-    } else {
-      const gif = getRandomGoodJobGif();
-      setActiveCelebration({
-        gifUrl: gif,
-        kidName: kidName || "Kid",
-        taskTitle: taskTitle || "Chore",
-        variant: "good_job"
-      });
-      preloadNextGoodJobGifs(3);
-    }
   };
 
   // Real-Time Household Activity State & Logging
@@ -3669,7 +3621,6 @@ function App({
     const newKidState = !currentKidsDone[kidName];
     if (newKidState) {
       playChoreCompletionSound();
-      triggerChoreCelebration(kidName, taskTitle || "Weekly Checklist");
       logHouseholdActivity({
         kidName,
         taskTitle: taskTitle || "Weekly Checklist",
@@ -4133,7 +4084,6 @@ function App({
 
     if (nextDone) {
       playChoreCompletionSound();
-      triggerChoreCelebration(kidName, choreTask || "Chore");
       logHouseholdActivity({
         kidName,
         taskTitle: choreTask || "Chore",
@@ -5734,20 +5684,6 @@ function App({
           />
         )}
 
-        {/* Chore Completion & Goal GIF Celebration Popup */}
-        {activeCelebration && (
-          <GifCelebrationModal
-            isOpen={!!activeCelebration}
-            gifUrl={activeCelebration.gifUrl}
-            kidName={activeCelebration.kidName}
-            taskTitle={activeCelebration.taskTitle}
-            variant={activeCelebration.variant}
-            headline={activeCelebration.headline}
-            message={activeCelebration.message}
-            onClose={() => setActiveCelebration(null)}
-          />
-        )}
-
         {/* Household Real-Time Activity Drawer */}
         <HouseholdActivityDrawer
           isOpen={showActivityDrawer}
@@ -6976,19 +6912,6 @@ function App({
           monthlyIncentive={monthlyIncentive}
           monthlyGoalTarget={monthlyGoalTarget || 25}
           topPerformer={topPerformer}
-        />
-      )}
-      {/* Chore Completion & Goal GIF Celebration Popup */}
-      {activeCelebration && (
-        <GifCelebrationModal
-          isOpen={!!activeCelebration}
-          gifUrl={activeCelebration.gifUrl}
-          kidName={activeCelebration.kidName}
-          taskTitle={activeCelebration.taskTitle}
-          variant={activeCelebration.variant}
-          headline={activeCelebration.headline}
-          message={activeCelebration.message}
-          onClose={() => setActiveCelebration(null)}
         />
       )}
       {/* Household Real-Time Activity Drawer */}

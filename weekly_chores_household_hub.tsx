@@ -1317,9 +1317,9 @@ function getSpecificKidForChore(title) {
   return match ? match[1].trim() : null;
 }
 function getBiWeeklyStatus(year, month, day) {
-  const target = new Date(year, month, day, 12, 0, 0);
-  const anchor = new Date(2026, 9, 18, 12, 0, 0);
-  const diffDays = Math.round((target.getTime() - anchor.getTime()) / (1e3 * 60 * 60 * 24));
+  const targetUtc = Date.UTC(year, month, day);
+  const anchorUtc = Date.UTC(2026, 9, 18);
+  const diffDays = Math.round((targetUtc - anchorUtc) / (1e3 * 60 * 60 * 24));
   const cycleIndex = (diffDays % 14 + 14) % 14;
   if (cycleIndex === 0) {
     return {
@@ -1676,6 +1676,19 @@ function parseDateKey(val) {
     return null;
   }
   const str = String(val).trim();
+  if (str.includes("/")) {
+    const parts = str.split("/").map(Number);
+    if (parts.length === 3 && !isNaN(parts[0]) && !isNaN(parts[1]) && !isNaN(parts[2])) {
+      if (parts[0] > 1000) {
+        // YYYY/MM/DD
+        return { year: parts[0], month: parts[1] - 1, day: parts[2] };
+      } else {
+        // MM/DD/YYYY
+        const y = parts[2] < 100 ? 2000 + parts[2] : parts[2];
+        return { year: y, month: parts[0] - 1, day: parts[1] };
+      }
+    }
+  }
   if (!str.includes("-")) {
     const num = Number(str);
     if (!isNaN(num) && num > 3e4 && num < 6e4) {
@@ -1752,9 +1765,7 @@ function generateWeekAssignments(startDateStr, choresList = DEFAULT_MASTER_CHORE
   const scheduleMap = {};
   const weekNum = Math.floor(parsedStart.day / 7);
 
-  const thu = weekDays[3] || weekDays[0];
-  const thuBwStatus = getBiWeeklyStatus(thu.year, thu.month, thu.day);
-  const areKidsInResidenceThisWeek = thuBwStatus.isFullStay || thuBwStatus.isDepartureDay;
+  const areKidsInResidenceThisWeek = isBiWeeklyInResidenceForWeek(weekDays);
   const availableKidsThisWeek = areKidsInResidenceThisWeek ? allKids : fullTimeKids;
   const availableWorkersThisWeek = areKidsInResidenceThisWeek ? allNonCasual : fullTimeRoster;
 
@@ -1821,14 +1832,27 @@ function generateWeekAssignments(startDateStr, choresList = DEFAULT_MASTER_CHORE
         assignedWho = wasteWorker;
       } else {
         const groupLower = String(cr.rotationGroup || "").toLowerCase();
-        if (groupLower.includes("parent")) {
+        if (groupLower.includes("parent") && !groupLower.includes("kid") && !groupLower.includes("non-casual") && !groupLower.includes("all")) {
           assignedWho = parents[(dayStartOffset + dailyCounter) % parents.length];
         } else if (groupLower.includes("kid")) {
           assignedWho = kids[(dayStartOffset + dailyCounter) % kids.length];
+        } else if (groupLower === "sydney" || groupLower === "cadence" || groupLower === "mason") {
+          if (groupLower === "sydney") {
+            assignedWho = "Sydney";
+          } else if (areKidsInResidence) {
+            assignedWho = groupLower === "cadence" ? "Cadence" : "Mason";
+          } else {
+            assignedWho = kids[(dayStartOffset + dailyCounter) % kids.length];
+          }
         } else {
           assignedWho = dailyRotation[(dayStartOffset + dailyCounter) % dailyRotation.length];
-          dailyCounter++;
         }
+        dailyCounter++;
+      }
+
+      // Strict safeguard: ensure Cadence or Mason can NEVER be assigned when not in residence on this date
+      if (!areKidsInResidence && (assignedWho === "Cadence" || assignedWho === "Mason")) {
+        assignedWho = kids[0] || "Sydney";
       }
       const choreKey = cr.index_ !== void 0 ? cr.index_ : 5 + choreIdx;
       const entry = {
@@ -1879,7 +1903,13 @@ function extractWeekFromSheet(sheetRows, startDateStr) {
       const doneCol = 2 + dayIdx * 2;
       const rawCellWho = r.row[whoCol] !== void 0 && r.row[whoCol] !== null ? String(r.row[whoCol]).trim() : "";
       const isPlaceholderOrDesc = rawCellWho.startsWith("-") || rawCellWho.startsWith("(") || rawCellWho.startsWith("SG:") || rawCellWho.startsWith("Done:") || rawCellWho.startsWith("Parent Initials") || rawCellWho.startsWith("___") || /^Who:\s*_+$/i.test(rawCellWho);
-      const cellWho = isPlaceholderOrDesc ? "" : rawCellWho.replace(/^Who:\s*/i, "").trim();
+      let cellWho = isPlaceholderOrDesc ? "" : rawCellWho.replace(/^Who:\s*/i, "").trim();
+      if (cellWho === "Cadence" || cellWho === "Mason") {
+        const bw = getBiWeeklyStatus(dayObj.year, dayObj.month, dayObj.day);
+        if (!bw.isFullStay && !bw.isDepartureDay) {
+          cellWho = "";
+        }
+      }
       const cellDone = r.row[doneCol] === true || String(r.row[doneCol]).toLowerCase() === "true";
       const entry = {
         who: cellWho,
@@ -3593,19 +3623,23 @@ function App({
         for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
           const d = new Date(parsedStart.year, parsedStart.month, parsedStart.day + dayOffset);
           const dKey = formatDateKey(d.getFullYear(), d.getMonth(), d.getDate());
-          const assignedWho = ((_b2 = (_a2 = newSchedule[dKey]) == null ? void 0 : _a2[cr.index_]) == null ? void 0 : _b2.who) || ((_d = (_c2 = newSchedule[dKey]) == null ? void 0 : _c2[cr.task]) == null ? void 0 : _d.who) || ((_f = (_e = newSchedule[dKey]) == null ? void 0 : _e[getChoreCanonicalKey(cr.task)]) == null ? void 0 : _f.who);
-          if (assignedWho) {
-            const whoCol = 1 + dayOffset * 2;
-            rowUpdates[whoCol] = assignedWho;
-            hasChanges = true;
-            if (isStreamlined && !weeklyAssignedWho) {
-              weeklyAssignedWho = assignedWho;
+          let assignedWho = ((_b2 = (_a2 = newSchedule[dKey]) == null ? void 0 : _a2[cr.index_]) == null ? void 0 : _b2.who) || ((_d = (_c2 = newSchedule[dKey]) == null ? void 0 : _c2[cr.task]) == null ? void 0 : _d.who) || ((_f = (_e = newSchedule[dKey]) == null ? void 0 : _e[getChoreCanonicalKey(cr.task)]) == null ? void 0 : _f.who) || "";
+          if (assignedWho === "Cadence" || assignedWho === "Mason") {
+            const bw = getBiWeeklyStatus(d.getFullYear(), d.getMonth(), d.getDate());
+            if (!bw.isFullStay && !bw.isDepartureDay) {
+              assignedWho = "";
             }
+          }
+          const whoCol = 1 + dayOffset * 2;
+          rowUpdates[whoCol] = assignedWho;
+          hasChanges = true;
+          if (isStreamlined && assignedWho && !weeklyAssignedWho) {
+            weeklyAssignedWho = assignedWho;
           }
         }
 
-        if (isStreamlined && weeklyAssignedWho) {
-          rowUpdates[9] = `Who: ${weeklyAssignedWho}`;
+        if (isStreamlined) {
+          rowUpdates[9] = weeklyAssignedWho ? `Who: ${weeklyAssignedWho}` : "Who: _____________________";
           hasChanges = true;
 
           editsPatch[cr.index_] = {
@@ -3785,8 +3819,18 @@ function App({
     ) : null;
 
     if (s && (s.done !== undefined || s.who !== undefined || (s.kidsDone && Object.keys(s.kidsDone).length > 0))) {
+      let resolvedWho = s.who !== void 0 && s.who !== null ? String(s.who) : "";
+      if (resolvedWho === "Cadence" || resolvedWho === "Mason") {
+        const pDate = parseDateKey(dateKey);
+        if (pDate) {
+          const bw = getBiWeeklyStatus(pDate.year, pDate.month, pDate.day);
+          if (!bw.isFullStay && !bw.isDepartureDay) {
+            resolvedWho = "";
+          }
+        }
+      }
       return {
-        who: s.who !== void 0 && s.who !== null ? String(s.who) : "",
+        who: resolvedWho,
         done: s.done !== undefined ? !!s.done : undefined,
         kidsDone: s.kidsDone || {},
         hasExplicitRecord: true
@@ -3815,6 +3859,12 @@ function App({
             const rawW = String(row[whoCol]).trim();
             const isDesc = rawW.startsWith("-") || rawW.startsWith("(") || rawW.startsWith("SG:") || rawW.startsWith("Done:") || rawW.startsWith("Parent Initials") || rawW.startsWith("___") || /^Who:\s*_+$/i.test(rawW);
             fallbackWho = isDesc ? "" : rawW.replace(/^Who:\s*/i, "").trim();
+            if (fallbackWho === "Cadence" || fallbackWho === "Mason") {
+              const bw = getBiWeeklyStatus(parsedTarget.year, parsedTarget.month, parsedTarget.day);
+              if (!bw.isFullStay && !bw.isDepartureDay) {
+                fallbackWho = "";
+              }
+            }
           }
           if (row[doneCol] !== undefined && row[doneCol] !== null) {
             fallbackDone = row[doneCol] === true || String(row[doneCol]).toLowerCase() === "true";
@@ -4710,7 +4760,13 @@ function App({
             const whoCol = 1 + dayOffset * 2;
             const doneCol = 2 + dayOffset * 2;
             const rawWho = (_a3 = cr.row) == null ? void 0 : _a3[whoCol];
-            const whoVal = rawWho !== void 0 && rawWho !== null ? String(rawWho) : "";
+            let whoVal = rawWho !== void 0 && rawWho !== null ? String(rawWho).trim() : "";
+            if (whoVal === "Cadence" || whoVal === "Mason") {
+              const bw = getBiWeeklyStatus(d.year, d.month, d.day);
+              if (!bw.isFullStay && !bw.isDepartureDay) {
+                whoVal = "";
+              }
+            }
             const doneVal = ((_b2 = cr.row) == null ? void 0 : _b2[doneCol]) === true || String((_c2 = cr.row) == null ? void 0 : _c2[doneCol]).toLowerCase() === "true";
             next[d.dateKey][cr.index_] = {
               who: whoVal,
@@ -5376,7 +5432,6 @@ function App({
 
     calendarWeeks.forEach(week => {
       week.forEach(dayObj => {
-        if (!dayObj.isCurrentMonth) return;
         const dKey = dayObj.dateKey;
         if (!updated[dKey]) updated[dKey] = {};
         const biWeeklyStatus = getBiWeeklyStatus(dayObj.year, dayObj.month, dayObj.day);
@@ -5509,9 +5564,12 @@ function App({
             };
             return;
           }
-          if (groupLower === "kids" && kidsWorkers.length > 0) {
-            const kidAssignee = kidsWorkers[(dayStartOffset + choreAssignCounter) % kidsWorkers.length];
+          if ((groupLower === "kids" || groupLower.includes("kid")) && kidsWorkers.length > 0) {
+            let kidAssignee = kidsWorkers[(dayStartOffset + choreAssignCounter) % kidsWorkers.length];
             choreAssignCounter++;
+            if (!areKidsInResidence && (kidAssignee === "Cadence" || kidAssignee === "Mason")) {
+              kidAssignee = kidsWorkers.find(k => k !== "Cadence" && k !== "Mason") || "Sydney";
+            }
             updated[dKey][cr.index_] = {
               who: kidAssignee,
               done: current.done,
@@ -5519,8 +5577,11 @@ function App({
             };
             return;
           }
-          const assignedPerson = activeWorkers[(dayStartOffset + choreAssignCounter) % activeWorkers.length];
+          let assignedPerson = activeWorkers[(dayStartOffset + choreAssignCounter) % activeWorkers.length];
           choreAssignCounter++;
+          if (!areKidsInResidence && (assignedPerson === "Cadence" || assignedPerson === "Mason")) {
+            assignedPerson = kidsWorkers.find(k => k !== "Cadence" && k !== "Mason") || activeWorkers.find(k => k !== "Cadence" && k !== "Mason") || "Sydney";
+          }
           updated[dKey][cr.index_] = {
             who: assignedPerson,
             done: current.done,
@@ -5555,21 +5616,25 @@ function App({
 
             for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
               const d = week[dayOffset];
-              if (d && ((_a2 = updated[d.dateKey]) == null ? void 0 : _a2[cr.index_])) {
-                const assignedWho = updated[d.dateKey][cr.index_].who || "";
-                if (assignedWho) {
-                  const whoCol = 1 + dayOffset * 2;
-                  rowUpdates[whoCol] = assignedWho;
-                  hasChanges = true;
-                  if (isStreamlined && !weeklyAssignedWho) {
-                    weeklyAssignedWho = assignedWho;
+              let assignedWho = (d && updated[d.dateKey]?.[cr.index_]?.who) || "";
+              if (assignedWho === "Cadence" || assignedWho === "Mason") {
+                if (d) {
+                  const bw = getBiWeeklyStatus(d.year, d.month, d.day);
+                  if (!bw.isFullStay && !bw.isDepartureDay) {
+                    assignedWho = "";
                   }
                 }
               }
+              const whoCol = 1 + dayOffset * 2;
+              rowUpdates[whoCol] = assignedWho;
+              hasChanges = true;
+              if (isStreamlined && assignedWho && !weeklyAssignedWho) {
+                weeklyAssignedWho = assignedWho;
+              }
             }
 
-            if (isStreamlined && weeklyAssignedWho) {
-              rowUpdates[9] = `Who: ${weeklyAssignedWho}`;
+            if (isStreamlined) {
+              rowUpdates[9] = weeklyAssignedWho ? `Who: ${weeklyAssignedWho}` : "Who: _____________________";
               hasChanges = true;
 
               editsPatch[cr.index_] = {
@@ -6904,11 +6969,17 @@ function App({
             const editRow = ((_a3 = choreEdits[cr.index_]) == null ? void 0 : _a3.row) || (taskTitle ? (_b3 = choreEdits[taskTitle.toLowerCase().trim()]) == null ? void 0 : _b3.row : null);
             const curRowWho = (editRow == null ? void 0 : editRow[whoCol]) !== void 0 ? editRow[whoCol] : (_c2 = cr.row) == null ? void 0 : _c2[whoCol];
             const curRowDone = (editRow == null ? void 0 : editRow[doneCol]) !== void 0 ? editRow[doneCol] : (_d = cr.row) == null ? void 0 : _d[doneCol];
-            const whoVal = (cellStatus && cellStatus.who !== undefined && cellStatus.who !== "")
+            let whoVal = (cellStatus && cellStatus.who !== undefined && cellStatus.who !== "")
               ? String(cellStatus.who).trim()
               : curRowWho !== void 0 && curRowWho !== null
                 ? String(curRowWho).trim()
                 : "";
+            if (whoVal === "Cadence" || whoVal === "Mason") {
+              const bw = getBiWeeklyStatus(colDate.getFullYear(), colDate.getMonth(), colDate.getDate());
+              if (!bw.isFullStay && !bw.isDepartureDay) {
+                whoVal = "";
+              }
+            }
             const isDone = (cellStatus && cellStatus.hasExplicitRecord)
               ? !!cellStatus.done
               : curRowDone !== void 0 && curRowDone !== null

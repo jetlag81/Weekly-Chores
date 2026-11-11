@@ -349,6 +349,59 @@ export function subscribeToFirestoreSchedule(
   }
 }
 
+// Sync Kid Reward & Digital Payout profile to Firestore
+export async function syncKidRewardProfileToFirestore(
+  householdId: string,
+  profile: Record<string, any>
+): Promise<void> {
+  const { db } = initFirebase();
+  if (!db || !profile || !profile.kidName) return;
+
+  try {
+    const cleanKid = String(profile.kidName).trim().toLowerCase();
+    const rewardRef = doc(db, "households", householdId, "rewards", cleanKid);
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2500));
+    await Promise.race([
+      setDoc(rewardRef, { ...profile, lastUpdated: profile.lastUpdated || Date.now() }, { merge: true }),
+      timeoutPromise
+    ]);
+  } catch (err) {
+    console.warn("Firestore reward profile sync write skipped or timed out:", err);
+  }
+}
+
+// Subscribe to real-time Firestore reward profile updates
+export function subscribeToFirestoreRewardProfiles(
+  householdId: string,
+  onRemoteRewardUpdate: (profile: Record<string, any>) => void
+): Unsubscribe | null {
+  const { db } = initFirebase();
+  if (!db) return null;
+
+  try {
+    const rewardsCol = collection(db, "households", householdId, "rewards");
+    return onSnapshot(
+      rewardsCol,
+      snapshot => {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === "added" || change.type === "modified") {
+            const data = change.doc.data() || {};
+            if (data && data.kidName) {
+              onRemoteRewardUpdate(data);
+            }
+          }
+        });
+      },
+      err => {
+        console.warn("Firestore rewards subscription error:", err);
+      }
+    );
+  } catch (err) {
+    console.warn("Could not attach Firestore rewards listener:", err);
+    return null;
+  }
+}
+
 // Manage Invites (Stored in Firestore when connected, fallback to localStorage)
 export async function createKidInvite(kidName: string, householdId: string): Promise<HouseholdInvite> {
   const code = generateKidInviteCode();
@@ -633,7 +686,8 @@ export function subscribeToRealtimeSync(
       e.key === "weekly_chores_month_schedule" ||
       e.key === "weekly-chores-config" ||
       e.key === "weekly_chores_photo_requests_v1" ||
-      e.key === "weekly_chores_photo_proofs_v1"
+      e.key === "weekly_chores_photo_proofs_v1" ||
+      e.key === "weekly_chores_kid_reward_profiles_v1"
     ) {
       onUpdate({ type: "STORAGE_SYNC", key: e.key });
     }

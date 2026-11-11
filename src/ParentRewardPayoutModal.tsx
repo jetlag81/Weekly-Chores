@@ -27,11 +27,13 @@ import {
   saveKidRewardProfile,
   getStoredRewardRegion,
   saveStoredRewardRegion,
+  fetchRewardProfilesFromServer,
   type KidRewardProfile,
   type RewardRegion,
   type RewardPlatformConfig
 } from "./rewardAccounts";
 import { updateKidPayoutPayment, getStoredAllowanceLedger } from "./allowanceLedger";
+import { subscribeToRealtimeSync } from "./firebaseSync";
 
 interface ParentRewardPayoutModalProps {
   isOpen: boolean;
@@ -76,6 +78,74 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
     }
   }, [isOpen, initialKid, allKidsList]);
 
+  // Real-time synchronization across windows, tabs, and browsers (Chrome <-> Edge)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Immediately fetch latest from server bridge on open
+    fetchRewardProfilesFromServer().then(profiles => {
+      if (profiles) {
+        const p = getKidRewardProfile(selectedKid);
+        setProfile(p);
+      }
+    });
+
+    const handleRewardUpdate = (e: any) => {
+      const detail = e.detail;
+      if (!detail) return;
+      if (detail.kidName) {
+        if (String(detail.kidName).toLowerCase().trim() === selectedKid.toLowerCase().trim()) {
+          setProfile(detail);
+        }
+      } else {
+        const p = getKidRewardProfile(selectedKid);
+        setProfile(p);
+      }
+    };
+
+    window.addEventListener("household_reward_profile_updated", handleRewardUpdate);
+
+    const unsubRealtime = subscribeToRealtimeSync((msg: any) => {
+      if (!msg) return;
+      if (msg.type === "REWARD_PROFILE_UPDATED" && msg.profile) {
+        if (String(msg.profile.kidName || "").toLowerCase().trim() === selectedKid.toLowerCase().trim()) {
+          setProfile(msg.profile);
+        }
+      } else if (msg.type === "STORAGE_SYNC" && msg.key === "weekly_chores_kid_reward_profiles_v1") {
+        const p = getKidRewardProfile(selectedKid);
+        setProfile(p);
+      }
+    });
+
+    // Cross-browser active bridge polling while parent modal is open (1.5s interval)
+    const pollInterval = setInterval(() => {
+      fetchRewardProfilesFromServer().then(profiles => {
+        if (profiles) {
+          const p = getKidRewardProfile(selectedKid);
+          setProfile(prev => {
+            if ((p.lastUpdated || 0) > (prev.lastUpdated || 0)) {
+              return p;
+            }
+            if (
+              JSON.stringify(p.platforms) !== JSON.stringify(prev.platforms) ||
+              p.topWish !== prev.topWish ||
+              p.targetGoalAmount !== prev.targetGoalAmount
+            ) {
+              return p;
+            }
+            return prev;
+          });
+        }
+      });
+    }, 1500);
+
+    return () => {
+      window.removeEventListener("household_reward_profile_updated", handleRewardUpdate);
+      unsubRealtime();
+      clearInterval(pollInterval);
+    };
+  }, [isOpen, selectedKid]);
+
   const handleSelectKid = (kid: string) => {
     setSelectedKid(kid);
     const p = getKidRewardProfile(kid);
@@ -84,6 +154,11 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
     setRecordSuccess(null);
     setNotice(null);
     setEditingPlatformId(null);
+    fetchRewardProfilesFromServer().then(profiles => {
+      if (profiles) {
+        setProfile(getKidRewardProfile(kid));
+      }
+    });
   };
 
   const handleSwitchRegion = (newRegion: RewardRegion) => {

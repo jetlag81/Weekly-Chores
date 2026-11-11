@@ -21,6 +21,7 @@ import {
   REWARD_PLATFORMS,
   getKidRewardProfile,
   saveKidRewardProfile,
+  fetchRewardProfilesFromServer,
   type KidRewardProfile
 } from "./rewardAccounts";
 
@@ -52,6 +53,16 @@ export const KidRewardAccountsModal: React.FC<KidRewardAccountsModalProps> = ({
       setGoalAmount(p.targetGoalAmount || 15);
       setPlatforms({ ...(p.platforms || {}) });
       setSavedSuccess(false);
+
+      fetchRewardProfilesFromServer().then(profiles => {
+        if (profiles) {
+          const fresh = getKidRewardProfile(kidName);
+          setProfile(fresh);
+          setTopWish(fresh.topWish || "");
+          setGoalAmount(fresh.targetGoalAmount || 15);
+          setPlatforms({ ...(fresh.platforms || {}) });
+        }
+      });
     }
   }, [isOpen, kidName]);
 

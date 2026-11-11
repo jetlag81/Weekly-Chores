@@ -314,7 +314,62 @@ export default defineConfig({
           choreUpdates: [] as any[],
           choreSeq: 0,
           lastChoreUpdate: Date.now(),
+          rewardProfiles: {} as Record<string, any>,
+          lastRewardUpdate: Date.now(),
         };
+
+        server.middlewares.use('/__sync-rewards', (req, res) => {
+          res.setHeader('Content-Type', 'application/json');
+          if (req.method === 'POST') {
+            let body = '';
+            req.on('data', chunk => { body += chunk; });
+            req.on('end', () => {
+              try {
+                const data = JSON.parse(body || '{}');
+                if (data.action === 'SAVE' && data.profile && data.profile.kidName) {
+                  const search = String(data.profile.kidName).toLowerCase().trim();
+                  for (const k of Object.keys(syncState.rewardProfiles)) {
+                    if (k.toLowerCase().trim() === search && k !== data.profile.kidName) {
+                      delete syncState.rewardProfiles[k];
+                    }
+                  }
+                  syncState.rewardProfiles[data.profile.kidName] = data.profile;
+                  syncState.lastRewardUpdate = Date.now();
+                } else if (data.action === 'SAVE_ALL' && data.profiles) {
+                  for (const [k, p] of Object.entries(data.profiles)) {
+                    const profile = p as any;
+                    if (profile && profile.kidName) {
+                      const search = String(profile.kidName).toLowerCase().trim();
+                      for (const existingKey of Object.keys(syncState.rewardProfiles)) {
+                        if (existingKey.toLowerCase().trim() === search && existingKey !== profile.kidName) {
+                          delete syncState.rewardProfiles[existingKey];
+                        }
+                      }
+                      const existing = syncState.rewardProfiles[profile.kidName];
+                      if (!existing || (profile.lastUpdated || 0) >= (existing.lastUpdated || 0)) {
+                        syncState.rewardProfiles[profile.kidName] = profile;
+                      }
+                    }
+                  }
+                  syncState.lastRewardUpdate = Date.now();
+                } else if (data.action === 'CLEAR') {
+                  syncState.rewardProfiles = {};
+                  syncState.lastRewardUpdate = Date.now();
+                }
+                res.end(JSON.stringify({ ok: true, profiles: syncState.rewardProfiles, lastUpdated: syncState.lastRewardUpdate }));
+              } catch (e: any) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ ok: false, error: e?.message }));
+              }
+            });
+          } else {
+            res.end(JSON.stringify({
+              ok: true,
+              profiles: syncState.rewardProfiles,
+              lastUpdated: syncState.lastRewardUpdate
+            }));
+          }
+        });
 
         server.middlewares.use('/__sync-invites', (req, res) => {
           res.setHeader('Content-Type', 'application/json');

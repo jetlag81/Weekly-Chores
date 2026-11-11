@@ -3,6 +3,12 @@
 // shopping (Amazon Wishlist, Apple ID), and wallet accounts so parents can send
 // digital gift cards, top-ups, and wish items as chore rewards.
 
+import {
+  broadcastLocalUpdate,
+  getStoredDeviceSession,
+  syncKidRewardProfileToFirestore
+} from "./firebaseSync";
+
 export type RewardRegion = "US" | "CA";
 
 const STORAGE_KEY_REWARD_REGION = "weekly_chores_reward_store_region";
@@ -206,7 +212,7 @@ export interface KidRewardProfile {
   lastUpdated: number;
 }
 
-const STORAGE_KEY_REWARD_PROFILES = "weekly_chores_kid_reward_profiles_v1";
+export const STORAGE_KEY_REWARD_PROFILES = "weekly_chores_kid_reward_profiles_v1";
 
 // Default placeholder profiles for Sydney, Cadence, and Mason
 export const DEFAULT_KID_REWARD_PROFILES: Record<string, KidRewardProfile> = {
@@ -281,8 +287,14 @@ export function getStoredKidRewardProfiles(): Record<string, KidRewardProfile> {
 
 export function getKidRewardProfile(kidName: string): KidRewardProfile {
   const all = getStoredKidRewardProfiles();
-  if (all[kidName]) {
-    return all[kidName];
+  const search = String(kidName || "").trim().toLowerCase();
+  const matchedKey = Object.keys(all).find(k => k.trim().toLowerCase() === search);
+  if (matchedKey && all[matchedKey]) {
+    const prof = all[matchedKey];
+    return {
+      ...prof,
+      platforms: prof.platforms || {}
+    };
   }
   return {
     kidName,
@@ -297,25 +309,109 @@ export function saveKidRewardProfile(profile: KidRewardProfile): void {
   if (typeof window === "undefined") return;
   try {
     const all = getStoredKidRewardProfiles();
-    all[profile.kidName] = {
+    const search = String(profile.kidName || "").trim().toLowerCase();
+
+    // Clean up any mismatched casing duplicates
+    for (const key of Object.keys(all)) {
+      if (key.trim().toLowerCase() === search && key !== profile.kidName) {
+        delete all[key];
+      }
+    }
+
+    const updated: KidRewardProfile = {
       ...profile,
+      platforms: profile.platforms || {},
       lastUpdated: Date.now()
     };
+    all[profile.kidName] = updated;
     localStorage.setItem(STORAGE_KEY_REWARD_PROFILES, JSON.stringify(all));
 
-    // Broadcast update across windows & tabs
-    if ("BroadcastChannel" in window) {
-      try {
-        const bc = new BroadcastChannel("weekly_chores_broadcast_v1");
-        bc.postMessage({
-          type: "REWARD_PROFILE_UPDATED",
-          profile: all[profile.kidName],
-          timestamp: Date.now()
-        });
-      } catch {}
-    }
+    // 1. Same-window custom event for instant local modal updates
+    window.dispatchEvent(
+      new CustomEvent("household_reward_profile_updated", { detail: updated })
+    );
+
+    // 2. Realtime BroadcastChannel & local sync
+    broadcastLocalUpdate({
+      type: "REWARD_PROFILE_UPDATED",
+      profile: updated,
+      timestamp: updated.lastUpdated
+    });
+
+    // 3. Local dev server cross-browser bridge (Chrome <-> Edge communication)
+    fetch("/__sync-rewards", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "SAVE", profile: updated })
+    }).catch(() => {});
+
+    // 4. Cloud Firebase Firestore sync
+    const session = getStoredDeviceSession();
+    syncKidRewardProfileToFirestore(session.householdId || "household_family_hub", updated).catch(() => {});
   } catch (err) {
     console.warn("Could not save kid reward profile:", err);
   }
+}
+
+// Pull latest profiles from dev server cross-browser bridge and merge locally
+export async function fetchRewardProfilesFromServer(): Promise<Record<string, KidRewardProfile> | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const res = await fetch("/__sync-rewards");
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (json.ok && json.profiles && typeof json.profiles === "object") {
+      const serverProfiles = json.profiles as Record<string, KidRewardProfile>;
+      const local = getStoredKidRewardProfiles();
+      let changed = false;
+
+      for (const [k, sProfile] of Object.entries(serverProfiles)) {
+        if (!sProfile || !sProfile.kidName) continue;
+        const sSearch = String(sProfile.kidName).trim().toLowerCase();
+        const localKey = Object.keys(local).find(lk => lk.trim().toLowerCase() === sSearch);
+        const localProfile = localKey ? local[localKey] : null;
+
+        if (!localProfile || (sProfile.lastUpdated || 0) > (localProfile.lastUpdated || 0)) {
+          if (localKey && localKey !== sProfile.kidName) {
+            delete local[localKey];
+          }
+          local[sProfile.kidName] = sProfile;
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        localStorage.setItem(STORAGE_KEY_REWARD_PROFILES, JSON.stringify(local));
+        window.dispatchEvent(
+          new CustomEvent("household_reward_profile_updated", { detail: local })
+        );
+      }
+      return local;
+    }
+  } catch {}
+  return null;
+}
+
+// Background auto-sync bootstrap between local storage and dev server bridge
+if (typeof window !== "undefined") {
+  setTimeout(() => {
+    fetch("/__sync-rewards")
+      .then(res => res.json())
+      .then(data => {
+        const local = getStoredKidRewardProfiles();
+        if (!data.profiles || Object.keys(data.profiles).length === 0) {
+          // Dev server is fresh: push local profiles to seed server bridge
+          fetch("/__sync-rewards", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "SAVE_ALL", profiles: local })
+          }).catch(() => {});
+        } else {
+          // Dev server has profiles: fetch and merge into local browser
+          fetchRewardProfilesFromServer();
+        }
+      })
+      .catch(() => {});
+  }, 150);
 }
 

@@ -383,8 +383,38 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         }
         setPhotoRequestsVersion(v => v + 1);
       }
+
+      // Realtime Reward Profile Updates
+      if (msg.type === "REWARD_PROFILE_UPDATED" && msg.profile) {
+        if (String(msg.profile.kidName || "").toLowerCase().trim() === (currentKid.name || kidName).toLowerCase().trim()) {
+          setRewardProfile(msg.profile);
+        }
+      } else if (msg.type === "STORAGE_SYNC" && msg.key === "weekly_chores_kid_reward_profiles_v1") {
+        setRewardProfile(getKidRewardProfile(currentKid.name || kidName));
+      }
     });
-  }, [currentKid.name]);
+  }, [currentKid.name, kidName]);
+
+  // Keep rewardProfile in sync when currentKid changes or when profile is updated
+  useEffect(() => {
+    setRewardProfile(getKidRewardProfile(currentKid.name || kidName));
+  }, [currentKid.name, kidName]);
+
+  useEffect(() => {
+    const handleRewardUpdate = (e: any) => {
+      const detail = e.detail;
+      if (!detail) return;
+      if (detail.kidName) {
+        if (String(detail.kidName).toLowerCase().trim() === (currentKid.name || kidName).toLowerCase().trim()) {
+          setRewardProfile(detail);
+        }
+      } else {
+        setRewardProfile(getKidRewardProfile(currentKid.name || kidName));
+      }
+    };
+    window.addEventListener("household_reward_profile_updated", handleRewardUpdate);
+    return () => window.removeEventListener("household_reward_profile_updated", handleRewardUpdate);
+  }, [currentKid.name, kidName]);
 
   const activeDateKey = formatDateKey(
     activeDate.getFullYear(),

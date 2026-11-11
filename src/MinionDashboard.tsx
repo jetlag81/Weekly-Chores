@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { isStandalone, subscribeInstallable } from "./pwaManager";
 import { InstallPwaModal } from "./InstallPwaModal";
+import { SiblingChoreDetailModal } from "./SiblingChoreDetailModal";
 import { HouseholdSettingsModal, type SettingsTab } from "./HouseholdSettingsModal";
 import { ParentInspectionModal } from "./ParentInspectionModal";
 import { GifCelebrationModal, type GifModalVariant } from "./GifCelebrationModal";
@@ -184,6 +185,11 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>("appearance");
   const [rewardProfile, setRewardProfile] = useState<KidRewardProfile>(() => getKidRewardProfile(kidName));
+  const [inspectingSibling, setInspectingSibling] = useState<{
+    name: string;
+    color?: string;
+    id?: string;
+  } | null>(null);
 
   // Interactive Chore Celebration, Goal "Almost", and Parent Nudge/Praise State
   const [activeCelebration, setActiveCelebration] = useState<{
@@ -577,6 +583,69 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     return { done, total, allDone: total > 0 && done === total };
   };
 
+  const getMemberChoresForDay = (memberName: string, dateKey: string) => {
+    const dayChores = monthSchedule[dateKey] || {};
+    const list: Array<{
+      task: string;
+      choreIndex: number;
+      done: boolean;
+      timeOfDay: string;
+      category?: string;
+      points?: number;
+    }> = [];
+
+    hubMasterChores.forEach((chore, idx) => {
+      const f = String(chore.frequency || "").toLowerCase();
+      const isDaily = f.includes("daily") || (!f.includes("bi") && !f.includes("once") && !f.includes("week"));
+      if (!isDaily) return;
+
+      const cKey = getChoreCanonicalKey(chore.task);
+      const norm = normalizeTaskName(chore.task);
+
+      const statusFromProp = getChoreStatus ? getChoreStatus(dateKey, chore.index_, chore.task) : null;
+      const choreStatus = (statusFromProp && (statusFromProp.hasExplicitRecord || statusFromProp.who || statusFromProp.done))
+        ? statusFromProp
+        : (cKey ? dayChores[cKey] : null) ||
+          dayChores[chore.index_] ||
+          (chore.task ? dayChores[chore.task] : null) ||
+          (chore.task ? dayChores[chore.task.toLowerCase().trim()] : null) ||
+          (norm ? dayChores[norm] : null) || {};
+
+      const who = choreStatus.who || "";
+      const isShared = (chore.assignedTo || []).includes("All") || (chore.assignedTo || []).length > 1;
+      const isDone = isShared && choreStatus.kidsDone ? !!choreStatus.kidsDone[memberName] : !!choreStatus.done;
+
+      const mem = familyMembers.find(f => f.name.toLowerCase() === memberName.toLowerCase());
+      const memType = mem?.type;
+
+      const isDirectlyAssigned = who.toLowerCase() === memberName.toLowerCase();
+      const isGroupAssigned =
+        who === "All Kids" ||
+        who === "Each Child" ||
+        (who === "Non-Casual" && memType !== "casual") ||
+        (who === "All Non-Casual" && memType !== "casual") ||
+        (isShared && ((chore.assignedTo || []).includes("All") || (chore.assignedTo || []).includes(memberName)));
+
+      if (isDirectlyAssigned || isGroupAssigned || isDone) {
+        list.push({
+          task: chore.task || "Chore",
+          choreIndex: chore.index_ !== undefined ? chore.index_ : idx,
+          done: isDone,
+          timeOfDay: chore.timeOfDay || "Anytime",
+          category: chore.category,
+          points: chore.points || 1
+        });
+      }
+    });
+
+    list.sort((a, b) => {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return a.choreIndex - b.choreIndex;
+    });
+
+    return list;
+  };
+
   const getKidCompletionForDay = (dateKey: string) => {
     return getMemberCompletionForDay(currentKid.name, dateKey);
   };
@@ -763,7 +832,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         </div>
       </header>
 
-      {/* Kid Pages Segmented Switcher (Each Kid Has Their Own Dedicated Page) */}
+      {/* Sibling Chore Status Pill Bar (Informational Check-In Only - Does NOT Switch Minion Mode) */}
       {kidMembers.length > 1 && (
         <div className="w-full max-w-xl mx-auto px-3 sm:px-4 pt-3 pb-0.5 overflow-hidden">
           <div className="flex items-center gap-1 sm:gap-1.5 p-1 bg-slate-200/80 dark:bg-slate-900 rounded-2xl border border-slate-300/80 dark:border-slate-800 shadow-2xs overflow-x-auto no-scrollbar">
@@ -775,43 +844,38 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                 <button
                   key={m.id || m.name}
                   type="button"
-                  onClick={() => {
-                    if (!isCurrent) {
-                      const cur = getStoredDeviceSession();
-                      const updatedSession: DeviceSession = {
-                        ...cur,
-                        role: "kid",
-                        kidName: m.name
-                      };
-                      saveDeviceSession(updatedSession);
-                      try {
-                        const url = new URL(window.location.href);
-                        url.searchParams.set("kid", m.name);
-                        window.history.replaceState({}, document.title, url.toString());
-                      } catch {}
-                      onKidSwitched?.(m.name);
-                    }
-                  }}
-                  className={`flex-1 min-w-0 py-2 px-1.5 sm:px-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-2 select-none shrink ${
+                  onClick={() => setInspectingSibling(m)}
+                  className={`flex-1 min-w-[80px] py-1.5 px-2 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-1 select-none shrink ${
                     isCurrent
-                      ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-black ring-1 ring-slate-300 dark:ring-slate-700"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60 font-bold"
+                      ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-black ring-1.5 ring-indigo-500/60 dark:ring-indigo-400/60"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60 font-semibold"
                   }`}
-                  title={`Open ${m.name}'s Chore Page`}
+                  title={`Check ${m.name}'s chore status (${mStats.done} completed)`}
                 >
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-white/50"
-                    style={{ backgroundColor: m.color || "#6366F1" }}
-                  />
-                  <span className="text-xs truncate font-bold">{m.name}</span>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-white/50"
+                      style={{ backgroundColor: m.color || "#6366F1" }}
+                    />
+                    <span className="text-xs truncate font-bold">
+                      {m.name}
+                      {isCurrent && (
+                        <span className="ml-1 text-[9px] font-normal text-indigo-600 dark:text-indigo-400">
+                          (You)
+                        </span>
+                      )}
+                    </span>
+                  </div>
                   <span
                     className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
-                      isCurrent
+                      mStats.allDone
+                        ? "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-black border border-emerald-300/60 dark:border-emerald-700/60"
+                        : isCurrent
                         ? "bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300"
                         : "bg-slate-300/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                     }`}
                   >
-                    {mStats.done}/{mStats.total}
+                    {mStats.done} done
                   </span>
                 </button>
               );
@@ -1687,6 +1751,18 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             setShowSettingsModal(false);
             onKidSwitched?.(kName);
           }}
+        />
+      )}
+
+      {/* Sibling Chore Detail Check-In Modal */}
+      {inspectingSibling && (
+        <SiblingChoreDetailModal
+          isOpen={!!inspectingSibling}
+          onClose={() => setInspectingSibling(null)}
+          sibling={inspectingSibling}
+          currentKidName={currentKid.name}
+          dateKey={activeDateKey}
+          chores={getMemberChoresForDay(inspectingSibling.name, activeDateKey)}
         />
       )}
     </div>

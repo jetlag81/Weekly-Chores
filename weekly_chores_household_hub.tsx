@@ -5674,6 +5674,60 @@ function App({
       }, 50);
     }
   }, [activeTab]);
+
+  // Master Chore Template: Auto-Nudge Evaluation Interval (Runs every 60s)
+  useEffect(() => {
+    const runAutoNudgeCheck = () => {
+      try {
+        const curMonday = getCurrentWeekMonday().dateKey;
+        const weekData = (monthSchedule && monthSchedule[curMonday]) || {};
+        const todayIdx = new Date().getDay(); // 0 is Sunday, 1 is Monday ...
+        // Day index matching sheet convention: 0 is Monday ... 6 is Sunday
+        const dayIdx = todayIdx === 0 ? 6 : todayIdx - 1;
+        const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const dayName = DAY_NAMES[dayIdx];
+
+        // Collect all chores for today
+        const dayChores = (choreRows || []).map((row: any) => {
+          const taskTitle = row.task || "";
+          const who = row.who || "";
+          const choreKey = `${row.id}_${dayIdx}`;
+          const isDone = Boolean(weekData[choreKey]);
+          return {
+            taskId: row.id,
+            taskTitle,
+            who,
+            dayName,
+            done: isDone,
+          };
+        });
+
+        evaluateAndDispatchAutoNudges({
+          currentWeekKey: curMonday,
+          dayName,
+          dayChores,
+          familyMembers: familyMembers || [],
+          onNudgeDispatched: (kidName, choreTitle, time) => {
+            saveActivityEvent({
+              type: "nudge",
+              actorName: "Household Hub",
+              actorRole: "parent",
+              targetName: kidName,
+              choreTitle: `${choreTitle} (Auto: ${time})`,
+              details: `Auto-nudge triggered according to Master Chore schedule (${time})`
+            });
+          }
+        });
+      } catch (err) {
+        console.error("Error evaluating auto-nudges:", err);
+      }
+    };
+
+    runAutoNudgeCheck();
+    const intervalId = setInterval(runAutoNudgeCheck, 60000);
+    return () => clearInterval(intervalId);
+  }, [monthSchedule, choreRows, familyMembers]);
+
   const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
   if (showPairingScreen) {
@@ -7369,46 +7423,6 @@ export default function AppWrapper() {
       }
     } catch (e) {}
   }, []);
-
-  // Master Chore Automated Nudge Background Loop
-  // Evaluates chores periodically against rules configured in the Master Chore Template
-  useEffect(() => {
-    const evaluateAutoNudges = () => {
-      try {
-        if (!monthSchedule || !choreRows || choreRows.length === 0) return;
-        const now = new Date();
-        const todayKey = formatDateKey(now.getFullYear(), now.getMonth(), now.getDate());
-        const todaySchedule = monthSchedule[todayKey] || {};
-        const dayChores = choreRows.map(cr => {
-          const taskTitle = cr.task || (cr.row ? cr.row[0] : "") || "";
-          const cKey = getChoreCanonicalKey(taskTitle);
-          const status = todaySchedule[cr.index_] || (taskTitle ? todaySchedule[taskTitle] : null) || (cKey ? todaySchedule[cKey] : null) || {};
-          return {
-            choreIndex: cr.index_,
-            taskTitle,
-            who: status.who || cr.rotationGroup || "",
-            done: Boolean(status.done),
-            kidsDone: status.kidsDone || {}
-          };
-        });
-
-        evaluateAndDispatchAutoNudges({
-          dateKey: todayKey,
-          dayChores,
-          familyMembers: (familyMembers || []).map(m => ({ id: m.id || m.name, name: m.name, role: m.role, type: m.type }))
-        });
-      } catch (err) {
-        console.error("Auto-nudge evaluation check error:", err);
-      }
-    };
-
-    const timer = setInterval(evaluateAutoNudges, 45000);
-    const initialTimer = setTimeout(evaluateAutoNudges, 3000);
-    return () => {
-      clearInterval(timer);
-      clearTimeout(initialTimer);
-    };
-  }, [monthSchedule, choreRows, familyMembers]);
 
   useEffect(() => {
     let readyIntervalId = null;

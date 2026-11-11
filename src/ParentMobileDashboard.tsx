@@ -295,10 +295,10 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
               <div>
                 <div className="flex items-center gap-1.5">
                   <span
-                    className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                    className={`inline-flex items-center text-[10.5px] font-black uppercase tracking-wide px-3 py-1 rounded-xl shadow-2xs ${
                       signOffStatus.done
                         ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                        : "bg-amber-500/20 text-amber-300 border border-amber-500/30 animate-pulse"
+                        : "bg-amber-500/20 text-amber-300 border border-amber-500/35"
                     }`}
                   >
                     {signOffStatus.done ? "Sunday Verified ✓" : "Pending Sunday Sign-Off"}

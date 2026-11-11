@@ -15,7 +15,9 @@ import {
   Meh,
   Shuffle,
   Eye,
-  Check
+  Check,
+  Search,
+  Loader2
 } from "lucide-react";
 import {
   sendParentNudge,
@@ -24,6 +26,11 @@ import {
   type ParentNudgeEvent
 } from "./nudgeSystem";
 import { getRandomGoodJobGif, getRandomMehGif } from "./gifCelebrations";
+import {
+  getRandomGiphyOrFallbackGif,
+  searchFamilyGiphyGifs,
+  type GiphyGifItem
+} from "./giphyService";
 
 interface ParentNudgeModalProps {
   isOpen: boolean;
@@ -51,6 +58,12 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
   const [previewGif, setPreviewGif] = useState<string>("");
   const [sentNudge, setSentNudge] = useState<ParentNudgeEvent | null>(null);
 
+  // Giphy search state (Strictly Family-Friendly G-Rated)
+  const [showGiphySearch, setShowGiphySearch] = useState(false);
+  const [giphySearchQuery, setGiphySearchQuery] = useState("");
+  const [isSearchingGiphy, setIsSearchingGiphy] = useState(false);
+  const [giphySearchResults, setGiphySearchResults] = useState<GiphyGifItem[]>([]);
+
   // Synchronize state when opened with fresh props
   useEffect(() => {
     if (isOpen) {
@@ -58,14 +71,17 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
       setSelectedKid(kid);
       setNudgeType(initialType);
       setSentNudge(null);
+      setShowGiphySearch(false);
+      setGiphySearchQuery("");
+      setGiphySearchResults([]);
 
       // Default preset
       const presets = initialType === "praise" ? PRAISE_PRESETS : NUDGE_PRESETS;
       setHeadline(presets[0].headline);
       setMessage(presets[0].message);
 
-      // Initial random GIF for preview
-      const gif = initialType === "praise" ? getRandomGoodJobGif() : getRandomMehGif();
+      // Initial random family-friendly GIF for preview
+      const gif = getRandomGiphyOrFallbackGif(initialType === "praise" ? "goodJob" : "meh");
       setPreviewGif(gif);
     }
   }, [isOpen, initialKid, initialType, allKidsList]);
@@ -76,13 +92,27 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
     const presets = type === "praise" ? PRAISE_PRESETS : NUDGE_PRESETS;
     setHeadline(presets[0].headline);
     setMessage(presets[0].message);
-    const gif = type === "praise" ? getRandomGoodJobGif() : getRandomMehGif();
+    const gif = getRandomGiphyOrFallbackGif(type === "praise" ? "goodJob" : "meh");
     setPreviewGif(gif);
   };
 
   const handleShuffleGif = () => {
-    const gif = nudgeType === "praise" ? getRandomGoodJobGif() : getRandomMehGif();
+    const gif = getRandomGiphyOrFallbackGif(nudgeType === "praise" ? "goodJob" : "meh");
     setPreviewGif(gif);
+  };
+
+  const handlePerformGiphySearch = async (queryText?: string) => {
+    const q = (queryText !== undefined ? queryText : giphySearchQuery).trim();
+    if (!q) return;
+    setIsSearchingGiphy(true);
+    try {
+      const results = await searchFamilyGiphyGifs(q, 15);
+      setGiphySearchResults(results);
+    } catch {
+      setGiphySearchResults([]);
+    } finally {
+      setIsSearchingGiphy(false);
+    }
   };
 
   const handleSelectPreset = (preset: { headline: string; message: string }) => {
@@ -342,20 +372,49 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
                 />
               </div>
 
-              {/* Live GIF Reaction Preview with Shuffle Button */}
+              {/* Live GIF Reaction Preview with Shuffle & Giphy Search */}
               {previewGif && (
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-2.5 space-y-1.5">
-                  <div className="flex items-center justify-between text-xs font-bold text-slate-600 px-1">
-                    <span>Reaction GIF Preview:</span>
-                    <button
-                      type="button"
-                      onClick={handleShuffleGif}
-                      className="text-[11px] text-indigo-600 hover:text-indigo-800 font-extrabold flex items-center gap-1 cursor-pointer"
-                    >
-                      <Shuffle className="w-3.5 h-3.5" />
-                      <span>Shuffle GIF 🎲</span>
-                    </button>
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-2.5 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-700 px-1">
+                    <div className="flex items-center gap-1.5">
+                      <span>Reaction GIF:</span>
+                      <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-md flex items-center gap-1">
+                        <span>🛡️ G-Rated</span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowGiphySearch(s => !s);
+                          if (!showGiphySearch && giphySearchResults.length === 0) {
+                            handlePerformGiphySearch(nudgeType === "praise" ? "great job celebration" : "playful reminder cartoon");
+                          }
+                        }}
+                        className={`text-[11px] font-bold px-2 py-1 rounded-lg flex items-center gap-1 transition cursor-pointer ${
+                          showGiphySearch
+                            ? "bg-indigo-600 text-white shadow-2xs"
+                            : "bg-slate-200 hover:bg-slate-300 text-slate-700"
+                        }`}
+                        title="Search family-friendly Giphy GIFs"
+                      >
+                        <Search className="w-3 h-3" />
+                        <span>Search Giphy</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleShuffleGif}
+                        className="text-[11px] text-indigo-600 hover:text-indigo-800 font-extrabold flex items-center gap-1 cursor-pointer px-2 py-1 rounded-lg hover:bg-indigo-50 transition"
+                      >
+                        <Shuffle className="w-3.5 h-3.5" />
+                        <span>Shuffle 🎲</span>
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Main Selected GIF Preview Container */}
                   <div className="w-full rounded-xl overflow-hidden border border-slate-200 bg-white min-h-[140px] max-h-[180px] flex items-center justify-center shadow-inner">
                     <img
                       src={previewGif}
@@ -363,6 +422,96 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
                       className="w-full h-auto max-h-[180px] object-contain"
                     />
                   </div>
+
+                  {/* Expandable Giphy Family Search Panel */}
+                  {showGiphySearch && (
+                    <div className="pt-1.5 border-t border-slate-200 space-y-2 animate-in fade-in duration-150">
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handlePerformGiphySearch();
+                        }}
+                        className="flex items-center gap-1.5"
+                      >
+                        <div className="relative flex-1">
+                          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                          <input
+                            type="text"
+                            value={giphySearchQuery}
+                            onChange={(e) => setGiphySearchQuery(e.target.value)}
+                            placeholder="Search G-rated GIFs (e.g. Star Wars, Mario, Dance)..."
+                            className="w-full text-xs pl-8 pr-2.5 py-1.5 rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-1 focus:ring-indigo-500 font-medium"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={isSearchingGiphy}
+                          className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl transition cursor-pointer flex items-center gap-1 shrink-0"
+                        >
+                          {isSearchingGiphy ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <span>Find</span>
+                          )}
+                        </button>
+                      </form>
+
+                      {/* Quick Family Search Chips */}
+                      <div className="flex flex-wrap gap-1">
+                        {["⭐ Celebration", "👏 High Five", "💃 Dance", "🧹 Clean Up", "🎮 Gaming", "🐶 Cute Pets"].map(
+                          (tag) => (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => {
+                                const clean = tag.replace(/^[^\w\s]+\s*/, "");
+                                setGiphySearchQuery(clean);
+                                handlePerformGiphySearch(clean);
+                              }}
+                              className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-slate-200/80 hover:bg-slate-300 text-slate-700 transition cursor-pointer"
+                            >
+                              {tag}
+                            </button>
+                          )
+                        )}
+                      </div>
+
+                      {/* Search Results Gallery */}
+                      {giphySearchResults.length > 0 && (
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 -mx-0.5 px-0.5 scrollbar-thin">
+                          {giphySearchResults.map((item) => {
+                            const isSelected = previewGif === item.url;
+                            return (
+                              <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => setPreviewGif(item.url)}
+                                className={`relative rounded-xl overflow-hidden shrink-0 border-2 transition cursor-pointer w-20 h-16 bg-slate-200 flex items-center justify-center ${
+                                  isSelected
+                                    ? "border-indigo-600 ring-2 ring-indigo-500/40"
+                                    : "border-transparent hover:border-slate-400"
+                                }`}
+                                title={item.title}
+                              >
+                                <img
+                                  src={item.previewUrl || item.url}
+                                  alt={item.title}
+                                  className="w-full h-full object-cover"
+                                />
+                                {isSelected && (
+                                  <div className="absolute inset-0 bg-indigo-600/30 flex items-center justify-center">
+                                    <div className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center">
+                                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                    </div>
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 

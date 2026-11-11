@@ -57,6 +57,12 @@ import {
   saveKidRewardProfile,
   type KidRewardProfile
 } from "./rewardAccounts";
+import {
+  getStoredGiphyApiKey,
+  saveStoredGiphyApiKey,
+  testGiphyApiKey,
+  MANDATORY_FAMILY_RATING
+} from "./giphyService";
 import { QRCodeDisplay } from "./QRCodeDisplay";
 import { isStandalone, promptPwaInstall } from "./pwaManager";
 
@@ -145,6 +151,14 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
   // PWA Install State
   const [installStatus, setInstallStatus] = useState<string>("");
 
+  // Giphy API State (Family Friendly G-Rated Celebrations)
+  const [giphyKey, setGiphyKey] = useState<string>(() => getStoredGiphyApiKey());
+  const [isEditingGiphy, setIsEditingGiphy] = useState<boolean>(false);
+  const [giphyInput, setGiphyInput] = useState<string>("");
+  const [giphyTesting, setGiphyTesting] = useState<boolean>(false);
+  const [giphyTestSuccess, setGiphyTestSuccess] = useState<boolean | null>(null);
+  const [giphyTestMessage, setGiphyTestMessage] = useState<string | null>(null);
+
   useEffect(() => {
     if (isOpen) {
       setActiveTab(initialTab);
@@ -159,6 +173,10 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
       setIsUnlocked(false);
       setShowUnpairConfirm(false);
       setRewardsSaved(false);
+      setGiphyKey(getStoredGiphyApiKey());
+      setIsEditingGiphy(false);
+      setGiphyTestSuccess(null);
+      setGiphyTestMessage(null);
 
       const sess = getStoredDeviceSession();
       if (sess.parentPin) {
@@ -322,6 +340,37 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
       setPinUpdatedNotice(true);
       setTimeout(() => setPinUpdatedNotice(false), 3000);
     }
+  };
+
+  // Giphy API Actions
+  const handleTestGiphy = async (keyToTest?: string) => {
+    const k = keyToTest || (isEditingGiphy ? giphyInput : giphyKey);
+    setGiphyTesting(true);
+    setGiphyTestSuccess(null);
+    setGiphyTestMessage(null);
+    try {
+      const res = await testGiphyApiKey(k);
+      setGiphyTestSuccess(res.success);
+      if (res.success) {
+        setGiphyTestMessage("Connected! Official Giphy API active with G-Rating strictly enforced.");
+      } else {
+        setGiphyTestMessage(res.error || "Giphy API connection failed.");
+      }
+    } catch (err: any) {
+      setGiphyTestSuccess(false);
+      setGiphyTestMessage(err?.message || "Failed to test Giphy key.");
+    } finally {
+      setGiphyTesting(false);
+    }
+  };
+
+  const handleSaveGiphy = () => {
+    saveStoredGiphyApiKey(giphyInput);
+    setGiphyKey(giphyInput.trim());
+    setIsEditingGiphy(false);
+    setGiphyTestSuccess(true);
+    setGiphyTestMessage("Giphy API key saved and synced!");
+    setTimeout(() => setGiphyTestMessage(null), 3500);
   };
 
   return (
@@ -707,6 +756,118 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
                       Enabled ✓
                     </span>
                   )}
+                </div>
+
+                {/* Giphy API Key & Family-Friendly (G-Rated) Celebrations */}
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-pink-500/15 text-pink-600 dark:text-pink-400 flex items-center justify-center shrink-0">
+                        <Sparkles className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black text-slate-900 dark:text-white">
+                            Giphy Celebrations
+                          </span>
+                          <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                            <ShieldCheck className="w-2.5 h-2.5" />
+                            <span>Strictly G-Rated</span>
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          Enforces 100% kid-safe, wholesome animated celebration and nudge GIFs
+                        </div>
+                      </div>
+                    </div>
+
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0">
+                      ● Active
+                    </span>
+                  </div>
+
+                  {/* Key Management & Test Row */}
+                  <div className="pt-1 space-y-2">
+                    {isEditingGiphy ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={giphyInput}
+                            onChange={(e) => setGiphyInput(e.target.value)}
+                            placeholder="Enter Giphy API Key (developers.giphy.com)..."
+                            className="flex-1 text-xs px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleSaveGiphy}
+                            className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl transition cursor-pointer shadow-xs"
+                          >
+                            Save
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setIsEditingGiphy(false)}
+                            className="px-2.5 py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-700/80">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                            API Key:
+                          </span>
+                          <span className="text-xs font-mono font-bold text-slate-800 dark:text-slate-200 truncate">
+                            {giphyKey
+                              ? `${giphyKey.slice(0, 6)}••••••••••••••••${giphyKey.slice(-4)}`
+                              : "Not configured"}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            disabled={giphyTesting}
+                            onClick={() => handleTestGiphy()}
+                            className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition cursor-pointer flex items-center gap-1"
+                          >
+                            {giphyTesting ? "Testing..." : "Test Connection ⚡"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setGiphyInput(giphyKey);
+                              setIsEditingGiphy(true);
+                            }}
+                            className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 transition cursor-pointer"
+                          >
+                            Change Key
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Test Feedback Notice */}
+                    {giphyTestMessage && (
+                      <div
+                        className={`p-2.5 rounded-xl text-xs font-medium flex items-center gap-2 ${
+                          giphyTestSuccess
+                            ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+                            : "bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800"
+                        }`}
+                      >
+                        {giphyTestSuccess ? (
+                          <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        ) : (
+                          <X className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                        )}
+                        <span className="flex-1">{giphyTestMessage}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

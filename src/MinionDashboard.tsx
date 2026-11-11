@@ -60,6 +60,7 @@ import {
   preloadNextAlmostGifs,
   preloadNextMehGifs
 } from "./gifCelebrations";
+import { getRandomGiphyOrFallbackGif } from "./giphyService";
 import { getStoredParentNudges, markNudgeAcknowledged, type ParentNudgeEvent } from "./nudgeSystem";
 import { HouseholdActivityDrawer } from "./HouseholdActivityDrawer";
 import { ActivityToast } from "./ActivityToast";
@@ -267,7 +268,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
   const triggerCelebration = (task: string, isNearGoal: boolean = false, goalDescription?: string) => {
     if (isNearGoal) {
-      const gif = getRandomAlmostGif();
+      const gif = getRandomGiphyOrFallbackGif("almost");
       setActiveCelebration({
         gifUrl: gif,
         taskTitle: task,
@@ -277,7 +278,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
       });
       preloadNextAlmostGifs(3);
     } else {
-      const gif = getRandomGoodJobGif();
+      const gif = getRandomGiphyOrFallbackGif("goodJob");
       setActiveCelebration({
         gifUrl: gif,
         taskTitle: task,

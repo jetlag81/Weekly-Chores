@@ -505,6 +505,72 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     });
   }, [hubMasterChores]);
 
+  const DAY_SHORT_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const today = new Date();
+  const todayDateKey = formatDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+  const weekDaysToRender = React.useMemo(() => {
+    if (activeWeekDays && activeWeekDays.length === 7) {
+      return activeWeekDays;
+    }
+    const curr = new Date(activeDate);
+    const day = curr.getDay();
+    const diff = curr.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(curr.setDate(diff));
+    const list = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      list.push({
+        year: d.getFullYear(),
+        month: d.getMonth(),
+        day: d.getDate(),
+        dateKey: formatDateKey(d.getFullYear(), d.getMonth(), d.getDate()),
+        dayOfWeekIndex: d.getDay()
+      });
+    }
+    return list;
+  }, [activeWeekDays, activeDate, formatDateKey]);
+
+  const getKidCompletionForDay = (dateKey: string) => {
+    const dayChores = monthSchedule[dateKey] || {};
+    let done = 0;
+    let total = 0;
+
+    hubMasterChores.forEach((chore, idx) => {
+      const cKey = getChoreCanonicalKey(chore.task);
+      const norm = normalizeTaskName(chore.task);
+
+      const statusFromProp = getChoreStatus ? getChoreStatus(dateKey, chore.index_, chore.task) : null;
+      const choreStatus = (statusFromProp && (statusFromProp.hasExplicitRecord || statusFromProp.who || statusFromProp.done))
+        ? statusFromProp
+        : (cKey ? dayChores[cKey] : null) ||
+          dayChores[chore.index_] ||
+          (chore.task ? dayChores[chore.task] : null) ||
+          (chore.task ? dayChores[chore.task.toLowerCase().trim()] : null) ||
+          (norm ? dayChores[norm] : null) || {};
+
+      const who = choreStatus.who || "";
+      const isShared = (chore.assignedTo || []).includes("All") || (chore.assignedTo || []).length > 1;
+      const isDone = isShared && choreStatus.kidsDone ? !!choreStatus.kidsDone[currentKid.name] : !!choreStatus.done;
+
+      const isDirectlyAssigned = who.toLowerCase() === currentKid.name.toLowerCase();
+      const isGroupAssigned =
+        who === "All Kids" ||
+        who === "Each Child" ||
+        (who === "Non-Casual" && currentKid.type !== "casual") ||
+        (who === "All Non-Casual" && currentKid.type !== "casual") ||
+        (isShared && ((chore.assignedTo || []).includes("All") || (chore.assignedTo || []).includes(currentKid.name)));
+
+      if (isDirectlyAssigned || isGroupAssigned || isDone) {
+        total++;
+        if (isDone) done++;
+      }
+    });
+
+    return { done, total, allDone: total > 0 && done === total };
+  };
+
   const handleToggleDailyChore = (choreIndex: number, currentDone: boolean, taskTitle?: string) => {
     const nextDone = !currentDone;
     onUpdateChore(
@@ -623,38 +689,40 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-16 font-sans transition-colors">
       {/* Top Mobile Bar */}
-      <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 shadow-xs dark:shadow-md transition-colors">
-        <div className="max-w-xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-4 py-2.5 shadow-xs dark:shadow-md transition-colors">
+        <div className="max-w-xl mx-auto flex items-center justify-between gap-2">
+          {/* Avatar and Kid Name */}
+          <div className="flex items-center gap-2.5 min-w-0">
             <div
-              className="w-11 h-11 rounded-2xl flex items-center justify-center font-black text-white text-base shadow-sm ring-2 ring-white dark:ring-slate-700"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-white text-base shadow-sm ring-2 ring-white dark:ring-slate-700 shrink-0"
               style={{ backgroundColor: currentKid.color || "#6366F1" }}
             >
               {currentKid.name.slice(0, 2).toUpperCase()}
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h1 className="font-extrabold text-base text-slate-900 dark:text-white leading-tight">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h1 className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate">
                   {currentKid.name}
                 </h1>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                  🎒 Minion Mode
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0">
+                  🎒 Minion
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5 font-medium">
-                <span className="flex items-center gap-0.5 text-amber-600 font-bold">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate">
+                <span className="flex items-center gap-0.5 text-amber-600 dark:text-amber-400 font-bold shrink-0">
                   <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                   <span>3 Day Streak</span>
                 </span>
                 <span>•</span>
-                <span className="text-emerald-700 font-bold">
-                  {kidMonthlyCompletions} finished this month
+                <span className="text-emerald-700 dark:text-emerald-400 font-bold truncate">
+                  {kidMonthlyCompletions} finished
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Header Action Controls */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {kidMembers.length > 1 && (
               <div className="relative">
                 <select
@@ -670,12 +738,12 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                     saveDeviceSession(updatedSession);
                     onKidSwitched?.(targetName);
                   }}
-                  className="text-xs font-bold py-1.5 px-2 bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-xl cursor-pointer hover:bg-indigo-100 focus:outline-none shadow-2xs"
-                  title="Switch active minion dashboard"
+                  className="text-xs font-bold py-1.5 px-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 rounded-xl cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none shadow-2xs"
+                  title="Switch minion"
                 >
                   {kidMembers.map(m => (
                     <option key={m.id || m.name} value={m.name}>
-                      Minion: {m.name}
+                      {m.name}
                     </option>
                   ))}
                 </select>
@@ -686,40 +754,13 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
               <button
                 type="button"
                 onClick={() => setShowInstallModal(true)}
-                className="py-1.5 px-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white transition flex items-center gap-1.5 text-xs font-black cursor-pointer shadow-xs"
+                className="py-1.5 px-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white transition flex items-center gap-1 text-xs font-black cursor-pointer shadow-xs"
                 title="Install app to your home screen"
               >
                 <Smartphone className="w-3.5 h-3.5 text-indigo-100" />
-                <span>Install</span>
+                <span className="hidden xs:inline">Install</span>
               </button>
             )}
-
-            {/* Sunday Inspection Quick Access for Parents */}
-            <button
-              type="button"
-              onClick={() => {
-                setPinInput("");
-                setPinError("");
-                setPinAction("inspection");
-                setShowExitPinModal(true);
-              }}
-              className={`p-1.5 sm:px-2.5 rounded-xl transition flex items-center gap-1.5 text-xs font-bold cursor-pointer shadow-2xs border ${
-                signOffStatus?.done
-                  ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
-                  : "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
-              }`}
-              title="Parent Sunday Inspection (PIN: 1234)"
-            >
-              <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
-              <span className="hidden sm:inline">Sunday Inspection</span>
-              <span
-                className={`text-[10px] font-mono px-1 py-0.2 rounded font-black ${
-                  signOffStatus?.done ? "bg-emerald-200 text-emerald-950" : "bg-amber-200 text-amber-950"
-                }`}
-              >
-                {signOffStatus?.done ? "✓ TV/MV" : "Inspect"}
-              </span>
-            </button>
 
             {/* Theme Toggle (System / Light / Dark) */}
             <ThemeToggle variant="compact" />
@@ -739,7 +780,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
               )}
             </button>
 
-            {/* Parent Lock / Exit Button */}
+            {/* Parent Mode / Exit Button */}
             <button
               type="button"
               onClick={() => {
@@ -749,10 +790,10 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                 setShowExitPinModal(true);
               }}
               className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition flex items-center gap-1 text-xs font-semibold cursor-pointer shadow-2xs"
-              title="Parent Admin Unlock (PIN: 1234)"
+              title="Parent Mode Unlock (PIN: 1234)"
             >
               <Lock className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-              <span className="hidden sm:inline">Parent Mode</span>
+              <span className="hidden sm:inline">Parent</span>
             </button>
           </div>
         </div>
@@ -766,13 +807,13 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             onClick={() => setActiveNavTab("chores")}
             className={`flex-1 py-2 px-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
               activeNavTab === "chores"
-                ? "bg-white text-indigo-700 shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-400 shadow-xs"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span className="truncate">Chores</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700 font-mono">
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono">
               {completedTodayCount}/{dailyChoresForKid.length}
             </span>
           </button>
@@ -782,7 +823,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             className={`flex-1 py-2 px-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
               activeNavTab === "leaderboard"
                 ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             <Trophy className="w-4 h-4 text-amber-200 shrink-0" />
@@ -792,7 +833,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                 #1
               </span>
             ) : (
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700 font-bold">
+              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold">
                 #{myRank}
               </span>
             )}
@@ -803,7 +844,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             className={`flex-1 py-2 px-2.5 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
               activeNavTab === "rewards"
                 ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs"
-                : "text-slate-600 hover:text-slate-900"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
             <Gift className="w-4 h-4 text-purple-200 shrink-0" />
@@ -863,26 +904,26 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             {/* Current Minion's Status & Motivation Callout */}
             <div className={`p-4 rounded-2xl border transition-all ${
               isMyKidLeading
-                ? "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300 shadow-sm"
-                : "bg-white border-slate-200 shadow-2xs"
+                ? "bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/40 border-amber-300 dark:border-amber-800 shadow-sm"
+                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-2xs"
             }`}>
               <div className="flex items-center gap-3">
                 <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-base shrink-0 shadow-xs ${
                   isMyKidLeading
                     ? "bg-amber-500 text-white"
                     : myRank === 2
-                    ? "bg-slate-300 text-slate-800"
+                    ? "bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-slate-100"
                     : myRank === 3
                     ? "bg-amber-700 text-white"
-                    : "bg-slate-100 text-slate-600"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
                 }`}>
                   {isMyKidLeading ? <Crown className="w-5 h-5" /> : `#${myRank}`}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+                  <div className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
                     <span>{isMyKidLeading ? "👑 You are currently in 1st Place!" : `You are ranked #${myRank}`}</span>
                   </div>
-                  <p className="text-xs text-slate-600 mt-0.5 leading-snug">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-snug">
                     {isMyKidLeading
                       ? `Amazing job, ${currentKid.name}! You're on track to win "${monthlyIncentive}"!`
                       : leaderKid
@@ -932,14 +973,14 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             </div>
 
             {/* Minions Leaderboard Standings */}
-            <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-2xs space-y-3.5">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-2xs space-y-3.5">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                  <h3 className="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+                  <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
                     <Trophy className="w-4 h-4 text-amber-500" />
                     <span>Minions Leaderboard</span>
                   </h3>
-                  <p className="text-[11px] text-slate-500">Live rankings for {MONTH_NAMES[selectedMonth]} {selectedYear}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Live rankings for {MONTH_NAMES[selectedMonth]} {selectedYear}</p>
                 </div>
                 <button
                   type="button"
@@ -956,10 +997,10 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                       window.speechSynthesis.speak(u);
                     }
                   }}
-                  className="p-1.5 rounded-xl bg-amber-50 text-amber-800 hover:bg-amber-100 transition cursor-pointer flex items-center gap-1 text-[11px] font-bold"
+                  className="p-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition cursor-pointer flex items-center gap-1 text-[11px] font-bold"
                   title="Announce leaderboard"
                 >
-                  <Volume2 className="w-3.5 h-3.5 text-amber-600" />
+                  <Volume2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                   <span>Announce</span>
                 </button>
               </div>
@@ -975,10 +1016,10 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                       key={k.id || k.name}
                       className={`p-3.5 rounded-2xl border transition-all ${
                         isMe
-                          ? "border-indigo-400 bg-indigo-50/60 ring-2 ring-indigo-200 shadow-xs"
+                          ? "border-indigo-400 dark:border-indigo-600 bg-indigo-50/60 dark:bg-indigo-950/40 ring-2 ring-indigo-200 dark:ring-indigo-800/60 shadow-xs"
                           : isLeader
-                          ? "border-amber-300 bg-amber-50/40"
-                          : "border-slate-200 bg-slate-50/60"
+                          ? "border-amber-300 dark:border-amber-700/80 bg-amber-50/40 dark:bg-amber-950/30"
+                          : "border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-3 mb-2">
@@ -988,7 +1029,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                             className="w-4 h-4 rounded-full shadow-2xs shrink-0"
                             style={{ backgroundColor: k.color }}
                           />
-                          <span className="font-bold text-sm text-slate-900 flex items-center gap-1.5">
+                          <span className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
                             <span>{k.name}</span>
                             {isMe && (
                               <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-indigo-600 text-white uppercase tracking-wider">
@@ -996,7 +1037,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                               </span>
                             )}
                             {isLeader && (
-                              <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-amber-200 text-amber-900 border border-amber-300 flex items-center gap-0.5">
+                              <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 border border-amber-300 dark:border-amber-700 flex items-center gap-0.5">
                                 <Crown className="w-2.5 h-2.5" />
                                 <span>#1 Leader</span>
                               </span>
@@ -1004,13 +1045,13 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="font-black text-sm text-slate-900">{k.done}</span>
-                          <span className="text-xs text-slate-500"> chores</span>
+                          <span className="font-black text-sm text-slate-900 dark:text-white">{k.done}</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400"> chores</span>
                         </div>
                       </div>
 
                       {/* Progress Bar */}
-                      <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                      <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-700"
                           style={{
@@ -1079,20 +1120,20 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             </div>
 
             {/* Connected Accounts & Gaming Tags List */}
-            <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                  <h3 className="font-black text-sm text-slate-900">
+                  <h3 className="font-black text-sm text-slate-900 dark:text-white">
                     Connected Accounts &amp; Tags
                   </h3>
-                  <p className="text-[11px] text-slate-500 font-medium">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                     Parents use these to send digital gift cards &amp; Robux
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowKidRewardModal(true)}
-                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 underline cursor-pointer"
                 >
                   + Add / Edit
                 </button>
@@ -1106,31 +1147,31 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                       key={platform.id}
                       className={`p-3 rounded-2xl border transition flex items-center justify-between gap-2 ${
                         val
-                          ? "bg-slate-50 border-slate-200"
-                          : "bg-slate-50/50 border-dashed border-slate-200"
+                          ? "bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700"
+                          : "bg-slate-50/50 dark:bg-slate-800/40 border-dashed border-slate-200 dark:border-slate-700"
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <span className="text-xl shrink-0">{platform.iconEmoji}</span>
                         <div className="min-w-0">
-                          <div className="text-xs font-black text-slate-800 truncate">
+                          <div className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">
                             {platform.name}
                           </div>
-                          <div className="text-[11px] text-slate-500 font-mono truncate">
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate">
                             {val || "Not linked yet"}
                           </div>
                         </div>
                       </div>
 
                       {val ? (
-                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full shrink-0">
+                        <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full shrink-0">
                           ✓ Linked
                         </span>
                       ) : (
                         <button
                           type="button"
                           onClick={() => setShowKidRewardModal(true)}
-                          className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-lg shrink-0 cursor-pointer"
+                          className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-lg shrink-0 cursor-pointer"
                         >
                           + Link
                         </button>
@@ -1146,7 +1187,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveNavTab("chores")}
-                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold rounded-2xl shadow-xs transition flex items-center justify-center gap-2 text-xs cursor-pointer"
+                className="w-full py-2.5 bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-700 text-white font-extrabold rounded-2xl shadow-xs transition flex items-center justify-center gap-2 text-xs cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <span>Back to My Daily Chores</span>
@@ -1156,335 +1197,367 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         ) : (
           /* CHORES VIEW (Default) */
           <>
-            {/* Wish Motivation Strip */}
-            {rewardProfile.topWish && (
-              <div
-                onClick={() => setActiveNavTab("rewards")}
-                className="bg-purple-50/80 hover:bg-purple-100/80 border border-purple-200 rounded-2xl p-3 flex items-center justify-between gap-3 text-xs cursor-pointer transition shadow-2xs"
-                title="View your connected accounts & rewards"
-              >
-                <div className="flex items-center gap-2.5 truncate">
-                  <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
-                    🎁
-                  </div>
-                  <div className="truncate">
-                    <div className="text-[10px] text-purple-700 font-bold uppercase tracking-wider">
-                      Your Chore Reward Goal:
-                    </div>
-                    <div className="text-xs font-black text-purple-950 truncate">
-                      {rewardProfile.topWish}
-                    </div>
-                  </div>
-                </div>
-                <span className="text-[11px] font-bold text-purple-700 shrink-0 bg-white border border-purple-200 px-2 py-0.5 rounded-lg shadow-2xs">
-                  ${rewardProfile.targetGoalAmount || 15} ↗
-                </span>
-              </div>
-            )}
-            {/* Interactive Monthly Incentive Reward Card */}
+            {/* Unified Motivational Goal & Wish Strip */}
             <div
-              onClick={() => setActiveNavTab("leaderboard")}
-              className="bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 rounded-2xl p-4 text-white shadow-sm space-y-2 cursor-pointer hover:shadow-md transition active:scale-[0.99]"
-              title="Click to view Family Leaderboard & Rankings"
+              onClick={() => setActiveNavTab(rewardProfile.topWish ? "rewards" : "leaderboard")}
+              className="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 dark:from-slate-900 dark:via-indigo-950/80 dark:to-purple-950/80 rounded-2xl p-3 text-white shadow-sm border border-indigo-500/30 cursor-pointer hover:border-indigo-400 transition"
+              title="Click to view rewards, wish list and leaderboard"
             >
-              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-amber-100">
-                <span className="flex items-center gap-1.5">
-                  <Trophy className="w-4 h-4 text-amber-200" />
-                  <span>Monthly Goal &amp; Incentive Prize</span>
-                </span>
-                <span className="bg-white/20 px-2 py-0.5 rounded-full text-[10px] font-black flex items-center gap-1">
-                  <span>{isMyKidLeading ? "👑 Rank #1" : `Rank #${myRank}`}</span>
-                  <span>↗</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3 pt-1">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                    <Gift className="w-5 h-5 text-amber-200" />
+              <div className="flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-400/30 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
+                    {rewardProfile.topWish ? "🎁" : "🏆"}
                   </div>
-                  <div>
-                    <div className="text-xs text-amber-100 font-medium">Qualifying Prize:</div>
-                    <div className="text-sm font-extrabold text-white leading-snug">
-                      {monthlyIncentive}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] uppercase font-black tracking-wider text-purple-300">
+                        {rewardProfile.topWish ? "Reward Wish" : "Monthly Prize"}
+                      </span>
+                      <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                        {isMyKidLeading ? "👑 #1" : `#${myRank}`}
+                      </span>
+                    </div>
+                    <div className="text-xs font-black text-white truncate leading-tight mt-0.5">
+                      {rewardProfile.topWish || monthlyIncentive}
                     </div>
                   </div>
                 </div>
+
                 <div className="text-right shrink-0">
-                  <div className="text-xs text-amber-100 font-semibold">Your Progress:</div>
-                  <div className="text-xs font-black text-white">
-                    {kidMonthlyCompletions} / {monthlyGoalTarget} chores
+                  <div className="text-[10px] text-indigo-200 font-semibold">
+                    {kidMonthlyCompletions} / {monthlyGoalTarget} done
+                  </div>
+                  <div className="text-xs font-black text-amber-300">
+                    {Math.min(100, Math.round((kidMonthlyCompletions / Math.max(1, monthlyGoalTarget)) * 100))}%
                   </div>
                 </div>
               </div>
-              {/* Mini Progress Bar */}
-              <div className="w-full bg-black/20 rounded-full h-1.5 overflow-hidden">
+
+              {/* Progress Bar */}
+              <div className="w-full bg-black/40 rounded-full h-1.5 overflow-hidden mt-2">
                 <div
-                  className="h-full rounded-full bg-amber-200 transition-all duration-500"
-                  style={{ width: `${Math.min(100, Math.max(5, (kidMonthlyCompletions / monthlyGoalTarget) * 100))}%` }}
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-emerald-400 transition-all duration-500"
+                  style={{ width: `${Math.min(100, Math.max(5, (kidMonthlyCompletions / Math.max(1, monthlyGoalTarget)) * 100))}%` }}
                 />
               </div>
             </div>
 
-        {/* Date Selector Navigation */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-3 shadow-2xs flex items-center justify-between">
-          <button
-            onClick={() => {
-              const prev = new Date(activeDate);
-              prev.setDate(prev.getDate() - 1);
-              setActiveDate(prev);
-            }}
-            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600"
-            title="Previous Day"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-
-          <div className="text-center">
-            <div className="text-xs font-bold uppercase tracking-wider text-indigo-700">
-              {formattedDayName}
-            </div>
-            <div className="text-sm font-extrabold text-slate-900 mt-0.5">
-              {formattedDateStr}
-            </div>
-          </div>
-
-          <button
-            onClick={() => {
-              const next = new Date(activeDate);
-              next.setDate(next.getDate() + 1);
-              setActiveDate(next);
-            }}
-            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600"
-            title="Next Day"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Today's Daily Chores Section */}
-        <div className="space-y-2.5">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-              <span>Today's Daily Routines</span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-200/80 text-slate-700">
-                {completedTodayCount} / {dailyChoresForKid.length}
-              </span>
-            </h2>
-            <div className="flex items-center gap-2">
-              {isSpeechSupported() && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (isSpeakingAudio) {
-                      stopSpeaking();
-                    } else {
-                      speakKidDailySummary(
-                        currentKid.name,
-                        formattedDayName,
-                        dailyChoresForKid.map(c => ({
-                          task: c.chore.task,
-                          done: c.done,
-                          notes: c.chore.notes
-                        }))
-                      );
-                    }
-                  }}
-                  className={`text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer ${
-                    isSpeakingAudio
-                      ? "bg-rose-100 text-rose-700 border border-rose-300 animate-pulse"
-                      : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
-                  }`}
-                  title={isSpeakingAudio ? "Stop reading" : "Read today's chores aloud"}
-                >
-                  {isSpeakingAudio ? (
-                    <>
-                      <VolumeX className="w-3.5 h-3.5 text-rose-600" />
-                      <span>Stop</span>
-                    </>
-                  ) : (
-                    <>
-                      <Volume2 className="w-3.5 h-3.5 text-indigo-600" />
-                      <span>Read Aloud</span>
-                    </>
+            {/* Horizontal 7-Day Switcher */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                    {formattedDayName}, {formattedDateStr}
+                  </span>
+                  {activeDateKey === todayDateKey && (
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                      Today
+                    </span>
                   )}
-                </button>
-              )}
-              {completedTodayCount === dailyChoresForKid.length && dailyChoresForKid.length > 0 && (
-                <span className="text-[11px] font-extrabold text-emerald-700 flex items-center gap-1">
-                  <span>🌟 All Done Today!</span>
-                </span>
-              )}
-            </div>
-          </div>
+                </div>
 
-          {dailyChoresForKid.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-2 shadow-2xs">
-              <Sparkles className="w-8 h-8 text-indigo-400 mx-auto" />
-              <div className="font-extrabold text-slate-800 text-sm">No Chores Scheduled Today!</div>
-              <p className="text-xs text-slate-500">
-                Take a breather, play outside, or get ahead on your weekly tasks below!
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {dailyChoresForKid.map(({ chore, choreIndex, done, isAssignedToMe, canonicalKey }) => {
-                const titleLines = String(chore.task || "Chore").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-                const mainTitle = titleLines[0] || chore.task;
-                const subTitle = titleLines.slice(1).join(" ") || chore.notes;
-
-                return (
-                  <div
-                    key={`kid-chore-${canonicalKey || choreIndex}`}
-                    onClick={() => handleToggleDailyChore(choreIndex, done, chore.task)}
-                    className={`p-4 rounded-2xl border transition-all cursor-pointer select-none flex items-center justify-between gap-3 shadow-2xs ${
-                      done
-                        ? "bg-emerald-50/80 border-emerald-300 ring-1 ring-emerald-300/60"
-                        : "bg-white border-slate-200 hover:border-indigo-300 hover:shadow-xs active:scale-[0.99]"
-                    }`}
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const prev = new Date(activeDate);
+                      prev.setDate(prev.getDate() - 1);
+                      setActiveDate(prev);
+                    }}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                    title="Previous Day"
                   >
-                    <div className="flex items-start gap-3 min-w-0 flex-1">
-                      <div className="pt-0.5">
-                        {done ? (
-                          <CheckCircle2 className="w-6 h-6 text-emerald-600 fill-emerald-100 shrink-0" />
-                        ) : (
-                          <Circle className="w-6 h-6 text-slate-300 hover:text-indigo-400 shrink-0" />
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span
-                            className={`font-bold text-sm leading-snug ${
-                              done ? "line-through text-slate-500 font-medium" : "text-slate-900"
-                            }`}
-                          >
-                            {mainTitle}
-                          </span>
-                          {chore.category && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                              {chore.category}
-                            </span>
-                          )}
-                        </div>
-                        {subTitle && (
-                          <p className="text-xs text-slate-500 mt-1 leading-snug line-clamp-2">
-                            {subTitle}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = new Date(activeDate);
+                      next.setDate(next.getDate() + 1);
+                      setActiveDate(next);
+                    }}
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                    title="Next Day"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
 
-                    <div className="shrink-0 flex items-center gap-1.5">
-                      {isSpeechSupported() && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            speakSingleChore(chore.task, chore.notes, done);
-                          }}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 transition cursor-pointer"
-                          title="Listen to this chore"
+              {/* 7-Day Pills */}
+              <div className="grid grid-cols-7 gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xs">
+                {weekDaysToRender.map(day => {
+                  const isSelected = day.dateKey === activeDateKey;
+                  const isToday = day.dateKey === todayDateKey;
+                  const dayStats = getKidCompletionForDay(day.dateKey);
+
+                  return (
+                    <button
+                      key={day.dateKey}
+                      type="button"
+                      onClick={() => setActiveDate(new Date(day.year, day.month, day.day, 12, 0, 0))}
+                      className={`py-2 rounded-xl flex flex-col items-center justify-center transition cursor-pointer relative ${
+                        isSelected
+                          ? "bg-indigo-600 dark:bg-indigo-500 text-white shadow-sm font-black"
+                          : "hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold"
+                      }`}
+                    >
+                      <span className="text-[10px] uppercase tracking-wider">
+                        {DAY_SHORT_NAMES[day.dayOfWeekIndex]}
+                      </span>
+                      <span className="text-xs font-black mt-0.5">{day.day}</span>
+                      {isToday ? (
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full mt-0.5 ${
+                            isSelected ? "bg-white" : "bg-emerald-500"
+                          }`}
+                        />
+                      ) : dayStats.allDone ? (
+                        <span
+                          className={`text-[9px] leading-none mt-0.5 ${
+                            isSelected ? "text-white" : "text-emerald-500 font-black"
+                          }`}
                         >
-                          <Volume2 className="w-4 h-4" />
-                        </button>
+                          ✓
+                        </span>
+                      ) : (
+                        <span className="w-1.5 h-1.5 mt-0.5" />
                       )}
-                      <span
-                        className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition ${
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Today's Daily Chores Section */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <span>Daily Routines</span>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    {completedTodayCount} / {dailyChoresForKid.length}
+                  </span>
+                </h2>
+                <div className="flex items-center gap-2">
+                  {isSpeechSupported() && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isSpeakingAudio) {
+                          stopSpeaking();
+                        } else {
+                          speakKidDailySummary(
+                            currentKid.name,
+                            formattedDayName,
+                            dailyChoresForKid.map(c => ({
+                              task: c.chore.task,
+                              done: c.done,
+                              notes: c.chore.notes
+                            }))
+                          );
+                        }
+                      }}
+                      className={`text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer ${
+                        isSpeakingAudio
+                          ? "bg-rose-100 text-rose-700 border border-rose-300 animate-pulse"
+                          : "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900 border border-indigo-200 dark:border-indigo-800"
+                      }`}
+                      title={isSpeakingAudio ? "Stop reading" : "Read today's chores aloud"}
+                    >
+                      {isSpeakingAudio ? (
+                        <>
+                          <VolumeX className="w-3.5 h-3.5 text-rose-600" />
+                          <span>Stop</span>
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                          <span>Read Aloud</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                  {completedTodayCount === dailyChoresForKid.length && dailyChoresForKid.length > 0 && (
+                    <span className="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                      <span>🌟 All Done!</span>
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {dailyChoresForKid.length === 0 ? (
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 text-center space-y-2 shadow-2xs">
+                  <Sparkles className="w-8 h-8 text-indigo-400 mx-auto" />
+                  <div className="font-extrabold text-slate-800 dark:text-slate-200 text-sm">No Chores Scheduled Today!</div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Take a breather, play outside, or get ahead on your weekly tasks below!
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {dailyChoresForKid.map(({ chore, choreIndex, done, isAssignedToMe, canonicalKey }) => {
+                    const titleLines = String(chore.task || "Chore").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+                    const mainTitle = titleLines[0] || chore.task;
+                    const subTitle = titleLines.slice(1).join(" ") || chore.notes;
+
+                    return (
+                      <div
+                        key={`kid-chore-${canonicalKey || choreIndex}`}
+                        onClick={() => handleToggleDailyChore(choreIndex, done, chore.task)}
+                        className={`p-4 rounded-2xl border transition-all cursor-pointer select-none flex items-center justify-between gap-3 shadow-2xs ${
                           done
-                            ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
-                            : "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100"
+                            ? "bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800/80 ring-1 ring-emerald-300/60 dark:ring-emerald-800/50"
+                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-xs active:scale-[0.99]"
                         }`}
                       >
-                        {done ? "Done ✓" : "Mark Done"}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                        <div className="flex items-start gap-3 min-w-0 flex-1">
+                          <div className="pt-0.5">
+                            {done ? (
+                              <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400 fill-emerald-100 dark:fill-emerald-950 shrink-0" />
+                            ) : (
+                              <Circle className="w-6 h-6 text-slate-300 dark:text-slate-600 hover:text-indigo-400 shrink-0" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span
+                                className={`font-bold text-sm leading-snug ${
+                                  done ? "line-through text-slate-400 dark:text-slate-500 font-medium" : "text-slate-900 dark:text-white"
+                                }`}
+                              >
+                                {mainTitle}
+                              </span>
+                              {chore.category && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                  {chore.category}
+                                </span>
+                              )}
+                            </div>
+                            {subTitle && (
+                              <p className={`text-xs mt-1 leading-snug line-clamp-2 ${
+                                done ? "line-through text-slate-400 dark:text-slate-600" : "text-slate-500 dark:text-slate-400"
+                              }`}>
+                                {subTitle}
+                              </p>
+                            )}
+                          </div>
+                        </div>
 
-        {/* Weekly Minion Tasks (Personal Laundry & Bedroom Checklist) */}
-        <div className="space-y-2.5 pt-2">
-          <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 px-1 flex items-center gap-1.5">
-            <span>Weekly Minion Checklist</span>
-            <span className="text-[10px] text-slate-400 font-normal">(Do Once a Week)</span>
-          </h2>
-
-          <div className="grid grid-cols-1 gap-2.5">
-            {weeklyChores.map((wChore, wIdx) => {
-              const isLaundry = (wChore.task || "").toLowerCase().includes("laundry");
-              const isBedroom = (wChore.task || "").toLowerCase().includes("bedroom");
-              const wIndex = wChore.index_ !== undefined ? wChore.index_ : wIdx;
-              const statusMap = getWeeklyKidsStatus(wIndex, wChore.task);
-              const isDone = !!statusMap[currentKid.name];
-
-              return (
-                <div
-                  key={`weekly-kid-${wIndex}`}
-                  onClick={() => handleToggleWeekly(wIndex, wChore.task, isDone)}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer select-none flex items-center justify-between gap-3 shadow-2xs ${
-                    isDone
-                      ? "bg-purple-50/80 border-purple-300 ring-1 ring-purple-300/60"
-                      : "bg-white border-slate-200 hover:border-purple-300 hover:shadow-xs active:scale-[0.99]"
-                  }`}
-                >
-                  <div className="flex items-start gap-3 min-w-0 flex-1">
-                    <div
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-                        isDone ? "bg-purple-200 text-purple-800" : "bg-purple-100 text-purple-700"
-                      }`}
-                    >
-                      {isLaundry ? <Shirt className="w-5 h-5" /> : <BedDouble className="w-5 h-5" />}
-                    </div>
-                    <div>
-                      <div className="font-bold text-sm text-slate-900 leading-snug">
-                        {wChore.task}
+                        <div className="shrink-0 flex items-center gap-1.5">
+                          {isSpeechSupported() && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                speakSingleChore(chore.task, chore.notes, done);
+                              }}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                              title="Listen to this chore"
+                            >
+                              <Volume2 className="w-4 h-4" />
+                            </button>
+                          )}
+                          <span
+                            className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition ${
+                              done
+                                ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
+                                : "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900"
+                            }`}
+                          >
+                            {done ? "Done ✓" : "Mark Done"}
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-500 mt-0.5 leading-snug">
-                        {isLaundry
-                          ? "Wash, dry, fold & put away your clothes"
-                          : "Pick up floor, dust, vacuum & organize room"}
-                      </p>
-                    </div>
-                  </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
-                  <div className="shrink-0 flex items-center gap-1.5">
-                    {isSpeechSupported() && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          speakSingleChore(
-                            wChore.task,
-                            isLaundry
-                              ? "Wash, dry, fold and put away your clothes"
-                              : "Pick up floor, dust, vacuum and organize room",
-                            isDone
-                          );
-                        }}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-50 transition cursor-pointer"
-                        title="Listen to this task"
-                      >
-                        <Volume2 className="w-4 h-4" />
-                      </button>
-                    )}
-                    <span
-                      className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition ${
+            {/* Weekly Minion Tasks (Personal Laundry & Bedroom Checklist) */}
+            <div className="space-y-2.5 pt-2">
+              <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 px-1 flex items-center gap-1.5">
+                <span>Weekly Minion Checklist</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">(Do Once a Week)</span>
+              </h2>
+
+              <div className="grid grid-cols-1 gap-2.5">
+                {weeklyChores.map((wChore, wIdx) => {
+                  const isLaundry = (wChore.task || "").toLowerCase().includes("laundry");
+                  const isBedroom = (wChore.task || "").toLowerCase().includes("bedroom");
+                  const wIndex = wChore.index_ !== undefined ? wChore.index_ : wIdx;
+                  const statusMap = getWeeklyKidsStatus(wIndex, wChore.task);
+                  const isDone = !!statusMap[currentKid.name];
+
+                  return (
+                    <div
+                      key={`weekly-kid-${wIndex}`}
+                      onClick={() => handleToggleWeekly(wIndex, wChore.task, isDone)}
+                      className={`p-4 rounded-2xl border transition-all cursor-pointer select-none flex items-center justify-between gap-3 shadow-2xs ${
                         isDone
-                          ? "bg-purple-700 text-white border-purple-700 shadow-2xs"
-                          : "bg-white text-purple-700 border-purple-200 hover:bg-purple-50"
+                          ? "bg-purple-50/80 dark:bg-purple-950/30 border-purple-300 dark:border-purple-800/80 ring-1 ring-purple-300/60 dark:ring-purple-800/50"
+                          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-700 hover:shadow-xs active:scale-[0.99]"
                       }`}
                     >
-                      {isDone ? "Completed ✓" : "Check Off"}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <div
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                            isDone
+                              ? "bg-purple-200 dark:bg-purple-900/60 text-purple-800 dark:text-purple-200"
+                              : "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300"
+                          }`}
+                        >
+                          {isLaundry ? <Shirt className="w-5 h-5" /> : <BedDouble className="w-5 h-5" />}
+                        </div>
+                        <div>
+                          <div className="font-bold text-sm text-slate-900 dark:text-white leading-snug">
+                            {wChore.task}
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                            {isLaundry
+                              ? "Wash, dry, fold & put away your clothes"
+                              : "Pick up floor, dust, vacuum & organize room"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 flex items-center gap-1.5">
+                        {isSpeechSupported() && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              speakSingleChore(
+                                wChore.task,
+                                isLaundry
+                                  ? "Wash, dry, fold and put away your clothes"
+                                  : "Pick up floor, dust, vacuum and organize room",
+                                isDone
+                              );
+                            }}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/50 transition cursor-pointer"
+                            title="Listen to this task"
+                          >
+                            <Volume2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        <span
+                          className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition ${
+                            isDone
+                              ? "bg-purple-700 text-white border-purple-700 shadow-2xs"
+                              : "bg-white dark:bg-slate-800 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 hover:bg-purple-50 dark:hover:bg-purple-900/40"
+                          }`}
+                        >
+                          {isDone ? "Completed ✓" : "Check Off"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
       </>
     )}
   </main>

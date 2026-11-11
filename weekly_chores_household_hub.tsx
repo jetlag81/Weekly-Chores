@@ -37,6 +37,7 @@ import {
   VolumeX,
   Download,
   ShieldCheck,
+  Bell,
   X
 } from 'lucide-react';
 import {
@@ -59,6 +60,15 @@ import { InstallPwaModal } from "./src/InstallPwaModal";
 import { ParentInspectionModal } from "./src/ParentInspectionModal";
 import { GifCelebrationModal } from "./src/GifCelebrationModal";
 import { getRandomGoodJobGif, preloadNextGoodJobGifs } from "./src/gifCelebrations";
+import { HouseholdActivityDrawer } from "./src/HouseholdActivityDrawer";
+import { ActivityToast } from "./src/ActivityToast";
+import {
+  type HouseholdActivityEvent,
+  getStoredActivityLog,
+  saveActivityEvent,
+  clearActivityLog,
+  playHouseholdRemoteChime
+} from "./src/activityFeed";
 import { isStandalone } from "./src/pwaManager";
 import { getChoreCanonicalKey, normalizeTaskName } from "./src/choreUtils";
 import {
@@ -1797,6 +1807,26 @@ function App({
     preloadNextGoodJobGifs(3);
   };
 
+  // Real-Time Household Activity State & Logging
+  const [activities, setActivities] = useState(() => getStoredActivityLog());
+  const [showActivityDrawer, setShowActivityDrawer] = useState(false);
+  const [activeToastEvent, setActiveToastEvent] = useState(null);
+
+  const logHouseholdActivity = useCallback((event) => {
+    const fullEvent = {
+      ...event,
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      timestamp: Date.now(),
+      deviceId: (deviceSession == null ? void 0 : deviceSession.deviceId) || "local_dev"
+    };
+    const updated = saveActivityEvent(fullEvent);
+    setActivities(updated);
+    broadcastLocalUpdate({
+      type: "ACTIVITY_LOGGED",
+      event: fullEvent
+    });
+  }, [deviceSession]);
+
   useEffect(() => {
     return subscribeSpeechState(speaking => setIsSpeakingAudio(speaking));
   }, []);
@@ -1901,6 +1931,23 @@ function App({
   useEffect(() => {
     const unsub = subscribeToRealtimeSync((msg: any) => {
       if (!msg) return;
+      if (msg.type === "ACTIVITY_LOGGED" && msg.event) {
+        setActivities(prev => {
+          const updated = [msg.event, ...prev.filter(e => e.id !== msg.event.id)].slice(0, 100);
+          try {
+            localStorage.setItem("weekly_chores_activity_log_v1", JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+
+        // If the event came from another device and is a completion or signoff, play remote chime and display toast!
+        const myDeviceId = (deviceSession == null ? void 0 : deviceSession.deviceId) || "local_dev";
+        if (msg.event.deviceId !== myDeviceId && msg.event.action !== "uncompleted") {
+          playHouseholdRemoteChime();
+          setActiveToastEvent(msg.event);
+        }
+        return;
+      }
       if (msg.type === "INCENTIVE_UPDATED") {
         if (msg.monthlyIncentive) {
           setMonthlyIncentive(msg.monthlyIncentive);
@@ -3561,6 +3608,17 @@ function App({
     if (newKidState) {
       playChoreCompletionSound();
       triggerGoodJobCelebration(kidName, taskTitle || "Weekly Checklist");
+      logHouseholdActivity({
+        kidName,
+        taskTitle: taskTitle || "Weekly Checklist",
+        action: "completed"
+      });
+    } else {
+      logHouseholdActivity({
+        kidName,
+        taskTitle: taskTitle || "Weekly Checklist",
+        action: "uncompleted"
+      });
     }
     const updatedKids = {
       ...{
@@ -3943,6 +4001,13 @@ function App({
       done: nextDone,
       who: nextWho
     });
+    if (nextDone) {
+      logHouseholdActivity({
+        kidName: "Parents Thom & Meghan",
+        taskTitle: "Weekly Sign-Off & Inspection (✓ TV / MV)",
+        action: "signoff"
+      });
+    }
     setNotice(nextDone ? "Weekly Sign-Off & Inspection completed and verified for the week!" : "Weekly Sign-Off reset to pending.");
     setTimeout(() => setNotice(null), 3500);
   };
@@ -3953,6 +4018,19 @@ function App({
     if (newKidState) {
       playChoreCompletionSound();
       triggerGoodJobCelebration(kidName, taskTitle || "Chore");
+      logHouseholdActivity({
+        kidName,
+        taskTitle: taskTitle || "Chore",
+        action: "completed",
+        dateKey
+      });
+    } else {
+      logHouseholdActivity({
+        kidName,
+        taskTitle: taskTitle || "Chore",
+        action: "uncompleted",
+        dateKey
+      });
     }
     const updatedKids = {
       ...{
@@ -5559,6 +5637,20 @@ function App({
                 {signOffStatus.done ? "✓ TV / MV" : "Pending"}
               </span>
             </button>
+            <button
+              type="button"
+              onClick={() => setShowActivityDrawer(true)}
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200 rounded-lg transition cursor-pointer shadow-2xs relative"
+              title="Open Live Household Activity Feed & Chime Settings"
+            >
+              <Bell className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Activity</span>
+              {activities.length > 0 && (
+                <span className="text-[10px] font-black px-1.5 py-0.2 rounded-full bg-indigo-600 text-white font-mono">
+                  {activities.length > 99 ? "99+" : activities.length}
+                </span>
+              )}
+            </button>
             {isSpeechSupported() && (
               <button
                 type="button"
@@ -6604,6 +6696,26 @@ function App({
           onClose={() => setActiveCelebrationGif(null)}
         />
       )}
+      {/* Household Real-Time Activity Drawer */}
+      <HouseholdActivityDrawer
+        isOpen={showActivityDrawer}
+        onClose={() => setShowActivityDrawer(false)}
+        activities={activities}
+        onClearActivities={() => {
+          clearActivityLog();
+          setActivities([]);
+        }}
+        familyMembers={familyMembers}
+        allKidsList={allKidsList}
+      />
+
+      {/* Floating Real-Time Remote Activity Toast */}
+      <ActivityToast
+        event={activeToastEvent}
+        familyMembers={familyMembers}
+        onClose={() => setActiveToastEvent(null)}
+        onOpenFeed={() => setShowActivityDrawer(true)}
+      />
     </div>
   );
 }

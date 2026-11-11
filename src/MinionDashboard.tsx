@@ -27,18 +27,29 @@ import {
   Users,
   Smartphone,
   Download,
-  ShieldCheck
+  ShieldCheck,
+  Bell
 } from "lucide-react";
 import { isStandalone, subscribeInstallable } from "./pwaManager";
 import { InstallPwaModal } from "./InstallPwaModal";
 import { ParentInspectionModal } from "./ParentInspectionModal";
 import { GifCelebrationModal } from "./GifCelebrationModal";
 import { getRandomGoodJobGif, preloadNextGoodJobGifs } from "./gifCelebrations";
+import { HouseholdActivityDrawer } from "./HouseholdActivityDrawer";
+import { ActivityToast } from "./ActivityToast";
+import {
+  type HouseholdActivityEvent,
+  getStoredActivityLog,
+  saveActivityEvent,
+  clearActivityLog,
+  playHouseholdRemoteChime
+} from "./activityFeed";
 import {
   playChoreCompletionSound,
   saveDeviceSession,
   getStoredDeviceSession,
   broadcastLocalUpdate,
+  subscribeToRealtimeSync,
   unpairKid,
   type DeviceSession
 } from "./firebaseSync";
@@ -167,6 +178,47 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     setCelebrationTaskTitle(task);
     preloadNextGoodJobGifs(3);
   };
+
+  // Household Real-Time Activity State
+  const [activities, setActivities] = useState<HouseholdActivityEvent[]>(() => getStoredActivityLog());
+  const [showActivityDrawer, setShowActivityDrawer] = useState(false);
+  const [activeToastEvent, setActiveToastEvent] = useState<HouseholdActivityEvent | null>(null);
+
+  const logHouseholdActivity = (event: Omit<HouseholdActivityEvent, "id" | "timestamp" | "deviceId">) => {
+    const fullEvent: HouseholdActivityEvent = {
+      ...event,
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      timestamp: Date.now(),
+      deviceId: currentKid.name
+    };
+    const updated = saveActivityEvent(fullEvent);
+    setActivities(updated);
+    broadcastLocalUpdate({
+      type: "ACTIVITY_LOGGED",
+      event: fullEvent
+    });
+  };
+
+  useEffect(() => {
+    return subscribeToRealtimeSync((msg: any) => {
+      if (!msg) return;
+      if (msg.type === "ACTIVITY_LOGGED" && msg.event) {
+        setActivities(prev => {
+          const updated = [msg.event, ...prev.filter(e => e.id !== msg.event.id)].slice(0, 100);
+          try {
+            localStorage.setItem("weekly_chores_activity_log_v1", JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+
+        // Remote activity event from another family member
+        if (msg.event.kidName?.toLowerCase() !== currentKid.name.toLowerCase() && msg.event.action !== "uncompleted") {
+          playHouseholdRemoteChime();
+          setActiveToastEvent(msg.event);
+        }
+      }
+    });
+  }, [currentKid.name]);
 
   useEffect(() => {
     return subscribeSpeechState(speaking => setIsSpeakingAudio(speaking));
@@ -340,6 +392,19 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
       }
       speakChoreCelebration(currentKid.name, taskTitle || "Chore");
       triggerGoodJobCelebration(taskTitle || "Chore");
+      logHouseholdActivity({
+        kidName: currentKid.name,
+        taskTitle: taskTitle || "Chore",
+        action: "completed",
+        dateKey: activeDateKey
+      });
+    } else {
+      logHouseholdActivity({
+        kidName: currentKid.name,
+        taskTitle: taskTitle || "Chore",
+        action: "uncompleted",
+        dateKey: activeDateKey
+      });
     }
   };
 
@@ -358,6 +423,17 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
       }
       speakChoreCelebration(currentKid.name, taskTitle);
       triggerGoodJobCelebration(taskTitle);
+      logHouseholdActivity({
+        kidName: currentKid.name,
+        taskTitle,
+        action: "completed"
+      });
+    } else {
+      logHouseholdActivity({
+        kidName: currentKid.name,
+        taskTitle,
+        action: "uncompleted"
+      });
     }
   };
 
@@ -476,6 +552,21 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
               >
                 {signOffStatus?.done ? "✓ TV/MV" : "Inspect"}
               </span>
+            </button>
+
+            {/* Live Household Activity Feed Button */}
+            <button
+              type="button"
+              onClick={() => setShowActivityDrawer(true)}
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition flex items-center justify-center cursor-pointer shadow-2xs relative"
+              title="Live Household Activity Feed"
+            >
+              <Bell className="w-4 h-4 text-slate-600" />
+              {activities.length > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-indigo-600 text-white text-[9px] font-mono font-black flex items-center justify-center px-1 shadow-xs">
+                  {activities.length > 9 ? "9+" : activities.length}
+                </span>
+              )}
             </button>
 
             {/* Parent Lock / Exit Button */}
@@ -1204,6 +1295,27 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
           onClose={() => setActiveCelebrationGif(null)}
         />
       )}
+
+      {/* Household Real-Time Activity Drawer */}
+      <HouseholdActivityDrawer
+        isOpen={showActivityDrawer}
+        onClose={() => setShowActivityDrawer(false)}
+        activities={activities}
+        onClearActivities={() => {
+          clearActivityLog();
+          setActivities([]);
+        }}
+        familyMembers={familyMembers}
+        allKidsList={allKidsList}
+      />
+
+      {/* Floating Real-Time Remote Activity Toast */}
+      <ActivityToast
+        event={activeToastEvent}
+        familyMembers={familyMembers}
+        onClose={() => setActiveToastEvent(null)}
+        onOpenFeed={() => setShowActivityDrawer(true)}
+      />
     </div>
   );
 };

@@ -181,8 +181,8 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     helpText: "Xbox Live Gamertag for Game Pass or Store credit",
     officialUrl: (_handle, _amount, region = "US") =>
       region === "CA"
-        ? "https://www.xbox.com/en-ca/games/store/xbox-gift-card-digital-code/CFQ7TTC0K63H"
-        : "https://www.xbox.com/en-us/games/store/xbox-gift-card-digital-code/CFQ7TTC0K63H",
+        ? "https://www.microsoft.com/en-ca/p/xbox-gift-card-digital-code/cfq7ttc0k63h"
+        : "https://www.microsoft.com/en-us/p/xbox-gift-card-digital-code/cfq7ttc0k63h",
     amazonUrl: (_handle, amount = 15, region = "US") =>
       region === "CA"
         ? `https://www.amazon.ca/s?k=xbox+gift+card+${amount}+digital+code&i=gift-cards`
@@ -190,8 +190,8 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     giftCardUrl: (handle, _amount, region = "US") => {
       if (handle && (handle.startsWith("http://") || handle.startsWith("https://"))) return handle;
       return region === "CA"
-        ? "https://www.xbox.com/en-ca/games/store/xbox-gift-card-digital-code/CFQ7TTC0K63H"
-        : "https://www.xbox.com/en-us/games/store/xbox-gift-card-digital-code/CFQ7TTC0K63H";
+        ? "https://www.microsoft.com/en-ca/p/xbox-gift-card-digital-code/cfq7ttc0k63h"
+        : "https://www.microsoft.com/en-us/p/xbox-gift-card-digital-code/cfq7ttc0k63h";
     },
     giftCardLabel: "Xbox Gift Card"
   },

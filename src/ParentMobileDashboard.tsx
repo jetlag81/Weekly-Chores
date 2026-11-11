@@ -150,8 +150,10 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
         ? statusFromProp
         : (cKey ? dayData[cKey] : null) || dayData[choreIndex] || {};
 
-      const isGroupChore = choreStatus.kidsDone !== undefined;
-      const who = String(choreStatus.who || "").toLowerCase();
+      const who = String(choreStatus.who || "").trim();
+      const whoLower = who.toLowerCase();
+      const hasKidsDone = choreStatus.kidsDone && Object.keys(choreStatus.kidsDone).length > 0;
+      const isGroupChore = hasKidsDone || whoLower === "all kids" || whoLower === "each child" || whoLower === "all non-casual";
 
       allKidsList.forEach(kid => {
         const kidLower = kid.toLowerCase();
@@ -160,8 +162,11 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
 
         if (isGroupChore) {
           assigned = true;
-          isDone = !!choreStatus.kidsDone?.[kid];
-        } else if (who.includes(kidLower) || who === "all kids" || who === "each child") {
+          isDone = !!(choreStatus.kidsDone && choreStatus.kidsDone[kid]);
+        } else if (whoLower.includes(kidLower)) {
+          assigned = true;
+          isDone = !!choreStatus.done;
+        } else if (!whoLower && chore.assignedTo && String(chore.assignedTo).toLowerCase().includes(kidLower)) {
           assigned = true;
           isDone = !!choreStatus.done;
         }

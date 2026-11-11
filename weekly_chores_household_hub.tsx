@@ -4074,75 +4074,153 @@ function App({
     setTimeout(() => setNotice(null), 3500);
   };
   const handleToggleKidChore = (dateKey, choreIndex, kidName, taskTitle, dayIdx) => {
-    const current = getChoreStatus(dateKey, choreIndex, taskTitle);
-    const prevKids = current.kidsDone || {};
-    const newKidState = !prevKids[kidName];
-    if (newKidState) {
+    const rawTitle = taskTitle || "";
+    const rawCKey = rawTitle ? getChoreCanonicalKey(rawTitle) : "";
+    const rawNorm = rawTitle ? normalizeTaskName(rawTitle) : "";
+
+    const targetChore = choreRows.find(r => {
+      if (r.index_ === choreIndex) return true;
+      if (rawCKey && getChoreCanonicalKey(r.task) === rawCKey) return true;
+      if (rawTitle && String(r.task || "").toLowerCase().trim() === rawTitle.toLowerCase().trim()) return true;
+      if (rawNorm && normalizeTaskName(r.task) === rawNorm) return true;
+      return false;
+    });
+
+    const choreTask = (targetChore == null ? void 0 : targetChore.task) || rawTitle || "";
+    const cKey = getChoreCanonicalKey(choreTask);
+    const norm = normalizeTaskName(choreTask);
+    const effectiveIndex = targetChore ? targetChore.index_ : choreIndex;
+
+    const current = getChoreStatus(dateKey, effectiveIndex, choreTask);
+    const whoStr = String(current.who || "").trim();
+    const whoLower = whoStr.toLowerCase();
+    const hasKidsDone = current.kidsDone && Object.keys(current.kidsDone).length > 0;
+    const isGroupChore = hasKidsDone || whoLower === "all kids" || whoLower === "each child" || whoLower === "all non-casual";
+
+    let nextDone = false;
+    let patch = {};
+
+    if (isGroupChore) {
+      const prevKids = current.kidsDone || {};
+      const newKidState = !prevKids[kidName];
+      nextDone = newKidState;
+      const updatedKids = {
+        ...prevKids,
+        [kidName]: newKidState
+      };
+      const doneCount = allKidsList.filter(k => updatedKids[k]).length;
+      const allDone = doneCount === allKidsList.length && allKidsList.length > 0;
+      const anyDone = doneCount > 0;
+      let whoLabel = "Each Child";
+      if (allDone) {
+        whoLabel = "All Kids";
+      } else if (anyDone) {
+        const doneNames = allKidsList.filter(k => updatedKids[k]);
+        whoLabel = doneNames.length <= 2 ? doneNames.join(" & ") : `${doneNames.length} Kids`;
+      }
+      patch = {
+        who: whoLabel,
+        done: anyDone,
+        kidsDone: updatedKids
+      };
+    } else {
+      nextDone = !current.done;
+      patch = {
+        who: current.who || kidName,
+        done: nextDone
+      };
+    }
+
+    if (nextDone) {
       playChoreCompletionSound();
-      triggerChoreCelebration(kidName, taskTitle || "Chore");
+      triggerChoreCelebration(kidName, choreTask || "Chore");
       logHouseholdActivity({
         kidName,
-        taskTitle: taskTitle || "Chore",
+        taskTitle: choreTask || "Chore",
         action: "completed",
         dateKey
       });
     } else {
       logHouseholdActivity({
         kidName,
-        taskTitle: taskTitle || "Chore",
+        taskTitle: choreTask || "Chore",
         action: "uncompleted",
         dateKey
       });
     }
-    const updatedKids = {
-      ...{
-        ...prevKids
-      },
-      [kidName]: newKidState
-    };
-    const doneCount = allKidsList.filter(k => updatedKids[k]).length;
-    const allDone = doneCount === allKidsList.length && allKidsList.length > 0;
-    const anyDone = doneCount > 0;
-    let whoLabel = "Each Child";
-    if (allDone) {
-      whoLabel = "All Kids";
-    } else if (anyDone) {
-      const doneNames = allKidsList.filter(k => updatedKids[k]);
-      whoLabel = doneNames.length <= 2 ? doneNames.join(" & ") : `${doneNames.length} Kids`;
-    }
+
     setMonthSchedule(prev => {
-      const curDay = prev[dateKey] || {};
-      const curChore = curDay[choreIndex] || {
-        who: "",
-        done: false,
-        kidsDone: {}
+      const currentDay = prev[dateKey] || {};
+      const currentChore = (cKey ? currentDay[cKey] : null) ||
+        currentDay[choreIndex] ||
+        currentDay[effectiveIndex] ||
+        (norm ? currentDay[norm] : null) || {};
+
+      const updated = {
+        ...currentChore,
+        ...patch
       };
+
+      const nextDay = {
+        ...currentDay,
+        [choreIndex]: updated,
+        [effectiveIndex]: updated
+      };
+      if (choreTask) {
+        nextDay[choreTask] = updated;
+        nextDay[choreTask.toLowerCase()] = updated;
+        nextDay[choreTask.toLowerCase().trim()] = updated;
+      }
+      if (cKey) nextDay[cKey] = updated;
+      if (norm) nextDay[norm] = updated;
+
       return {
-        ...{
-          ...prev
-        },
-        [dateKey]: {
-          ...{
-            ...curDay
-          },
-          [choreIndex]: {
-            ...{
-              ...curChore
-            },
-            who: whoLabel,
-            done: anyDone,
-            kidsDone: updatedKids
-          }
-        }
+        ...prev,
+        [dateKey]: nextDay
       };
     });
-    if (printableRangeIndex >= 0 && dayIdx !== void 0) {
-      const whoCol = 1 + dayIdx * 2;
-      const doneCol = 2 + dayIdx * 2;
-      const updateRow = new Array(15).fill(void 0);
-      updateRow[whoCol] = whoLabel;
-      updateRow[doneCol] = anyDone;
-      updateItem(printableRangeIndex, choreIndex, updateRow);
+
+    broadcastLocalUpdate({
+      type: "CHORE_UPDATED",
+      dateKey,
+      choreIndex: effectiveIndex,
+      originalIndex: choreIndex,
+      patch,
+      taskTitle: choreTask,
+      normKey: norm,
+      canonicalKey: cKey
+    });
+
+    syncChoreToFirestore(
+      (deviceSession == null ? void 0 : deviceSession.householdId) || "household_family_hub",
+      dateKey,
+      effectiveIndex,
+      patch
+    );
+
+    const pRow = findPrintableRow(choreTask, effectiveIndex);
+    if (printableRangeIndex >= 0 && pRow) {
+      const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr);
+      const parsedTarget = parseDateKey(dateKey);
+      if (parsedStart && parsedTarget) {
+        const startDateObj = new Date(parsedStart.year, parsedStart.month, parsedStart.day);
+        const targetDateObj = new Date(parsedTarget.year, parsedTarget.month, parsedTarget.day);
+        const diffTime = targetDateObj.getTime() - startDateObj.getTime();
+        const diffDays = Math.round(diffTime / (1e3 * 3600 * 24));
+        if (diffDays >= 0 && diffDays < 7) {
+          const whoCol = 1 + diffDays * 2;
+          const doneCol = 2 + diffDays * 2;
+          const updateArray = new Array(15).fill(void 0);
+          updateArray[0] = choreTask || (pRow.row ? pRow.row[0] : void 0);
+          if ("who" in patch) {
+            updateArray[whoCol] = patch.who;
+          }
+          if ("done" in patch) {
+            updateArray[doneCol] = patch.done;
+          }
+          updateItem(printableRangeIndex, pRow.index_, updateArray);
+        }
+      }
     }
   };
   const handleUpdateChore = (dateKey, choreIndex, patch, optionalTaskTitle) => {

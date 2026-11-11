@@ -107,7 +107,7 @@
         {
           "index_": 5,
           "row": [
-            "Empty the Litter Box \n(Morning & Evening)",
+            "Empty the Litter Box (Morning & Evening)",
             "Meghan",
             false,
             "Sydney",
@@ -127,10 +127,10 @@
         {
           "index_": 6,
           "row": [
-            "Feed the Herd \n(Breakfast & Supper)",
+            "Feed the Herd (Breakfast & Supper)",
             "Sydney",
-            false,
-            "Cadence",
+            true,
+            "Sydney",
             false,
             "Mason",
             false,
@@ -152,7 +152,7 @@
             false,
             "Mason",
             false,
-            "Thom",
+            "Sydney",
             false,
             "Meghan",
             false,
@@ -880,6 +880,6 @@
       ]
     }
   ],
-  "savedAt": "2026-11-11T16:42:12.850Z",
+  "savedAt": "2026-11-11T16:45:27.978Z",
   "version": "5.0"
 }

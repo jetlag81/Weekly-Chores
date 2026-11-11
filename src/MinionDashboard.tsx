@@ -29,10 +29,13 @@ import {
   Download,
   ShieldCheck,
   Bell,
-  Wallet
+  Wallet,
+  Settings,
+  QrCode
 } from "lucide-react";
 import { isStandalone, subscribeInstallable } from "./pwaManager";
 import { InstallPwaModal } from "./InstallPwaModal";
+import { HouseholdSettingsModal, type SettingsTab } from "./HouseholdSettingsModal";
 import { ParentInspectionModal } from "./ParentInspectionModal";
 import { GifCelebrationModal, type GifModalVariant } from "./GifCelebrationModal";
 import {
@@ -180,6 +183,8 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
   const [activeNavTab, setActiveNavTab] = useState<"chores" | "leaderboard" | "rewards">("chores");
   const [showKidRewardModal, setShowKidRewardModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>("appearance");
   const [rewardProfile, setRewardProfile] = useState<KidRewardProfile>(() => getKidRewardProfile(kidName));
 
   // Interactive Chore Celebration, Goal "Almost", and Parent Nudge/Praise State
@@ -742,9 +747,6 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
               </button>
             )}
 
-            {/* Theme Toggle (System / Light / Dark) */}
-            <ThemeToggle variant="compact" />
-
             {/* Live Household Activity Feed Button */}
             <button
               type="button"
@@ -758,6 +760,19 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                   {activities.length > 9 ? "9+" : activities.length}
                 </span>
               )}
+            </button>
+
+            {/* Household Settings Menu Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setSettingsInitialTab("appearance");
+                setShowSettingsModal(true);
+              }}
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition flex items-center justify-center cursor-pointer shadow-2xs"
+              title="Household Settings & Preferences"
+            >
+              <Settings className="w-4 h-4 text-slate-600 dark:text-slate-300" />
             </button>
 
             {/* Parent Mode / Exit Button */}
@@ -1803,6 +1818,28 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
           kidName={kidName}
           onProfileSaved={(p) => {
             setRewardProfile(p);
+          }}
+        />
+      )}
+
+      {/* Household Unified Settings Modal (Theme, Audio/Alerts, Rewards, Minion QR, Parent Access, Sync) */}
+      {showSettingsModal && (
+        <HouseholdSettingsModal
+          isOpen={showSettingsModal}
+          onClose={() => setShowSettingsModal(false)}
+          viewMode="minion"
+          currentKidName={currentKid.name}
+          allKidsList={allKidsList}
+          familyMembers={familyMembers}
+          activeSyncWeek={activeSyncWeek}
+          initialTab={settingsInitialTab}
+          onUnlockParentMode={() => {
+            setShowSettingsModal(false);
+            onExitMinionMode();
+          }}
+          onSwitchToKid={(kName) => {
+            setShowSettingsModal(false);
+            onKidSwitched?.(kName);
           }}
         />
       )}

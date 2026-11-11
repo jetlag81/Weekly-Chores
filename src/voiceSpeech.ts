@@ -94,9 +94,27 @@ function getBestVoice(): SpeechSynthesisVoice | null {
   return anyEnglish || voices[0] || null;
 }
 
+const STORAGE_KEY_VOICE_ENABLED = "weekly_chores_voice_enabled_v1";
+
+export function isVoiceNarrationEnabled(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    const val = localStorage.getItem(STORAGE_KEY_VOICE_ENABLED);
+    return val !== "false";
+  } catch {
+    return true;
+  }
+}
+
+export function setVoiceNarrationEnabled(enabled: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY_VOICE_ENABLED, String(enabled));
+  } catch {}
+}
+
 export function speakText(rawText: string, options: SpeechOptions = {}): void {
-  if (!isSpeechSupported()) {
-    console.warn("Speech synthesis is not supported in this browser.");
+  if (!isSpeechSupported() || !isVoiceNarrationEnabled()) {
     return;
   }
 

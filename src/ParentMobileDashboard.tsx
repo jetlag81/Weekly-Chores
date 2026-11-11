@@ -23,11 +23,13 @@ import {
   Pizza,
   ArrowRight,
   UserCheck,
-  Gift
+  Gift,
+  Settings
 } from "lucide-react";
 import { getChoreCanonicalKey, normalizeTaskName } from "./choreUtils";
 import { getKidRewardProfile } from "./rewardAccounts";
 import { ThemeToggle } from "./ThemeToggle";
+import { HouseholdSettingsModal, type SettingsTab } from "./HouseholdSettingsModal";
 
 interface FamilyMember {
   name: string;
@@ -122,6 +124,8 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   });
 
   const [expandedWeeklyChecklist, setExpandedWeeklyChecklist] = useState<boolean>(true);
+  const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
+  const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>("appearance");
 
   const toggleKidExpanded = (kidName: string) => {
     setExpandedKids(prev => ({ ...prev, [kidName]: !prev[kidName] }));
@@ -226,11 +230,8 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
             </div>
           </div>
 
-          {/* Top Actions: Theme Toggle, View Switcher Pill & Activity Feed */}
+          {/* Top Actions: View Switcher Pill, Activity Feed & Settings Menu */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* Theme Toggle (System / Light / Dark) */}
-            <ThemeToggle variant="compact" />
-
             {/* View Mode Toggle Pill: Mobile vs Desktop Table */}
             <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
               <button
@@ -265,6 +266,19 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                   {activitiesCount > 99 ? "99+" : activitiesCount}
                 </span>
               )}
+            </button>
+
+            {/* Household Settings Menu Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setSettingsInitialTab("appearance");
+                setShowSettingsModal(true);
+              }}
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center transition cursor-pointer"
+              title="Household Settings & Preferences"
+            >
+              <Settings className="w-4 h-4 text-slate-600 dark:text-slate-300" />
             </button>
           </div>
         </div>
@@ -789,6 +803,27 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
           </button>
         </div>
       </nav>
+
+      {/* Household Unified Settings Modal */}
+      {showSettingsModal && (
+        <HouseholdSettingsModal
+          isOpen={showSettingsModal}
+          onClose={() => setShowSettingsModal(false)}
+          viewMode="parent"
+          allKidsList={allKidsList}
+          familyMembers={familyMembers}
+          activeSyncWeek={activeSyncWeek}
+          initialTab={settingsInitialTab}
+          onSwitchToKid={(kName) => {
+            setShowSettingsModal(false);
+            onSwitchToMinionMode(kName);
+          }}
+          onOpenRewardPayoutModal={(kName) => {
+            setShowSettingsModal(false);
+            onOpenRewardModal?.(kName);
+          }}
+        />
+      )}
     </div>
   );
 };

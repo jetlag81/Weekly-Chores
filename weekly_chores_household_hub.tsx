@@ -24,6 +24,7 @@ import {
   Pen,
   Plus,
   Search,
+  Settings,
   Settings2,
   Sparkles,
   Square,
@@ -64,6 +65,7 @@ import { ParentNudgeModal } from "./src/ParentNudgeModal";
 import { ParentRewardPayoutModal } from "./src/ParentRewardPayoutModal";
 import { ParentMobileDashboard } from "./src/ParentMobileDashboard";
 import { ThemeToggle } from "./src/ThemeToggle";
+import { HouseholdSettingsModal } from "./src/HouseholdSettingsModal";
 import { HouseholdActivityDrawer } from "./src/HouseholdActivityDrawer";
 import { ActivityToast } from "./src/ActivityToast";
 import {
@@ -1799,6 +1801,7 @@ function App({
   const [nudgeModalTarget, setNudgeModalTarget] = useState<{ kid?: string; type?: "praise" | "nudge" } | null>(null);
   const [showRewardPayoutModal, setShowRewardPayoutModal] = useState(false);
   const [rewardPayoutKid, setRewardPayoutKid] = useState<string>("Sydney");
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
 
   // Parent View Mode Preference: "mobile" vs "table" (stored in localStorage)
@@ -5961,6 +5964,15 @@ function App({
               <Smartphone className="w-3.5 h-3.5 text-indigo-700" />
               <span>Mobile View</span>
             </button>
+            <button
+              type="button"
+              onClick={() => setShowSettingsModal(true)}
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 border border-slate-300 dark:border-slate-700 rounded-lg transition cursor-pointer shadow-2xs"
+              title="Household Settings & Preferences"
+            >
+              <Settings className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
+              <span>Settings</span>
+            </button>
             <ThemeToggle variant="pill" />
             {isSpeechSupported() && (
               <button
@@ -7081,6 +7093,38 @@ function App({
             setNudgeModalTarget(null);
             setNotice(`👀 Previewing as ${targetKid}`);
             setTimeout(() => setNotice(null), 3500);
+          }}
+        />
+      )}
+
+      {/* Household Settings & Preferences Modal */}
+      {showSettingsModal && (
+        <HouseholdSettingsModal
+          isOpen={showSettingsModal}
+          onClose={() => setShowSettingsModal(false)}
+          viewMode="parent"
+          allKidsList={allKidsList}
+          familyMembers={familyMembers}
+          activeSyncWeek={activeSyncWeek}
+          householdId={deviceSession.householdId || "household_family_hub"}
+          onSwitchToKid={(kName) => {
+            setShowSettingsModal(false);
+            const kidSession: DeviceSession = {
+              role: "kid",
+              kidName: kName,
+              householdId: deviceSession.householdId || "household_family_hub",
+              deviceId: deviceSession.deviceId || "local_dev",
+              parentPin: deviceSession.parentPin || "1234"
+            };
+            saveDeviceSession(kidSession);
+            setDeviceSession(kidSession);
+            setNotice(`👀 Switched to Minion view for ${kName}`);
+            setTimeout(() => setNotice(null), 3500);
+          }}
+          onOpenRewardPayoutModal={(kName) => {
+            setShowSettingsModal(false);
+            setRewardPayoutKid(kName || allKidsList[0] || "Sydney");
+            setShowRewardPayoutModal(true);
           }}
         />
       )}

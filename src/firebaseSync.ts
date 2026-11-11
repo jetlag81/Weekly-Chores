@@ -61,8 +61,28 @@ try {
 let firebaseApp: FirebaseApp | null = null;
 let firestoreDb: Firestore | null = null;
 
+const STORAGE_KEY_CELEBRATION_SOUND = "weekly_chores_celebration_sound_v1";
+
+export function isCelebrationSoundEnabled(): boolean {
+  if (typeof window === "undefined") return true;
+  try {
+    const val = localStorage.getItem(STORAGE_KEY_CELEBRATION_SOUND);
+    return val !== "false";
+  } catch {
+    return true;
+  }
+}
+
+export function setCelebrationSoundEnabled(enabled: boolean): void {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(STORAGE_KEY_CELEBRATION_SOUND, String(enabled));
+  } catch {}
+}
+
 // Audio Chime using Web Audio API for rewarding kid chore completion
 export function playChoreCompletionSound() {
+  if (!isCelebrationSoundEnabled()) return;
   try {
     const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioContextClass) return;

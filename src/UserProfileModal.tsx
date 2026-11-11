@@ -23,6 +23,7 @@ import {
 import {
   type UserProfile,
   type AgeTier,
+  type ProfileTierOverride,
   calculateAge,
   getAgeTier,
   generateInitials,
@@ -84,6 +85,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   const [firstName, setFirstName] = useState(profile.firstName || "");
   const [lastName, setLastName] = useState(profile.lastName || "");
   const [birthday, setBirthday] = useState(profile.birthday || "");
+  const [tierOverride, setTierOverride] = useState<ProfileTierOverride>(profile.tierOverride || "auto");
   const [email, setEmail] = useState(profile.email || "");
   const [avatarEmoji, setAvatarEmoji] = useState(profile.avatarEmoji || "🎒");
   const [bio, setBio] = useState(profile.bio || "");
@@ -98,6 +100,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     setFirstName(current.firstName || "");
     setLastName(current.lastName || "");
     setBirthday(current.birthday || "");
+    setTierOverride(current.tierOverride || "auto");
     setEmail(current.email || "");
     setAvatarEmoji(current.avatarEmoji || (current.role === "Supreme Overlord" ? "👑" : "🎒"));
     setBio(current.bio || "");
@@ -108,13 +111,13 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   if (!isOpen) return null;
 
   const currentAge = calculateAge(birthday);
-  const ageTier = getAgeTier(currentAge, profile.role);
+  const ageTier = getAgeTier(currentAge, profile.role, tierOverride);
   const daysToBday = getDaysUntilBirthday(birthday);
   const liveInitials = generateInitials(firstName, lastName);
 
   // Autonomy rule: 12 and up or parent can manage email and profile details
   const hasEmailAutonomy = isParent || ageTier === "teen" || ageTier === "adult";
-  const hasProfileAutonomy = isParent || canProfileSelfManage(profile);
+  const hasProfileAutonomy = isParent || ageTier === "teen" || ageTier === "adult";
 
   const handleSave = () => {
     const updated: UserProfile = {
@@ -124,6 +127,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
       displayName: `${firstName.trim()} ${lastName.trim()}`.trim(),
       initials: liveInitials,
       birthday: birthday || void 0,
+      tierOverride: isParent ? tierOverride : profile.tierOverride,
       email: hasEmailAutonomy ? email.trim() : profile.email,
       avatarEmoji,
       bio: bio.trim(),
@@ -164,16 +168,19 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               <div className="flex items-center gap-2">
                 <h3 className="text-lg font-black tracking-tight">{firstName || targetMemberName} {lastName}</h3>
                 {ageTier === "adult" ? (
-                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 shadow-xs">
-                    👑 Supreme Overlord
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 shadow-xs flex items-center gap-1">
+                    <span>👑 Supreme Overlord</span>
+                    {tierOverride !== "auto" && <span className="bg-amber-900/20 px-1 rounded text-[9px] font-black">Override</span>}
                   </span>
                 ) : ageTier === "teen" ? (
-                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-950 shadow-xs">
-                    ⚡ Teen Minion (12+)
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-950 shadow-xs flex items-center gap-1">
+                    <span>⚡ Teen Minion (12+)</span>
+                    {tierOverride !== "auto" && <span className="bg-indigo-950/20 px-1 rounded text-[9px] font-black">Override</span>}
                   </span>
                 ) : (
-                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-300 text-amber-950 shadow-xs animate-pulse">
-                    🌟 Junior Minion (≤11)
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-300 text-amber-950 shadow-xs animate-pulse flex items-center gap-1">
+                    <span>🌟 Junior Minion (≤11)</span>
+                    {tierOverride !== "auto" && <span className="bg-amber-950/20 px-1 rounded text-[9px] font-black">Override</span>}
                   </span>
                 )}
               </div>
@@ -299,6 +306,56 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Parent Admin Profile Tier Override (Parents Only) */}
+          {isParent ? (
+            <div className="p-3.5 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/70 dark:bg-indigo-950/40 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 text-xs">
+                  <Shield className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                  <span>Parent Admin Override: Profile Experience & Tier</span>
+                </label>
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-200 dark:bg-indigo-900/80 text-indigo-900 dark:text-indigo-200 shadow-2xs">
+                  Parent Control 👑
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300">
+                Parents can override any user's profile type regardless of their birthday (e.g. set an adult down to junior, or elevate a child to teen autonomy).
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <div>
+                  <select
+                    value={tierOverride}
+                    onChange={e => setTierOverride(e.target.value as ProfileTierOverride)}
+                    className="w-full p-2.5 rounded-xl border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-slate-800 font-bold text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-xs"
+                  >
+                    <option value="auto">Auto (Calculate from Birthday: {currentAge !== null ? `${currentAge} yrs` : "N/A"})</option>
+                    <option value="junior">🌟 Junior Minion (≤11) - Visual stimulation & restrictions</option>
+                    <option value="teen">⚡ Teen Minion (12+) - Autonomy & email access</option>
+                    <option value="adult">👑 Adult / Supreme Overlord - Full administrative power</option>
+                  </select>
+                </div>
+                <div className="p-2 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-indigo-100 dark:border-indigo-900/40 text-[11px] flex items-center">
+                  {tierOverride === "auto" ? (
+                    <span className="text-slate-600 dark:text-slate-400">
+                      Standard auto-mode based on age ({ageTier} tier).
+                    </span>
+                  ) : (
+                    <span className="font-semibold text-indigo-950 dark:text-indigo-200">
+                      ⚠️ Manually overridden to <strong className="uppercase underline decoration-indigo-400">{tierOverride}</strong> tier.
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : profile.tierOverride && profile.tierOverride !== "auto" ? (
+            <div className="p-3 rounded-2xl border border-indigo-100 dark:border-indigo-950 bg-indigo-50/50 dark:bg-indigo-950/20 text-xs text-indigo-900 dark:text-indigo-300 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-indigo-500 shrink-0" />
+              <span>
+                Your profile tier is currently tailored to <strong>{tierOverride}</strong> by your parents.
+              </span>
+            </div>
+          ) : null}
 
           {/* Email Address (Autonomy Rule: 12 and Up or Parent) */}
           <div className="space-y-1.5">

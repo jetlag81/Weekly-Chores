@@ -4,6 +4,7 @@
 // - First & last name tracking with automatic initial generation
 
 export type AgeTier = "junior" | "teen" | "adult";
+export type ProfileTierOverride = "auto" | "junior" | "teen" | "adult";
 
 export interface UserProfile {
   id: string; // Unique identifier (e.g. "sydney", "thom")
@@ -14,6 +15,7 @@ export interface UserProfile {
   initials: string;
   birthday?: string; // YYYY-MM-DD
   email?: string; // Only editable if age >= 12 or parent
+  tierOverride?: ProfileTierOverride; // Parent admin override ("auto" | "junior" | "teen" | "adult")
   avatarEmoji?: string;
   bio?: string;
   role: "Supreme Overlord" | "Minion";
@@ -150,18 +152,31 @@ export function calculateAge(birthday?: string, referenceDate: Date = new Date()
 }
 
 /**
- * Determines age tier based on age:
- * - junior: <= 11
- * - teen: 12 to 17
- * - adult: >= 18 or Supreme Overlord
+ * Determines age tier based on age, role, and optional parent admin tierOverride:
+ * - If tierOverride is set to junior/teen/adult, it takes precedence.
+ * - Otherwise:
+ *   - junior: <= 11
+ *   - teen: 12 to 17
+ *   - adult: >= 18 or Supreme Overlord
  */
-export function getAgeTier(age: number | null, role?: string): AgeTier {
+export function getAgeTier(age: number | null, role?: string, tierOverride?: ProfileTierOverride): AgeTier {
+  if (tierOverride && tierOverride !== "auto") {
+    return tierOverride;
+  }
   const isParent = role === "Supreme Overlord" || role === "Overseer Supreme" || String(role || "").toLowerCase().includes("parent");
   if (isParent) return "adult";
   if (age === null) return "junior"; // Default safe tier if unknown
   if (age >= 18) return "adult";
   if (age >= 12) return "teen";
   return "junior";
+}
+
+/**
+ * Returns the effective age tier for a profile, accounting for tierOverride
+ */
+export function getEffectiveAgeTier(profile: UserProfile): AgeTier {
+  const age = calculateAge(profile.birthday);
+  return getAgeTier(age, profile.role, profile.tierOverride);
 }
 
 /**
@@ -181,21 +196,46 @@ export function generateInitials(firstName: string, lastName: string): string {
 
 /**
  * Check if the user profile has autonomy to manage their email address:
- * True if age >= 12 or if adult/parent
+ * True if effective tier is teen or adult
  */
 export function canProfileManageEmail(profile: UserProfile): boolean {
-  const age = calculateAge(profile.birthday);
-  const tier = getAgeTier(age, profile.role);
+  const tier = getEffectiveAgeTier(profile);
   return tier === "teen" || tier === "adult";
 }
 
 /**
- * Check if profile has self-management autonomy (12 and up or parent)
+ * Check if profile has self-management autonomy (effective tier is teen or adult)
  */
 export function canProfileSelfManage(profile: UserProfile): boolean {
-  const age = calculateAge(profile.birthday);
-  const tier = getAgeTier(age, profile.role);
+  const tier = getEffectiveAgeTier(profile);
   return tier === "teen" || tier === "adult";
+}
+
+const STORAGE_KEY_ACTIVE_ADMIN = "weekly_chores_active_parent_admin";
+
+/**
+ * Get the currently active parent administrator for this hub ("Thom" | "Meghan")
+ */
+export function getStoredActiveParentAdmin(): "Thom" | "Meghan" {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_ACTIVE_ADMIN);
+    if (saved === "Meghan" || saved === "Thom") return saved;
+  } catch {}
+  return "Thom";
+}
+
+/**
+ * Set the currently active parent administrator for this hub ("Thom" | "Meghan")
+ */
+export function saveActiveParentAdmin(admin: "Thom" | "Meghan"): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_ACTIVE_ADMIN, admin);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("household_active_admin_updated", { detail: admin }));
+    }
+  } catch (err) {
+    console.error("Error saving active admin:", err);
+  }
 }
 
 /**

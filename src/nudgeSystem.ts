@@ -77,9 +77,10 @@ export function sendParentNudge(params: {
   headline?: string;
   message?: string;
   fromParent?: string;
+  gifUrl?: string;
 }): ParentNudgeEvent {
   const fromParent = params.fromParent || "Parents Thom & Meghan";
-  const gifUrl = params.type === "praise" ? getRandomGoodJobGif() : getRandomMehGif();
+  const gifUrl = params.gifUrl || (params.type === "praise" ? getRandomGoodJobGif() : getRandomMehGif());
   
   const headline = params.headline || (params.type === "praise" ? "Awesome Job! ⭐" : "Minion Nudge! 🧹");
   const message = params.message || (params.type === "praise" ? "Keep up the fantastic work!" : "Time for a quick chore touch-up!");
@@ -99,19 +100,25 @@ export function sendParentNudge(params: {
   // 1. Save to local storage
   saveParentNudge(nudge);
 
-  // 2. Broadcast across devices
+  // 2. Broadcast nudge across devices
   broadcastLocalUpdate({
     type: "PARENT_NUDGE_SENT",
     nudge
   });
 
-  // 3. Log to activity feed so it appears in household drawer and toast
-  saveActivityEvent({
+  const activityEvent = {
     id: nudge.id,
     timestamp: nudge.timestamp,
     kidName: params.targetKid,
     taskTitle: params.type === "praise" ? `⭐ Praise from ${fromParent}: "${message}"` : `🧹 Nudge from ${fromParent}: "${message}"`,
-    action: "signoff"
+    action: "signoff" as const
+  };
+
+  // 3. Log to activity feed and broadcast activity event
+  saveActivityEvent(activityEvent);
+  broadcastLocalUpdate({
+    type: "ACTIVITY_LOGGED",
+    event: activityEvent
   });
 
   // 4. Play ambient household chime

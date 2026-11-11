@@ -5725,6 +5725,27 @@ function App({
             allKidsList={allKidsList}
             initialKid={nudgeModalTarget?.kid}
             initialType={nudgeModalTarget?.type}
+            onNudgeSent={(targetKid, type) => {
+              setActivities(getStoredActivityLog());
+              setNotice(type === "praise" ? `⭐ Praise sent to ${targetKid}!` : `🧹 Nudge sent to ${targetKid}!`);
+              setTimeout(() => setNotice(null), 4000);
+            }}
+            onSwitchToKid={(targetKid) => {
+              const cur = getStoredDeviceSession();
+              const newSession: DeviceSession = {
+                role: "kid",
+                householdId: cur.householdId || "household_family_hub",
+                kidName: targetKid,
+                deviceId: cur.deviceId,
+                parentPin: cur.parentPin || "1234"
+              };
+              saveDeviceSession(newSession);
+              setDeviceSession(newSession);
+              setShowNudgeModal(false);
+              setNudgeModalTarget(null);
+              setNotice(`👀 Previewing as ${targetKid}`);
+              setTimeout(() => setNotice(null), 3500);
+            }}
           />
         )}
       </div>
@@ -6948,8 +6969,34 @@ function App({
       {showNudgeModal && (
         <ParentNudgeModal
           isOpen={showNudgeModal}
-          onClose={() => setShowNudgeModal(false)}
+          onClose={() => {
+            setShowNudgeModal(false);
+            setNudgeModalTarget(null);
+          }}
           allKidsList={allKidsList}
+          initialKid={nudgeModalTarget?.kid}
+          initialType={nudgeModalTarget?.type}
+          onNudgeSent={(targetKid, type) => {
+            setActivities(getStoredActivityLog());
+            setNotice(type === "praise" ? `⭐ Praise sent to ${targetKid}!` : `🧹 Nudge sent to ${targetKid}!`);
+            setTimeout(() => setNotice(null), 4000);
+          }}
+          onSwitchToKid={(targetKid) => {
+            const cur = getStoredDeviceSession();
+            const newSession: DeviceSession = {
+              role: "kid",
+              householdId: cur.householdId || "household_family_hub",
+              kidName: targetKid,
+              deviceId: cur.deviceId,
+              parentPin: cur.parentPin || "1234"
+            };
+            saveDeviceSession(newSession);
+            setDeviceSession(newSession);
+            setShowNudgeModal(false);
+            setNudgeModalTarget(null);
+            setNotice(`👀 Previewing as ${targetKid}`);
+            setTimeout(() => setNotice(null), 3500);
+          }}
         />
       )}
     </div>

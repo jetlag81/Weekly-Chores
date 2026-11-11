@@ -83,6 +83,7 @@ interface HouseholdSettingsModalProps {
   onUnpairDevice?: (kidName: string) => void;
   onSwitchToKid?: (kidName: string) => void;
   onOpenRewardPayoutModal?: (kidName?: string) => void;
+  viewingAsParent?: "Thom" | "Meghan";
 }
 
 export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
@@ -99,7 +100,8 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
   onOpenInspectionModal,
   onUnpairDevice,
   onSwitchToKid,
-  onOpenRewardPayoutModal
+  onOpenRewardPayoutModal,
+  viewingAsParent
 }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
 
@@ -134,7 +136,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
   // Parent Access & PIN
   const [pinInput, setPinInput] = useState("");
   const [pinError, setPinError] = useState("");
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(() => Boolean(viewingAsParent));
   const [showUnpairConfirm, setShowUnpairConfirm] = useState(false);
   const [parentPin, setParentPin] = useState("1234");
   const [newPinInput, setNewPinInput] = useState("");
@@ -276,7 +278,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
 
   // Parent Action Handlers in Minion Mode
   const handleActionWithPin = (action: "admin" | "inspect" | "unpair") => {
-    const isValid = isUnlocked || pinInput === parentPin || pinInput === "1234" || pinInput === "0000";
+    const isValid = Boolean(viewingAsParent) || isUnlocked || pinInput === parentPin || pinInput === "1234" || pinInput === "0000";
     if (isValid) {
       setIsUnlocked(true);
       setPinError("");
@@ -1018,7 +1020,27 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
                       )}
                     </div>
 
-                    {!isUnlocked && (
+                    {viewingAsParent ? (
+                      <div className="p-3 bg-amber-50 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">👑</span>
+                          <div>
+                            <div className="font-extrabold">{viewingAsParent}'s Active Parent View</div>
+                            <div className="text-[11px] text-amber-700 dark:text-amber-300">Viewing child page layout • No PIN required</div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onClose();
+                            onUnlockParentMode?.();
+                          }}
+                          className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black rounded-xl text-xs transition cursor-pointer shrink-0 shadow-2xs"
+                        >
+                          Return to Hub
+                        </button>
+                      </div>
+                    ) : !isUnlocked && (
                       <div className="space-y-2 pt-1">
                         <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                           Enter 4-Digit Parent PIN:

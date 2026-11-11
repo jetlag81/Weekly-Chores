@@ -138,6 +138,7 @@ interface MinionDashboardProps {
   }>;
   allKidsList?: string[];
   onToggleKidChore?: (dateKey: string, choreIndex: number, kidName: string, taskTitle: string, dayIdx: number) => void;
+  viewingAsParent?: "Thom" | "Meghan";
 }
 
 export const MinionDashboard: React.FC<MinionDashboardProps> = ({
@@ -163,7 +164,8 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   onToggleWeeklySignOff,
   activeWeekDays = [],
   allKidsList = ["Sydney", "Cadence", "Mason"],
-  onToggleKidChore
+  onToggleKidChore,
+  viewingAsParent
 }) => {
   const kidMembers = React.useMemo(() => {
     return familyMembers.filter(
@@ -864,11 +866,50 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-16 font-sans transition-colors">
+      {/* Parent Preview Banner (When a parent is inspecting their child's page layout) */}
+      {viewingAsParent && (
+        <aside
+          aria-label="Parent Preview Banner"
+          className="sticky top-0 z-40 w-full bg-gradient-to-r from-amber-500 via-indigo-600 to-purple-600 text-white shadow-md border-b border-white/20 px-3.5 sm:px-4 py-2 transition-colors"
+        >
+          <div className="max-w-xl mx-auto flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-base shrink-0">👑</span>
+              <div className="text-xs truncate">
+                <span className="font-extrabold text-amber-200">{viewingAsParent}'s View</span>
+                <span className="text-white/90"> • Viewing {currentKid.name}'s page</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onExitMinionMode}
+              className="shrink-0 px-3 py-1.5 rounded-xl bg-white text-indigo-950 font-black text-xs hover:bg-amber-100 hover:text-amber-950 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+              title={`Return to ${viewingAsParent}'s Parent View (No PIN required)`}
+            >
+              <span className="text-sm leading-none">←</span>
+              <span>Back to Parent View</span>
+            </button>
+          </div>
+        </aside>
+      )}
+
       {/* Top Mobile Bar */}
-      <header className="sticky top-0 z-30 w-full max-w-full overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-4 py-2.5 shadow-xs dark:shadow-md transition-colors">
+      <header className={`sticky ${viewingAsParent ? "top-[41px]" : "top-0"} z-30 w-full max-w-full overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-4 py-2.5 shadow-xs dark:shadow-md transition-colors`}>
         <div className="max-w-xl mx-auto flex items-center justify-between gap-2">
           {/* Avatar and Kid Name */}
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            {viewingAsParent && (
+              <button
+                type="button"
+                onClick={onExitMinionMode}
+                className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/70 dark:hover:bg-amber-900/90 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 text-xs font-black transition flex items-center gap-1 cursor-pointer shadow-2xs shrink-0 active:scale-95"
+                title={`Return to ${viewingAsParent}'s Parent View (No PIN)`}
+              >
+                <span>←</span>
+                <span className="hidden sm:inline">Parent View</span>
+                <span className="sm:hidden">Back</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setShowProfileModal(true)}
@@ -2113,6 +2154,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             setShowSettingsModal(false);
             onKidSwitched?.(kName);
           }}
+          viewingAsParent={viewingAsParent}
         />
       )}
 

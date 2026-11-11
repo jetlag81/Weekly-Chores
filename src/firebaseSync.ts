@@ -33,6 +33,7 @@ export interface DeviceSession {
   parentName?: "Thom" | "Meghan";
   deviceId: string;
   parentPin?: string;
+  viewingAsParent?: "Thom" | "Meghan";
 }
 
 export interface HouseholdInvite {

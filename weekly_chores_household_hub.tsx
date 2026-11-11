@@ -1897,12 +1897,14 @@ function App({
   };
 
   const handleOpenKidPage = (kidName: string) => {
+    const parentAdmin = activeParentAdmin || deviceSession.parentName || "Thom";
     const kidSession: DeviceSession = {
       role: "kid",
       kidName,
       householdId: deviceSession.householdId || "household_family_hub",
       deviceId: deviceSession.deviceId || "local_dev",
-      parentPin: deviceSession.parentPin || "1234"
+      parentPin: deviceSession.parentPin || "1234",
+      viewingAsParent: parentAdmin
     };
     saveDeviceSession(kidSession);
     setDeviceSession(kidSession);
@@ -1910,9 +1912,10 @@ function App({
       const url = new URL(window.location.href);
       url.searchParams.delete("parent");
       url.searchParams.set("kid", kidName);
+      url.searchParams.set("fromParent", parentAdmin);
       window.history.replaceState({}, document.title, url.toString());
     } catch {}
-    setNotice(`Opened ${kidName}'s dedicated Minion page! 🎒`);
+    setNotice(`Viewing ${kidName}'s Minion page as ${parentAdmin}! 🎒`);
     setTimeout(() => setNotice(null), 3000);
   };
 
@@ -2030,12 +2033,16 @@ function App({
       } catch {}
     } else if (kidParam) {
       const cur = getStoredDeviceSession();
+      const fromParent = (params.get("fromParent") || params.get("parentOrigin") || "") as "Thom" | "Meghan" | "";
+      const validFromParent: "Thom" | "Meghan" | undefined =
+        fromParent === "Thom" || fromParent === "Meghan" ? fromParent : cur.viewingAsParent;
       const newSession: DeviceSession = {
         role: "kid",
         householdId: cur.householdId || "household_family_hub",
         kidName: kidParam,
         deviceId: cur.deviceId,
-        parentPin: "1234"
+        parentPin: "1234",
+        viewingAsParent: validFromParent
       };
       saveDeviceSession(newSession);
       setDeviceSession(newSession);
@@ -2044,6 +2051,9 @@ function App({
         const url = new URL(window.location.href);
         url.searchParams.delete("parent");
         url.searchParams.set("kid", kidParam);
+        if (validFromParent) {
+          url.searchParams.set("fromParent", validFromParent);
+        }
         window.history.replaceState({}, document.title, url.toString());
       } catch {}
     } else if (modeParam === "parent" || modeParam === "admin") {
@@ -5883,6 +5893,7 @@ function App({
   }
 
   if (deviceSession.role === "kid" && deviceSession.kidName) {
+    const activeFromParent = deviceSession.viewingAsParent || (typeof window !== "undefined" ? ((new URLSearchParams(window.location.search).get("fromParent") as any) || undefined) : undefined);
     return (
       <MinionDashboard
         kidName={deviceSession.kidName}
@@ -5906,16 +5917,20 @@ function App({
         onToggleWeeklySignOff={handleToggleWeeklySignOff}
         onToggleKidChore={handleToggleKidChore}
         getChoreStatus={getChoreStatus}
+        viewingAsParent={activeFromParent}
         onKidSwitched={(kName) => {
-          setDeviceSession(prev => ({ ...prev, role: "kid", kidName: kName }));
+          setDeviceSession(prev => ({ ...prev, role: "kid", kidName: kName, viewingAsParent: activeFromParent }));
           try {
             const url = new URL(window.location.href);
             url.searchParams.set("kid", kName);
+            if (activeFromParent) {
+              url.searchParams.set("fromParent", activeFromParent);
+            }
             window.history.replaceState({}, document.title, url.toString());
           } catch {}
         }}
         onExitMinionMode={() => {
-          const chosen = activeParentAdmin || "Thom";
+          const chosen = activeFromParent || activeParentAdmin || "Thom";
           const adminSession: DeviceSession = {
             role: "admin",
             parentName: chosen,
@@ -5925,12 +5940,17 @@ function App({
           };
           saveDeviceSession(adminSession);
           setDeviceSession(adminSession);
+          setActiveParentAdmin(chosen);
+          saveActiveParentAdmin(chosen);
           try {
             const url = new URL(window.location.href);
             url.searchParams.delete("kid");
+            url.searchParams.delete("fromParent");
             url.searchParams.set("parent", chosen);
             window.history.replaceState({}, document.title, url.toString());
           } catch {}
+          setNotice(`Returned to ${chosen}'s Admin Hub! 👑`);
+          setTimeout(() => setNotice(null), 3000);
         }}
       />
     );
@@ -5969,20 +5989,26 @@ function App({
           onOpenActivityFeed={() => setShowActivityDrawer(true)}
           onSwitchToMinionMode={(kName) => {
             const target = kName || allKidsList[0] || "Sydney";
-            const kidSession = {
+            const parentAdmin = activeParentAdmin || deviceSession.parentName || "Thom";
+            const kidSession: DeviceSession = {
               role: "kid",
               kidName: target,
               householdId: deviceSession.householdId || "household_family_hub",
               deviceId: deviceSession.deviceId || "local_dev",
-              parentPin: "1234"
+              parentPin: "1234",
+              viewingAsParent: parentAdmin
             };
             saveDeviceSession(kidSession);
             setDeviceSession(kidSession);
             try {
               const url = new URL(window.location.href);
+              url.searchParams.delete("parent");
               url.searchParams.set("kid", target);
+              url.searchParams.set("fromParent", parentAdmin);
               window.history.replaceState({}, document.title, url.toString());
             } catch {}
+            setNotice(`Viewing ${target}'s Minion page as ${parentAdmin}! 🎒`);
+            setTimeout(() => setNotice(null), 3000);
           }}
           onToggleDesktopView={toggleParentViewMode}
           activitiesCount={activities.length}
@@ -6083,18 +6109,27 @@ function App({
             }}
             onSwitchToKid={(targetKid) => {
               const cur = getStoredDeviceSession();
+              const parentAdmin = activeParentAdmin || cur.parentName || "Thom";
               const newSession: DeviceSession = {
                 role: "kid",
                 householdId: cur.householdId || "household_family_hub",
                 kidName: targetKid,
                 deviceId: cur.deviceId,
-                parentPin: cur.parentPin || "1234"
+                parentPin: cur.parentPin || "1234",
+                viewingAsParent: parentAdmin
               };
               saveDeviceSession(newSession);
               setDeviceSession(newSession);
               setShowNudgeModal(false);
               setNudgeModalTarget(null);
-              setNotice(`👀 Previewing as ${targetKid}`);
+              try {
+                const url = new URL(window.location.href);
+                url.searchParams.delete("parent");
+                url.searchParams.set("kid", targetKid);
+                url.searchParams.set("fromParent", parentAdmin);
+                window.history.replaceState({}, document.title, url.toString());
+              } catch {}
+              setNotice(`Viewing ${targetKid}'s Minion page as ${parentAdmin}! 🎒`);
               setTimeout(() => setNotice(null), 3500);
             }}
           />
@@ -7847,18 +7882,27 @@ function App({
           }}
           onSwitchToKid={(targetKid) => {
             const cur = getStoredDeviceSession();
+            const parentAdmin = activeParentAdmin || cur.parentName || "Thom";
             const newSession: DeviceSession = {
               role: "kid",
               householdId: cur.householdId || "household_family_hub",
               kidName: targetKid,
               deviceId: cur.deviceId,
-              parentPin: cur.parentPin || "1234"
+              parentPin: cur.parentPin || "1234",
+              viewingAsParent: parentAdmin
             };
             saveDeviceSession(newSession);
             setDeviceSession(newSession);
             setShowNudgeModal(false);
             setNudgeModalTarget(null);
-            setNotice(`👀 Previewing as ${targetKid}`);
+            try {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("parent");
+              url.searchParams.set("kid", targetKid);
+              url.searchParams.set("fromParent", parentAdmin);
+              window.history.replaceState({}, document.title, url.toString());
+            } catch {}
+            setNotice(`Viewing ${targetKid}'s Minion page as ${parentAdmin}! 🎒`);
             setTimeout(() => setNotice(null), 3500);
           }}
         />

@@ -141,10 +141,21 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   onToggleKidChore
 }) => {
   const kidMembers = React.useMemo(() => {
-    return familyMembers.filter(
-      m => m.active !== false && m.role !== "Supreme Overlord" && m.role !== "Overseer Supreme"
+    // Exclude parents/admins and casual occupants (e.g. Koda, Keyanna)
+    const nonCasual = familyMembers.filter(
+      m => m.active !== false &&
+           m.type !== "casual" &&
+           m.residency !== "Casual" &&
+           m.role !== "Supreme Overlord" &&
+           m.role !== "Overseer Supreme"
     );
-  }, [familyMembers]);
+    if (allKidsList && allKidsList.length > 0) {
+      const allowed = allKidsList.map(k => k.trim().toLowerCase());
+      const matched = nonCasual.filter(m => allowed.includes(m.name.trim().toLowerCase()));
+      if (matched.length > 0) return matched;
+    }
+    return nonCasual;
+  }, [familyMembers, allKidsList]);
 
   const currentKid = familyMembers.find(
     m => m.name.toLowerCase() === kidName.toLowerCase()
@@ -682,9 +693,9 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const completedTodayCount = dailyChoresForKid.filter(c => c.done).length;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-16 font-sans transition-colors">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-16 font-sans transition-colors">
       {/* Top Mobile Bar */}
-      <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-4 py-2.5 shadow-xs dark:shadow-md transition-colors">
+      <header className="sticky top-0 z-30 w-full max-w-full overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-4 py-2.5 shadow-xs dark:shadow-md transition-colors">
         <div className="max-w-xl mx-auto flex items-center justify-between gap-2">
           {/* Avatar and Kid Name */}
           <div className="flex items-center gap-2.5 min-w-0">
@@ -757,16 +768,14 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             >
               <Settings className="w-4 h-4 text-slate-600 dark:text-slate-300" />
             </button>
-
-
           </div>
         </div>
       </header>
 
       {/* Kid Pages Segmented Switcher (Each Kid Has Their Own Dedicated Page) */}
       {kidMembers.length > 1 && (
-        <div className="max-w-xl mx-auto px-4 pt-3 pb-0.5">
-          <div className="flex items-center gap-1.5 p-1 bg-slate-200/80 dark:bg-slate-900 rounded-2xl border border-slate-300/80 dark:border-slate-800 shadow-2xs">
+        <div className="w-full max-w-xl mx-auto px-3 sm:px-4 pt-3 pb-0.5 overflow-hidden">
+          <div className="flex items-center gap-1 sm:gap-1.5 p-1 bg-slate-200/80 dark:bg-slate-900 rounded-2xl border border-slate-300/80 dark:border-slate-800 shadow-2xs overflow-x-auto no-scrollbar">
             {kidMembers.map(m => {
               const isCurrent = m.name.toLowerCase() === currentKid.name.toLowerCase();
               const mStats = getMemberCompletionForDay(m.name, activeDateKey);
@@ -792,7 +801,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                       onKidSwitched?.(m.name);
                     }
                   }}
-                  className={`flex-1 py-2 px-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 select-none ${
+                  className={`flex-1 min-w-0 py-2 px-1.5 sm:px-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1 sm:gap-2 select-none shrink ${
                     isCurrent
                       ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-black ring-1 ring-slate-300 dark:ring-slate-700"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60 font-bold"
@@ -803,9 +812,9 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                     className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-white/50"
                     style={{ backgroundColor: m.color || "#6366F1" }}
                   />
-                  <span className="text-xs truncate">{m.name}</span>
+                  <span className="text-xs truncate font-bold">{m.name}</span>
                   <span
-                    className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
+                    className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
                       isCurrent
                         ? "bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300"
                         : "bg-slate-300/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
@@ -821,7 +830,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
       )}
 
       {/* Navigation Tab Bar */}
-      <div className="max-w-xl mx-auto px-4 pt-2.5 pb-1">
+      <div className="w-full max-w-xl mx-auto px-3 sm:px-4 pt-2.5 pb-1 overflow-hidden">
         <div className="flex bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-black shadow-2xs gap-1">
           <button
             type="button"

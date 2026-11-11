@@ -2436,12 +2436,13 @@ function App({
   const kidsList = useMemo(() => {
     return familyMembers.filter(m => {
       if (m.active === false) return false;
+      if (m.type === "casual" || m.residency === "Casual") return false;
       const roleLower = String(m.role || "").toLowerCase();
       return !roleLower.includes("parent") && !roleLower.includes("overseer") && !roleLower.includes("overlord") && !roleLower.includes("admin") && !roleLower.includes("mom") && !roleLower.includes("dad");
     }).map(m => m.name);
   }, [familyMembers]);
   const allKidsList = useMemo(() => {
-    const fallbackKids = ["Sydney", "Cadence", "Mason", "Koda", "Keyanna"];
+    const fallbackKids = ["Sydney", "Cadence", "Mason"];
     const merged = Array.from(new Set([...kidsList, ...fallbackKids]));
     return merged.length > 0 ? merged : fallbackKids;
   }, [kidsList]);

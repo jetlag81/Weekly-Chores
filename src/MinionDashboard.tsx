@@ -33,7 +33,8 @@ import {
   Settings,
   QrCode,
   Camera,
-  X
+  X,
+  MessageSquare
 } from "lucide-react";
 import { isStandalone, subscribeInstallable } from "./pwaManager";
 import { InstallPwaModal } from "./InstallPwaModal";
@@ -108,6 +109,8 @@ import {
   getDaysUntilBirthday,
   type UserProfile
 } from "./userProfiles";
+import { FamilyChatDrawer } from "./FamilyChatDrawer";
+import { getUnreadChatCount, subscribeToFamilyChat } from "./familyChat";
 
 interface MinionDashboardProps {
   kidName: string;
@@ -300,6 +303,17 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const [showActivityDrawer, setShowActivityDrawer] = useState(false);
   const [activeToastEvent, setActiveToastEvent] = useState<HouseholdActivityEvent | null>(null);
 
+  // Household Real-Time Family Chat State
+  const [showChatDrawer, setShowChatDrawer] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState(() => getUnreadChatCount(currentKid.name));
+
+  useEffect(() => {
+    const unsub = subscribeToFamilyChat((msgs) => {
+      setUnreadChatCount(getUnreadChatCount(currentKid.name, msgs));
+    }, currentKid.name);
+    return () => unsub();
+  }, [currentKid.name]);
+
   const logHouseholdActivity = (event: Omit<HouseholdActivityEvent, "id" | "timestamp" | "deviceId">) => {
     const fullEvent: HouseholdActivityEvent = {
       ...event,
@@ -471,7 +485,15 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     return count;
   }, [monthSchedule, currentKid.name]);
 
-  // Ranked kids for the leaderboard
+  // Pro-rated monthly target for fairness across Full-Time, Bi-Weekly, and Casual kids
+  const myMonthlyTarget = React.useMemo(() => {
+    const base = monthlyGoalTarget || 25;
+    if (currentKid.type === "biweekly") return Math.max(1, Math.round(base * 0.5));
+    if (currentKid.type === "casual") return Math.max(1, Math.round(base * 0.32));
+    return base;
+  }, [currentKid.type, monthlyGoalTarget]);
+
+  // Ranked kids for the leaderboard with pro-rated targets and % completion fairness
   const rankedKidsList = React.useMemo(() => {
     if (rankedMembers && rankedMembers.length > 0) {
       return rankedMembers;
@@ -489,6 +511,12 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
           }
         });
       });
+      const target = m.type === "biweekly"
+        ? Math.max(1, Math.round(monthlyGoalTarget * 0.5))
+        : m.type === "casual"
+        ? Math.max(1, Math.round(monthlyGoalTarget * 0.32))
+        : monthlyGoalTarget;
+
       return {
         id: m.id || m.name,
         name: m.name,
@@ -497,12 +525,13 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         residency: m.type === "biweekly" ? "Bi-Weekly" : m.type === "casual" ? "Casual" : "Full-Time",
         type: m.type,
         done,
-        total: Math.max(done, 20),
-        pct: Math.min(100, Math.round((done / Math.max(1, monthlyGoalTarget)) * 100))
+        target,
+        total: target,
+        pct: Math.min(100, Math.round((done / Math.max(1, target)) * 100))
       };
     }).sort((a, b) => {
-      if (b.done !== a.done) return b.done - a.done;
-      return b.pct - a.pct;
+      if (b.pct !== a.pct) return b.pct - a.pct;
+      return b.done - a.done;
     });
   }, [rankedMembers, kidMembers, monthSchedule, monthlyGoalTarget]);
 
@@ -773,7 +802,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
       const nextDoneCount = completedTodayCount + 1;
       const dailyPct = totalDaily > 0 ? (nextDoneCount / totalDaily) * 100 : 0;
 
-      const totalMonthlyTarget = Math.max(1, monthlyGoalTarget);
+      const totalMonthlyTarget = Math.max(1, myMonthlyTarget);
       const nextMonthlyCount = kidMonthlyCompletions + 1;
       const monthlyPct = (nextMonthlyCount / totalMonthlyTarget) * 100;
 
@@ -782,7 +811,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
       const isNearGoal = isNearDailyGoal || isNearMonthlyGoal;
       const goalNote = isNearMonthlyGoal
-        ? `90% Monthly Goal! ${nextMonthlyCount}/${monthlyGoalTarget} chores towards ${monthlyIncentive}!`
+        ? `90% Monthly Goal! ${nextMonthlyCount}/${myMonthlyTarget} chores towards ${monthlyIncentive}!`
         : isNearDailyGoal
         ? `90% of today's chores done (${nextDoneCount}/${totalDaily})! Only 1 chore left!`
         : undefined;
@@ -819,13 +848,13 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const handleToggleWeekly = (choreIndex: number, taskTitle: string, currentDone: boolean) => {
     onToggleWeeklyKidChore(choreIndex, currentKid.name, taskTitle);
     if (!currentDone) {
-      const totalMonthlyTarget = Math.max(1, monthlyGoalTarget);
+      const totalMonthlyTarget = Math.max(1, myMonthlyTarget);
       const nextMonthlyCount = kidMonthlyCompletions + 1;
       const monthlyPct = (nextMonthlyCount / totalMonthlyTarget) * 100;
       const isNearMonthlyGoal = monthlyPct >= 88 && monthlyPct < 100;
 
       const goalNote = isNearMonthlyGoal
-        ? `90% Monthly Goal! ${nextMonthlyCount}/${monthlyGoalTarget} chores towards ${monthlyIncentive}!`
+        ? `90% Monthly Goal! ${nextMonthlyCount}/${myMonthlyTarget} chores towards ${monthlyIncentive}!`
         : "90% of weekly goal reached! Final push!";
 
       playChoreCompletionSound();
@@ -852,6 +881,142 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         action: "uncompleted"
       });
     }
+  };
+
+  // Parent Chore Bounties available on activeDateKey (Thom/Meghan chores kids can step up to do)
+  const parentBountyChores = React.useMemo(() => {
+    const dayChores = monthSchedule[activeDateKey] || {};
+    const list: Array<{
+      chore: any;
+      choreIndex: number;
+      done: boolean;
+      who: string;
+      originalAssignee: string;
+      canonicalKey: string;
+      claimedByMe: boolean;
+      claimedByOther?: string;
+    }> = [];
+
+    hubMasterChores.forEach((chore, idx) => {
+      const f = String(chore.frequency || "").toLowerCase();
+      const isDaily = f.includes("daily") || (!f.includes("bi") && !f.includes("once") && !f.includes("week"));
+      if (!isDaily) return;
+
+      const cKey = getChoreCanonicalKey(chore.task);
+      const norm = normalizeTaskName(chore.task);
+
+      const statusFromProp = getChoreStatus ? getChoreStatus(activeDateKey, chore.index_, chore.task) : null;
+      const choreStatus = (statusFromProp && (statusFromProp.hasExplicitRecord || statusFromProp.who || statusFromProp.done))
+        ? statusFromProp
+        : (cKey ? dayChores[cKey] : null) ||
+          dayChores[chore.index_] ||
+          (chore.task ? dayChores[chore.task] : null) ||
+          (chore.task ? dayChores[chore.task.toLowerCase().trim()] : null) ||
+          (norm ? dayChores[norm] : null) || {};
+
+      const who = (choreStatus.who || chore.who || "").trim();
+      const isDone = !!choreStatus.done;
+      const isBounty = !!choreStatus.isBounty;
+      const originalAssignee = choreStatus.originalAssignee || (isBounty ? "Parents" : who);
+
+      const isParentAssigned =
+        who.toLowerCase() === "thom" ||
+        who.toLowerCase() === "meghan" ||
+        who.toLowerCase().includes("thom") ||
+        who.toLowerCase().includes("megh") ||
+        who.toLowerCase().includes("parent");
+
+      const claimedByMe = isBounty && who.toLowerCase() === currentKid.name.toLowerCase();
+      const claimedByOther = isBounty && !claimedByMe && who ? who : undefined;
+
+      if (isParentAssigned || isBounty) {
+        list.push({
+          chore,
+          choreIndex: chore.index_ !== undefined ? chore.index_ : idx,
+          done: isDone,
+          who,
+          originalAssignee: isBounty ? originalAssignee : who,
+          canonicalKey: cKey,
+          claimedByMe,
+          claimedByOther
+        });
+      }
+    });
+
+    list.sort((a, b) => {
+      if (a.claimedByMe !== b.claimedByMe) return a.claimedByMe ? 1 : -1;
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return a.choreIndex - b.choreIndex;
+    });
+
+    return list;
+  }, [hubMasterChores, monthSchedule, activeDateKey, currentKid.name, getChoreStatus]);
+
+  const handleClaimParentBounty = (bounty: {
+    choreIndex: number;
+    chore: any;
+    who: string;
+    originalAssignee: string;
+    done: boolean;
+    claimedByMe: boolean;
+  }) => {
+    if (bounty.claimedByMe && bounty.done) {
+      // Revert bounty back to original parent
+      onUpdateChore(
+        activeDateKey,
+        bounty.choreIndex,
+        {
+          who: bounty.originalAssignee || "Thom",
+          done: false,
+          isBounty: false,
+          originalAssignee: undefined
+        },
+        bounty.chore.task
+      );
+      logHouseholdActivity({
+        kidName: currentKid.name,
+        taskTitle: `⭐ Parent Bounty: ${bounty.chore.task}`,
+        action: "uncompleted",
+        dateKey: activeDateKey
+      });
+      return;
+    }
+
+    const targetParent = bounty.originalAssignee || bounty.who || "Parents";
+    onUpdateChore(
+      activeDateKey,
+      bounty.choreIndex,
+      {
+        who: currentKid.name,
+        done: true,
+        isBounty: true,
+        originalAssignee: targetParent
+      },
+      bounty.chore.task
+    );
+
+    playChoreCompletionSound();
+    try {
+      confetti({
+        particleCount: 85,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+    } catch {}
+
+    speakChoreCelebration(currentKid.name, `Parent Bounty: ${bounty.chore.task}`);
+    triggerCelebration(
+      `⭐ Parent Bounty: ${bounty.chore.task}`,
+      false,
+      `Awesome job stepping up to help ${targetParent}! +1 Extra Credit earned toward your goal!`
+    );
+
+    logHouseholdActivity({
+      kidName: currentKid.name,
+      taskTitle: `⭐ Stepped up for ${targetParent}: ${bounty.chore.task} (+1 Credit!)`,
+      action: "completed",
+      dateKey: activeDateKey
+    });
   };
 
 
@@ -989,6 +1154,21 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
               {activities.length > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-indigo-600 text-white text-[9px] font-mono font-black flex items-center justify-center px-1 shadow-xs">
                   {activities.length > 9 ? "9+" : activities.length}
+                </span>
+              )}
+            </button>
+
+            {/* Family Hub Chat Button */}
+            <button
+              type="button"
+              onClick={() => setShowChatDrawer(true)}
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition flex items-center justify-center cursor-pointer shadow-2xs relative"
+              title="Open Family Hub Chat"
+            >
+              <MessageSquare className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              {unreadChatCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 rounded-full bg-rose-500 text-white text-[9px] font-mono font-black flex items-center justify-center px-1 shadow-xs animate-bounce">
+                  {unreadChatCount > 9 ? "9+" : unreadChatCount}
                 </span>
               )}
             </button>
@@ -1150,18 +1330,23 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
               {/* Monthly Target Progress for this Kid */}
               <div className="bg-black/20 p-3.5 rounded-2xl space-y-2 border border-white/10">
                 <div className="flex items-center justify-between text-xs font-bold">
-                  <span className="text-amber-100 flex items-center gap-1.5">
+                  <span className="text-amber-100 flex items-center gap-1.5 flex-wrap">
                     <Target className="w-3.5 h-3.5 text-amber-300" />
-                    <span>Your Target: {monthlyGoalTarget} Chores</span>
+                    <span>Your Target: {myMonthlyTarget} Chores</span>
+                    {currentKid.type && currentKid.type !== "regular" && (
+                      <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-white/20 text-white shadow-2xs">
+                        {currentKid.type === "biweekly" ? "Bi-Weekly (50%)" : "Casual (32%)"}
+                      </span>
+                    )}
                   </span>
                   <span className="text-white font-black text-xs">
-                    {kidMonthlyCompletions} / {monthlyGoalTarget} ({Math.min(100, Math.round((kidMonthlyCompletions / monthlyGoalTarget) * 100))}%)
+                    {kidMonthlyCompletions} / {myMonthlyTarget} ({Math.min(100, Math.round((kidMonthlyCompletions / myMonthlyTarget) * 100))}%)
                   </span>
                 </div>
                 <div className="w-full bg-black/30 rounded-full h-3 overflow-hidden p-0.5">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-amber-300 to-yellow-200 transition-all duration-700 shadow-xs"
-                    style={{ width: `${Math.min(100, Math.max(5, (kidMonthlyCompletions / monthlyGoalTarget) * 100))}%` }}
+                    style={{ width: `${Math.min(100, Math.max(5, (kidMonthlyCompletions / myMonthlyTarget) * 100))}%` }}
                   />
                 </div>
               </div>
@@ -1295,7 +1480,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                             className="w-4 h-4 rounded-full shadow-2xs shrink-0"
                             style={{ backgroundColor: k.color }}
                           />
-                          <span className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                          <span className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
                             <span>{k.name}</span>
                             {isMe && (
                               <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-full bg-indigo-600 text-white uppercase tracking-wider">
@@ -1308,11 +1493,17 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                                 <span>#1 Leader</span>
                               </span>
                             )}
+                            {k.residency && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                {k.residency}
+                              </span>
+                            )}
                           </span>
                         </div>
                         <div className="text-right">
                           <span className="font-black text-sm text-slate-900 dark:text-white">{k.done}</span>
-                          <span className="text-xs text-slate-500 dark:text-slate-400"> chores</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400"> / {k.target || monthlyGoalTarget}</span>
+                          <span className="ml-1.5 text-xs font-black text-amber-600 dark:text-amber-400">({k.pct}%)</span>
                         </div>
                       </div>
 
@@ -1321,7 +1512,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                         <div
                           className="h-full rounded-full transition-all duration-700"
                           style={{
-                            width: `${Math.min(100, Math.max(6, (k.done / Math.max(1, topScore, monthlyGoalTarget)) * 100))}%`,
+                            width: `${Math.min(100, Math.max(6, k.pct))}%`,
                             backgroundColor: isLeader ? "#D97706" : k.color
                           }}
                         />
@@ -1887,6 +2078,119 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
               )}
             </div>
 
+            {/* Parent Chore Bounties & Extra Credit Section */}
+            {parentBountyChores.length > 0 && (
+              <div className="space-y-2.5 pt-2">
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-black shadow-2xs">
+                      ⭐
+                    </span>
+                    <div>
+                      <h2 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <span>Parent Bounties & Extra Credit</span>
+                        <span className="text-[10px] font-extrabold px-2 py-0.2 rounded-full bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                          +1 Goal Credit
+                        </span>
+                      </h2>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-indigo-500/10 border border-amber-300/80 dark:border-amber-800/80 rounded-2xl p-3.5 space-y-2.5">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-snug">
+                    {currentKid.type === "casual"
+                      ? `Hey ${currentKid.name}! As a visiting family member, you can jump in and do parents' chores anytime to earn credits toward rewards!`
+                      : `Step up and take over a parent's chore to give them a break and score an extra completion towards your monthly goal!`}
+                  </p>
+
+                  <div className="space-y-2">
+                    {parentBountyChores.map((bounty) => {
+                      const titleLines = String(bounty.chore.task || "Chore").split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+                      const mainTitle = titleLines[0] || bounty.chore.task;
+                      const subTitle = titleLines.slice(1).join(" ") || bounty.chore.notes;
+                      const isClaimedByMe = bounty.claimedByMe && bounty.done;
+                      const isClaimedByOther = !!bounty.claimedByOther;
+                      const targetParent = bounty.originalAssignee || "Parents";
+
+                      return (
+                        <div
+                          key={`bounty-${bounty.canonicalKey || bounty.choreIndex}`}
+                          onClick={() => {
+                            if (!isClaimedByOther) {
+                              handleClaimParentBounty(bounty);
+                            }
+                          }}
+                          className={`p-3.5 rounded-2xl border transition-all select-none flex items-center justify-between gap-3 shadow-2xs ${
+                            isClaimedByMe
+                              ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 dark:border-emerald-700 ring-1 ring-emerald-400/50 cursor-pointer"
+                              : isClaimedByOther
+                              ? "bg-slate-100/70 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800 opacity-60 cursor-not-allowed"
+                              : "bg-white dark:bg-slate-900 border-amber-200 dark:border-amber-900/60 hover:border-amber-400 dark:hover:border-amber-600 hover:shadow-xs cursor-pointer active:scale-[0.99]"
+                          }`}
+                        >
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div className="pt-0.5">
+                              {isClaimedByMe ? (
+                                <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 fill-emerald-100 dark:fill-emerald-950 shrink-0" />
+                              ) : (
+                                <Sparkles className="w-5 h-5 text-amber-500 shrink-0" />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className={`font-bold text-sm ${isClaimedByMe ? "line-through text-slate-400" : "text-slate-900 dark:text-white"}`}>
+                                  {mainTitle}
+                                </span>
+                                <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                                  For {targetParent}
+                                </span>
+                                {bounty.chore.category && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                    {bounty.chore.category}
+                                  </span>
+                                )}
+                              </div>
+                              {subTitle && (
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug line-clamp-1">
+                                  {subTitle}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="shrink-0">
+                            {isClaimedByMe ? (
+                              <span className="px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 text-xs font-black flex items-center gap-1 shadow-2xs">
+                                <span>Done ✓</span>
+                                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">(Tap to undo)</span>
+                              </span>
+                            ) : isClaimedByOther ? (
+                              <span className="px-2.5 py-1 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold">
+                                Done by {bounty.claimedByOther} ✓
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleClaimParentBounty(bounty);
+                                }}
+                                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black shadow-xs hover:shadow-sm transition cursor-pointer flex items-center gap-1 active:scale-95"
+                              >
+                                <Sparkles className="w-3.5 h-3.5 text-amber-100" />
+                                <span>Do for {targetParent} (+1 ⭐)</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Weekly Minion Tasks (Personal Laundry & Bedroom Checklist) */}
             <div className="space-y-2.5 pt-2">
               <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 px-1 flex items-center gap-1.5">
@@ -2308,6 +2612,18 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
           }}
         />
       )}
+
+      {/* Household Real-Time Family Chat Drawer */}
+      <FamilyChatDrawer
+        isOpen={showChatDrawer}
+        onClose={() => setShowChatDrawer(false)}
+        currentUser={{
+          name: currentKid.name,
+          role: currentKid.role || "Minion",
+          color: currentKid.color || "#6366F1"
+        }}
+        familyMembers={familyMembers}
+      />
     </div>
   );
 };

@@ -42,7 +42,8 @@ import {
   Bell,
   DollarSign,
   X,
-  Camera
+  Camera,
+  MessageSquare
 } from 'lucide-react';
 import {
   getStoredDeviceSession,
@@ -81,6 +82,8 @@ import { ThemeToggle } from "./src/ThemeToggle";
 import { getEffectiveTheme, subscribeTheme } from "./src/themeManager";
 import { HouseholdSettingsModal } from "./src/HouseholdSettingsModal";
 import { HouseholdActivityDrawer } from "./src/HouseholdActivityDrawer";
+import { FamilyChatDrawer } from "./src/FamilyChatDrawer";
+import { getUnreadChatCount, subscribeToFamilyChat } from "./src/familyChat";
 import { ActivityToast } from "./src/ActivityToast";
 import {
   type HouseholdActivityEvent,
@@ -2107,6 +2110,18 @@ function App({
   const [activities, setActivities] = useState(() => getStoredActivityLog());
   const [showActivityDrawer, setShowActivityDrawer] = useState(false);
   const [activeToastEvent, setActiveToastEvent] = useState(null);
+
+  // Real-Time Household Family Chat State
+  const [showChatDrawer, setShowChatDrawer] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState(() => getUnreadChatCount(activeParentAdmin || "Thom"));
+
+  useEffect(() => {
+    const parentName = activeParentAdmin || "Thom";
+    const unsub = subscribeToFamilyChat((msgs) => {
+      setUnreadChatCount(getUnreadChatCount(parentName, msgs));
+    }, parentName);
+    return () => unsub();
+  }, [activeParentAdmin]);
 
   const logHouseholdActivity = useCallback((event) => {
     const fullEvent = {
@@ -6009,6 +6024,7 @@ function App({
     };
   }, [calendarWeeks, choreRows, monthSchedule, familyMembers, getMember]);
   const rankedMembers = useMemo(() => {
+    const baseTarget = Math.max(1, monthlyGoalTarget || 25);
     return familyMembers
       .filter(m => {
         const nameLower = (m.name || "").toLowerCase().trim();
@@ -6022,20 +6038,31 @@ function App({
           total: 0,
           done: 0
         };
-        const pct = stat.total > 0 ? Math.round(stat.done / stat.total * 100) : 0;
+        // Fairness Target by Residency:
+        // Full-Time (Sydney): 100% of base target (e.g. 25)
+        // Bi-Weekly (Cadence, Mason): 50% pro-rated for alternating schedule (e.g. 12-13)
+        // Casual (Koda, Keyanna): Casual milestone goal (e.g. 8)
+        const target = m.type === "biweekly"
+          ? Math.max(1, Math.round(baseTarget * 0.5))
+          : m.type === "casual"
+          ? Math.max(1, Math.round(baseTarget * 0.32))
+          : baseTarget;
+
+        const pct = target > 0 ? Math.round((stat.done / target) * 100) : 0;
         return {
-          ...{
-            ...m
-          },
+          ...m,
           done: stat.done,
+          target,
           total: stat.total,
           pct
         };
       }).sort((a, b) => {
-        if (b.done !== a.done) return b.done - a.done;
-        return b.pct - a.pct;
+        // Fair ranking: sort primarily by % of residency-adjusted goal reached!
+        if (b.pct !== a.pct) return b.pct - a.pct;
+        // Secondary tie breaker: total raw chores completed
+        return b.done - a.done;
       });
-  }, [familyMembers, monthStats]);
+  }, [familyMembers, monthStats, monthlyGoalTarget]);
   const topPerformer = useMemo(() => {
     if (rankedMembers.length === 0) return null;
     if (rankedMembers[0].done === 0) return null;
@@ -6331,6 +6358,18 @@ function App({
           allKidsList={allKidsList}
         />
 
+        {/* Household Real-Time Family Chat Drawer */}
+        <FamilyChatDrawer
+          isOpen={showChatDrawer}
+          onClose={() => setShowChatDrawer(false)}
+          currentUser={{
+            name: activeParentAdmin || "Thom",
+            role: activeParentAdmin === "Meghan" ? "Overseer Supreme" : "Supreme Overlord",
+            color: activeParentAdmin === "Meghan" ? "#EC4899" : "#3B82F6"
+          }}
+          familyMembers={familyMembers}
+        />
+
         {/* Floating Real-Time Remote Activity Toast */}
         <ActivityToast
           event={activeToastEvent}
@@ -6591,6 +6630,21 @@ function App({
               {activities.length > 0 && (
                 <span className="absolute -top-1 -right-1 text-[9px] font-black px-1.5 py-0.2 rounded-full bg-indigo-600 text-white font-mono shadow-xs">
                   {activities.length > 99 ? "99+" : activities.length}
+                </span>
+              )}
+            </button>
+
+            {/* Family Chat Button */}
+            <button
+              type="button"
+              onClick={() => setShowChatDrawer(true)}
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer shadow-2xs relative"
+              title="Open Family Hub Chat"
+            >
+              <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              {unreadChatCount > 0 && (
+                <span className="absolute -top-1 -right-1 text-[9px] font-black px-1.5 py-0.2 rounded-full bg-rose-500 text-white font-mono shadow-xs animate-bounce">
+                  {unreadChatCount > 9 ? "9+" : unreadChatCount}
                 </span>
               )}
             </button>
@@ -7113,14 +7167,14 @@ function App({
               setNotice(`Updated Monthly Incentive: "${cleaned}" (${targetNum} chores target)`);
               setTimeout(() => setNotice(null), 3e3);
             }
-          }} className="px-4 py-2 bg-white text-amber-900 font-extrabold rounded-lg hover:bg-amber-50 transition cursor-pointer shadow-xs">Save Prize &amp; Goal</button></div><div className="flex flex-wrap items-center gap-1.5 text-[11px] pt-1"><span className="opacity-80">Quick ideas:</span><button onClick={() => { setIncentiveDraft("$15 Allowance Bonus & Pizza Night Pick"); setTargetDraft(25); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">{"$15 + Pizza Night (25)"}</button><button onClick={() => { setIncentiveDraft("1-Day Chore Exemption Pass & Movie Pick"); setTargetDraft(30); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">1-Day Chore Pass (30)</button><button onClick={() => { setIncentiveDraft("$20 Gift Card & Weekend Treat"); setTargetDraft(35); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">{"$20 Gift Card (35)"}</button><button onClick={() => { setIncentiveDraft("Family Ice Cream Outing of Their Choice"); setTargetDraft(20); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">Ice Cream Outing (20)</button></div></div>}</div><div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm transition-colors"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-200 dark:border-slate-800"><div><div className="flex items-center gap-2"><h3 className="text-base font-bold text-slate-900 dark:text-white">Family Members Completion</h3><span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">Kids & Minions ({rankedMembers.length}{" Members)"}</span></div><p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{"Monthly Total Tracker ranked by total chores completed for "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}. Kids and minions completion leaderboard competing for the monthly reward.</p></div><div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><Award className="w-4 h-4 text-amber-500" /><span className="font-semibold text-slate-700 dark:text-slate-300">Ranked by Monthly Completions</span></div></div><div className="space-y-3">{rankedMembers.map((m, idx) => {
+          }} className="px-4 py-2 bg-white text-amber-900 font-extrabold rounded-lg hover:bg-amber-50 transition cursor-pointer shadow-xs">Save Prize &amp; Goal</button></div><div className="flex flex-wrap items-center gap-1.5 text-[11px] pt-1"><span className="opacity-80">Quick ideas:</span><button onClick={() => { setIncentiveDraft("$15 Allowance Bonus & Pizza Night Pick"); setTargetDraft(25); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">{"$15 + Pizza Night (25)"}</button><button onClick={() => { setIncentiveDraft("1-Day Chore Exemption Pass & Movie Pick"); setTargetDraft(30); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">1-Day Chore Pass (30)</button><button onClick={() => { setIncentiveDraft("$20 Gift Card & Weekend Treat"); setTargetDraft(35); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">{"$20 Gift Card (35)"}</button><button onClick={() => { setIncentiveDraft("Family Ice Cream Outing of Their Choice"); setTargetDraft(20); }} className="px-2 py-0.5 rounded bg-white/20 hover:bg-white/30 text-white cursor-pointer">Ice Cream Outing (20)</button></div></div>}</div><div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm transition-colors"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-200 dark:border-slate-800"><div><div className="flex items-center gap-2"><h3 className="text-base font-bold text-slate-900 dark:text-white">Family Members Completion</h3><span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">Kids & Minions ({rankedMembers.length}{" Members)"}</span></div><p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{"Monthly Total Tracker ranked by total chores completed for "}{MONTH_NAMES[selectedMonth]}{" "}{selectedYear}. Kids and minions completion leaderboard competing for the monthly reward.</p></div><div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400"><Award className="w-4 h-4 text-amber-500" /><span className="font-semibold text-slate-700 dark:text-slate-300">Ranked by Goal % Achieved (Fairness Pro-Rated)</span></div></div><div className="space-y-3">{rankedMembers.map((m, idx) => {
             const isFirst = idx === 0 && m.done > 0;
             const isSecond = idx === 1 && m.done > 0;
             const isThird = idx === 2 && m.done > 0;
             return <div key={m.id} className={`p-3.5 rounded-xl border transition-all ${isFirst ? "border-amber-400 bg-amber-50/40 dark:bg-amber-950/30 ring-1 ring-amber-300 dark:ring-amber-900/60 shadow-sm" : "border-slate-200 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700"}`}><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5"><div className="flex items-center gap-3"><div className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${isFirst ? "bg-amber-500 text-white shadow-xs" : isSecond ? "bg-slate-300 text-slate-800" : isThird ? "bg-amber-700/80 text-white" : "bg-slate-100 text-slate-500"}`}>{isFirst ? <Crown className="w-4 h-4" /> : `#${idx + 1}`}</div><div className="flex items-center gap-2"><span className="w-3.5 h-3.5 rounded-full shrink-0" style={{
               backgroundColor: m.color
-            }} /><span className="font-bold text-sm text-slate-900 dark:text-white">{m.name}</span>{m.role && <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">({m.role}{" = "}{m.role === "Supreme Overlord" ? "Parent" : "Kid"})</span>}<span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${m.type === "biweekly" ? "bg-pink-50 text-pink-700 border-pink-200" : m.type === "casual" ? "bg-sky-50 text-sky-700 border-sky-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}>{m.residency}</span>{isFirst && <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs"><span>{"\u{1F3C6}"}</span><span>{"Top Performer • Incentive Winner"}</span></span>}</div></div><div className="flex items-center gap-3 self-end sm:self-auto text-xs"><div className="text-right"><span className="font-extrabold text-sm text-slate-900 dark:text-white">{m.done}</span><span className="text-slate-500 dark:text-slate-400">{" / "}{m.total}{" completed"}</span></div><span className={`font-black text-xs px-2 py-0.5 rounded-md ${m.pct >= 80 ? "bg-emerald-100 text-emerald-800" : m.pct >= 50 ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-600"}`}>{m.pct}%</span></div></div><div className="w-full bg-slate-200/80 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden"><div className="h-2.5 rounded-full transition-all duration-500" style={{
-              width: `${m.pct}%`,
+            }} /><span className="font-bold text-sm text-slate-900 dark:text-white">{m.name}</span>{m.role && <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">({m.role}{" = "}{m.role === "Supreme Overlord" ? "Parent" : "Kid"})</span>}<span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${m.type === "biweekly" ? "bg-pink-50 text-pink-700 border-pink-200" : m.type === "casual" ? "bg-sky-50 text-sky-700 border-sky-200" : "bg-slate-100 text-slate-600 border-slate-200"}`}>{m.residency}</span>{isFirst && <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs"><span>{"\u{1F3C6}"}</span><span>{"Top Performer • Incentive Winner"}</span></span>}</div></div><div className="flex items-center gap-3 self-end sm:self-auto text-xs"><div className="text-right"><span className="font-extrabold text-sm text-slate-900 dark:text-white">{m.done}</span><span className="text-slate-500 dark:text-slate-400">{" / "}{m.target}{" goal"}</span><div className="text-[9px] text-slate-400">{m.type === "biweekly" ? "Bi-Weekly (50% Target)" : m.type === "casual" ? "Casual Bounty Target" : "Full-Time Target"}</div></div><span className={`font-black text-xs px-2 py-0.5 rounded-md ${m.pct >= 100 ? "bg-amber-100 text-amber-900 font-extrabold border border-amber-300" : m.pct >= 80 ? "bg-emerald-100 text-emerald-800" : m.pct >= 50 ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-600"}`}>{m.pct}%</span></div></div><div className="w-full bg-slate-200/80 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden"><div className="h-2.5 rounded-full transition-all duration-500" style={{
+              width: `${Math.min(100, m.pct)}%`,
               backgroundColor: isFirst ? "#D97706" : m.color
             }} /></div>{isFirst && <div className="mt-2 pt-2 border-t border-amber-200/60 dark:border-amber-900/60 flex items-center justify-between text-[11px] text-amber-900 dark:text-amber-300 font-medium"><div className="flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 shrink-0" /><span>{"Qualifying Reward: "}<strong>{monthlyIncentive}</strong></span></div><span className="font-bold text-amber-700 dark:text-amber-400">{"Rank #1 in "}{MONTH_NAMES[selectedMonth]}</span></div>}</div>;
           })}</div></div></div>}{activeTab === "roster" && <div className="max-w-5xl mx-auto space-y-6"><div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200"><div><div className="flex items-center gap-2"><h2 className="text-lg font-bold text-slate-900">Household Hub Master Data</h2><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Linked: Monthly Calendar & Printable Weekly Schedule</span></div><p className="text-xs text-slate-500 mt-0.5">Centralized household administration: Family member roster & occupancy, pet care routines, and chore allocation master files.</p></div><div className="flex flex-wrap items-center gap-2"><span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 font-semibold rounded-lg border border-slate-200">{"Selected Week: "}<strong>{activeSyncWeek || hubScheduleConfig.activeWeekStart}</strong></span><span className="text-xs px-2.5 py-1 bg-pink-50 text-pink-700 font-semibold rounded-lg border border-pink-200">{"Kids Week: "}<strong>{isBiWeeklyHereThisWeek ? "Active" : "Inactive"}</strong></span><button type="button" onClick={handleSaveAsDefault} className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 shadow-2xs transition cursor-pointer" title="Save current browser setup as the permanent default in code (.tsx) and weekly-chores-config.json"><span>💾</span><span>Save as Default</span></button><button type="button" onClick={handleExportConfig} className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 shadow-2xs transition cursor-pointer" title="Download / export current configuration backup file (.json)"><span>⬇️</span><span>Export Config</span></button><label className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 bg-white text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-100 shadow-2xs transition cursor-pointer" title="Import / restore a configuration file (.json)"><span>⬆️</span><span>Import Config</span><input type="file" accept=".json" onChange={handleImportConfigFile} className="hidden" /></label></div></div><div className="my-5 p-4 rounded-xl bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/50 border border-indigo-200 shadow-2xs space-y-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-indigo-600" /><h3 className="text-xs font-bold uppercase tracking-wider text-indigo-950">Special Rules & Parameters</h3></div><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">Live Analytical Summary</span></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">{(() => {
@@ -8111,6 +8165,18 @@ function App({
         }}
         familyMembers={familyMembers}
         allKidsList={allKidsList}
+      />
+
+      {/* Household Real-Time Family Chat Drawer */}
+      <FamilyChatDrawer
+        isOpen={showChatDrawer}
+        onClose={() => setShowChatDrawer(false)}
+        currentUser={{
+          name: activeParentAdmin || "Thom",
+          role: activeParentAdmin === "Meghan" ? "Overseer Supreme" : "Supreme Overlord",
+          color: activeParentAdmin === "Meghan" ? "#EC4899" : "#3B82F6"
+        }}
+        familyMembers={familyMembers}
       />
 
       {/* Floating Real-Time Remote Activity Toast */}

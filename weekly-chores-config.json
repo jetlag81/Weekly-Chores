@@ -107,20 +107,20 @@
         {
           "index_": 5,
           "row": [
-            "Empty the Litter Box (Morning & Evening)",
+            "Empty the Litter Box \n(Morning & Evening)",
+            "Meghan",
+            false,
+            "Sydney",
+            false,
+            "Cadence",
+            false,
+            "Mason",
+            false,
             "Thom",
             false,
             "Meghan",
             false,
             "Sydney",
-            false,
-            "Thom",
-            false,
-            "Meghan",
-            false,
-            "Sydney",
-            false,
-            "Thom",
             false
           ]
         },
@@ -128,9 +128,11 @@
           "index_": 6,
           "row": [
             "Feed the Herd (Breakfast & Supper)",
-            "Meghan",
-            true,
             "Sydney",
+            false,
+            "Cadence",
+            false,
+            "Mason",
             false,
             "Thom",
             false,
@@ -138,9 +140,7 @@
             false,
             "Sydney",
             false,
-            "Thom",
-            false,
-            "Meghan",
+            "Cadence",
             false
           ]
         },
@@ -148,19 +148,19 @@
           "index_": 7,
           "row": [
             "Empty Dishwasher",
-            "Sydney",
+            "Cadence",
             false,
-            "Thom",
-            false,
-            "Meghan",
+            "Mason",
             false,
             "Sydney",
             false,
-            "Thom",
-            false,
             "Meghan",
             false,
-            "Meghan",
+            "Sydney",
+            false,
+            "Cadence",
+            false,
+            "Mason",
             false
           ]
         },
@@ -168,11 +168,7 @@
           "index_": 8,
           "row": [
             "Make Supper: Plan Ahead!",
-            "Thom",
-            false,
-            "Meghan",
-            false,
-            "Sydney",
+            "Mason",
             false,
             "Thom",
             false,
@@ -180,7 +176,11 @@
             false,
             "Sydney",
             false,
-            "Meghan",
+            "Cadence",
+            false,
+            "Mason",
+            false,
+            "Thom",
             false
           ]
         },
@@ -268,19 +268,19 @@
           "index_": 13,
           "row": [
             "Clean Up Basement",
-            "",
+            "Pick Up Mess; Dust Surfaces; Vacuum Floors & Litter Box Area",
             null,
-            "",
             null,
-            "",
             null,
-            "",
             null,
-            "Who: Sydney",
             null,
-            "Sydney",
             null,
-            "",
+            null,
+            "Who: _____________________",
+            null,
+            null,
+            null,
+            "Done: ______",
             false
           ]
         },
@@ -288,19 +288,19 @@
           "index_": 14,
           "row": [
             "Herd Feeding Station Deep Clean",
-            "",
+            "Wash & Sanitize Bowls; Vacuum Feeding Mat",
             null,
-            "",
             null,
-            "",
             null,
-            "",
             null,
-            "Who: Sydney",
             null,
-            "",
             null,
-            "Sydney",
+            null,
+            "Who: _____________________",
+            null,
+            null,
+            null,
+            "Done: ______",
             false
           ]
         },
@@ -308,19 +308,19 @@
           "index_": 15,
           "row": [
             "Curbside Recycling",
-            "",
+            "Roll recycling bin to curb Thursday evening for Friday pickup (Bi-Weekly)",
             null,
-            "",
             null,
-            "",
             null,
-            "Sydney",
             null,
-            "Who: Sydney",
             null,
-            "",
             null,
-            "",
+            null,
+            "Who: _____________________",
+            null,
+            null,
+            null,
+            "Done: ______",
             false
           ]
         },
@@ -328,19 +328,19 @@
           "index_": 18,
           "row": [
             "Weekly Sign-Off",
-            "",
+            "Parent Initials:",
             null,
-            "",
             null,
-            "",
             null,
-            "",
             null,
-            "",
             null,
-            "",
             null,
-            "Parents",
+            null,
+            null,
+            null,
+            null,
+            null,
+            "_________",
             false
           ]
         }
@@ -421,7 +421,7 @@
         {
           "index_": 5,
           "row": [
-            "Thom Voth",
+            "Thom",
             "Supreme Overlord",
             "Full-Time",
             "Parents, Non-Casual, All",
@@ -438,7 +438,7 @@
         {
           "index_": 6,
           "row": [
-            "Meghan Ginter",
+            "Meghan",
             "Supreme Overlord",
             "Full-Time",
             "Parents, Non-Casual, All",
@@ -483,7 +483,7 @@
             "Daily",
             "Mon – Sun",
             "Think of a menu, make a list if items are needed, prepare & serve (try to have a plan in place by at least the day before)",
-            "Kitchen"
+            null
           ]
         },
         {
@@ -496,7 +496,7 @@
             true,
             null,
             "Dinner Dishes & Kitchen Cleanup",
-            "Thom",
+            "Non-Casual",
             "Daily",
             "N/A",
             "Load dishwasher, put leftovers in containers & put away, wash & dry any extra dishes, wipe counters, table, stove & other surfaces",
@@ -615,7 +615,7 @@
             true,
             null,
             "Walk Dogs: Ellie & Lewis",
-            "",
+            "Non-Casual",
             "Daily",
             "Mon – Sun",
             "Walk Ellie & Lewis",
@@ -880,6 +880,6 @@
       ]
     }
   ],
-  "savedAt": "2026-11-12T00:31:31.868Z",
+  "savedAt": "2026-11-12T00:51:54.526Z",
   "version": "5.0"
 }

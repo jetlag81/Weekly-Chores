@@ -58,3 +58,4 @@ Use these on parent phones or tablets to access full admin controls, Sunday insp
 3. Tap **"Install App"** or **"Add to Home screen"**.
 4. Tap **"Install"** to confirm.
 5. The standalone app icon is now installed on their home screen.
+

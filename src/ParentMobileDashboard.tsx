@@ -95,6 +95,7 @@ interface ParentMobileDashboardProps {
   onSwitchParentAdmin?: (admin: "Thom" | "Meghan") => void;
   lastInspectedKid?: string | null;
   onClearCompletedTasks?: () => void;
+  onRegisterDismissModal?: (fn: () => boolean) => void;
 }
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -128,7 +129,8 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   activeParentAdmin: activeParentAdminProp,
   onSwitchParentAdmin,
   lastInspectedKid,
-  onClearCompletedTasks
+  onClearCompletedTasks,
+  onRegisterDismissModal
 }) => {
   const [internalAdmin, setInternalAdmin] = useState<"Thom" | "Meghan">(() => getStoredActiveParentAdmin());
   const currentAdmin = activeParentAdminProp || internalAdmin;
@@ -214,6 +216,27 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>("appearance");
   const [selectedReviewProof, setSelectedReviewProof] = useState<ChorePhotoProof | null>(null);
   const [showPhotoInbox, setShowPhotoInbox] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (onRegisterDismissModal) {
+      onRegisterDismissModal(() => {
+        if (showSettingsModal) {
+          setShowSettingsModal(false);
+          return true;
+        }
+        if (showPhotoInbox) {
+          setShowPhotoInbox(false);
+          return true;
+        }
+        if (selectedReviewProof) {
+          setSelectedReviewProof(null);
+          return true;
+        }
+        return false;
+      });
+    }
+  }, [showSettingsModal, showPhotoInbox, selectedReviewProof, onRegisterDismissModal]);
+
   const [photoRequestsVersion, setPhotoRequestsVersion] = useState<number>(0);
   const pendingPhotoCount = getPendingPhotoProofsCount();
 

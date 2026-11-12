@@ -101,6 +101,8 @@ import {
 } from "./rewardAccounts";
 import { ThemeToggle } from "./ThemeToggle";
 import { applyTheme } from "./themeManager";
+import { useBackToExit } from "./useBackToExit";
+import { BackToExitToast } from "./BackToExitToast";
 import { UserProfileModal } from "./UserProfileModal";
 import {
   getUserProfile,
@@ -315,6 +317,85 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     }, currentKid.name);
     return () => unsub();
   }, [currentKid.name]);
+
+  // Mobile Web App "Press Back Again to Exit" & Modal Dismiss Handler
+  const handleDismissAnyModal = React.useCallback((): boolean => {
+    if (showChatDrawer) {
+      setShowChatDrawer(false);
+      return true;
+    }
+    if (showActivityDrawer) {
+      setShowActivityDrawer(false);
+      return true;
+    }
+    if (showSettingsModal) {
+      setShowSettingsModal(false);
+      return true;
+    }
+    if (showKidRewardModal) {
+      setShowKidRewardModal(false);
+      return true;
+    }
+    if (showProfileModal) {
+      setShowProfileModal(false);
+      return true;
+    }
+    if (showInstallModal) {
+      setShowInstallModal(false);
+      return true;
+    }
+    if (showInspectionModal) {
+      setShowInspectionModal(false);
+      return true;
+    }
+    if (inspectingSibling) {
+      setInspectingSibling(null);
+      return true;
+    }
+    if (photoUploadTarget) {
+      setPhotoUploadTarget(null);
+      return true;
+    }
+    if (viewingProof) {
+      setViewingProof(null);
+      return true;
+    }
+    if (incomingPhotoRequest) {
+      setIncomingPhotoRequest(null);
+      return true;
+    }
+    if (activeCelebration) {
+      setActiveCelebration(null);
+      return true;
+    }
+    if (activeNavTab !== "chores") {
+      setActiveNavTab("chores");
+      return true;
+    }
+    return false;
+  }, [
+    showChatDrawer,
+    showActivityDrawer,
+    showSettingsModal,
+    showKidRewardModal,
+    showProfileModal,
+    showInstallModal,
+    showInspectionModal,
+    inspectingSibling,
+    photoUploadTarget,
+    viewingProof,
+    incomingPhotoRequest,
+    activeCelebration,
+    activeNavTab
+  ]);
+
+  const { showExitToast, message: exitToastMsg } = useBackToExit({
+    onCloseOpenModals: handleDismissAnyModal,
+    onCustomBackAction: viewingAsParent && onExitMinionMode ? () => {
+      onExitMinionMode();
+      return true;
+    } : undefined
+  });
 
   const logHouseholdActivity = (event: Omit<HouseholdActivityEvent, "id" | "timestamp" | "deviceId">) => {
     const fullEvent: HouseholdActivityEvent = {
@@ -2669,6 +2750,8 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         }}
         familyMembers={familyMembers}
       />
+      {/* Mobile "Press back again to exit" Toast */}
+      <BackToExitToast visible={showExitToast} message={exitToastMsg} />
     </div>
   );
 };

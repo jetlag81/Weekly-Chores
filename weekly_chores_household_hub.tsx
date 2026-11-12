@@ -81,6 +81,8 @@ import {
 } from "./src/chorePhotoTypes";
 import { ThemeToggle } from "./src/ThemeToggle";
 import { getEffectiveTheme, subscribeTheme, applyTheme } from "./src/themeManager";
+import { useBackToExit } from "./src/useBackToExit";
+import { BackToExitToast } from "./src/BackToExitToast";
 import { HouseholdSettingsModal } from "./src/HouseholdSettingsModal";
 import { HouseholdActivityDrawer } from "./src/HouseholdActivityDrawer";
 import { FamilyChatDrawer } from "./src/FamilyChatDrawer";
@@ -3509,6 +3511,121 @@ function App({
     nudgeWindow: "",
     nudgeMessage: ""
   });
+
+  // Ref for child MobileParentDashboard internal modals
+  const parentMobileCloserRef = useRef<() => boolean>(() => false);
+
+  // Mobile Web App "Press Back Again to Exit" & Modal Dismiss Handler (Parent Hub)
+  const handleDismissAnyParentModal = useCallback((): boolean => {
+    // 1. Check if child mobile dashboard has open modal (settings, photo inbox, photo review)
+    if (parentMobileCloserRef.current && parentMobileCloserRef.current()) {
+      return true;
+    }
+    // 2. Check parent hub modals & drawers
+    if (showChatDrawer) {
+      setShowChatDrawer(false);
+      return true;
+    }
+    if (showActivityDrawer) {
+      setShowActivityDrawer(false);
+      return true;
+    }
+    if (showSettingsModal) {
+      setShowSettingsModal(false);
+      return true;
+    }
+    if (showSettingsMenu) {
+      setShowSettingsMenu(false);
+      return true;
+    }
+    if (showPhotoInboxModal) {
+      setShowPhotoInboxModal(false);
+      return true;
+    }
+    if (selectedReviewProof) {
+      setSelectedReviewProof(null);
+      return true;
+    }
+    if (showInspectionModal) {
+      setShowInspectionModal(false);
+      return true;
+    }
+    if (showAllowanceLedger) {
+      setShowAllowanceLedger(false);
+      return true;
+    }
+    if (showNudgeModal) {
+      setShowNudgeModal(false);
+      setNudgeModalTarget(null);
+      return true;
+    }
+    if (showRewardPayoutModal) {
+      setShowRewardPayoutModal(false);
+      return true;
+    }
+    if (showFirebaseModal) {
+      setShowFirebaseModal(false);
+      return true;
+    }
+    if (showPwaModal) {
+      setShowPwaModal(false);
+      return true;
+    }
+    if (profileModalTarget) {
+      setProfileModalTarget(null);
+      return true;
+    }
+    if (activeDayModal) {
+      setActiveDayModal(null);
+      return true;
+    }
+    if (showAutoAssignModal) {
+      setShowAutoAssignModal(false);
+      return true;
+    }
+    if (showNewChoreModal) {
+      setShowNewChoreModal(false);
+      return true;
+    }
+    if (showAddRemoveChoreModal) {
+      setShowAddRemoveChoreModal(false);
+      return true;
+    }
+    if (showCombineModal) {
+      setShowCombineModal(false);
+      return true;
+    }
+    if (showAddMemberModal) {
+      setShowAddMemberModal(false);
+      return true;
+    }
+    return false;
+  }, [
+    showChatDrawer,
+    showActivityDrawer,
+    showSettingsModal,
+    showSettingsMenu,
+    showPhotoInboxModal,
+    selectedReviewProof,
+    showInspectionModal,
+    showAllowanceLedger,
+    showNudgeModal,
+    showRewardPayoutModal,
+    showFirebaseModal,
+    showPwaModal,
+    profileModalTarget,
+    activeDayModal,
+    showAutoAssignModal,
+    showNewChoreModal,
+    showAddRemoveChoreModal,
+    showCombineModal,
+    showAddMemberModal
+  ]);
+
+  const { showExitToast: showParentExitToast, message: parentExitToastMsg } = useBackToExit({
+    enabled: deviceSession.role !== "kid",
+    onCloseOpenModals: handleDismissAnyParentModal
+  });
   const handleSaveAsDefault = async () => {
     try {
       const rawData = localStorage.getItem(STORAGE_KEY);
@@ -6463,6 +6580,7 @@ function App({
           onSwitchParentAdmin={handleSwitchActiveAdmin}
           lastInspectedKid={lastInspectedKid}
           onClearCompletedTasks={() => handleClearAllCompletedTasks(true)}
+          onRegisterDismissModal={(fn) => { parentMobileCloserRef.current = fn; }}
         />
 
         {/* Sunday Parent Inspection & Sign-off Modal */}
@@ -6596,6 +6714,9 @@ function App({
             }}
           />
         )}
+
+        {/* Mobile "Press back again to exit" Toast */}
+        <BackToExitToast visible={showParentExitToast} message={parentExitToastMsg} />
       </div>
     );
   }
@@ -8497,6 +8618,9 @@ function App({
           }}
         />
       )}
+
+      {/* Mobile "Press back again to exit" Toast */}
+      <BackToExitToast visible={showParentExitToast} message={parentExitToastMsg} />
     </div>
   );
 }

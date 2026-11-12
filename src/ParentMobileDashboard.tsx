@@ -426,7 +426,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                 <h1 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight leading-tight truncate">
                   {currentAdmin}'s Hub
                 </h1>
-                <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-md bg-amber-400/20 text-amber-700 dark:text-amber-400 border border-amber-400/30">
+                <span className="hidden sm:inline-flex text-[9px] font-extrabold px-1.5 py-0.2 rounded-md bg-amber-400/20 text-amber-700 dark:text-amber-400 border border-amber-400/30 whitespace-nowrap">
                   👑 {currentAdmin === "Thom" ? "Supreme Overlord" : "Overseer Supreme"}
                 </span>
               </div>

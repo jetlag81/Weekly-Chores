@@ -14,17 +14,24 @@ public class MainActivity extends BridgeActivity {
         EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);
 
-        // Keep WebView full-screen (edge-to-edge) without white letterboxing,
-        // and inject the exact Pixel system bar insets into CSS variables.
+        // Ensure native Android ActionBar is completely removed
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+        if (getActionBar() != null) {
+            getActionBar().hide();
+        }
+
+        // Pass exact status bar and navigation bar insets to CSS variables
         View contentView = findViewById(android.R.id.content);
         if (contentView != null) {
             ViewCompat.setOnApplyWindowInsetsListener(contentView, (v, windowInsets) -> {
-                Insets insets = windowInsets.getInsets(
-                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
-                );
+                Insets statusBars = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars());
+                Insets navBars = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars());
+
                 float density = getResources().getDisplayMetrics().density;
-                int topDp = Math.round(insets.top / density);
-                int bottomDp = Math.round(insets.bottom / density);
+                int topDp = Math.round(statusBars.top / density);
+                int bottomDp = Math.round(navBars.bottom / density);
 
                 if (getBridge() != null && getBridge().getWebView() != null) {
                     getBridge().getWebView().post(() -> {

@@ -83,13 +83,17 @@ function jsxSourceLocBabelPlugin({ types: t }: any) {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
-    react({
-      babel: {
-        plugins: [jsxSourceLocBabelPlugin],
-      },
-    }),
+    react(
+      command === 'serve'
+        ? {
+            babel: {
+              plugins: [jsxSourceLocBabelPlugin],
+            },
+          }
+        : undefined
+    ),
     {
       name: 'vscode-click-to-source',
       configureServer(server) {
@@ -503,4 +507,4 @@ export default defineConfig({
       ignored: ['**/*.exe', '**/.tunnel-url', '**/.git/**', '**/android/**'],
     },
   },
-});
+}));

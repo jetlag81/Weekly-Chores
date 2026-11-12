@@ -4,8 +4,12 @@ const config: CapacitorConfig = {
   appId: 'com.household.choreshub',
   appName: 'Chores Hub',
   webDir: 'dist',
-  android: {
-    adjustMarginsForEdgeToEdge: 'force'
+  plugins: {
+    SystemBars: {
+      insetsHandling: 'css',
+      style: 'DARK',
+      hidden: false
+    }
   },
   server: {
     androidScheme: 'https'

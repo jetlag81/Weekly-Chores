@@ -506,7 +506,10 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
       </header>
 
       {/* Main Streamlined Mobile Content */}
-      <main className="p-4 space-y-4 max-w-lg mx-auto w-full">
+      <main
+        className="p-4 space-y-4 max-w-lg mx-auto w-full pb-32"
+        style={{ paddingBottom: "calc(7rem + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))" }}
+      >
         {/* Streamlined Sunday Inspection Action Bar */}
         <div
           onClick={onOpenInspection}
@@ -1031,7 +1034,10 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
       </main>
 
       {/* Floating Mobile Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-4 py-2.5 shadow-2xl">
+      <nav
+        className="fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-4 pt-2.5 shadow-2xl"
+        style={{ paddingBottom: "max(0.625rem, calc(0.625rem + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px))))" }}
+      >
         <div className="max-w-lg mx-auto flex items-center justify-around">
           {/* Sunday Inspection */}
           <button

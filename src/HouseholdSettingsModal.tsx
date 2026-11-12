@@ -98,6 +98,7 @@ interface HouseholdSettingsModalProps {
   onUnpairDevice?: (kidName: string) => void;
   onSwitchToKid?: (kidName: string) => void;
   onOpenRewardPayoutModal?: (kidName?: string) => void;
+  onClearCompletedTasks?: () => void;
   viewingAsParent?: "Thom" | "Meghan";
 }
 
@@ -116,6 +117,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
   onUnpairDevice,
   onSwitchToKid,
   onOpenRewardPayoutModal,
+  onClearCompletedTasks,
   viewingAsParent
 }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
@@ -1430,6 +1432,33 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
                       </div>
                       <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
                     </button>
+
+                    {/* Action 4: Reset & Clear Completed Tasks for Fresh Rollout */}
+                    {onClearCompletedTasks && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClearCompletedTasks();
+                          onClose();
+                        }}
+                        className="w-full p-3.5 bg-gradient-to-r from-rose-50 to-red-50 dark:from-slate-800 dark:to-slate-800/80 hover:from-rose-100 hover:to-red-100 dark:hover:from-slate-700 dark:hover:to-slate-700 border border-rose-200 dark:border-slate-700 rounded-2xl flex items-center justify-between transition cursor-pointer text-left shadow-2xs group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                            <RotateCcw className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-xs font-black text-slate-900 dark:text-white">
+                              Clear All Completed Tasks
+                            </div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                              Reset all chore checkmarks &amp; activity feed to start fresh for installs
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                      </button>
+                    )}
 
                     {/* Action 3: Unpair This Device */}
                     <div className="p-3.5 bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/40 rounded-2xl space-y-2">

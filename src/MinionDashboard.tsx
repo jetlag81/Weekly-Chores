@@ -441,6 +441,23 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     return subscribeSpeechState(speaking => setIsSpeakingAudio(speaking));
   }, []);
 
+  // One-time Clean Rollout Reset (clears old test data on fresh device install)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const CLEAN_ROLLOUT_KEY = "weekly_chores_clean_rollout_v1";
+    if (!localStorage.getItem(CLEAN_ROLLOUT_KEY)) {
+      localStorage.setItem(CLEAN_ROLLOUT_KEY, "true");
+      try {
+        localStorage.removeItem("weekly_chores_activity_log_v1");
+        localStorage.removeItem("weekly_chores_allowance_ledger_v1");
+        localStorage.removeItem("weekly_chores_photo_proofs_v1");
+        localStorage.removeItem("weekly_chores_photo_requests_v1");
+        localStorage.removeItem("weekly_chores_parent_nudges_v1");
+      } catch {}
+      setActivities([]);
+    }
+  }, []);
+
   useEffect(() => {
     return subscribeInstallable(can => setCanInstallPwa(can));
   }, []);
@@ -618,8 +635,15 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         (who === "Non-Casual" && currentKid.type !== "casual") ||
         (who === "All Non-Casual" && currentKid.type !== "casual");
 
+      const isWalkDogs = norm.includes("walk dog") || (chore.task && chore.task.toLowerCase().includes("walk dog"));
+
+      // Walk Dogs is purely a bonus task: only include in daily required routines if explicitly assigned or completed
+      if (isWalkDogs && !isDirectlyAssigned && !isDone) {
+        return;
+      }
+
       // Stable list inclusion:
-      if (isDirectlyAssigned || isGroupAssigned || !who || isDone) {
+      if (isDirectlyAssigned || isGroupAssigned || (!who && !isWalkDogs) || isDone) {
         list.push({
           chore,
           choreIndex: chore.index_ !== undefined ? chore.index_ : idx,
@@ -883,7 +907,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     }
   };
 
-  // Parent Chore Bounties available on activeDateKey (Thom/Meghan chores kids can step up to do)
+  // Parent Chore Bounties & Bonus Tasks available on activeDateKey (Thom/Meghan chores & Walk Dogs)
   const parentBountyChores = React.useMemo(() => {
     const dayChores = monthSchedule[activeDateKey] || {};
     const list: Array<{
@@ -895,6 +919,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
       canonicalKey: string;
       claimedByMe: boolean;
       claimedByOther?: string;
+      isBonus?: boolean;
     }> = [];
 
     hubMasterChores.forEach((chore, idx) => {
@@ -919,6 +944,9 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
       const isBounty = !!choreStatus.isBounty;
       const originalAssignee = choreStatus.originalAssignee || (isBounty ? "Parents" : who);
 
+      const isWalkDogs = norm.includes("walk dog") || (chore.task && chore.task.toLowerCase().includes("walk dog"));
+      const isBonus = isWalkDogs || String(chore.rotationGroup || "").toLowerCase().includes("bonus");
+
       const isParentAssigned =
         who.toLowerCase() === "thom" ||
         who.toLowerCase() === "meghan" ||
@@ -926,19 +954,20 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         who.toLowerCase().includes("megh") ||
         who.toLowerCase().includes("parent");
 
-      const claimedByMe = isBounty && who.toLowerCase() === currentKid.name.toLowerCase();
-      const claimedByOther = isBounty && !claimedByMe && who ? who : undefined;
+      const claimedByMe = (isBounty || isBonus) && who.toLowerCase() === currentKid.name.toLowerCase() && isDone;
+      const claimedByOther = (isBounty || isBonus) && !claimedByMe && who && isDone ? who : undefined;
 
-      if (isParentAssigned || isBounty) {
+      if (isParentAssigned || isBounty || isBonus) {
         list.push({
           chore,
           choreIndex: chore.index_ !== undefined ? chore.index_ : idx,
           done: isDone,
-          who,
-          originalAssignee: isBounty ? originalAssignee : who,
+          who: isBonus && !who ? "Bonus" : who,
+          originalAssignee: isBonus ? "Bonus Task" : (isBounty ? originalAssignee : who),
           canonicalKey: cKey,
           claimedByMe,
-          claimedByOther
+          claimedByOther,
+          isBonus
         });
       }
     });
@@ -959,14 +988,15 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     originalAssignee: string;
     done: boolean;
     claimedByMe: boolean;
+    isBonus?: boolean;
   }) => {
     if (bounty.claimedByMe && bounty.done) {
-      // Revert bounty back to original parent
+      // Revert bounty/bonus back
       onUpdateChore(
         activeDateKey,
         bounty.choreIndex,
         {
-          who: bounty.originalAssignee || "Thom",
+          who: bounty.isBonus ? "" : (bounty.originalAssignee || "Thom"),
           done: false,
           isBounty: false,
           originalAssignee: undefined
@@ -975,14 +1005,14 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
       );
       logHouseholdActivity({
         kidName: currentKid.name,
-        taskTitle: `⭐ Parent Bounty: ${bounty.chore.task}`,
+        taskTitle: bounty.isBonus ? `⭐ Reverted Bonus: ${bounty.chore.task}` : `⭐ Reverted Parent Bounty: ${bounty.chore.task}`,
         action: "uncompleted",
         dateKey: activeDateKey
       });
       return;
     }
 
-    const targetParent = bounty.originalAssignee || bounty.who || "Parents";
+    const targetParent = bounty.isBonus ? "Bonus Task" : (bounty.originalAssignee || bounty.who || "Parents");
     onUpdateChore(
       activeDateKey,
       bounty.choreIndex,
@@ -1004,16 +1034,18 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
       });
     } catch {}
 
-    speakChoreCelebration(currentKid.name, `Parent Bounty: ${bounty.chore.task}`);
+    speakChoreCelebration(currentKid.name, bounty.isBonus ? `Bonus: ${bounty.chore.task}` : `Parent Bounty: ${bounty.chore.task}`);
     triggerCelebration(
-      `⭐ Parent Bounty: ${bounty.chore.task}`,
+      bounty.isBonus ? `⭐ Bonus: ${bounty.chore.task}` : `⭐ Parent Bounty: ${bounty.chore.task}`,
       false,
-      `Awesome job stepping up to help ${targetParent}! +1 Extra Credit earned toward your goal!`
+      bounty.isBonus
+        ? `Awesome job completing the bonus task "${bounty.chore.task}"! +1 Extra Credit earned toward your goal!`
+        : `Awesome job stepping up to help ${targetParent}! +1 Extra Credit earned toward your goal!`
     );
 
     logHouseholdActivity({
       kidName: currentKid.name,
-      taskTitle: `⭐ Stepped up for ${targetParent}: ${bounty.chore.task} (+1 Credit!)`,
+      taskTitle: bounty.isBonus ? `⭐ Bonus Task Completed: ${bounty.chore.task} (+1 Credit!)` : `⭐ Stepped up for ${targetParent}: ${bounty.chore.task} (+1 Credit!)`,
       action: "completed",
       dateKey: activeDateKey
     });
@@ -2142,8 +2174,12 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                                 <span className={`font-bold text-sm ${isClaimedByMe ? "line-through text-slate-400" : "text-slate-900 dark:text-white"}`}>
                                   {mainTitle}
                                 </span>
-                                <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                                  For {targetParent}
+                                <span className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded-md border ${
+                                  bounty.isBonus
+                                    ? "bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800"
+                                    : "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800"
+                                }`}>
+                                  {bounty.isBonus ? "Bonus Chore" : `For ${targetParent}`}
                                 </span>
                                 {bounty.chore.category && (
                                   <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
@@ -2176,10 +2212,14 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                                   e.stopPropagation();
                                   handleClaimParentBounty(bounty);
                                 }}
-                                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black shadow-xs hover:shadow-sm transition cursor-pointer flex items-center gap-1 active:scale-95"
+                                className={`px-3 py-1.5 rounded-xl text-white text-xs font-black shadow-xs hover:shadow-sm transition cursor-pointer flex items-center gap-1 active:scale-95 ${
+                                  bounty.isBonus
+                                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                                    : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                                }`}
                               >
-                                <Sparkles className="w-3.5 h-3.5 text-amber-100" />
-                                <span>Do for {targetParent} (+1 ⭐)</span>
+                                <Sparkles className="w-3.5 h-3.5 text-white/90" />
+                                <span>{bounty.isBonus ? "Do Walk Dogs (+1 ⭐)" : `Do for ${targetParent} (+1 ⭐)`}</span>
                               </button>
                             )}
                           </div>

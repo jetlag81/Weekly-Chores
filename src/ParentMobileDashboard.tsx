@@ -94,6 +94,7 @@ interface ParentMobileDashboardProps {
   activeParentAdmin?: "Thom" | "Meghan";
   onSwitchParentAdmin?: (admin: "Thom" | "Meghan") => void;
   lastInspectedKid?: string | null;
+  onClearCompletedTasks?: () => void;
 }
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -126,7 +127,8 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   activitiesCount = 0,
   activeParentAdmin: activeParentAdminProp,
   onSwitchParentAdmin,
-  lastInspectedKid
+  lastInspectedKid,
+  onClearCompletedTasks
 }) => {
   const [internalAdmin, setInternalAdmin] = useState<"Thom" | "Meghan">(() => getStoredActiveParentAdmin());
   const currentAdmin = activeParentAdminProp || internalAdmin;
@@ -1081,6 +1083,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
           onUnpairDevice={(kName) => {
             unpairKid(kName);
           }}
+          onClearCompletedTasks={onClearCompletedTasks}
         />
       )}
 

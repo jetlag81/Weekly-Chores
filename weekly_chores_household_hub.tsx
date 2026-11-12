@@ -43,7 +43,8 @@ import {
   DollarSign,
   X,
   Camera,
-  MessageSquare
+  MessageSquare,
+  RotateCcw
 } from 'lucide-react';
 import {
   getStoredDeviceSession,
@@ -742,7 +743,7 @@ export const INITIAL_SHEET_DATA = [
           true,
           null,
           "Walk Dogs: Ellie & Lewis",
-          "Non-Casual",
+          "Bonus",
           "Daily",
           "Mon – Sun",
           "Walk Ellie & Lewis",
@@ -1582,8 +1583,8 @@ var DEFAULT_MASTER_CHORES = [{
     dayOfWeek: 0
   },
   targetDay: "Mon \u2013 Sun",
-  rotationGroup: "Kids Rotation",
-  notes: "Morning & evening walk for Ellie & Lewis"
+  rotationGroup: "Bonus",
+  notes: "Morning & evening walk for Ellie & Lewis (Bonus extra credit task)"
 }];
 function isCurbsideActiveOnDate(taskName, year, month, day) {
   const lower = String(taskName || "").toLowerCase();
@@ -1820,6 +1821,9 @@ function generateWeekAssignments(startDateStr, choresList = DEFAULT_MASTER_CHORE
         assignedWho = "";
       } else if (isKidsChecklistChore(taskTitle)) {
         // Tidy Bedrooms and Laundry Tasks are individual minion checklists: DO NOT auto-assign to a single person!
+        assignedWho = "";
+      } else if (tLower.includes("walk dog") || tLower.includes("walk dogs")) {
+        // Walk Dogs is a pure bonus / volunteer task: DO NOT auto-assign!
         assignedWho = "";
       } else if (dayIdx === 6 && tLower.includes("supper")) {
         assignedWho = getSundaySupperAssignee(dayObj.year, dayObj.month, dayObj.day, parents);
@@ -2254,6 +2258,41 @@ function App({
     }
   }, []);
 
+  // One-time Clean Rollout Reset (clears any old test completion data across all devices before rollout)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const CLEAN_ROLLOUT_KEY = "weekly_chores_clean_rollout_v1";
+    if (!localStorage.getItem(CLEAN_ROLLOUT_KEY)) {
+      localStorage.setItem(CLEAN_ROLLOUT_KEY, "true");
+      try {
+        localStorage.removeItem("weekly_chores_activity_log_v1");
+        localStorage.removeItem("weekly_chores_allowance_ledger_v1");
+        localStorage.removeItem("weekly_chores_photo_proofs_v1");
+        localStorage.removeItem("weekly_chores_photo_requests_v1");
+        localStorage.removeItem("weekly_chores_parent_nudges_v1");
+      } catch {}
+      setMonthSchedule(prev => {
+        const next: Record<string, Record<string | number, any>> = {};
+        Object.keys(prev).forEach(dKey => {
+          next[dKey] = {};
+          Object.keys(prev[dKey]).forEach(cIdx => {
+            const item = prev[dKey][cIdx];
+            if (item) {
+              next[dKey][cIdx] = {
+                ...item,
+                done: false,
+                kidsDone: {},
+                isBounty: false
+              };
+            }
+          });
+        });
+        return next;
+      });
+      setActivities([]);
+    }
+  }, []);
+
   // Real-time Firestore Cloud subscription across physically separate devices
   useEffect(() => {
     const householdId = (deviceSession == null ? void 0 : deviceSession.householdId) || "household_family_hub";
@@ -2308,6 +2347,28 @@ function App({
           setMonthlyGoalTarget(msg.monthlyGoalTarget);
           try { localStorage.setItem("weekly_chores_monthly_target", String(msg.monthlyGoalTarget)); } catch { }
         }
+        return;
+      }
+      if (msg.type === "ALL_TASKS_CLEARED") {
+        setMonthSchedule(prev => {
+          const next: Record<string, Record<string | number, any>> = {};
+          Object.keys(prev).forEach(dKey => {
+            next[dKey] = {};
+            Object.keys(prev[dKey]).forEach(cIdx => {
+              const item = prev[dKey][cIdx];
+              if (item) {
+                next[dKey][cIdx] = {
+                  ...item,
+                  done: false,
+                  kidsDone: {},
+                  isBounty: false
+                };
+              }
+            });
+          });
+          return next;
+        });
+        setActivities([]);
         return;
       }
       if (msg.type === "CHORE_UPDATED") {
@@ -5615,6 +5676,16 @@ function App({
             return;
           }
 
+          // Walk Dogs: Excluded from auto-assign (purely a bonus task)
+          if (tLower.includes("walk dog") || tLower.includes("walk dogs")) {
+            updated[dKey][cr.index_] = {
+              who: "",
+              done: current.done,
+              kidsDone: current.kidsDone || {}
+            };
+            return;
+          }
+
           // 2. Sunday Supper: Parent rule
           if (dayObj.dayOfWeekIndex === 6 && tLower.includes("supper")) {
             const overseers = familyMembers.filter(m => m.role === "Overseer Supreme" || String(m.role || "").toLowerCase().includes("parent")).map(m => m.name);
@@ -5799,6 +5870,75 @@ function App({
     setShowAutoAssignModal(false);
     setNotice(`Auto-assigned daily & weekly tasks for ${MONTH_NAMES[selectedMonth]} ${selectedYear}! (Tidy Bedrooms & Laundry remain individual checklists)`);
     setTimeout(() => setNotice(null), 4500);
+  };
+
+  const handleClearAllCompletedTasks = (showConfirmation = true) => {
+    if (showConfirmation && typeof window !== "undefined") {
+      const ok = window.confirm("Are you sure you want to clear all completed chores and activity logs to start fresh for device installs?");
+      if (!ok) return;
+    }
+
+    setMonthSchedule(prev => {
+      const next: Record<string, Record<string | number, any>> = {};
+      Object.keys(prev).forEach(dKey => {
+        next[dKey] = {};
+        Object.keys(prev[dKey]).forEach(cIdx => {
+          const item = prev[dKey][cIdx];
+          if (item) {
+            next[dKey][cIdx] = {
+              ...item,
+              done: false,
+              kidsDone: {},
+              isBounty: false
+            };
+          }
+        });
+      });
+      return next;
+    });
+
+    if (printableRangeIndex >= 0 && printableSheet && Array.isArray(printableSheet.data)) {
+      printableSheet.data.forEach(r => {
+        if (r.index_ >= 5 && r.index_ <= 9) {
+          const cleanedRow = [...r.row];
+          for (let dIdx = 0; dIdx < 7; dIdx++) {
+            cleanedRow[2 + dIdx * 2] = false;
+          }
+          updateItem(printableRangeIndex, r.index_, cleanedRow);
+        } else if (r.index_ >= 13 && r.index_ <= 15) {
+          const cleanedWeekly = [...r.row];
+          cleanedWeekly[14] = false;
+          cleanedWeekly[13] = false;
+          updateItem(printableRangeIndex, r.index_, cleanedWeekly);
+        }
+      });
+    }
+
+    clearActivityLog();
+    setActivities([]);
+
+    try {
+      localStorage.removeItem("weekly_chores_activity_log_v1");
+      localStorage.removeItem("weekly_chores_allowance_ledger_v1");
+      localStorage.removeItem("weekly_chores_photo_proofs_v1");
+      localStorage.removeItem("weekly_chores_photo_requests_v1");
+      localStorage.removeItem("weekly_chores_parent_nudges_v1");
+    } catch {}
+
+    broadcastLocalUpdate({
+      type: "ALL_TASKS_CLEARED"
+    });
+
+    try {
+      const { db } = initFirebase();
+      if (db) {
+        const schedDocRef = doc(db, "households", "household_family_hub", "schedules", "current_month");
+        setDoc(schedDocRef, { clearedAt: Date.now(), monthSchedule: {} }, { merge: false });
+      }
+    } catch {}
+
+    setNotice("🧹 All completed tasks and activity logs have been reset clean!");
+    setTimeout(() => setNotice(null), 4000);
   };
   const handleUpdatePetChoresToRoster = () => {
     if (choreRangeIndex >= 0) {
@@ -6321,6 +6461,7 @@ function App({
           activeParentAdmin={activeParentAdmin}
           onSwitchParentAdmin={handleSwitchActiveAdmin}
           lastInspectedKid={lastInspectedKid}
+          onClearCompletedTasks={() => handleClearAllCompletedTasks(true)}
         />
 
         {/* Sunday Parent Inspection & Sign-off Modal */}
@@ -6614,6 +6755,17 @@ function App({
             >
               <Gift className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
               <span>Rewards</span>
+            </button>
+
+            {/* Clear All Completions for Fresh Install Rollout */}
+            <button
+              type="button"
+              onClick={() => handleClearAllCompletedTasks(true)}
+              className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-700/60 rounded-xl transition cursor-pointer shadow-2xs"
+              title="Clear all completed tasks and activity logs for a fresh install rollout"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+              <span>Reset Tasks</span>
             </button>
 
             {/* Subtle Divider */}
@@ -8297,6 +8449,7 @@ function App({
             setNotice(`Unpaired ${kName}'s device`);
             setTimeout(() => setNotice(null), 3500);
           }}
+          onClearCompletedTasks={() => handleClearAllCompletedTasks(true)}
         />
       )}
 

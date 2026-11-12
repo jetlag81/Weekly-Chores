@@ -21,3 +21,4 @@ After delivering any feature, bug fix, layout adjustment, or major milestone:
 - Drawers must use `.drawer-safe-header` and `.drawer-safe-footer` for top and bottom clearance.
 - Never reintroduce native Android `ActionBar` / `DarkActionBar` in `styles.xml`.
 - Maintain dark slate `#0F172A` theme continuity.
+

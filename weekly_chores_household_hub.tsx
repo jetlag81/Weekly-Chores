@@ -2002,6 +2002,7 @@ function App({
   const [profileModalTarget, setProfileModalTarget] = useState<string | null>(null);
   const [profilesVersion, setProfilesVersion] = useState(0);
   const [activeParentAdmin, setActiveParentAdmin] = useState<"Thom" | "Meghan">(() => getStoredActiveParentAdmin());
+  const [showRosterAccordion, setShowRosterAccordion] = useState(false);
   const [lastInspectedKid, setLastInspectedKid] = useState<string | null>(null);
   const [effectiveTheme, setEffectiveTheme] = useState<"light" | "dark">(() => getEffectiveTheme());
 
@@ -6738,51 +6739,180 @@ function App({
         className="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm sticky top-0 z-30 transition-colors"
         style={{ paddingTop: "calc(0.625rem + max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)))" }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
-          {/* Left: Brand Identity & Active Parent Switcher */}
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-rose-500 via-amber-500 to-teal-500 flex items-center justify-center text-white shadow-md shrink-0">
-              <Calendar className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">
-                  {activeParentAdmin}&apos;s Admin Hub
-                </h1>
-
-                {/* Active Parent Switcher Toggle */}
-                <div className="inline-flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                  {(["Thom", "Meghan"] as const).map(parent => (
-                    <button
-                      key={parent}
-                      type="button"
-                      onClick={() => handleSwitchActiveParent(parent)}
-                      className={`px-2 py-0.5 rounded-md text-[11px] font-black transition cursor-pointer flex items-center gap-1 ${activeParentAdmin === parent
-                          ? "bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-2xs"
-                          : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                        }`}
-                      title={`Switch to ${parent}'s Admin Hub`}
-                    >
-                      <span>👑</span>
-                      <span>{parent}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hidden sm:inline">
-                  Monthly Sync
-                </span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-col gap-2.5">
+          {/* Top Bar: Title, Parent Switcher, Mobile Switch, and Quick Icon Group */}
+          <div className="flex items-center justify-between gap-1.5">
+            {/* Left: Brand Identity & Active Parent Switcher */}
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-br from-rose-500 via-amber-500 to-teal-500 flex items-center justify-center text-white shadow-md shrink-0">
+                <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                Chore Hub • Week of {activeSyncWeek}
-              </p>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white truncate">
+                    {activeParentAdmin}&apos;s Hub
+                  </h1>
+
+                  {/* Desktop Active Parent Switcher */}
+                  <div className="hidden sm:inline-flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0">
+                    {(["Thom", "Meghan"] as const).map(parent => (
+                      <button
+                        key={parent}
+                        type="button"
+                        onClick={() => handleSwitchActiveParent(parent)}
+                        className={`px-2 py-0.5 rounded-md text-[11px] font-black transition cursor-pointer flex items-center gap-1 ${activeParentAdmin === parent
+                            ? "bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-2xs"
+                            : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                          }`}
+                        title={`Switch to ${parent}'s Admin Hub`}
+                      >
+                        <span>👑</span>
+                        <span>{parent}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                  Week of {activeSyncWeek}
+                </p>
+              </div>
+            </div>
+
+            {/* Right: Mobile Mode Switcher & Quick Utility Icons */}
+            <div className="flex items-center gap-1 shrink-0">
+              {/* Prominent Mobile View Toggle */}
+              <button
+                type="button"
+                onClick={toggleParentViewMode}
+                className="flex items-center gap-1 text-[11px] sm:text-xs font-bold px-2 py-1 sm:px-2.5 sm:py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg sm:rounded-xl transition cursor-pointer shadow-xs active:scale-95"
+                title="Switch back to streamlined Mobile Parent Hub"
+              >
+                <Smartphone className="w-3.5 h-3.5" />
+                <span>Mobile</span>
+              </button>
+
+              {/* Activity Feed Bell */}
+              <button
+                type="button"
+                onClick={() => setShowActivityDrawer(true)}
+                className="p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer shadow-2xs relative"
+                title="Open Live Household Activity Feed"
+              >
+                <Bell className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                {activities.length > 0 && (
+                  <span className="absolute -top-1 -right-1 text-[9px] font-black px-1.5 py-0.2 rounded-full bg-indigo-600 text-white font-mono shadow-xs">
+                    {activities.length > 99 ? "99+" : activities.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Family Chat Button */}
+              <button
+                type="button"
+                onClick={() => setShowChatDrawer(true)}
+                className="p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer shadow-2xs relative"
+                title="Open Family Hub Chat"
+              >
+                <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                {unreadChatCount > 0 && (
+                  <span className="absolute -top-1 -right-1 text-[9px] font-black px-1.5 py-0.2 rounded-full bg-rose-500 text-white font-mono shadow-xs animate-bounce">
+                    {unreadChatCount > 9 ? "9+" : unreadChatCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Cloud Sync Status */}
+              <button
+                type="button"
+                onClick={() => setShowFirebaseModal(true)}
+                className="p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer shadow-2xs"
+                title={getStoredFirebaseConfig() ? "Cloud Sync: Connected & Live" : "Cloud Sync: Setup"}
+              >
+                <Cloud className={`w-4 h-4 ${getStoredFirebaseConfig() ? "text-emerald-500" : "text-amber-500"}`} />
+              </button>
+
+              {/* Quick 1-Click Theme Toggle (Desktop or Tablet) */}
+              <div className="hidden sm:inline-block">
+                <ThemeToggle variant="compact" />
+              </div>
+
+              {/* Settings Menu Dropdown */}
+              <div className="relative inline-block text-left">
+                <button
+                  type="button"
+                  onClick={() => setShowSettingsMenu((prev) => !prev)}
+                  className={`p-1.5 sm:p-2 rounded-xl border transition cursor-pointer shadow-2xs ${showSettingsMenu
+                      ? "bg-indigo-50 dark:bg-indigo-950/60 border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400"
+                      : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  title="Household Settings & Theme"
+                  aria-expanded={showSettingsMenu}
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
+
+                {showSettingsMenu && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setShowSettingsMenu(false)}
+                    />
+                    <div className="absolute right-0 mt-2 z-40 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-2.5 space-y-2.5 animate-fadeIn">
+                      <div className="px-1 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        Theme
+                      </div>
+
+                      {/* Nested Theme Buttons */}
+                      <div>
+                        <ThemeToggle variant="pill" className="w-full flex" />
+                      </div>
+
+                      <div className="border-t border-slate-100 dark:border-slate-800" />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowSettingsMenu(false);
+                          setShowSettingsModal(true);
+                        }}
+                        className="w-full px-2.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 flex items-center justify-between transition cursor-pointer text-left"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Settings2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                          <span>All Household Settings</span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Right: Core Parent Actions & Controls */}
-          <div className="flex flex-wrap items-center gap-2 justify-end">
+          {/* Row 2: Horizontal Scrolling Action Strip */}
+          <div className="overflow-x-auto no-scrollbar flex items-center gap-1.5 py-0.5 -mx-3 px-3 sm:mx-0 sm:px-0">
+            {/* Mobile Active Parent Switcher */}
+            <div className="sm:hidden inline-flex items-center bg-slate-100 dark:bg-slate-800/90 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700/80 shadow-2xs shrink-0">
+              {(["Thom", "Meghan"] as const).map(parent => (
+                <button
+                  key={parent}
+                  type="button"
+                  onClick={() => handleSwitchActiveParent(parent)}
+                  className={`px-2 py-1 rounded-lg text-xs font-black transition cursor-pointer flex items-center gap-1 ${activeParentAdmin === parent
+                      ? "bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-2xs"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                  title={`Switch to ${parent}'s Admin Hub`}
+                >
+                  <span>👑</span>
+                  <span>{parent}</span>
+                </button>
+              ))}
+            </div>
+
             {/* Month Navigator */}
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800/90 rounded-xl p-1 border border-slate-200 dark:border-slate-700/80 shadow-2xs">
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800/90 rounded-xl p-1 border border-slate-200 dark:border-slate-700/80 shadow-2xs shrink-0">
               <button
                 onClick={handlePrevMonth}
                 className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
@@ -6790,7 +6920,7 @@ function App({
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <div className="px-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 min-w-[110px] text-center select-none">
+              <div className="px-2 text-xs font-bold text-slate-800 dark:text-slate-200 min-w-[95px] text-center select-none">
                 {MONTH_NAMES[selectedMonth]} {selectedYear}
               </div>
               <button
@@ -6812,7 +6942,7 @@ function App({
             <button
               type="button"
               onClick={() => setShowInspectionModal(true)}
-              className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 border rounded-xl transition cursor-pointer shadow-2xs ${signOffStatus.done
+              className={`shrink-0 flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 border rounded-xl transition cursor-pointer shadow-2xs ${signOffStatus.done
                   ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60"
                   : "bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-700/60 hover:bg-amber-100 dark:hover:bg-amber-900/60"
                 }`}
@@ -6834,7 +6964,7 @@ function App({
             <button
               type="button"
               onClick={() => setShowPhotoInboxModal(true)}
-              className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-900 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 rounded-xl transition cursor-pointer shadow-2xs relative"
+              className="shrink-0 flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-900 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 rounded-xl transition cursor-pointer shadow-2xs relative"
               title="Review chore completion photos submitted by kids"
             >
               <Camera className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
@@ -6850,7 +6980,7 @@ function App({
             <button
               type="button"
               onClick={() => setShowNudgeModal(true)}
-              className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-orange-50 dark:bg-orange-950/40 hover:bg-orange-100 dark:hover:bg-orange-900/60 text-orange-900 dark:text-orange-300 border border-orange-300 dark:border-orange-700/60 rounded-xl transition cursor-pointer shadow-2xs"
+              className="shrink-0 flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-orange-50 dark:bg-orange-950/40 hover:bg-orange-100 dark:hover:bg-orange-900/60 text-orange-900 dark:text-orange-300 border border-orange-300 dark:border-orange-700/60 rounded-xl transition cursor-pointer shadow-2xs"
               title="Send Remote Nudge or Praise to Kids"
             >
               <Sparkles className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
@@ -6861,7 +6991,7 @@ function App({
             <button
               type="button"
               onClick={() => setShowAllowanceLedger(true)}
-              className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 rounded-xl transition cursor-pointer shadow-2xs"
+              className="shrink-0 flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 rounded-xl transition cursor-pointer shadow-2xs"
               title="Open Household Allowance Ledger & Payment History"
             >
               <DollarSign className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -6875,151 +7005,32 @@ function App({
                 setRewardPayoutKid(allKidsList[0] || "Sydney");
                 setShowRewardPayoutModal(true);
               }}
-              className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-900 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 rounded-xl transition cursor-pointer shadow-2xs"
+              className="shrink-0 flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-900 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 rounded-xl transition cursor-pointer shadow-2xs"
               title="Open Kid Reward Accounts & 1-Click Digital Gift Card Payouts"
             >
               <Gift className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
               <span>Rewards</span>
             </button>
 
-            {/* Clear All Completions for Fresh Install Rollout */}
+            {/* Reset Tasks */}
             <button
               type="button"
               onClick={() => handleClearAllCompletedTasks(true)}
-              className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-700/60 rounded-xl transition cursor-pointer shadow-2xs"
+              className="shrink-0 flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-700/60 rounded-xl transition cursor-pointer shadow-2xs"
               title="Clear all completed tasks and activity logs for a fresh install rollout"
             >
               <RotateCcw className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
               <span>Reset Tasks</span>
             </button>
-
-            {/* Subtle Divider */}
-            <div className="h-5 w-px bg-slate-200 dark:bg-slate-700 mx-0.5 hidden sm:block" />
-
-            {/* Activity Feed Bell */}
-            <button
-              type="button"
-              onClick={() => setShowActivityDrawer(true)}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer shadow-2xs relative"
-              title="Open Live Household Activity Feed"
-            >
-              <Bell className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              {activities.length > 0 && (
-                <span className="absolute -top-1 -right-1 text-[9px] font-black px-1.5 py-0.2 rounded-full bg-indigo-600 text-white font-mono shadow-xs">
-                  {activities.length > 99 ? "99+" : activities.length}
-                </span>
-              )}
-            </button>
-
-            {/* Family Chat Button */}
-            <button
-              type="button"
-              onClick={() => setShowChatDrawer(true)}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer shadow-2xs relative"
-              title="Open Family Hub Chat"
-            >
-              <MessageSquare className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-              {unreadChatCount > 0 && (
-                <span className="absolute -top-1 -right-1 text-[9px] font-black px-1.5 py-0.2 rounded-full bg-rose-500 text-white font-mono shadow-xs animate-bounce">
-                  {unreadChatCount > 9 ? "9+" : unreadChatCount}
-                </span>
-              )}
-            </button>
-
-            {/* Cloud Sync Status */}
-            <button
-              type="button"
-              onClick={() => setShowFirebaseModal(true)}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition cursor-pointer shadow-2xs"
-              title={getStoredFirebaseConfig() ? "Cloud Sync: Connected & Live" : "Cloud Sync: Setup"}
-            >
-              <Cloud className={`w-4 h-4 ${getStoredFirebaseConfig() ? "text-emerald-500" : "text-amber-500"}`} />
-            </button>
-
-            {/* Mobile View Toggle */}
-            <button
-              type="button"
-              onClick={toggleParentViewMode}
-              className="flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl transition cursor-pointer shadow-2xs"
-              title="Switch to Mobile Parent View"
-            >
-              <Smartphone className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              <span className="hidden sm:inline">Mobile</span>
-            </button>
-
-            {/* Quick 1-Click Theme Toggle */}
-            <ThemeToggle variant="compact" />
-
-            {/* Settings & Theme Menu Dropdown */}
-            <div className="relative inline-block text-left">
-              <button
-                type="button"
-                onClick={() => setShowSettingsMenu((prev) => !prev)}
-                className={`p-2 rounded-xl border transition cursor-pointer shadow-2xs ${showSettingsMenu
-                    ? "bg-indigo-50 dark:bg-indigo-950/60 border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400"
-                    : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                title="Household Settings & Theme"
-                aria-expanded={showSettingsMenu}
-              >
-                <Settings className="w-4 h-4" />
-              </button>
-
-              {showSettingsMenu && (
-                <>
-                  <div
-                    className="fixed inset-0 z-30"
-                    onClick={() => setShowSettingsMenu(false)}
-                  />
-                  <div className="absolute right-0 mt-2 z-40 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl p-2.5 space-y-2.5 animate-fadeIn">
-                    <div className="px-1 text-[11px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                      Theme
-                    </div>
-
-                    {/* Nested Theme Buttons */}
-                    <div>
-                      <ThemeToggle variant="pill" className="w-full flex" />
-                    </div>
-
-                    <div className="border-t border-slate-100 dark:border-slate-800" />
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowSettingsMenu(false);
-                        setShowSettingsModal(true);
-                      }}
-                      className="w-full px-2.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 flex items-center justify-between transition cursor-pointer text-left"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Settings2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                        <span>All Household Settings</span>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
           </div>
         </div>
 
         {/* Sub-bar: Views & Tools */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 flex flex-wrap items-center justify-between gap-3 text-sm">
-          <div className="flex items-center gap-1 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab("month")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${activeTab === "month"
-                  ? "bg-slate-900 dark:bg-indigo-600 text-white shadow-sm"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-            >
-              <CalendarDays className="w-3.5 h-3.5" />
-              <span>Monthly Calendar</span>
-            </button>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-1.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-sm">
+          <div className="flex items-center gap-1 shrink-0">
             <button
               onClick={() => setActiveTab("matrix")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${activeTab === "matrix"
+              className={`shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${activeTab === "matrix"
                   ? "bg-slate-900 dark:bg-indigo-600 text-white shadow-sm"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
@@ -7028,18 +7039,28 @@ function App({
               <span>Weekly Schedule</span>
             </button>
             <button
+              onClick={() => setActiveTab("month")}
+              className={`shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${activeTab === "month"
+                  ? "bg-slate-900 dark:bg-indigo-600 text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                }`}
+            >
+              <CalendarDays className="w-3.5 h-3.5" />
+              <span>Monthly Calendar</span>
+            </button>
+            <button
               onClick={() => setActiveTab("stats")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${activeTab === "stats"
+              className={`shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${activeTab === "stats"
                   ? "bg-slate-900 dark:bg-indigo-600 text-white shadow-sm"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
             >
               <Award className="w-3.5 h-3.5" />
-              <span>Leaderboard & Stats</span>
+              <span>Leaderboard</span>
             </button>
             <button
               onClick={() => setActiveTab("roster")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${activeTab === "roster"
+              className={`shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${activeTab === "roster"
                   ? "bg-indigo-600 text-white shadow-sm"
                   : "text-indigo-700 dark:text-indigo-300 bg-indigo-50/70 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/60 dark:border-indigo-800/60"
                 }`}
@@ -7049,11 +7070,13 @@ function App({
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 shrink-0 mx-0.5" />
+
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={() => setShowAutoAssignModal(true)}
-              className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/60 rounded-lg transition cursor-pointer shadow-2xs"
+              className="shrink-0 flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/60 rounded-lg transition cursor-pointer shadow-2xs"
               title="Auto-Assign chores across family members"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
@@ -7063,7 +7086,7 @@ function App({
             <button
               type="button"
               onClick={() => setShowInviteModal(true)}
-              className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800/60 rounded-lg transition cursor-pointer shadow-2xs"
+              className="shrink-0 flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800/60 rounded-lg transition cursor-pointer shadow-2xs"
               title="Generate a 6-character invite code to pair a kid's phone, tablet, or PC"
             >
               <Smartphone className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
@@ -7074,11 +7097,11 @@ function App({
               <button
                 type="button"
                 onClick={() => setShowPwaModal(true)}
-                className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800/60 rounded-lg transition cursor-pointer shadow-2xs"
+                className="shrink-0 hidden sm:flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 bg-purple-50 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800/60 rounded-lg transition cursor-pointer shadow-2xs"
                 title="Install Weekly Chores Hub to your Home Screen or Desktop"
               >
                 <Download className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                <span className="hidden sm:inline">Install</span>
+                <span>Install</span>
               </button>
             )}
 
@@ -7097,7 +7120,7 @@ function App({
                     );
                   }
                 }}
-                className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition cursor-pointer shadow-2xs ${isSpeakingAudio
+                className={`shrink-0 flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition cursor-pointer shadow-2xs ${isSpeakingAudio
                     ? "bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse"
                     : "bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/60 border border-teal-200 dark:border-teal-800/60"
                   }`}
@@ -7112,11 +7135,11 @@ function App({
               href="/Workflow_Diagrams_Export.html"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition cursor-pointer shadow-2xs no-underline"
+              className="shrink-0 hidden md:flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition cursor-pointer shadow-2xs no-underline"
               title="Open Architecture & Workflow diagrams"
             >
               <span>📊</span>
-              <span className="hidden sm:inline">Diagrams</span>
+              <span>Diagrams</span>
             </a>
 
             <button
@@ -7126,7 +7149,7 @@ function App({
                 saveDeviceSession(kidSession);
                 setDeviceSession(kidSession);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 transition cursor-pointer shadow-2xs"
+              className="shrink-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 transition cursor-pointer shadow-2xs"
               title="Preview or switch to the Kid Interface (Minion Mode)"
             >
               <span>🎒</span>
@@ -7136,9 +7159,83 @@ function App({
         </div>
       </header>
       <main
-        className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6"
+        className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6"
         style={{ paddingBottom: "calc(4rem + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))" }}
-      ><div className="no-print bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3 mb-4 shadow-2xs space-y-2.5 text-xs transition-colors"><div className="flex flex-wrap items-center gap-3"><div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 min-w-[130px]"><Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" /><span>Household Roster:</span></div><div className="flex flex-wrap items-center gap-1.5"><span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">Supreme Overlords:</span>{familyMembers.filter(m => m.active !== false && (m.role === "Supreme Overlord" || m.role === "Overseer Supreme")).map(m => <span key={m.id} className="px-2.5 py-0.5 rounded-full font-semibold text-[11px] border transition shadow-2xs" style={getMemberBadgeStyle(m, isDark)} title="Supreme Overlord (= Parent • Included in Daily Chores)">{m.name}</span>)}<span className="text-slate-300 dark:text-slate-600 mx-1">{"•"}</span><span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase bg-indigo-50 dark:bg-indigo-950/50 px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-800/60">Minions:</span>{familyMembers.filter(m => m.active !== false && m.role !== "Supreme Overlord" && m.role !== "Overseer Supreme").map(m => <span key={m.id} className="px-2.5 py-0.5 rounded-full font-semibold text-[11px] border transition shadow-2xs" style={getMemberBadgeStyle(m, isDark)} title={`${m.name} (${m.residency} Minion = Kid)`}>{m.name}</span>)}</div></div><div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-800"><div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 min-w-[130px]"><span className="w-4 text-center shrink-0">{"\u{1F43E}"}</span><span>{"\"The Herd\":"}</span></div><div className="flex flex-wrap items-center gap-1.5"><span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 uppercase bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">Dogs:</span>{rosterPets.filter(p => p.active !== false && p.type.toLowerCase().includes("dog")).map(p => <span key={`${p.index_}-${p.name}`} className="px-2.5 py-0.5 rounded-full font-semibold text-[11px] border transition shadow-2xs" style={getPetBadgeStyle(p, isDark)} title={`${p.name} (${p.type} • ${p.routine})`}>{p.icon}{" "}{p.name}</span>)}<span className="text-slate-300 dark:text-slate-600 mx-1">{"•"}</span><span className="text-[10px] font-bold text-orange-800 dark:text-orange-300 uppercase bg-orange-50 dark:bg-orange-950/50 px-1.5 py-0.5 rounded border border-orange-200 dark:border-orange-800/60">Cats:</span>{rosterPets.filter(p => p.active !== false && p.type.toLowerCase().includes("cat")).map(p => <span key={`${p.index_}-${p.name}`} className="px-2.5 py-0.5 rounded-full font-medium text-[11px] border transition shadow-2xs" style={getPetBadgeStyle(p, isDark)} title={`${p.name} (${p.type} • ${p.routine})`}>{p.icon}{" "}{p.name}</span>)}{rosterPets.some(p => p.active !== false && !p.type.toLowerCase().includes("dog") && !p.type.toLowerCase().includes("cat")) && <><span className="text-slate-300 dark:text-slate-600 mx-1">{"•"}</span><span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60">Other Pets:</span>{rosterPets.filter(p => p.active !== false && !p.type.toLowerCase().includes("dog") && !p.type.toLowerCase().includes("cat")).map(p => <span key={`${p.index_}-${p.name}`} className="px-2.5 py-0.5 rounded-full font-medium text-[11px] border transition shadow-2xs" style={getPetBadgeStyle(p, isDark)} title={`${p.name} (${p.type} • ${p.routine})`}>{p.icon}{" "}{p.name}</span>)}</>}</div></div></div><div className="no-print bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 mb-5 shadow-sm flex flex-wrap items-center justify-between gap-4 transition-colors"><div className="flex items-center gap-6"><div><p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Month Overview</p><div className="flex items-baseline gap-2 mt-0.5"><span className="text-xl font-bold text-slate-900 dark:text-white">{monthStats.totalCompleted}{" / "}{monthStats.totalScheduled}</span><span className="text-xs text-slate-500 dark:text-slate-400">completed</span></div></div><div className="hidden sm:block w-36"><div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-1 font-medium"><span>Progress</span><span>{monthStats.completionRate}%</span></div><div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden"><div className="bg-emerald-500 h-2 rounded-full transition-all duration-500" style={{
+      >
+        {/* Collapsible Household Roster Card */}
+        <div className="no-print bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-3 mb-4 shadow-2xs text-xs transition-colors">
+          <button
+            type="button"
+            onClick={() => setShowRosterAccordion(prev => !prev)}
+            className="w-full font-bold flex items-center justify-between cursor-pointer select-none text-slate-800 dark:text-slate-200 text-left"
+          >
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span>Household Roster</span>
+              <span className="text-[11px] font-normal text-slate-500 dark:text-slate-400">
+                ({familyMembers.filter(m => m.active !== false).length} Members • {rosterPets.filter(p => p.active !== false).length} Pets)
+              </span>
+            </div>
+            <span className={`text-xs text-slate-400 transition-transform duration-200 ${showRosterAccordion ? "rotate-180" : ""}`}>▼</span>
+          </button>
+          {showRosterAccordion && (
+            <div className="space-y-2.5 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 animate-fadeIn">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 min-w-[130px]">
+                  <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                  <span>Household Roster:</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 uppercase bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">Supreme Overlords:</span>
+                  {familyMembers.filter(m => m.active !== false && (m.role === "Supreme Overlord" || m.role === "Overseer Supreme")).map(m => (
+                    <span key={m.id} className="px-2.5 py-0.5 rounded-full font-semibold text-[11px] border transition shadow-2xs" style={getMemberBadgeStyle(m, isDark)} title="Supreme Overlord (= Parent • Included in Daily Chores)">
+                      {m.name}
+                    </span>
+                  ))}
+                  <span className="text-slate-300 dark:text-slate-600 mx-1">•</span>
+                  <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 uppercase bg-indigo-50 dark:bg-indigo-950/50 px-1.5 py-0.5 rounded border border-indigo-200 dark:border-indigo-800/60">Minions:</span>
+                  {familyMembers.filter(m => m.active !== false && m.role !== "Supreme Overlord" && m.role !== "Overseer Supreme").map(m => (
+                    <span key={m.id} className="px-2.5 py-0.5 rounded-full font-semibold text-[11px] border transition shadow-2xs" style={getMemberBadgeStyle(m, isDark)} title={`${m.name} (${m.residency} Minion = Kid)`}>
+                      {m.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 min-w-[130px]">
+                  <span className="w-4 text-center shrink-0">🐾</span>
+                  <span>&quot;The Herd&quot;:</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 uppercase bg-amber-50 dark:bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800/60">Dogs:</span>
+                  {rosterPets.filter(p => p.active !== false && p.type.toLowerCase().includes("dog")).map(p => (
+                    <span key={`${p.index_}-${p.name}`} className="px-2.5 py-0.5 rounded-full font-semibold text-[11px] border transition shadow-2xs" style={getPetBadgeStyle(p, isDark)} title={`${p.name} (${p.type} • ${p.routine})`}>
+                      {p.icon} {p.name}
+                    </span>
+                  ))}
+                  <span className="text-slate-300 dark:text-slate-600 mx-1">•</span>
+                  <span className="text-[10px] font-bold text-orange-800 dark:text-orange-300 uppercase bg-orange-50 dark:bg-orange-950/50 px-1.5 py-0.5 rounded border border-orange-200 dark:border-orange-800/60">Cats:</span>
+                  {rosterPets.filter(p => p.active !== false && p.type.toLowerCase().includes("cat")).map(p => (
+                    <span key={`${p.index_}-${p.name}`} className="px-2.5 py-0.5 rounded-full font-medium text-[11px] border transition shadow-2xs" style={getPetBadgeStyle(p, isDark)} title={`${p.name} (${p.type} • ${p.routine})`}>
+                      {p.icon} {p.name}
+                    </span>
+                  ))}
+                  {rosterPets.some(p => p.active !== false && !p.type.toLowerCase().includes("dog") && !p.type.toLowerCase().includes("cat")) && (
+                    <>
+                      <span className="text-slate-300 dark:text-slate-600 mx-1">•</span>
+                      <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800/60">Other Pets:</span>
+                      {rosterPets.filter(p => p.active !== false && !p.type.toLowerCase().includes("dog") && !p.type.toLowerCase().includes("cat")).map(p => (
+                        <span key={`${p.index_}-${p.name}`} className="px-2.5 py-0.5 rounded-full font-medium text-[11px] border transition shadow-2xs" style={getPetBadgeStyle(p, isDark)} title={`${p.name} (${p.type} • ${p.routine})`}>
+                          {p.icon} {p.name}
+                        </span>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div><div className="no-print bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 mb-5 shadow-sm flex flex-wrap items-center justify-between gap-4 transition-colors"><div className="flex items-center gap-6"><div><p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Month Overview</p><div className="flex items-baseline gap-2 mt-0.5"><span className="text-xl font-bold text-slate-900 dark:text-white">{monthStats.totalCompleted}{" / "}{monthStats.totalScheduled}</span><span className="text-xs text-slate-500 dark:text-slate-400">completed</span></div></div><div className="hidden sm:block w-36"><div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-1 font-medium"><span>Progress</span><span>{monthStats.completionRate}%</span></div><div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden"><div className="bg-emerald-500 h-2 rounded-full transition-all duration-500" style={{
         width: `${monthStats.completionRate}%`
       }} /></div></div></div><div className="flex items-center gap-3 text-xs"><div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-blue-800 dark:text-blue-300 px-3 py-1.5 rounded-lg"><span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /><span>{"Active Week: "}<strong>{activeSyncWeek}</strong>{" • "}{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || "Cadence & Mason arrive Sun Oct 18 @ 5 PM"}</span></div><button onClick={() => {
         const cur = getCurrentWeekMonday();

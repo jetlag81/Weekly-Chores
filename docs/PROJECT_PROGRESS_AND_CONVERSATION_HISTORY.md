@@ -1,6 +1,6 @@
-﻿# Household Hub — Project Progress & Conversation History
+# Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-12 13:55:00
+> **Export Date**: 2026-11-12 14:15:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -54,6 +54,12 @@
    - Removed native `DarkActionBar` toolbar interference via `Theme.AppCompat.DayNight.NoActionBar`.
    - Wired live WindowInsetsCompat listeners in `MainActivity.java` to inject dynamic CSS safe-area variables (`--safe-area-inset-top`, `--safe-area-inset-bottom`).
    - Conducted a comprehensive, screen-by-screen audit on a connected Google Pixel 9 Pro, eliminating all overlaps across Parent Mobile Dashboard, Minion/Kid View, Full Table View, Activity Stream Drawer, Family Chat Drawer, Sunday Inspection, Allowance Ledger, Parent Nudge, Reward Payout, and Household Settings modals.
+
+10. **Thom's Admin Hub Mobile Viewport Decluttering & Collapsible Roster** (weekly_chores_household_hub.tsx):
+    - Redesigned Thom's Admin Hub header on mobile viewports into a streamlined 2-row layout:
+      - Row 1: Brand title and Parent Switcher (👑 Thom / Meghan) on left; prominent `[ 📱 Mobile ]` quick-switch button and compact utility icons (Activity Bell with badge, Family Chat with unread badge, Cloud Sync status, Settings) on right.
+      - Row 2: Sleek horizontal-scrolling action chip bar (`overflow-x-auto no-scrollbar`) containing Month Navigator, Sunday Inspection, Photo Proofs, Nudge, Ledger, Rewards, and Reset Tasks.
+    - Converted the dense Household Roster card (Supreme Overlords, Minions, Dogs, Cats) into an interactive collapsible `<details>` accordion with animated chevron, reclaiming over 150px of vertical space on mobile so the schedule table is immediately visible without scrolling.
 
 ---
 
@@ -4942,3 +4948,18 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 4. **Family Chat Drawer**: Padded header below status bar and elevated message input box above navigation buttons.
 5. **Sunday Inspection, Allowance Ledger, Parent Nudge, Reward Payout, Household Settings, and User Profile Modals**: Added global `.modal-safe-area` and `max-h-full` so all modal cards sit safely inside viewport boundaries without touching or colliding with system bars.
 6. **Full Spreadsheet / Table View**: Added bottom safe-area padding to `<main>` so the month overview and pet care routine cards float cleanly above the navigation buttons.
+
+---
+
+### Turn 175
+**Date / Time**: 2026-11-12T20:00:00Z
+
+**User Prompt**:
+> Thank you :). I am looking at Thom's Admin Hub on my Pixel and it is very crowded and clunky. Can we clean that up?
+
+**Summary of Work Delivered**:
+- **Mobile Header Restructuring**: Replaced the 15-button multi-row wrapping mess in Thom's Admin Hub with a compact brand header featuring an immediate `[ 📱 Mobile ]` toggle to easily return to the streamlined mobile dashboard.
+- **Horizontal Scrolling Action Strip**: Encapsulated Month Navigation, Inspection, Photo Proofs, Nudge, Allowance Ledger, Rewards, and Reset Tasks into a single-line horizontal scrolling chip track.
+- **Collapsible Household Roster Accordion**: Converted the bulky ~180px human & pet roster card into an expandable `<details>` accordion (`Household Roster (6 Members • 3 Pets) ▾`), freeing up ~150px of vertical screen real estate.
+- **Sub-bar Optimization**: Streamlined tab navigation (`Weekly Schedule`, `Monthly Calendar`, `Leaderboard & Stats`, `Household Hub`, `Minion Mode`) with horizontal touch scrolling.
+- **Live Verification**: Rebuilt APK headlessly and streamed directly to connected Google Pixel 9 Pro via ADB, capturing a live screenshot to verify the clean, uncluttered interface.

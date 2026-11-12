@@ -36,6 +36,7 @@ import {
 import {
   getRandomGiphyOrFallbackGif,
   searchFamilyGiphyGifs,
+  useGiphyUsage,
   type GiphyGifItem
 } from "./giphyService";
 import {
@@ -82,6 +83,7 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
   const [giphySearchQuery, setGiphySearchQuery] = useState("");
   const [isSearchingGiphy, setIsSearchingGiphy] = useState(false);
   const [giphySearchResults, setGiphySearchResults] = useState<GiphyGifItem[]>([]);
+  const giphyUsage = useGiphyUsage();
 
   // Synchronize state when opened with fresh props
   useEffect(() => {
@@ -613,6 +615,28 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
                   {/* Expandable Giphy Family Search Panel */}
                   {showGiphySearch && (
                     <div className="pt-1.5 border-t border-slate-200 space-y-2 animate-in fade-in duration-150">
+                      {/* Quota & Rate Limit Status Header */}
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 font-semibold px-0.5">
+                        <span className="flex items-center gap-1">
+                          <Sparkles className="w-3 h-3 text-indigo-500" />
+                          <span>Family-Safe G-Rated Search</span>
+                        </span>
+                        <span
+                          className={`px-1.5 py-0.5 rounded-md font-bold text-[9.5px] border ${
+                            giphyUsage.isThrottled
+                              ? "bg-rose-50 text-rose-700 border-rose-200"
+                              : giphyUsage.isNearLimit
+                              ? "bg-amber-50 text-amber-700 border-amber-200"
+                              : "bg-slate-100 text-slate-600 border-slate-200"
+                          }`}
+                          title={`Hourly Quota: ${giphyUsage.callsInLastHour}/100 calls used in past 60 min. Oldest call drops off in ~${giphyUsage.resetInMinutes}m.`}
+                        >
+                          {giphyUsage.isThrottled
+                            ? "⛔ Limit Reached (Local Safe Mode)"
+                            : `⚡ ${giphyUsage.remaining}/100 calls left this hr`}
+                        </span>
+                      </div>
+
                       <form
                         onSubmit={(e) => {
                           e.preventDefault();

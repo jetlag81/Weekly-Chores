@@ -28,7 +28,11 @@ import {
   ChevronRight,
   ShieldCheck,
   Music,
-  Radio
+  Radio,
+  Activity,
+  Zap,
+  AlertTriangle,
+  Clock
 } from "lucide-react";
 import { getStoredThemeMode, setThemeMode, type ThemeMode } from "./themeManager";
 import {
@@ -61,7 +65,12 @@ import {
   getStoredGiphyApiKey,
   saveStoredGiphyApiKey,
   testGiphyApiKey,
-  MANDATORY_FAMILY_RATING
+  MANDATORY_FAMILY_RATING,
+  useGiphyUsage,
+  clearGiphyCallLog,
+  clearGiphyCache,
+  HOURLY_RATE_LIMIT,
+  SOFT_RATE_LIMIT
 } from "./giphyService";
 import { QRCodeDisplay } from "./QRCodeDisplay";
 import { isStandalone, promptPwaInstall } from "./pwaManager";
@@ -151,13 +160,15 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
   // PWA Install State
   const [installStatus, setInstallStatus] = useState<string>("");
 
-  // Giphy API State (Family Friendly G-Rated Celebrations)
+  // Giphy API State (Family Friendly G-Rated Celebrations & Rate Limiting)
+  const giphyUsage = useGiphyUsage();
   const [giphyKey, setGiphyKey] = useState<string>(() => getStoredGiphyApiKey());
   const [isEditingGiphy, setIsEditingGiphy] = useState<boolean>(false);
   const [giphyInput, setGiphyInput] = useState<string>("");
   const [giphyTesting, setGiphyTesting] = useState<boolean>(false);
   const [giphyTestSuccess, setGiphyTestSuccess] = useState<boolean | null>(null);
   const [giphyTestMessage, setGiphyTestMessage] = useState<string | null>(null);
+  const [giphyActionNotice, setGiphyActionNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -867,6 +878,126 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
                         <span className="flex-1">{giphyTestMessage}</span>
                       </div>
                     )}
+
+                    {/* Real-Time Hourly Rate Limit & Quota Monitor */}
+                    <div className="mt-3 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <Activity className="w-4 h-4 text-indigo-500" />
+                          <span className="text-xs font-black text-slate-900 dark:text-white">
+                            Hourly Rate Limit &amp; Quota Monitor
+                          </span>
+                        </div>
+                        <span
+                          className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                            giphyUsage.isThrottled
+                              ? "bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800"
+                              : giphyUsage.isNearLimit
+                              ? "bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800"
+                              : "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
+                          }`}
+                        >
+                          {giphyUsage.isThrottled
+                            ? "⛔ Limit Reached (Local Safe Mode)"
+                            : giphyUsage.isNearLimit
+                            ? "⚠️ Soft Limit (Preloads Paused)"
+                            : "🟢 Active & Cached"}
+                        </span>
+                      </div>
+
+                      {/* Usage Progress Bar */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[11px] font-bold">
+                          <span className="text-slate-600 dark:text-slate-400">
+                            Calls in Past 60 Mins:{" "}
+                            <strong className="text-slate-900 dark:text-white">
+                              {giphyUsage.callsInLastHour}
+                            </strong>{" "}
+                            / {HOURLY_RATE_LIMIT}
+                          </span>
+                          <span
+                            className={
+                              giphyUsage.isThrottled
+                                ? "text-rose-600 font-extrabold"
+                                : giphyUsage.isNearLimit
+                                ? "text-amber-600 font-extrabold"
+                                : "text-emerald-600 dark:text-emerald-400 font-extrabold"
+                            }
+                          >
+                            {giphyUsage.remaining} calls remaining
+                          </span>
+                        </div>
+
+                        <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-300 rounded-full ${
+                              giphyUsage.isThrottled
+                                ? "bg-rose-500"
+                                : giphyUsage.isNearLimit
+                                ? "bg-amber-500"
+                                : "bg-emerald-500"
+                            }`}
+                            style={{ width: `${Math.min(100, Math.max(4, giphyUsage.percentUsed))}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Quota Details and Expiration */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-500 dark:text-slate-400 pt-0.5">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-slate-400" />
+                          <span>
+                            {giphyUsage.callsInLastHour > 0
+                              ? `Oldest call drops off in ~${giphyUsage.resetInMinutes}m (reclaiming 1 call)`
+                              : "No API calls made in the last 60 minutes."}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              clearGiphyCallLog();
+                              setGiphyActionNotice("Call counter reset to 0!");
+                              setTimeout(() => setGiphyActionNotice(null), 3000);
+                            }}
+                            className="hover:text-indigo-600 dark:hover:text-indigo-400 underline cursor-pointer"
+                            title="Reset local call history counter"
+                          >
+                            Reset Counter
+                          </button>
+                          <span>•</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              clearGiphyCache();
+                              setGiphyActionNotice("GIF search cache cleared!");
+                              setTimeout(() => setGiphyActionNotice(null), 3000);
+                            }}
+                            className="hover:text-indigo-600 dark:hover:text-indigo-400 underline cursor-pointer"
+                            title="Clear cached search queries and queue"
+                          >
+                            Flush Cache
+                          </button>
+                        </div>
+                      </div>
+
+                      {giphyActionNotice && (
+                        <div className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 p-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 text-center animate-in fade-in">
+                          {giphyActionNotice}
+                        </div>
+                      )}
+
+                      {/* Architecture and Guardrails Note */}
+                      <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                        <strong className="text-slate-800 dark:text-slate-200">How we stay under 100 calls/hr:</strong>
+                        <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
+                          <li><strong>12-Hour Queue Caching:</strong> Celebratory GIFs are saved locally so page reloads do not burn requests.</li>
+                          <li><strong>Automatic Soft-Cap ({SOFT_RATE_LIMIT} calls):</strong> Background preloading automatically pauses when approaching {SOFT_RATE_LIMIT} calls, saving remaining bandwidth for your manual searches.</li>
+                          <li><strong>Zero Downtime Fallback:</strong> If the hourly limit is hit, the app instantly switches to our curated local cartoon library until the quota recharges.</li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

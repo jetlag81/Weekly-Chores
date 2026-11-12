@@ -1244,7 +1244,7 @@ var PRESET_PET_COLORS: Record<string, {
 
 function getMemberBadgeStyle(member: any, isDark: boolean): React.CSSProperties {
   if (!member) return {};
-  const nameKey = String(member.name || member.id || "").toLowerCase();
+  const nameKey = String(member.firstName || member.name || member.id || "").toLowerCase().split(/\s+/)[0];
   const preset = PRESET_MEMBER_COLORS[nameKey];
   if (isDark) {
     return {
@@ -2712,7 +2712,8 @@ function App({
     }
     return memberRows.map((r, i) => {
       const rawName = String(r.row[0] || "").trim();
-      const rawRole = String(r.row[1] || "").trim() || (["thom", "meghan"].includes(rawName.toLowerCase()) ? "Overseer Supreme" : "Minion");
+      const firstName = rawName.split(/\s+/)[0];
+      const rawRole = String(r.row[1] || "").trim() || (["thom", "meghan"].includes(firstName.toLowerCase()) ? "Overseer Supreme" : "Minion");
       const rawResidency = String(r.row[2] || "").trim();
       const rawSpecialGroups = String(r.row[3] || "").trim();
       const isActive = r.row[4] === true || String(r.row[4]).toLowerCase() === "true";
@@ -2723,10 +2724,12 @@ function App({
       } else if (cleanRes.includes("casual")) {
         type = "casual";
       }
-      const palette = PRESET_MEMBER_COLORS[rawName.toLowerCase()] || MEMBER_COLOR_PALETTES[i % MEMBER_COLOR_PALETTES.length];
+      const palette = PRESET_MEMBER_COLORS[firstName.toLowerCase()] || PRESET_MEMBER_COLORS[rawName.toLowerCase()] || MEMBER_COLOR_PALETTES[i % MEMBER_COLOR_PALETTES.length];
       return {
-        id: rawName,
-        name: rawName,
+        id: firstName,
+        name: firstName,
+        fullName: rawName,
+        firstName,
         role: rawRole,
         residency: rawResidency || (type === "biweekly" ? "Bi-Weekly" : type === "casual" ? "Casual" : "Full-Time"),
         type,
@@ -3000,12 +3003,68 @@ function App({
     return chores;
   }, [rosterSheet, customMasterChores, choreOrderOverrides, deletedChoreKeys]);
   const getMember = useMemo(() => {
-    return name => {
+    return (name: string | null | undefined) => {
       if (!name) return null;
       const clean = String(name).trim().toLowerCase();
-      return familyMembers.find(m => m.name.toLowerCase() === clean || m.id.toLowerCase() === clean || clean === "mom" && (m.name.toLowerCase().includes("megh") || m.role.toLowerCase().includes("mom") || m.role.toLowerCase().includes("parent")) || clean === "dad" && (m.name.toLowerCase() === "thom" || m.role.toLowerCase().includes("dad") || m.role.toLowerCase().includes("parent"))) || null;
+      const first = clean.split(/\s+/)[0];
+      return (
+        familyMembers.find(m => {
+          const mLow = m.name.toLowerCase();
+          const mFull = (m.fullName || m.name).toLowerCase();
+          const mFirst = (m.firstName || m.name).toLowerCase();
+          return (
+            mLow === clean ||
+            mFull === clean ||
+            m.id.toLowerCase() === clean ||
+            mFirst === clean ||
+            mFirst === first ||
+            mFull.startsWith(clean + " ") ||
+            clean.startsWith(mFirst + " ") ||
+            (clean === "mom" && (mLow.includes("megh") || m.role.toLowerCase().includes("mom") || m.role.toLowerCase().includes("parent"))) ||
+            (clean === "dad" && (mLow.includes("thom") || m.role.toLowerCase().includes("dad") || m.role.toLowerCase().includes("parent")))
+          );
+        }) || null
+      );
     };
   }, [familyMembers]);
+
+  const standardWhoOptions = useMemo(() => {
+    const list: string[] = [];
+    familyMembers.forEach(m => {
+      const raw = String(m.firstName || m.name || m.id || "").trim();
+      const first = raw.split(/\s+/)[0];
+      if (first && !list.includes(first)) {
+        list.push(first);
+      }
+    });
+    const defaults = ["Thom", "Meghan", "Sydney", "Cadence", "Mason", "Koda", "Keyanna"];
+    defaults.forEach(d => {
+      if (!list.some(n => n.toLowerCase() === d.toLowerCase())) {
+        list.push(d);
+      }
+    });
+    return list;
+  }, [familyMembers]);
+
+  const toFirstName = (val: string | null | undefined): string => {
+    if (!val) return "";
+    const clean = String(val).replace(/^Who:\s*/i, "").replace(/^Assigned:\s*/i, "").trim();
+    if (!clean) return "";
+    if (isDescriptionOrPlaceholderText(clean)) return "";
+    const mem = getMember(clean);
+    if (mem) {
+      return (mem.firstName || mem.name).split(/\s+/)[0];
+    }
+    const lower = clean.toLowerCase();
+    if (lower.startsWith("thom")) return "Thom";
+    if (lower.startsWith("megh")) return "Meghan";
+    if (lower.startsWith("syd")) return "Sydney";
+    if (lower.startsWith("cad")) return "Cadence";
+    if (lower.startsWith("mas")) return "Mason";
+    if (lower.startsWith("kod")) return "Koda";
+    if (lower.startsWith("key")) return "Keyanna";
+    return clean.split(/\s+/)[0];
+  };
   const biWeeklyNamesString = useMemo(() => {
     const bw = familyMembers.filter(m => m.type === "biweekly").map(m => m.name);
     return bw.length > 0 ? bw.join(" & ") : "Cadence & Mason";
@@ -6980,11 +7039,11 @@ function App({
           })}</div></td></React.Fragment>;
         })() : isStreamlined ? (() => {
           const singleStatus = getSingleWeeklyStatus(cr.index_, taskTitle);
-          const cleanWho = singleStatus.who && !singleStatus.who.startsWith("Who:") && !singleStatus.who.startsWith("Assigned:") ? singleStatus.who : "";
+          const cleanWho = toFirstName(singleStatus.who);
           const streamlinedMember = getMember(cleanWho);
           return <React.Fragment><td colSpan={8} className="py-1.5 px-2.5 text-[11px] text-slate-900 dark:text-slate-200 font-medium align-middle bg-white dark:bg-slate-900" style={{ borderRight: isDark ? "1.5px solid #334155" : "1.5px solid #475569" }}>{rawDescription}</td><td colSpan={4} className="py-1.5 px-2.5 align-middle bg-white dark:bg-slate-900" style={{ borderRight: isDark ? "1.5px solid #334155" : "1.5px solid #475569" }}><div className="flex items-baseline gap-1.5 text-[11px]"><span className="font-semibold text-slate-900 dark:text-slate-200 shrink-0">Who:</span><div className={`flex-1 min-w-0 rounded px-1 ${streamlinedMember ? "border shadow-2xs" : ""}`} style={streamlinedMember ? getMemberBadgeStyle(streamlinedMember, isDark) : undefined}><select value={cleanWho} onChange={e => handleUpdateSingleWeeklyChore(cr.index_, taskTitle, {
-            who: e.target.value
-          })} className="w-full text-[11px] py-0.5 px-0 bg-transparent font-bold focus:outline-none cursor-pointer" style={{ color: streamlinedMember ? (isDark ? streamlinedMember.darkText || "#F1F5F9" : streamlinedMember.text || "#334155") : (isDark ? "#F1F5F9" : "#0F172A") }}><option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"></option><optgroup label="Full-Time Occupants" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">{familyMembers.filter(m => m.type === "regular").map(m => <option key={m.id} value={m.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">{m.name}</option>)}</optgroup><optgroup label="Bi-Weekly Occupants" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">{familyMembers.filter(m => m.type === "biweekly").map(m => <option key={m.id} value={m.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">{m.name}</option>)}</optgroup><optgroup label="Casual Assignees" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">{familyMembers.filter(m => m.type === "casual").map(m => <option key={m.id} value={m.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">{m.name}</option>)}</optgroup><optgroup label="Special Groups" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"><option value="All Non-Casual" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">All Non-Casual</option><option value="All Kids" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">All Kids</option><option value="Parents" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Parents</option></optgroup></select></div></div></td><td colSpan={2} className="py-1.5 px-2 align-middle bg-white dark:bg-slate-900 text-left" style={{ borderRight: "1px solid #C55A11" }}><button type="button" onClick={() => handleUpdateSingleWeeklyChore(cr.index_, taskTitle, {
+            who: toFirstName(e.target.value)
+          })} className="w-full text-[11px] py-0.5 px-0 bg-transparent font-bold focus:outline-none cursor-pointer" style={{ color: streamlinedMember ? (isDark ? streamlinedMember.darkText || "#F1F5F9" : streamlinedMember.text || "#334155") : (isDark ? "#F1F5F9" : "#0F172A") }}><option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"></option>{standardWhoOptions.map(name => <option key={name} value={name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold">{name}</option>)}{cleanWho && !standardWhoOptions.includes(cleanWho) && !isDescriptionOrPlaceholderText(cleanWho) && <option key={cleanWho} value={cleanWho} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold">{cleanWho}</option>}</select></div></div></td><td colSpan={2} className="py-1.5 px-2 align-middle bg-white dark:bg-slate-900 text-left" style={{ borderRight: "1px solid #C55A11" }}><button type="button" onClick={() => handleUpdateSingleWeeklyChore(cr.index_, taskTitle, {
             done: !singleStatus.done
           })} className="inline-flex items-baseline gap-1 font-semibold text-[11px] text-slate-900 dark:text-slate-200 cursor-pointer w-full" title="Click to toggle Done"><span>Done:</span><span className={`inline-block flex-1 min-w-[32px] text-center border-b ${isDark ? "border-slate-500" : "border-slate-700"} ${singleStatus.done ? "text-emerald-700 dark:text-emerald-400 font-bold" : "text-transparent select-none"}`}>{singleStatus.done ? "✓" : "______"}</span></button></td></React.Fragment>;
         })() : (/* BRANCH C: Standard Daily Chores (Mon-Sun Columns) */
@@ -7008,6 +7067,7 @@ function App({
               : curRowWho !== void 0 && curRowWho !== null
                 ? String(curRowWho).trim()
                 : "";
+            whoVal = toFirstName(whoVal);
             if (whoVal === "Cadence" || whoVal === "Mason") {
               const bw = getBiWeeklyStatus(colDate.getFullYear(), colDate.getMonth(), colDate.getDate());
               if (!bw.isFullStay && !bw.isDepartureDay) {
@@ -7022,8 +7082,8 @@ function App({
             const cellMember = getMember(whoVal);
             const badgeStyle = cellMember ? getMemberBadgeStyle(cellMember, isDark) : undefined;
             return <React.Fragment key={d.name}><td className="p-1 text-center align-middle bg-white dark:bg-slate-900" style={{ borderRight: isDark ? "1px solid #334155" : "1px solid #94A3B8" }}><div className={`w-full rounded px-1 py-0.5 transition ${cellMember ? "border shadow-2xs" : ""}`} style={badgeStyle}><select value={whoVal} onChange={e => {
-              handleUpdatePrintableCell(cr.index_, dayIdx, "who", e.target.value, taskTitle);
-            }} className="w-full text-[11px] py-0.5 px-0 bg-transparent font-bold text-center focus:outline-none cursor-pointer" style={{ color: cellMember ? (isDark ? cellMember.darkText || "#F1F5F9" : cellMember.text || "#334155") : (isDark ? "#F1F5F9" : "#0F172A") }}><option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"></option><optgroup label="Full-Time Occupants" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">{familyMembers.filter(m => m.type === "regular").map(m => <option key={m.id} value={m.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">{m.name}</option>)}</optgroup><optgroup label="Bi-Weekly Occupants" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">{familyMembers.filter(m => m.type === "biweekly").map(m => <option key={m.id} value={m.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">{m.name}</option>)}</optgroup><optgroup label="Casual Assignees" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">{familyMembers.filter(m => m.type === "casual").map(m => <option key={m.id} value={m.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">{m.name}</option>)}</optgroup><optgroup label="Special Groups" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"><option value="Non-Casual" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Non-Casual</option><option value="All Non-Casual" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">All Non-Casual</option><option value="Each Child" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Each Child</option><option value="All Kids" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">All Kids</option><option value="Parents" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Parents</option></optgroup>{whoVal && !familyMembers.some(m => m.name === whoVal) && !["Non-Casual", "All Non-Casual", "Each Child", "All Kids", "Parents"].includes(whoVal) && <option value={whoVal} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">{whoVal}</option>}</select></div></td><td className="p-1 text-center align-middle bg-white dark:bg-slate-900" style={{ borderRight: dayIdx < 6 ? (isDark ? "1.5px solid #334155" : "1.5px solid #475569") : "1px solid #C55A11" }}><button type="button" onClick={() => {
+              handleUpdatePrintableCell(cr.index_, dayIdx, "who", toFirstName(e.target.value), taskTitle);
+            }} className="w-full text-[11px] py-0.5 px-0 bg-transparent font-bold text-center focus:outline-none cursor-pointer" style={{ color: cellMember ? (isDark ? cellMember.darkText || "#F1F5F9" : cellMember.text || "#334155") : (isDark ? "#F1F5F9" : "#0F172A") }}><option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"></option>{standardWhoOptions.map(name => <option key={name} value={name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold">{name}</option>)}{whoVal && !standardWhoOptions.includes(whoVal) && !isDescriptionOrPlaceholderText(whoVal) && <option key={whoVal} value={whoVal} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold">{whoVal}</option>}</select></div></td><td className="p-1 text-center align-middle bg-white dark:bg-slate-900" style={{ borderRight: dayIdx < 6 ? (isDark ? "1.5px solid #334155" : "1.5px solid #475569") : "1px solid #C55A11" }}><button type="button" onClick={() => {
               handleUpdatePrintableCell(cr.index_, dayIdx, "done", !isDone, taskTitle);
             }} className="w-full h-6 flex items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none cursor-pointer" title={isDone ? "Mark as not done" : "Mark as done"}>{isDone ? <span className="text-emerald-700 dark:text-emerald-400 font-black text-xs">{"✓"}</span> : <span className="text-slate-300 dark:text-slate-600 print:hidden text-[10px]">☐</span>}</button></td></React.Fragment>;
           }))}</tr>;
@@ -7746,71 +7806,13 @@ function App({
             const specificKid = getSpecificKidForChore(taskTitleStr);
             const targetKidName = specificKid || status.who || "All Kids";
             const isPhotoRequested = targetKidName ? hasPendingPhotoRequest(activeDayModal, cr.index_, targetKidName) : false;
+            const whoVal = toFirstName(status.who);
+            const whoMember = getMember(whoVal);
             return <div key={cr.index_} className={`p-2.5 rounded-xl border flex flex-col gap-2 transition ${status.done ? "bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800" : freq.frequency === "weekly" && isScheduledForToday ? "bg-purple-50/60 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"}`}><div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2.5 flex-1 min-w-0"><button onClick={() => handleUpdateChore(activeDayModal, cr.index_, {
               done: !status.done
-            })} className="text-slate-400 hover:text-emerald-600 focus:outline-none">{status.done ? <SquareCheckBig className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> : <Square className="w-5 h-5" />}</button><div className="flex items-center gap-1.5 min-w-0"><span className={`text-xs font-semibold truncate ${status.done ? "line-through text-slate-500 dark:text-slate-400" : "text-slate-800 dark:text-slate-100"}`}>{cr.task || cr.row[0]}</span>{freq.frequency === "weekly" && <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${isScheduledForToday ? "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800" : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"}`}>{isScheduledForToday ? "1x/wk (Today)" : `1x/wk (${(_b2 = DAY_STYLES[freq.dayOfWeek]) == null ? void 0 : _b2.short})`}</span>}</div></div><div className="flex items-center gap-1.5 shrink-0">{proof ? <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedReviewProof(proof); }} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition cursor-pointer" title="View submitted chore photo proof"><Camera className="w-3 h-3" /><span>{proof.verified ? "Photo ⭐" : "Photo 📸"}</span></button> : status.done && targetKidName ? (isPhotoRequested ? <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 animate-pulse" title={`Photo proof requested from ${targetKidName}`}><Camera className="w-3 h-3 text-amber-600" /><span>Photo Asked ⏳</span></span> : <button type="button" onClick={(e) => { e.stopPropagation(); handleRequestPhoto(targetKidName, taskTitleStr, cr.index_, activeDayModal); }} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 transition cursor-pointer" title={`Request live camera photo proof from ${targetKidName}`}><Camera className="w-3 h-3 text-amber-600" /><span>Request Photo 📸</span></button>) : null}{getSpecificKidForChore(cr.task || cr.row[0]) ? <div className="text-[11px] font-bold px-2 py-1 rounded border shrink-0 transition shadow-2xs" style={getMemberBadgeStyle(getMember(getSpecificKidForChore(cr.task || cr.row[0])), isDark)}>{getSpecificKidForChore(cr.task || cr.row[0])}</div> : isBedroomChore(cr.task || cr.row[0]) ? <div className="text-[11px] font-bold px-2 py-1 rounded border shrink-0" style={isDark ? { backgroundColor: "rgba(244, 114, 182, 0.18)", color: "#f472b6", borderColor: "rgba(244, 114, 182, 0.4)" } : { backgroundColor: "#fce7f3", color: "#be185d", borderColor: "#fbcfe8" }}>Each Child</div> : <select value={status.who} onChange={e => handleUpdateChore(activeDayModal, cr.index_, {
-              who: e.target.value
-            })} className="text-xs p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 shrink-0 shadow-2xs" style={status.who && getMember(status.who) ? getMemberBadgeStyle(getMember(status.who), isDark) : undefined}><option value="" style={{
-              color: "#64748b",
-              backgroundColor: "#FFFFFF"
-            }}>Unassigned</option><optgroup label="Full-Time Occupants" style={{
-              color: "#0f172a",
-              backgroundColor: "#F1F5F9",
-              fontWeight: "bold"
-            }}>{familyMembers.filter(m => m.type === "regular").map(m => <option key={m.id} value={m.name} style={{
-              color: "#0f172a",
-              backgroundColor: "#FFFFFF",
-              fontWeight: "600"
-            }}>{m.name}{m.role ? ` (${m.role})` : ""}</option>)}</optgroup><optgroup label="Bi-Weekly Occupants" style={{
-              color: "#0f172a",
-              backgroundColor: "#F1F5F9",
-              fontWeight: "bold"
-            }}>{familyMembers.filter(m => m.type === "biweekly").map(m => {
-              const parsed2 = parseDateKey(activeDayModal);
-              const bw = parsed2 ? getBiWeeklyStatus(parsed2.year, parsed2.month, parsed2.day) : null;
-              const note = (bw == null ? void 0 : bw.isArrivalDay) ? " (Arrives 5 PM)" : (bw == null ? void 0 : bw.isDepartureDay) ? " (Leaves 5 PM)" : (bw == null ? void 0 : bw.isPresent) ? " (Here)" : " (Away)";
-              return <option key={m.id} value={m.name} style={{
-                color: "#0f172a",
-                backgroundColor: "#FFFFFF",
-                fontWeight: "600"
-              }}>{m.name}{note}</option>;
-            })}</optgroup><optgroup label="Casual Assignees (Lesser Scale)" style={{
-              color: "#0f172a",
-              backgroundColor: "#F1F5F9",
-              fontWeight: "bold"
-            }}>{familyMembers.filter(m => m.type === "casual").map(m => <option key={m.id} value={m.name} style={{
-              color: "#0f172a",
-              backgroundColor: "#FFFFFF",
-              fontWeight: "600"
-            }}>{m.name}</option>)}</optgroup><optgroup label="Special Groups" style={{
-              color: "#0f172a",
-              backgroundColor: "#F1F5F9",
-              fontWeight: "bold"
-            }}><option value="All Non-Casual" style={{
-              color: "#4338CA",
-              backgroundColor: "#FFFFFF",
-              fontWeight: "bold"
-            }}>All Non-Casual</option><option value="Each Child" style={{
-              color: "#0f172a",
-              backgroundColor: "#FFFFFF",
-              fontWeight: "600"
-            }}>Each Child</option><option value="All Kids" style={{
-              color: "#0f172a",
-              backgroundColor: "#FFFFFF",
-              fontWeight: "600"
-            }}>All Kids</option><option value="Thom / Meghan" style={{
-              color: "#0f172a",
-              backgroundColor: "#FFFFFF",
-              fontWeight: "600"
-            }}>Thom / Meghan</option><option value="Parents" style={{
-              color: "#0f172a",
-              backgroundColor: "#FFFFFF",
-              fontWeight: "600"
-            }}>Parents</option></optgroup>{status.who && !familyMembers.some(m => m.name === status.who) && !["All Non-Casual", "Each Child", "All Kids", "Thom / Meghan", "Parents"].includes(status.who) && !isDescriptionOrPlaceholderText(status.who) && <option value={status.who} style={{
-              color: "#0f172a",
-              backgroundColor: "#FFFFFF",
-              fontWeight: "600"
-            }}>{status.who}</option>}</select>}</div></div>{isBedroomChore(cr.task || cr.row[0]) && !getSpecificKidForChore(cr.task || cr.row[0]) && <div className="bg-pink-50/70 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-900/60 rounded-lg p-2 mt-1"><div className="text-[11px] font-bold text-pink-900 dark:text-pink-300 mb-1.5 flex items-center justify-between"><span>Individual Bedrooms to Clean:</span><span className="text-[10px] text-pink-600 dark:text-pink-400 font-normal">Each child cleans own space</span></div><div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">{getKidsPresentOnDate(activeDayModal).map(kidName => {
+            })} className="text-slate-400 hover:text-emerald-600 focus:outline-none">{status.done ? <SquareCheckBig className="w-5 h-5 text-emerald-600 dark:text-emerald-400" /> : <Square className="w-5 h-5" />}</button><div className="flex items-center gap-1.5 min-w-0"><span className={`text-xs font-semibold truncate ${status.done ? "line-through text-slate-500 dark:text-slate-400" : "text-slate-800 dark:text-slate-100"}`}>{cr.task || cr.row[0]}</span>{freq.frequency === "weekly" && <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${isScheduledForToday ? "bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800" : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"}`}>{isScheduledForToday ? "1x/wk (Today)" : `1x/wk (${(_b2 = DAY_STYLES[freq.dayOfWeek]) == null ? void 0 : _b2.short})`}</span>}</div></div><div className="flex items-center gap-1.5 shrink-0">{proof ? <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedReviewProof(proof); }} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition cursor-pointer" title="View submitted chore photo proof"><Camera className="w-3 h-3" /><span>{proof.verified ? "Photo ⭐" : "Photo 📸"}</span></button> : status.done && targetKidName ? (isPhotoRequested ? <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 animate-pulse" title={`Photo proof requested from ${targetKidName}`}><Camera className="w-3 h-3 text-amber-600" /><span>Photo Asked ⏳</span></span> : <button type="button" onClick={(e) => { e.stopPropagation(); handleRequestPhoto(targetKidName, taskTitleStr, cr.index_, activeDayModal); }} className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 transition cursor-pointer" title={`Request live camera photo proof from ${targetKidName}`}><Camera className="w-3 h-3 text-amber-600" /><span>Request Photo 📸</span></button>) : null}{getSpecificKidForChore(cr.task || cr.row[0]) ? <div className="text-[11px] font-bold px-2 py-1 rounded border shrink-0 transition shadow-2xs" style={getMemberBadgeStyle(getMember(getSpecificKidForChore(cr.task || cr.row[0])), isDark)}>{getSpecificKidForChore(cr.task || cr.row[0])}</div> : isBedroomChore(cr.task || cr.row[0]) ? <div className="text-[11px] font-bold px-2 py-1 rounded border shrink-0" style={isDark ? { backgroundColor: "rgba(244, 114, 182, 0.18)", color: "#f472b6", borderColor: "rgba(244, 114, 182, 0.4)" } : { backgroundColor: "#fce7f3", color: "#be185d", borderColor: "#fbcfe8" }}>Each Child</div> : <select value={whoVal} onChange={e => handleUpdateChore(activeDayModal, cr.index_, {
+              who: toFirstName(e.target.value)
+            })} className="text-xs p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 shrink-0 shadow-2xs" style={whoMember ? getMemberBadgeStyle(whoMember, isDark) : undefined}><option value="" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">Unassigned</option>{standardWhoOptions.map(name => <option key={name} value={name} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold">{name}</option>)}{whoVal && !standardWhoOptions.includes(whoVal) && !isDescriptionOrPlaceholderText(whoVal) && <option key={whoVal} value={whoVal} className="bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold">{whoVal}</option>}</select>}</div></div>{isBedroomChore(cr.task || cr.row[0]) && !getSpecificKidForChore(cr.task || cr.row[0]) && <div className="bg-pink-50/70 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-900/60 rounded-lg p-2 mt-1"><div className="text-[11px] font-bold text-pink-900 dark:text-pink-300 mb-1.5 flex items-center justify-between"><span>Individual Bedrooms to Clean:</span><span className="text-[10px] text-pink-600 dark:text-pink-400 font-normal">Each child cleans own space</span></div><div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">{getKidsPresentOnDate(activeDayModal).map(kidName => {
               var _a3;
               const isKidDone = !!((_a3 = status.kidsDone) == null ? void 0 : _a3[kidName]);
               const kidMember = getMember(kidName);

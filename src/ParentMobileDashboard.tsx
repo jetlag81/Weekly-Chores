@@ -411,7 +411,10 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans pb-24 transition-colors">
       {/* Sticky Mobile Parent App Bar */}
-      <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-4 py-3 shadow-xs dark:shadow-lg transition-colors">
+      <header
+        className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-4 py-3 shadow-xs dark:shadow-lg transition-colors"
+        style={{ paddingTop: "calc(0.75rem + max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)))" }}
+      >
         <div className="flex items-center justify-between gap-2 sm:gap-3">
           {/* Brand & Parent Persona (Dedicated to this parent) */}
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">

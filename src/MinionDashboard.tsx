@@ -1163,7 +1163,10 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
       )}
 
       {/* Top Mobile Bar */}
-      <header className={`sticky ${viewingAsParent ? "top-[41px]" : "top-0"} z-30 w-full max-w-full overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-4 py-2.5 shadow-xs dark:shadow-md transition-colors`}>
+      <header
+        className={`sticky ${viewingAsParent ? "top-[41px]" : "top-0"} z-30 w-full max-w-full overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-4 py-2.5 shadow-xs dark:shadow-md transition-colors`}
+        style={{ paddingTop: "calc(0.625rem + max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)))" }}
+      >
         <div className="max-w-xl mx-auto flex items-center justify-between gap-2">
           {/* Avatar and Kid Name */}
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">

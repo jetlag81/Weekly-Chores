@@ -6734,7 +6734,10 @@ function App({
           </button>
         </div>
       )}
-      <header className="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm sticky top-0 z-30 transition-colors">
+      <header
+        className="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm sticky top-0 z-30 transition-colors"
+        style={{ paddingTop: "calc(0.625rem + max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)))" }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
           {/* Left: Brand Identity & Active Parent Switcher */}
           <div className="flex items-center gap-3 shrink-0">

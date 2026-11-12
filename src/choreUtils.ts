@@ -16,6 +16,13 @@ export function getChoreCanonicalKey(title: string | null | undefined): string {
   // 1. Pet Care
   if (lower.includes("litter")) return "litter_box";
   if (
+    lower.includes("feeding station") ||
+    (lower.includes("deep clean") && (lower.includes("feeding") || lower.includes("station") || lower.includes("herd") || lower.includes("bowl"))) ||
+    (lower.includes("herd feeding") && (lower.includes("station") || lower.includes("deep") || lower.includes("clean") || lower.includes("mat") || lower.includes("bowl")))
+  ) {
+    return "feeding_station_deep_clean";
+  }
+  if (
     lower.includes("herd") ||
     (lower.includes("feed") && (lower.includes("breakfast") || lower.includes("supper") || lower.includes("herd") || lower.includes("animal")))
   ) {
@@ -23,9 +30,6 @@ export function getChoreCanonicalKey(title: string | null | undefined): string {
   }
   if (lower.includes("walk") && (lower.includes("dog") || lower.includes("ellie") || lower.includes("lewis"))) {
     return "walk_dogs";
-  }
-  if (lower.includes("feeding station") || (lower.includes("deep clean") && lower.includes("feeding"))) {
-    return "feeding_station_deep_clean";
   }
 
   // 2. Kitchen
@@ -79,4 +83,66 @@ export function matchChore(
   if (normA && normB && (normA === normB || normA.includes(normB) || normB.includes(normA))) return true;
   return false;
 }
+
+export function isDescriptionOrPlaceholderText(val: string | null | undefined): boolean {
+  if (!val) return true;
+  const s = String(val).trim();
+  if (!s) return true;
+  if (
+    s.startsWith("-") ||
+    s.startsWith("(") ||
+    s.startsWith("•") ||
+    s.startsWith("*") ||
+    s.startsWith("SG:") ||
+    s.startsWith("CV:") ||
+    s.startsWith("MV:") ||
+    s.startsWith("KV:") ||
+    s.startsWith("KG:") ||
+    s.startsWith("Done:") ||
+    s.startsWith("Parent Initials") ||
+    s.startsWith("___") ||
+    /^Who:\s*_+$/i.test(s) ||
+    /^Done:\s*_+$/i.test(s) ||
+    s.toLowerCase() === "description" ||
+    s.toLowerCase() === "initials / assigned" ||
+    s.toLowerCase() === "unassigned" ||
+    s.toLowerCase().includes("each minion does their own") ||
+    s.toLowerCase().includes("wash & sanitize") ||
+    s.toLowerCase().includes("wash, dry") ||
+    s.toLowerCase().includes("pick up mess") ||
+    s.toLowerCase().includes("roll recycling") ||
+    s.toLowerCase().includes("roll waste") ||
+    s.toLowerCase().includes("morning & evening") ||
+    s.toLowerCase().includes("breakfast & supper") ||
+    s.toLowerCase().includes("feed all animals") ||
+    s.toLowerCase().includes("put away clean dishes") ||
+    s.toLowerCase().includes("wipe surfaces") ||
+    s.toLowerCase().includes("plan ahead")
+  ) {
+    return true;
+  }
+  if (s.length > 25 && /[\;\,\n\r]|\b(clean|wash|sanitize|dust|vacuum|dishes|laundry|routine|bowls|surfaces|feeding|pickup|waste|recycling)\b/i.test(s)) {
+    return true;
+  }
+  return false;
+}
+
+export function sanitizeAssigneeName(val: string | null | undefined, validMembers?: string[]): string {
+  if (!val) return "";
+  let clean = String(val).replace(/^Who:\s*/i, "").replace(/^Assigned:\s*/i, "").trim();
+  if (isDescriptionOrPlaceholderText(clean)) return "";
+  if (validMembers && validMembers.length > 0) {
+    const lower = clean.toLowerCase();
+    const isKnown = validMembers.some(m => m.toLowerCase() === lower);
+    const isKnownGroup = [
+      "parents", "all kids", "kids", "all non-casual", "each child", "each minion",
+      "thom / meghan", "kids rotation", "parents & kids"
+    ].some(g => g.toLowerCase() === lower);
+    if (!isKnown && !isKnownGroup && clean.length > 20) {
+      return "";
+    }
+  }
+  return clean;
+}
+
 

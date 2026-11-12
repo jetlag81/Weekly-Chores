@@ -90,7 +90,7 @@ import {
   playHouseholdRemoteChime
 } from "./src/activityFeed";
 import { isStandalone } from "./src/pwaManager";
-import { getChoreCanonicalKey, normalizeTaskName } from "./src/choreUtils";
+import { getChoreCanonicalKey, normalizeTaskName, isDescriptionOrPlaceholderText, sanitizeAssigneeName } from "./src/choreUtils";
 import {
   getChoreNudgeRule,
   saveChoreNudgeRule,
@@ -708,7 +708,7 @@ export const INITIAL_SHEET_DATA = [
           "Non-Casual",
           "Bi-Weekly",
           "Thursday Evening",
-          "Roll recycling bin to curb Thursday evening for Friday pickup (alternating weeks)",
+          "Roll recycling bin to curb Thursday evening for Friday pickup (Bi-Weekly)",
           "Household"
         ]
       },
@@ -1898,19 +1898,43 @@ function extractWeekFromSheet(sheetRows, startDateStr) {
     const tLower = taskTitle.toLowerCase();
     const cKey = getChoreCanonicalKey(taskTitle);
     const choreKey = r.index_;
+    const isWeekly = isKidsChecklistChore(taskTitle) || isStreamlinedWeeklyTask(taskTitle) || isSignOffChore(taskTitle) || r.index_ >= 10;
+    const weeklyWho = isStreamlinedWeeklyTask(taskTitle) ? sanitizeAssigneeName(r.row[9]) : "";
+    const weeklyDone = isStreamlinedWeeklyTask(taskTitle) ? (r.row[14] === true || String(r.row[14]).toLowerCase() === "true" || r.row[13] === true || String(r.row[13]).toLowerCase() === "true") : false;
+
     weekDays.forEach((dayObj, dayIdx) => {
-      const whoCol = 1 + dayIdx * 2;
-      const doneCol = 2 + dayIdx * 2;
-      const rawCellWho = r.row[whoCol] !== void 0 && r.row[whoCol] !== null ? String(r.row[whoCol]).trim() : "";
-      const isPlaceholderOrDesc = rawCellWho.startsWith("-") || rawCellWho.startsWith("(") || rawCellWho.startsWith("SG:") || rawCellWho.startsWith("Done:") || rawCellWho.startsWith("Parent Initials") || rawCellWho.startsWith("___") || /^Who:\s*_+$/i.test(rawCellWho);
-      let cellWho = isPlaceholderOrDesc ? "" : rawCellWho.replace(/^Who:\s*/i, "").trim();
+      let cellWho = "";
+      let cellDone = false;
+
+      if (isWeekly) {
+        if (isKidsChecklistChore(taskTitle)) {
+          cellWho = "";
+        } else if (isStreamlinedWeeklyTask(taskTitle)) {
+          // In sheet 0, column 1 is Description, not Monday's assignee!
+          // Streamlined weekly tasks are scheduled on a specific target day (Sat for Basement, Sun for Deep Clean, Thu for Curbside)
+          const isDeepClean = tLower.includes("deep clean") || tLower.includes("feeding station");
+          const isCurbside = tLower.includes("recycling") || tLower.includes("waste");
+          const isBasement = tLower.includes("basement");
+          const isScheduledDay = isDeepClean ? (dayIdx === 6) : isCurbside ? (dayIdx === 3) : isBasement ? (dayIdx === 5) : (dayIdx === 5 || dayIdx === 6);
+          if (isScheduledDay) {
+            cellWho = weeklyWho;
+            cellDone = weeklyDone;
+          }
+        }
+      } else {
+        const whoCol = 1 + dayIdx * 2;
+        const doneCol = 2 + dayIdx * 2;
+        const rawCellWho = r.row[whoCol] !== void 0 && r.row[whoCol] !== null ? String(r.row[whoCol]).trim() : "";
+        cellWho = sanitizeAssigneeName(rawCellWho);
+        cellDone = r.row[doneCol] === true || String(r.row[doneCol]).toLowerCase() === "true";
+      }
+
       if (cellWho === "Cadence" || cellWho === "Mason") {
         const bw = getBiWeeklyStatus(dayObj.year, dayObj.month, dayObj.day);
         if (!bw.isFullStay && !bw.isDepartureDay) {
           cellWho = "";
         }
       }
-      const cellDone = r.row[doneCol] === true || String(r.row[doneCol]).toLowerCase() === "true";
       const entry = {
         who: cellWho,
         done: cellDone,
@@ -2026,7 +2050,7 @@ function App({
       url.searchParams.delete("kid");
       url.searchParams.set("parent", cleanParent);
       window.history.replaceState({}, document.title, url.toString());
-    } catch {}
+    } catch { }
     setNotice(`Opened ${cleanParent}'s Admin Hub page! 👑`);
     setTimeout(() => setNotice(null), 3000);
   };
@@ -2050,7 +2074,7 @@ function App({
       url.searchParams.set("kid", kidName);
       url.searchParams.set("fromParent", parentAdmin);
       window.history.replaceState({}, document.title, url.toString());
-    } catch {}
+    } catch { }
     setNotice(`Viewing ${kidName}'s Minion page as ${parentAdmin}! 🎒`);
     setTimeout(() => setNotice(null), 3000);
   };
@@ -2074,7 +2098,7 @@ function App({
       const next = prev === "mobile" ? "table" : "mobile";
       try {
         localStorage.setItem("parent_view_mode_preference", next);
-      } catch {}
+      } catch { }
       return next;
     });
   };
@@ -2166,7 +2190,7 @@ function App({
         url.searchParams.delete("kid");
         url.searchParams.set("parent", cleanParent);
         window.history.replaceState({}, document.title, url.toString());
-      } catch {}
+      } catch { }
     } else if (kidParam) {
       const cur = getStoredDeviceSession();
       const fromParent = (params.get("fromParent") || params.get("parentOrigin") || "") as "Thom" | "Meghan" | "";
@@ -2191,7 +2215,7 @@ function App({
           url.searchParams.set("fromParent", validFromParent);
         }
         window.history.replaceState({}, document.title, url.toString());
-      } catch {}
+      } catch { }
     } else if (modeParam === "parent" || modeParam === "admin") {
       const cur = getStoredDeviceSession();
       const activeAdmin: "Thom" | "Meghan" = cur.parentName || getStoredActiveParentAdmin() || "Thom";
@@ -2211,7 +2235,7 @@ function App({
         url.searchParams.delete("kid");
         url.searchParams.set("parent", activeAdmin);
         window.history.replaceState({}, document.title, url.toString());
-      } catch {}
+      } catch { }
     }
   }, []);
 
@@ -2248,7 +2272,7 @@ function App({
           const updated = [msg.event, ...prev.filter(e => e.id !== msg.event.id)].slice(0, 100);
           try {
             localStorage.setItem("weekly_chores_activity_log_v1", JSON.stringify(updated));
-          } catch {}
+          } catch { }
           return updated;
         });
 
@@ -2263,11 +2287,11 @@ function App({
       if (msg.type === "INCENTIVE_UPDATED") {
         if (msg.monthlyIncentive) {
           setMonthlyIncentive(msg.monthlyIncentive);
-          try { localStorage.setItem("weekly_chores_monthly_incentive", msg.monthlyIncentive); } catch {}
+          try { localStorage.setItem("weekly_chores_monthly_incentive", msg.monthlyIncentive); } catch { }
         }
         if (msg.monthlyGoalTarget) {
           setMonthlyGoalTarget(msg.monthlyGoalTarget);
-          try { localStorage.setItem("weekly_chores_monthly_target", String(msg.monthlyGoalTarget)); } catch {}
+          try { localStorage.setItem("weekly_chores_monthly_target", String(msg.monthlyGoalTarget)); } catch { }
         }
         return;
       }
@@ -3040,6 +3064,8 @@ function App({
       if (rowData) {
         if (!isDaily && c.notes && String(c.notes).trim()) {
           rowData[1] = String(c.notes).trim();
+        } else if (isDaily && isDescriptionOrPlaceholderText(rowData[1])) {
+          rowData[1] = "";
         }
       } else {
         if (isDaily) {
@@ -3393,7 +3419,7 @@ function App({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      }).catch(() => {});
+      }).catch(() => { });
 
       setNotice('✓ Configuration file exported and saved to workspace!');
       setTimeout(() => setNotice(null), 3500);
@@ -3819,7 +3845,7 @@ function App({
     ) : null;
 
     if (s && (s.done !== undefined || s.who !== undefined || (s.kidsDone && Object.keys(s.kidsDone).length > 0))) {
-      let resolvedWho = s.who !== void 0 && s.who !== null ? String(s.who) : "";
+      let resolvedWho = sanitizeAssigneeName(s.who);
       if (resolvedWho === "Cadence" || resolvedWho === "Mason") {
         const pDate = parseDateKey(dateKey);
         if (pDate) {
@@ -3855,15 +3881,18 @@ function App({
         const row = (edit == null ? void 0 : edit.row) || (cr == null ? void 0 : cr.row);
         if (row) {
           foundInSheet = true;
-          if (row[whoCol] !== undefined && row[whoCol] !== null) {
-            const rawW = String(row[whoCol]).trim();
-            const isDesc = rawW.startsWith("-") || rawW.startsWith("(") || rawW.startsWith("SG:") || rawW.startsWith("Done:") || rawW.startsWith("Parent Initials") || rawW.startsWith("___") || /^Who:\s*_+$/i.test(rawW);
-            fallbackWho = isDesc ? "" : rawW.replace(/^Who:\s*/i, "").trim();
-            if (fallbackWho === "Cadence" || fallbackWho === "Mason") {
-              const bw = getBiWeeklyStatus(parsedTarget.year, parsedTarget.month, parsedTarget.day);
-              if (!bw.isFullStay && !bw.isDepartureDay) {
-                fallbackWho = "";
-              }
+          const isWeekly = isKidsChecklistChore(cr?.task || choreTitle) || isStreamlinedWeeklyTask(cr?.task || choreTitle) || isSignOffChore(cr?.task || choreTitle) || (cr?.index_ !== undefined && cr.index_ >= 10);
+          if (isWeekly) {
+            if (isStreamlinedWeeklyTask(cr?.task || choreTitle)) {
+              fallbackWho = sanitizeAssigneeName(row[9]);
+            }
+          } else if (row[whoCol] !== undefined && row[whoCol] !== null) {
+            fallbackWho = sanitizeAssigneeName(row[whoCol]);
+          }
+          if (fallbackWho === "Cadence" || fallbackWho === "Mason") {
+            const bw = getBiWeeklyStatus(parsedTarget.year, parsedTarget.month, parsedTarget.day);
+            if (!bw.isFullStay && !bw.isDepartureDay) {
+              fallbackWho = "";
             }
           }
           if (row[doneCol] !== undefined && row[doneCol] !== null) {
@@ -4565,9 +4594,9 @@ function App({
         currentDay[choreIndex] ||
         currentDay[effectiveIndex] ||
         (norm ? currentDay[norm] : null) || {
-          who: "",
-          done: false
-        };
+        who: "",
+        done: false
+      };
       const updated = {
         ...currentChore,
         ...patch
@@ -4757,17 +4786,31 @@ function App({
         choreRows.forEach(cr => {
           var _a3, _b2, _c2;
           if (!next[d.dateKey][cr.index_]) {
+            const isWeekly = isKidsChecklistChore(cr.task) || isStreamlinedWeeklyTask(cr.task) || isSignOffChore(cr.task) || cr.index_ >= 10;
             const whoCol = 1 + dayOffset * 2;
             const doneCol = 2 + dayOffset * 2;
-            const rawWho = (_a3 = cr.row) == null ? void 0 : _a3[whoCol];
-            let whoVal = rawWho !== void 0 && rawWho !== null ? String(rawWho).trim() : "";
+            let whoVal = "";
+            let doneVal = false;
+            if (isWeekly) {
+              if (isStreamlinedWeeklyTask(cr.task)) {
+                const targetDayLower = String(cr.targetDay || "").toLowerCase();
+                const scheduledDay = targetDayLower.includes("sunday") ? 6 : targetDayLower.includes("thursday") ? 3 : 5;
+                if (dayOffset === scheduledDay) {
+                  whoVal = sanitizeAssigneeName(cr.row?.[9]);
+                  doneVal = cr.row?.[14] === true || String(cr.row?.[14]).toLowerCase() === "true" || cr.row?.[13] === true || String(cr.row?.[13]).toLowerCase() === "true";
+                }
+              }
+            } else {
+              const rawWho = (_a3 = cr.row) == null ? void 0 : _a3[whoCol];
+              whoVal = sanitizeAssigneeName(rawWho);
+              doneVal = ((_b2 = cr.row) == null ? void 0 : _b2[doneCol]) === true || String((_c2 = cr.row) == null ? void 0 : _c2[doneCol]).toLowerCase() === "true";
+            }
             if (whoVal === "Cadence" || whoVal === "Mason") {
               const bw = getBiWeeklyStatus(d.year, d.month, d.day);
               if (!bw.isFullStay && !bw.isDepartureDay) {
                 whoVal = "";
               }
             }
-            const doneVal = ((_b2 = cr.row) == null ? void 0 : _b2[doneCol]) === true || String((_c2 = cr.row) == null ? void 0 : _c2[doneCol]).toLowerCase() === "true";
             next[d.dateKey][cr.index_] = {
               who: whoVal,
               done: doneVal,
@@ -6057,7 +6100,7 @@ function App({
             url.searchParams.delete("kid");
             url.searchParams.set("parent", chosen);
             window.history.replaceState({}, document.title, url.toString());
-          } catch {}
+          } catch { }
         }}
       />
     );
@@ -6099,7 +6142,7 @@ function App({
               url.searchParams.set("fromParent", activeFromParent);
             }
             window.history.replaceState({}, document.title, url.toString());
-          } catch {}
+          } catch { }
         }}
         onExitMinionMode={() => {
           const chosen = activeFromParent || activeParentAdmin || "Thom";
@@ -6124,7 +6167,7 @@ function App({
             url.searchParams.delete("fromParent");
             url.searchParams.set("parent", chosen);
             window.history.replaceState({}, document.title, url.toString());
-          } catch {}
+          } catch { }
           setNotice(`Returned to ${chosen}'s Admin Hub! 👑`);
           setTimeout(() => setNotice(null), 3000);
         }}
@@ -6183,7 +6226,7 @@ function App({
               url.searchParams.set("kid", target);
               url.searchParams.set("fromParent", parentAdmin);
               window.history.replaceState({}, document.title, url.toString());
-            } catch {}
+            } catch { }
             setNotice(`Viewing ${target}'s Minion page as ${parentAdmin}! 🎒`);
             setTimeout(() => setNotice(null), 3000);
           }}
@@ -6307,7 +6350,7 @@ function App({
                 url.searchParams.set("kid", targetKid);
                 url.searchParams.set("fromParent", parentAdmin);
                 window.history.replaceState({}, document.title, url.toString());
-              } catch {}
+              } catch { }
               setNotice(`Viewing ${targetKid}'s Minion page as ${parentAdmin}! 🎒`);
               setTimeout(() => setNotice(null), 3500);
             }}
@@ -6342,7 +6385,7 @@ function App({
                 <h1 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">
                   {activeParentAdmin}&apos;s Admin Hub
                 </h1>
-                
+
                 {/* Active Parent Switcher Toggle */}
                 <div className="inline-flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
                   {(["Thom", "Meghan"] as const).map(parent => (
@@ -6350,11 +6393,10 @@ function App({
                       key={parent}
                       type="button"
                       onClick={() => handleSwitchActiveParent(parent)}
-                      className={`px-2 py-0.5 rounded-md text-[11px] font-black transition cursor-pointer flex items-center gap-1 ${
-                        activeParentAdmin === parent
+                      className={`px-2 py-0.5 rounded-md text-[11px] font-black transition cursor-pointer flex items-center gap-1 ${activeParentAdmin === parent
                           ? "bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-2xs"
                           : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                      }`}
+                        }`}
                       title={`Switch to ${parent}'s Admin Hub`}
                     >
                       <span>👑</span>
@@ -6406,21 +6448,19 @@ function App({
             <button
               type="button"
               onClick={() => setShowInspectionModal(true)}
-              className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 border rounded-xl transition cursor-pointer shadow-2xs ${
-                signOffStatus.done
+              className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 border rounded-xl transition cursor-pointer shadow-2xs ${signOffStatus.done
                   ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60"
                   : "bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-700/60 hover:bg-amber-100 dark:hover:bg-amber-900/60"
-              }`}
+                }`}
               title="Conduct Sunday room inspection and sign off weekly allowances"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span>Inspection</span>
               <span
-                className={`text-[9px] font-black px-1.5 py-0.2 rounded font-mono ${
-                  signOffStatus.done
+                className={`text-[9px] font-black px-1.5 py-0.2 rounded font-mono ${signOffStatus.done
                     ? "bg-emerald-200 dark:bg-emerald-900/80 text-emerald-950 dark:text-emerald-100"
                     : "bg-amber-200 dark:bg-amber-900/80 text-amber-950 dark:text-amber-100"
-                }`}
+                  }`}
               >
                 {signOffStatus.done ? "✓ Done" : "Pending"}
               </span>
@@ -6522,11 +6562,10 @@ function App({
               <button
                 type="button"
                 onClick={() => setShowSettingsMenu((prev) => !prev)}
-                className={`p-2 rounded-xl border transition cursor-pointer shadow-2xs ${
-                  showSettingsMenu
+                className={`p-2 rounded-xl border transition cursor-pointer shadow-2xs ${showSettingsMenu
                     ? "bg-indigo-50 dark:bg-indigo-950/60 border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400"
                     : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-                }`}
+                  }`}
                 title="Household Settings & Theme"
                 aria-expanded={showSettingsMenu}
               >
@@ -6577,44 +6616,40 @@ function App({
           <div className="flex items-center gap-1 overflow-x-auto">
             <button
               onClick={() => setActiveTab("month")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeTab === "month"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${activeTab === "month"
                   ? "bg-slate-900 dark:bg-indigo-600 text-white shadow-sm"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
+                }`}
             >
               <CalendarDays className="w-3.5 h-3.5" />
               <span>Monthly Calendar</span>
             </button>
             <button
               onClick={() => setActiveTab("matrix")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeTab === "matrix"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${activeTab === "matrix"
                   ? "bg-slate-900 dark:bg-indigo-600 text-white shadow-sm"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
+                }`}
             >
               <LayoutGrid className="w-3.5 h-3.5" />
               <span>Weekly Schedule</span>
             </button>
             <button
               onClick={() => setActiveTab("stats")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeTab === "stats"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${activeTab === "stats"
                   ? "bg-slate-900 dark:bg-indigo-600 text-white shadow-sm"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
+                }`}
             >
               <Award className="w-3.5 h-3.5" />
               <span>Leaderboard & Stats</span>
             </button>
             <button
               onClick={() => setActiveTab("roster")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeTab === "roster"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${activeTab === "roster"
                   ? "bg-indigo-600 text-white shadow-sm"
                   : "text-indigo-700 dark:text-indigo-300 bg-indigo-50/70 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 border border-indigo-200/60 dark:border-indigo-800/60"
-              }`}
+                }`}
             >
               <Users className="w-3.5 h-3.5" />
               <span>Household Hub ({familyMembers.length})</span>
@@ -6669,11 +6704,10 @@ function App({
                     );
                   }
                 }}
-                className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition cursor-pointer shadow-2xs ${
-                  isSpeakingAudio
+                className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition cursor-pointer shadow-2xs ${isSpeakingAudio
                     ? "bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-800 animate-pulse"
                     : "bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/60 border border-teal-200 dark:border-teal-800/60"
-                }`}
+                  }`}
                 title={isSpeakingAudio ? "Stop voice narration" : "Speak household chore summary aloud"}
               >
                 {isSpeakingAudio ? <VolumeX className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" /> : <Volume2 className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />}
@@ -7009,7 +7043,7 @@ function App({
               try {
                 localStorage.setItem("weekly_chores_monthly_incentive", cleaned);
                 localStorage.setItem("weekly_chores_monthly_target", String(targetNum));
-              } catch {}
+              } catch { }
               broadcastLocalUpdate({
                 type: "INCENTIVE_UPDATED",
                 monthlyIncentive: cleaned,
@@ -7772,7 +7806,7 @@ function App({
               color: "#0f172a",
               backgroundColor: "#FFFFFF",
               fontWeight: "600"
-            }}>Parents</option></optgroup>{status.who && !familyMembers.some(m => m.name === status.who) && !["All Non-Casual", "Each Child", "All Kids", "Thom / Meghan", "Parents"].includes(status.who) && <option value={status.who} style={{
+            }}>Parents</option></optgroup>{status.who && !familyMembers.some(m => m.name === status.who) && !["All Non-Casual", "Each Child", "All Kids", "Thom / Meghan", "Parents"].includes(status.who) && !isDescriptionOrPlaceholderText(status.who) && <option value={status.who} style={{
               color: "#0f172a",
               backgroundColor: "#FFFFFF",
               fontWeight: "600"
@@ -8155,7 +8189,7 @@ function App({
               url.searchParams.set("kid", targetKid);
               url.searchParams.set("fromParent", parentAdmin);
               window.history.replaceState({}, document.title, url.toString());
-            } catch {}
+            } catch { }
             setNotice(`Viewing ${targetKid}'s Minion page as ${parentAdmin}! 🎒`);
             setTimeout(() => setNotice(null), 3500);
           }}
@@ -8314,9 +8348,9 @@ export default function AppWrapper() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sheetData: dataToSave }),
-        }).catch(() => {});
+        }).catch(() => { });
       }
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   useEffect(() => {

@@ -64,6 +64,12 @@ export const DEFAULT_CHORE_NUDGE_RULES: Record<string, ChoreNudgeConfig> = {
     time: "17:30",
     targetWindow: "Dinner Time (5:30 PM)",
     message: "Herd feeding station check: please feed pets and refresh water! 🐾"
+  },
+  feed_herd: {
+    enabled: false,
+    time: "17:30",
+    targetWindow: "Dinner Time (5:30 PM)",
+    message: "Herd feeding station check: please feed pets and refresh water! 🐾"
   }
 };
 

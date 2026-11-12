@@ -1134,25 +1134,29 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const completedTodayCount = dailyChoresForKid.filter(c => c.done).length;
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-16 font-sans transition-colors">
+    <div
+      className="min-h-screen w-full max-w-full overflow-x-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-16 font-sans transition-colors"
+      style={{ paddingBottom: "calc(4rem + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))" }}
+    >
       {/* Parent Preview Banner (When a parent is inspecting their child's page layout) */}
       {viewingAsParent && (
         <aside
           aria-label="Parent Preview Banner"
           className="sticky top-0 z-40 w-full bg-gradient-to-r from-amber-500 via-indigo-600 to-purple-600 text-white shadow-md border-b border-white/20 px-3.5 sm:px-4 py-2 transition-colors"
+          style={{ paddingTop: "calc(0.5rem + max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)))" }}
         >
           <div className="max-w-xl mx-auto flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-base shrink-0">👑</span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-sm shrink-0">👑</span>
               <div className="text-xs truncate">
                 <span className="font-extrabold text-amber-200">{viewingAsParent}'s View</span>
-                <span className="text-white/90"> • Viewing {currentKid.name}'s page</span>
+                <span className="text-white/90 hidden xs:inline"> • {currentKid.name}&apos;s page</span>
               </div>
             </div>
             <button
               type="button"
               onClick={onExitMinionMode}
-              className="shrink-0 px-3 py-1.5 rounded-xl bg-white text-indigo-950 font-black text-xs hover:bg-amber-100 hover:text-amber-950 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+              className="shrink-0 px-2.5 py-1 rounded-xl bg-white text-indigo-950 font-black text-xs hover:bg-amber-100 hover:text-amber-950 transition-all shadow-xs flex items-center gap-1 cursor-pointer active:scale-95"
               title={`Return to ${viewingAsParent}'s Parent View (No PIN required)`}
             >
               <span className="text-sm leading-none">←</span>
@@ -1164,24 +1168,16 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
 
       {/* Top Mobile Bar */}
       <header
-        className={`sticky ${viewingAsParent ? "top-[41px]" : "top-0"} z-30 w-full max-w-full overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-4 py-2.5 shadow-xs dark:shadow-md transition-colors`}
-        style={{ paddingTop: "calc(0.625rem + max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)))" }}
+        className="sticky top-0 z-30 w-full max-w-full overflow-hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 sm:px-4 py-2.5 shadow-xs dark:shadow-md transition-colors"
+        style={{
+          paddingTop: viewingAsParent
+            ? "0.625rem"
+            : "calc(0.625rem + max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)))"
+        }}
       >
         <div className="max-w-xl mx-auto flex items-center justify-between gap-2">
           {/* Avatar and Kid Name */}
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-            {viewingAsParent && (
-              <button
-                type="button"
-                onClick={onExitMinionMode}
-                className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/70 dark:hover:bg-amber-900/90 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 text-xs font-black transition flex items-center gap-1 cursor-pointer shadow-2xs shrink-0 active:scale-95"
-                title={`Return to ${viewingAsParent}'s Parent View (No PIN)`}
-              >
-                <span>←</span>
-                <span className="hidden sm:inline">Parent View</span>
-                <span className="sm:hidden">Back</span>
-              </button>
-            )}
             <button
               type="button"
               onClick={() => setShowProfileModal(true)}
@@ -1189,7 +1185,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
               title="Click to view & customize your user profile"
             >
               <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center font-black text-white text-xl shadow-sm ring-2 ring-white dark:ring-slate-700 transition-transform group-hover:scale-105"
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center font-black text-white text-lg sm:text-xl shadow-sm ring-2 ring-white dark:ring-slate-700 transition-transform group-hover:scale-105"
                 style={{ backgroundColor: kidProfile.favoriteColor || currentKid.color || "#6366F1" }}
               >
                 {kidProfile.avatarEmoji || currentKid.name.slice(0, 1).toUpperCase()}
@@ -1214,19 +1210,19 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowProfileModal(true)}
-                    className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0 hover:bg-indigo-100 transition cursor-pointer"
+                    className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0 hover:bg-indigo-100 transition cursor-pointer"
                     title="Teen Autonomy Mode (12+) • Profile & Email enabled"
                   >
-                    ⚡ Age {kidAge || "12+"} • Teen
+                    ⚡ Teen
                   </button>
                 ) : (
                   <button
                     type="button"
                     onClick={() => setShowProfileModal(true)}
-                    className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0 hover:bg-amber-100 transition cursor-pointer animate-pulse"
+                    className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0 hover:bg-amber-100 transition cursor-pointer"
                     title="Junior Explorer Mode (≤11) • High Visual Stimulation"
                   >
-                    🌟 Age {kidAge || "Junior"} • Junior
+                    🌟 Junior
                   </button>
                 )}
               </div>
@@ -1309,7 +1305,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
       {/* Sibling Chore Status Pill Bar (Informational Check-In Only - Does NOT Switch Minion Mode) */}
       {kidMembers.length > 1 && (
         <div className="w-full max-w-xl mx-auto px-3 sm:px-4 pt-3 pb-0.5 overflow-hidden">
-          <div className="flex items-center gap-1 sm:gap-1.5 p-1 bg-slate-200/80 dark:bg-slate-900 rounded-2xl border border-slate-300/80 dark:border-slate-800 shadow-2xs overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 p-1 bg-slate-200/80 dark:bg-slate-900 rounded-2xl border border-slate-300/80 dark:border-slate-800 shadow-2xs overflow-x-auto no-scrollbar">
             {kidMembers.map(m => {
               const isCurrent = m.name.toLowerCase() === currentKid.name.toLowerCase();
               const mStats = getMemberCompletionForDay(m.name, activeDateKey);
@@ -1320,37 +1316,30 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                   key={m.id || m.name}
                   type="button"
                   onClick={() => setInspectingSibling(m)}
-                  className={`flex-1 min-w-[80px] py-1.5 px-2 rounded-xl transition-all cursor-pointer flex items-center justify-between gap-1 select-none shrink ${
+                  className={`shrink-0 py-1.5 px-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 select-none ${
                     isCurrent
                       ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs font-black ring-1.5 ring-indigo-500/60 dark:ring-indigo-400/60"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/60 font-semibold"
                   }`}
                   title={`Check ${m.name}'s chore status (${mStats.done} completed)`}
                 >
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span
-                      className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-white/50"
-                      style={{ backgroundColor: m.color || "#6366F1" }}
-                    />
-                    <span className="text-[9px] font-mono font-black px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300">
-                      {mProfile.initials}
-                    </span>
-                    <span className="text-xs truncate font-bold">
-                      {m.name}
-                      {isCurrent && (
-                        <span className="ml-0.5 text-[9px] font-normal text-indigo-600 dark:text-indigo-400">
-                          (You)
-                        </span>
-                      )}
-                    </span>
-                  </div>
                   <span
-                    className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                    className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-white/50"
+                    style={{ backgroundColor: m.color || "#6366F1" }}
+                  />
+                  <span className="text-xs font-bold whitespace-nowrap">
+                    {m.name}
+                    {isCurrent && (
+                      <span className="ml-0.5 text-[9px] font-normal text-indigo-600 dark:text-indigo-400">
+                        (You)
+                      </span>
+                    )}
+                  </span>
+                  <span
+                    className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full shrink-0 ${
                       mStats.allDone
                         ? "bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-black border border-emerald-300/60 dark:border-emerald-700/60"
-                        : isCurrent
-                        ? "bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300"
-                        : "bg-slate-300/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
                     }`}
                   >
                     {mStats.done} done
@@ -1841,7 +1830,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                   onClick={() => setShowProfileModal(true)}
                   className="text-[11px] font-bold text-indigo-300 hover:text-white bg-indigo-600/30 hover:bg-indigo-600/50 px-2.5 py-1 rounded-lg border border-indigo-400/30 shrink-0 cursor-pointer transition"
                 >
-                  {kidProfile.email ? "Edit Profile & Email" : "+ Add Email"}
+                  {kidProfile.email ? "Edit" : "+ Add Email"}
                 </button>
               </div>
             )}

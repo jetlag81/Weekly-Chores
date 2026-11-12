@@ -86,7 +86,10 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shrink-0">
+        <div
+          className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shrink-0 drawer-safe-header"
+          style={{ paddingTop: "calc(1rem + max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)))" }}
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center shadow-inner">
@@ -308,7 +311,10 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 shrink-0 text-center text-xs text-slate-500">
+        <div
+          className="p-4 bg-slate-50 border-t border-slate-200 shrink-0 text-center text-xs text-slate-500 drawer-safe-footer"
+          style={{ paddingBottom: "calc(1rem + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))" }}
+        >
           Syncs live across connected household phones, tablets, and PCs.
         </div>
       </div>

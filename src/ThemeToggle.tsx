@@ -113,23 +113,23 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
       <button
         type="button"
         onClick={cycleNext}
-        className={`px-2.5 py-1.5 rounded-xl border transition flex items-center gap-1.5 text-xs font-bold cursor-pointer shadow-2xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 ${className}`}
+        className={`w-8 h-8 sm:w-auto p-2 sm:px-2.5 sm:py-1.5 rounded-xl border transition flex items-center justify-center gap-1.5 text-xs font-bold cursor-pointer shadow-2xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 ${className}`}
         title={`Theme: ${mode.toUpperCase()} (Click to toggle Dark/Light/Auto)`}
       >
         {mode === "system" ? (
           <>
-            <Laptop className="w-3.5 h-3.5 text-indigo-500" />
-            <span>Auto</span>
+            <Laptop className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-indigo-500" />
+            <span className="hidden sm:inline">Auto</span>
           </>
         ) : mode === "light" ? (
           <>
-            <Sun className="w-3.5 h-3.5 text-amber-500" />
-            <span>Light</span>
+            <Sun className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-amber-500" />
+            <span className="hidden sm:inline">Light</span>
           </>
         ) : (
           <>
-            <Moon className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Dark</span>
+            <Moon className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-indigo-400" />
+            <span className="hidden sm:inline">Dark</span>
           </>
         )}
       </button>

@@ -213,7 +213,10 @@ export const FamilyChatDrawer: React.FC<FamilyChatDrawerProps> = ({
       <div className="relative w-full max-w-md h-full bg-white dark:bg-slate-900 shadow-2xl flex flex-col z-10 transition-transform duration-300 ease-out border-l border-slate-200 dark:border-slate-800">
         
         {/* Drawer Header */}
-        <div className="px-4 py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white flex items-center justify-between shadow-md shrink-0">
+        <div
+          className="px-4 py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white flex items-center justify-between shadow-md shrink-0 drawer-safe-header"
+          style={{ paddingTop: "calc(0.875rem + max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)))" }}
+        >
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-9 h-9 rounded-2xl bg-white/20 flex items-center justify-center shadow-inner shrink-0">
               <MessageSquare className="w-5 h-5 text-indigo-100" />
@@ -487,7 +490,10 @@ export const FamilyChatDrawer: React.FC<FamilyChatDrawerProps> = ({
         )}
 
         {/* Input Bar */}
-        <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2 shrink-0">
+        <div
+          className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2 shrink-0 drawer-safe-footer"
+          style={{ paddingBottom: "calc(0.875rem + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))" }}
+        >
           <button
             type="button"
             onClick={() => setShowGifPicker(!showGifPicker)}

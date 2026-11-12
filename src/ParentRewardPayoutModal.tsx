@@ -251,8 +251,8 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
   const unlinkedPlatforms = allPlatforms.filter(p => !profile.platforms?.[p.id]?.trim());
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto modal-safe-area">
+      <div className="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden my-auto flex flex-col max-h-full animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="p-4 sm:p-5 bg-gradient-to-r from-amber-600 via-orange-600 to-rose-600 text-white flex items-center justify-between shrink-0 shadow-md">
           <div className="flex items-center gap-3">
@@ -556,7 +556,7 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
 
                     {/* Action Row: Direct Reliable Purchase Links + 1-Click Record Paid */}
                     <div className="space-y-1.5 pt-0.5">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         {isCustomUrl ? (
                           <button
                             type="button"

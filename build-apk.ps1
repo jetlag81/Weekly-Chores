@@ -25,12 +25,14 @@ Write-Host "$apkPath" -ForegroundColor Yellow
 
 $adb = "C:\Users\thomv\AppData\Local\Android\Sdk\platform-tools\adb.exe"
 if (Test-Path $adb) {
-    $devices = & $adb devices | Where-Object { $_ -match "\s+device$" }
-    if ($devices) {
-        Write-Host "`n==> Detected connected Android device. Installing APK..." -ForegroundColor Cyan
-        & $adb install -r $apkPath
-        Write-Host "[SUCCESS] App installed on phone!" -ForegroundColor Green
+    $rawDevices = & $adb devices | Where-Object { $_ -match "\s+device$" }
+    if ($rawDevices) {
+        $firstDevice = ($rawDevices | Select-Object -First 1).Split("`t")[0].Trim()
+        Write-Host "`n==> Detected connected Android device ($firstDevice). Installing APK..." -ForegroundColor Cyan
+        & $adb -s $firstDevice install -r $apkPath
+        Write-Host "[SUCCESS] App installed on $firstDevice!" -ForegroundColor Green
     } else {
         Write-Host "`n(Tip: Connect your phone via USB with USB Debugging enabled to auto-install)" -ForegroundColor DarkGray
     }
 }
+

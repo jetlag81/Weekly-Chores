@@ -436,10 +436,10 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
             </div>
           </div>
 
-          {/* Top Actions: View Switcher Pill, Activity Feed & Settings Menu */}
+          {/* Top Actions: Activity Feed, Camera, Theme & Settings Menu */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* View Mode Toggle Pill: Mobile vs Desktop Table */}
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
+            {/* View Mode Toggle Pill: Mobile vs Desktop Table (Desktop/Tablet Only - mobile uses bottom dock) */}
+            <div className="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
               <button
                 type="button"
                 className="px-2 py-1 rounded-lg text-[11px] font-bold bg-amber-500 text-slate-950 shadow-xs flex items-center gap-1"

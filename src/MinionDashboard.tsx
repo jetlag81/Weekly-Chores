@@ -390,11 +390,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   ]);
 
   const { showExitToast, message: exitToastMsg } = useBackToExit({
-    onCloseOpenModals: handleDismissAnyModal,
-    onCustomBackAction: viewingAsParent && onExitMinionMode ? () => {
-      onExitMinionMode();
-      return true;
-    } : undefined
+    onCloseOpenModals: handleDismissAnyModal
   });
 
   const logHouseholdActivity = (event: Omit<HouseholdActivityEvent, "id" | "timestamp" | "deviceId">) => {

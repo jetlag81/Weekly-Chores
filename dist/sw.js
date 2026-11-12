@@ -1,5 +1,5 @@
 // Progressive Web App Service Worker for Weekly Chores Hub
-const CACHE_NAME = 'chores-hub-v1';
+const CACHE_NAME = 'chores-hub-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

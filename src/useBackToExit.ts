@@ -1,10 +1,6 @@
 // Mobile Web App "Press Back Again to Exit" Hook
-// Production-grade hash-guard strategy for mobile browsers (Android Chrome, Samsung Internet, iOS Safari, PWA):
-// 1. Employs a URL fragment guard (#app) so mobile browser history intervention never ignores/skips back navigation.
-// 2. Dual-listens to both `popstate` and `hashchange` with touch-activation re-priming.
-// 3. Closes active modals/drawers first on back press.
-// 4. Prompts with high-contrast floating toast "Press back again to exit" when on root view.
-// 5. Exits cleanly on second back press within 2000ms.
+// Production-grade, deterministic state-machine for mobile back navigation.
+// Guarantees reliable 1st-press toast prompt and 2nd-press exit across Android & iOS browsers/PWAs.
 
 import { useState, useEffect, useRef } from "react";
 
@@ -16,18 +12,12 @@ export interface UseBackToExitOptions {
   onCloseOpenModals?: () => boolean;
 
   /**
-   * Optional custom back action before exiting (e.g. exit Minion view back to Parent Hub).
-   * Return true if handled.
-   */
-  onCustomBackAction?: () => boolean;
-
-  /**
    * Custom toast message (default: "Press back again to exit")
    */
   message?: string;
 
   /**
-   * Time window in milliseconds to register the second back press (default: 2000ms)
+   * Time window in milliseconds to register the second back press (default: 3000ms)
    */
   timeoutMs?: number;
 
@@ -37,94 +27,46 @@ export interface UseBackToExitOptions {
   enabled?: boolean;
 }
 
-const HASH_GUARD = "#app";
-
 export function useBackToExit({
   onCloseOpenModals,
-  onCustomBackAction,
   message = "Press back again to exit",
-  timeoutMs = 2000,
+  timeoutMs = 3000,
   enabled = true
 }: UseBackToExitOptions = {}) {
   const [showExitToast, setShowExitToast] = useState(false);
-  const lastBackPressRef = useRef<number>(0);
+  const exitArmedRef = useRef(false);
   const timerRef = useRef<any>(null);
-  const isHandlingRef = useRef<boolean>(false);
   const onCloseOpenModalsRef = useRef(onCloseOpenModals);
-  const onCustomBackActionRef = useRef(onCustomBackAction);
 
   useEffect(() => {
     onCloseOpenModalsRef.current = onCloseOpenModals;
   }, [onCloseOpenModals]);
 
   useEffect(() => {
-    onCustomBackActionRef.current = onCustomBackAction;
-  }, [onCustomBackAction]);
-
-  useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
 
     let isExiting = false;
 
-    const getBaseUrl = () => {
-      return window.location.pathname + window.location.search;
-    };
-
-    // Re-pushes the hash guard so the next back button press can be captured
-    const pushGuard = () => {
-      if (isExiting) return;
-      try {
-        const base = getBaseUrl();
-        if (window.location.hash !== HASH_GUARD) {
-          window.history.pushState({ choresHubGuard: true, ts: Date.now() }, "", base + HASH_GUARD);
-        }
-      } catch {}
-    };
-
-    // Prime the history stack with [Base, Base#app]
+    // Push initial guard state so the browser has a history entry to pop from
     try {
-      const base = getBaseUrl();
-      if (window.location.hash !== HASH_GUARD) {
-        window.history.replaceState({ choresBase: true }, "", base);
-        window.history.pushState({ choresHubGuard: true, ts: Date.now() }, "", base + HASH_GUARD);
-      } else {
-        // If loaded directly with #app, synthesize base entry before it
-        window.history.replaceState({ choresBase: true }, "", base);
-        window.history.pushState({ choresHubGuard: true, ts: Date.now() }, "", base + HASH_GUARD);
-      }
+      window.history.pushState({ choresGuard: true, ts: Date.now() }, "", window.location.href);
     } catch {}
 
-    // User touch interaction ensures hash guard stays primed even after in-app touches
-    const handleUserInteraction = () => {
-      if (isExiting) return;
-      if (window.location.hash !== HASH_GUARD) {
-        pushGuard();
-      }
-    };
-
-    window.addEventListener("touchstart", handleUserInteraction, { passive: true });
-    window.addEventListener("pointerdown", handleUserInteraction, { passive: true });
-    window.addEventListener("click", handleUserInteraction, { passive: true });
-
-    // Handle back navigation (both popstate and hashchange)
-    const handleBackNavigation = () => {
+    const handlePopState = () => {
       if (isExiting) return;
 
-      // Debounce duplicate events fired in same tick (e.g. popstate + hashchange)
-      if (isHandlingRef.current) return;
-      isHandlingRef.current = true;
-      setTimeout(() => {
-        isHandlingRef.current = false;
-      }, 120);
-
-      // 1. Close open modal or drawer if active
+      // 1. If any modal, drawer, or sheet is open, close it first
       if (onCloseOpenModalsRef.current) {
         try {
           const handled = onCloseOpenModalsRef.current();
           if (handled) {
-            pushGuard();
+            // Restore guard for next back press
+            try {
+              window.history.pushState({ choresGuard: true, ts: Date.now() }, "", window.location.href);
+            } catch {}
             setShowExitToast(false);
-            lastBackPressRef.current = 0;
+            exitArmedRef.current = false;
+            if (timerRef.current) clearTimeout(timerRef.current);
             return;
           }
         } catch (err) {
@@ -132,30 +74,13 @@ export function useBackToExit({
         }
       }
 
-      // 2. Custom action (e.g. exit Minion mode to Parent Hub)
-      if (onCustomBackActionRef.current) {
-        try {
-          const handled = onCustomBackActionRef.current();
-          if (handled) {
-            pushGuard();
-            setShowExitToast(false);
-            lastBackPressRef.current = 0;
-            return;
-          }
-        } catch (err) {
-          console.warn("Error in custom back action:", err);
-        }
-      }
-
-      // 3. User is on root view with no modal: check second press within window
-      const now = Date.now();
-      const timeSinceLast = now - lastBackPressRef.current;
-
-      if (lastBackPressRef.current > 0 && timeSinceLast < timeoutMs) {
-        // Second press: user confirmed exit!
+      // 2. User is on root view with no modal open
+      if (exitArmedRef.current) {
+        // SECOND PRESS CONFIRMED! EXIT APP NOW!
         isExiting = true;
+        exitArmedRef.current = false;
         setShowExitToast(false);
-        lastBackPressRef.current = 0;
+        if (timerRef.current) clearTimeout(timerRef.current);
 
         if (typeof navigator !== "undefined" && "vibrate" in navigator) {
           try { navigator.vibrate([60, 40, 60]); } catch {}
@@ -165,42 +90,36 @@ export function useBackToExit({
           window.close();
         } catch {}
 
-        // We are currently at base URL (without hash).
-        // Navigating back once more pops out of the app.
+        // Unwind the landing entry to exit the site/tab/PWA
         window.history.back();
         return;
       }
 
-      // First press: prevent immediate exit, show toast, and re-prime hash guard
-      lastBackPressRef.current = now;
-      pushGuard();
+      // FIRST PRESS: Arm the exit state and show toast
+      exitArmedRef.current = true;
       setShowExitToast(true);
+
+      // Immediately push a fresh guard so the browser can catch the SECOND back press
+      try {
+        window.history.pushState({ choresGuard: true, ts: Date.now() }, "", window.location.href);
+      } catch {}
 
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
         try { navigator.vibrate(40); } catch {}
       }
 
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
+      if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
+        exitArmedRef.current = false;
         setShowExitToast(false);
-        lastBackPressRef.current = 0;
       }, timeoutMs);
     };
 
-    window.addEventListener("popstate", handleBackNavigation);
-    window.addEventListener("hashchange", handleBackNavigation);
+    window.addEventListener("popstate", handlePopState);
 
     return () => {
-      window.removeEventListener("popstate", handleBackNavigation);
-      window.removeEventListener("hashchange", handleBackNavigation);
-      window.removeEventListener("touchstart", handleUserInteraction);
-      window.removeEventListener("pointerdown", handleUserInteraction);
-      window.removeEventListener("click", handleUserInteraction);
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
+      window.removeEventListener("popstate", handlePopState);
+      if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [enabled, timeoutMs]);
 

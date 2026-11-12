@@ -4,6 +4,9 @@ const config: CapacitorConfig = {
   appId: 'com.household.choreshub',
   appName: 'Chores Hub',
   webDir: 'dist',
+  android: {
+    adjustMarginsForEdgeToEdge: 'force'
+  },
   server: {
     androidScheme: 'https'
   }

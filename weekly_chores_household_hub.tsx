@@ -80,7 +80,7 @@ import {
   type ChorePhotoRequest
 } from "./src/chorePhotoTypes";
 import { ThemeToggle } from "./src/ThemeToggle";
-import { getEffectiveTheme, subscribeTheme } from "./src/themeManager";
+import { getEffectiveTheme, subscribeTheme, applyTheme } from "./src/themeManager";
 import { HouseholdSettingsModal } from "./src/HouseholdSettingsModal";
 import { HouseholdActivityDrawer } from "./src/HouseholdActivityDrawer";
 import { FamilyChatDrawer } from "./src/FamilyChatDrawer";
@@ -2004,6 +2004,7 @@ function App({
   const [effectiveTheme, setEffectiveTheme] = useState<"light" | "dark">(() => getEffectiveTheme());
 
   useEffect(() => {
+    applyTheme();
     setEffectiveTheme(getEffectiveTheme());
     return subscribeTheme((eff) => {
       setEffectiveTheme(eff);
@@ -6821,6 +6822,9 @@ function App({
               <Smartphone className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span className="hidden sm:inline">Mobile</span>
             </button>
+
+            {/* Quick 1-Click Theme Toggle */}
+            <ThemeToggle variant="compact" />
 
             {/* Settings & Theme Menu Dropdown */}
             <div className="relative inline-block text-left">

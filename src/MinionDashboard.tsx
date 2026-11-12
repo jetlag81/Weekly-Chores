@@ -100,6 +100,7 @@ import {
   type KidRewardProfile
 } from "./rewardAccounts";
 import { ThemeToggle } from "./ThemeToggle";
+import { applyTheme } from "./themeManager";
 import { UserProfileModal } from "./UserProfileModal";
 import {
   getUserProfile,
@@ -264,6 +265,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   } | null>(null);
 
   useEffect(() => {
+    applyTheme();
     preloadNextGoodJobGifs(3);
     preloadNextAlmostGifs(3);
     preloadNextMehGifs(3);
@@ -1204,6 +1206,9 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                 </span>
               )}
             </button>
+
+            {/* Quick 1-Click Theme Toggle */}
+            <ThemeToggle variant="compact" />
 
             {/* Household Settings Menu Button */}
             <button

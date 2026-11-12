@@ -463,6 +463,9 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
               )}
             </button>
 
+            {/* Theme Toggle Button */}
+            <ThemeToggle variant="compact" />
+
             {/* Household Settings Menu Button */}
             <button
               type="button"

@@ -104,21 +104,17 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
   // 2. Compact single-tap cycling button
   if (variant === "compact") {
     const cycleNext = () => {
-      if (mode === "system") handleSelectMode("light");
-      else if (mode === "light") handleSelectMode("dark");
-      else handleSelectMode("system");
+      if (mode === "dark") handleSelectMode("light");
+      else if (mode === "light") handleSelectMode("system");
+      else handleSelectMode("dark");
     };
 
     return (
       <button
         type="button"
         onClick={cycleNext}
-        className={`px-2.5 py-1.5 rounded-xl border transition flex items-center gap-1.5 text-xs font-bold cursor-pointer shadow-2xs ${
-          effective === "dark"
-            ? "bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700"
-            : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-        } ${className}`}
-        title={`Theme: ${mode.toUpperCase()} (Click to cycle)`}
+        className={`px-2.5 py-1.5 rounded-xl border transition flex items-center gap-1.5 text-xs font-bold cursor-pointer shadow-2xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 ${className}`}
+        title={`Theme: ${mode.toUpperCase()} (Click to toggle Dark/Light/Auto)`}
       >
         {mode === "system" ? (
           <>

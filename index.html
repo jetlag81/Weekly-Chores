@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#002060" />
+    <meta name="theme-color" content="#0F172A" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Chores Hub" />
@@ -27,17 +27,19 @@
       tailwind.config = {
         darkMode: 'class'
       };
-      // Zero-flash Theme Initializer (System is Default)
+      // Zero-flash Theme Initializer (Dark is Default)
       (function() {
         try {
-          var stored = localStorage.getItem('weekly_chores_theme_mode_v1') || 'system';
-          var isDark = stored === 'dark' || (stored === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          if (isDark) {
-            document.documentElement.classList.add('dark');
-          } else {
+          var stored = localStorage.getItem('weekly_chores_theme_mode_v1');
+          var isLight = stored === 'light' || (stored === 'system' && window.matchMedia && !window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isLight) {
             document.documentElement.classList.remove('dark');
+          } else {
+            document.documentElement.classList.add('dark');
           }
-        } catch (e) {}
+        } catch (e) {
+          document.documentElement.classList.add('dark');
+        }
       })();
     </script>
     <style>

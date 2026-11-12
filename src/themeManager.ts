@@ -8,18 +8,18 @@ export const STORAGE_KEY_THEME = "weekly_chores_theme_mode_v1";
 
 /**
  * Returns the stored theme preference ("system", "light", or "dark").
- * Defaults to "system" as requested.
+ * Defaults to "dark" as requested.
  */
 export function getStoredThemeMode(): ThemeMode {
-  if (typeof window === "undefined") return "system";
+  if (typeof window === "undefined") return "dark";
   try {
     const raw = localStorage.getItem(STORAGE_KEY_THEME);
     if (raw === "light" || raw === "dark" || raw === "system") {
       return raw;
     }
-    return "system";
+    return "dark";
   } catch {
-    return "system";
+    return "dark";
   }
 }
 
@@ -48,7 +48,7 @@ export function getEffectiveTheme(mode?: ThemeMode): "light" | "dark" {
  * Applies the effective theme class to <html> and updates meta theme-color.
  */
 export function applyTheme(mode?: ThemeMode): "light" | "dark" {
-  if (typeof document === "undefined") return "light";
+  if (typeof document === "undefined") return "dark";
   const m = mode || getStoredThemeMode();
   const effective = getEffectiveTheme(m);
   const root = document.documentElement;

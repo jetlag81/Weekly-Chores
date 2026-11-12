@@ -52,6 +52,22 @@ export function useBackToExit({
       window.history.pushState({ choresGuard: true, ts: Date.now() }, "", window.location.href);
     } catch {}
 
+    // Re-prime guard on the very first user interaction (touch, pointer, scroll, or click)
+    // with capture: true so it runs inside the active user gesture context.
+    // This satisfies Chrome's History Manipulation Intervention so the back button is trapped
+    // even on the main screen without needing to navigate to another page first.
+    const armOnFirstGesture = () => {
+      if (isExiting) return;
+      try {
+        window.history.pushState({ choresGuard: true, ts: Date.now() }, "", window.location.href);
+      } catch {}
+    };
+
+    window.addEventListener("pointerdown", armOnFirstGesture, { once: true, capture: true, passive: true });
+    window.addEventListener("touchstart", armOnFirstGesture, { once: true, capture: true, passive: true });
+    window.addEventListener("click", armOnFirstGesture, { once: true, capture: true, passive: true });
+    window.addEventListener("scroll", armOnFirstGesture, { once: true, capture: true, passive: true });
+
     const handlePopState = () => {
       if (isExiting) return;
 
@@ -119,6 +135,10 @@ export function useBackToExit({
 
     return () => {
       window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("pointerdown", armOnFirstGesture);
+      window.removeEventListener("touchstart", armOnFirstGesture);
+      window.removeEventListener("click", armOnFirstGesture);
+      window.removeEventListener("scroll", armOnFirstGesture);
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [enabled, timeoutMs]);

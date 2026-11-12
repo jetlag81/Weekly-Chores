@@ -500,7 +500,7 @@ export default defineConfig({
     strictPort: false,
     allowedHosts: true,
     watch: {
-      ignored: ['**/*.exe', '**/.tunnel-url', '**/.git/**'],
+      ignored: ['**/*.exe', '**/.tunnel-url', '**/.git/**', '**/android/**'],
     },
   },
 });

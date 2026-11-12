@@ -1,8 +1,10 @@
 // Mobile Web App "Press Back Again to Exit" Hook
-// Manages browser popstate history to intercept back button/gestures:
-// 1. Closes active modals/drawers first if any are open.
-// 2. Prompts with "Press back again to exit" toast if at root view.
-// 3. Exits cleanly if pressed a second time within the timeout window (2000ms).
+// Production-grade hash-guard strategy for mobile browsers (Android Chrome, Samsung Internet, iOS Safari, PWA):
+// 1. Employs a URL fragment guard (#app) so mobile browser history intervention never ignores/skips back navigation.
+// 2. Dual-listens to both `popstate` and `hashchange` with touch-activation re-priming.
+// 3. Closes active modals/drawers first on back press.
+// 4. Prompts with high-contrast floating toast "Press back again to exit" when on root view.
+// 5. Exits cleanly on second back press within 2000ms.
 
 import { useState, useEffect, useRef } from "react";
 
@@ -35,6 +37,8 @@ export interface UseBackToExitOptions {
   enabled?: boolean;
 }
 
+const HASH_GUARD = "#app";
+
 export function useBackToExit({
   onCloseOpenModals,
   onCustomBackAction,
@@ -45,6 +49,7 @@ export function useBackToExit({
   const [showExitToast, setShowExitToast] = useState(false);
   const lastBackPressRef = useRef<number>(0);
   const timerRef = useRef<any>(null);
+  const isHandlingRef = useRef<boolean>(false);
   const onCloseOpenModalsRef = useRef(onCloseOpenModals);
   const onCustomBackActionRef = useRef(onCustomBackAction);
 
@@ -61,17 +66,56 @@ export function useBackToExit({
 
     let isExiting = false;
 
-    // Push initial guard state to history
+    const getBaseUrl = () => {
+      return window.location.pathname + window.location.search;
+    };
+
+    // Re-pushes the hash guard so the next back button press can be captured
     const pushGuard = () => {
+      if (isExiting) return;
       try {
-        window.history.pushState({ choresHubGuard: true, ts: Date.now() }, "");
+        const base = getBaseUrl();
+        if (window.location.hash !== HASH_GUARD) {
+          window.history.pushState({ choresHubGuard: true, ts: Date.now() }, "", base + HASH_GUARD);
+        }
       } catch {}
     };
 
-    pushGuard();
+    // Prime the history stack with [Base, Base#app]
+    try {
+      const base = getBaseUrl();
+      if (window.location.hash !== HASH_GUARD) {
+        window.history.replaceState({ choresBase: true }, "", base);
+        window.history.pushState({ choresHubGuard: true, ts: Date.now() }, "", base + HASH_GUARD);
+      } else {
+        // If loaded directly with #app, synthesize base entry before it
+        window.history.replaceState({ choresBase: true }, "", base);
+        window.history.pushState({ choresHubGuard: true, ts: Date.now() }, "", base + HASH_GUARD);
+      }
+    } catch {}
 
-    const handlePopState = () => {
+    // User touch interaction ensures hash guard stays primed even after in-app touches
+    const handleUserInteraction = () => {
       if (isExiting) return;
+      if (window.location.hash !== HASH_GUARD) {
+        pushGuard();
+      }
+    };
+
+    window.addEventListener("touchstart", handleUserInteraction, { passive: true });
+    window.addEventListener("pointerdown", handleUserInteraction, { passive: true });
+    window.addEventListener("click", handleUserInteraction, { passive: true });
+
+    // Handle back navigation (both popstate and hashchange)
+    const handleBackNavigation = () => {
+      if (isExiting) return;
+
+      // Debounce duplicate events fired in same tick (e.g. popstate + hashchange)
+      if (isHandlingRef.current) return;
+      isHandlingRef.current = true;
+      setTimeout(() => {
+        isHandlingRef.current = false;
+      }, 120);
 
       // 1. Close open modal or drawer if active
       if (onCloseOpenModalsRef.current) {
@@ -114,24 +158,26 @@ export function useBackToExit({
         lastBackPressRef.current = 0;
 
         if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-          try { navigator.vibrate(60); } catch {}
+          try { navigator.vibrate([60, 40, 60]); } catch {}
         }
 
         try {
           window.close();
         } catch {}
 
+        // We are currently at base URL (without hash).
+        // Navigating back once more pops out of the app.
         window.history.back();
         return;
       }
 
-      // First press: prevent immediate exit and show toast
+      // First press: prevent immediate exit, show toast, and re-prime hash guard
       lastBackPressRef.current = now;
       pushGuard();
       setShowExitToast(true);
 
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-        try { navigator.vibrate(35); } catch {}
+        try { navigator.vibrate(40); } catch {}
       }
 
       if (timerRef.current) {
@@ -143,10 +189,15 @@ export function useBackToExit({
       }, timeoutMs);
     };
 
-    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("popstate", handleBackNavigation);
+    window.addEventListener("hashchange", handleBackNavigation);
 
     return () => {
-      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("popstate", handleBackNavigation);
+      window.removeEventListener("hashchange", handleBackNavigation);
+      window.removeEventListener("touchstart", handleUserInteraction);
+      window.removeEventListener("pointerdown", handleUserInteraction);
+      window.removeEventListener("click", handleUserInteraction);
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }

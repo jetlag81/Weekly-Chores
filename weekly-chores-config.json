@@ -127,7 +127,7 @@
         {
           "index_": 6,
           "row": [
-            "Feed the Herd (Breakfast & Supper)",
+            "Feed the Herd \n(Breakfast & Supper)",
             "Sydney",
             false,
             "Cadence",
@@ -147,12 +147,12 @@
         {
           "index_": 7,
           "row": [
-            "Empty Dishwasher",
+            "Empty Dishwasher (Before Supper) \n- Put away clean dishes; Load any dirty ones",
             "Cadence",
             false,
             "Mason",
             false,
-            "Sydney",
+            "Thom",
             false,
             "Meghan",
             false,
@@ -584,7 +584,7 @@
             "Non-Casual",
             "Bi-Weekly",
             "Thursday Evening",
-            "Roll recycling bin to curb Thursday evening for Friday pickup (alternating weeks)",
+            "Roll recycling bin to curb Thursday evening for Friday pickup (Bi-Weekly)",
             "Household"
           ]
         },
@@ -615,7 +615,7 @@
             true,
             null,
             "Walk Dogs: Ellie & Lewis",
-            "Non-Casual",
+            "Bonus",
             "Daily",
             "Mon – Sun",
             "Walk Ellie & Lewis",
@@ -880,6 +880,6 @@
       ]
     }
   ],
-  "savedAt": "2026-11-12T13:48:01.940Z",
+  "savedAt": "2026-11-12T13:58:33.049Z",
   "version": "5.0"
 }

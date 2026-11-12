@@ -19,14 +19,16 @@ export const BackToExitToast: React.FC<BackToExitToastProps> = ({
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none transition-all duration-200 ease-out transform animate-fade-in"
+      className="fixed bottom-12 sm:bottom-8 left-1/2 -translate-x-1/2 z-[99999] pointer-events-none transition-all duration-200 ease-out transform animate-fade-in"
+      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="flex items-center gap-2.5 px-4 py-2.5 bg-slate-900/95 dark:bg-slate-800/95 text-white border border-slate-700/80 dark:border-slate-600/80 rounded-full shadow-2xl backdrop-blur-md">
+      <div className="flex items-center gap-3 px-5 py-3 bg-slate-950/95 dark:bg-slate-900/95 text-white border-2 border-amber-400 dark:border-amber-400 rounded-full shadow-2xl backdrop-blur-md">
         <ArrowLeft className="w-4 h-4 text-amber-400 shrink-0 animate-pulse" />
-        <span className="text-xs font-bold tracking-wide text-slate-100 whitespace-nowrap">
+        <span className="text-sm font-extrabold tracking-wide text-slate-100 whitespace-nowrap">
           {message}
         </span>
       </div>
     </div>
   );
 };
+

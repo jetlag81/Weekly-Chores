@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Chores Hub</string>
+    <string name="title_activity_main">Chores Hub</string>
+    <string name="package_name">com.household.choreshub</string>
+    <string name="custom_url_scheme">com.household.choreshub</string>
+</resources>

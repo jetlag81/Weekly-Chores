@@ -28,3 +28,12 @@ dist-ssr
 .env.*
 !.env.example
 
+# Android Gradle build artifacts
+android/.gradle
+android/build
+android/app/build
+android/.idea
+*.apk
+*.aab
+
+

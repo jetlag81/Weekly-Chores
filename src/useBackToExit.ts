@@ -1,8 +1,12 @@
-// Mobile Web App "Press Back Again to Exit" Hook
-// Production-grade, deterministic state-machine for mobile back navigation.
-// Guarantees reliable 1st-press toast prompt and 2nd-press exit across Android & iOS browsers/PWAs.
+// Universal "Press Back Again to Exit" Hook
+// Supports both Native Mobile (Capacitor on Android / iOS) and Web Browsers / PWAs:
+// 1. In Native Android/iOS: Uses native Capacitor App.addListener('backButton') with App.exitApp().
+//    This gives 100% deterministic, instant control over the physical Android back button.
+// 2. In Web Browser / PWA: Uses standard popstate history fallback.
 
 import { useState, useEffect, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
+import { App as CapApp } from "@capacitor/app";
 
 export interface UseBackToExitOptions {
   /**
@@ -45,17 +49,78 @@ export function useBackToExit({
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
 
+    // =========================================================================
+    // 1. Native Mobile Platform (Android / iOS via Capacitor)
+    // =========================================================================
+    if (Capacitor.isNativePlatform()) {
+      let isSubscribed = true;
+
+      const setupNativeBack = async () => {
+        const handle = await CapApp.addListener("backButton", () => {
+          if (!isSubscribed) return;
+
+          // 1. If any modal, drawer, or sheet is open, close it first
+          if (onCloseOpenModalsRef.current) {
+            try {
+              const handled = onCloseOpenModalsRef.current();
+              if (handled) {
+                setShowExitToast(false);
+                exitArmedRef.current = false;
+                if (timerRef.current) clearTimeout(timerRef.current);
+                return;
+              }
+            } catch (err) {
+              console.warn("Error dismissing modal on native back:", err);
+            }
+          }
+
+          // 2. User is on root view with no modal open
+          if (exitArmedRef.current) {
+            // Second press within window -> NATIVE EXIT!
+            exitArmedRef.current = false;
+            setShowExitToast(false);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            CapApp.exitApp();
+            return;
+          }
+
+          // First press: arm exit state and show toast
+          exitArmedRef.current = true;
+          setShowExitToast(true);
+
+          if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+            try { navigator.vibrate(40); } catch {}
+          }
+
+          if (timerRef.current) clearTimeout(timerRef.current);
+          timerRef.current = setTimeout(() => {
+            exitArmedRef.current = false;
+            setShowExitToast(false);
+          }, timeoutMs);
+        });
+
+        return handle;
+      };
+
+      const handlePromise = setupNativeBack();
+
+      return () => {
+        isSubscribed = false;
+        handlePromise.then(h => h.remove()).catch(() => {});
+        if (timerRef.current) clearTimeout(timerRef.current);
+      };
+    }
+
+    // =========================================================================
+    // 2. Web Browser & PWA Fallback (popstate)
+    // =========================================================================
     let isExiting = false;
 
-    // Push initial guard state so the browser has a history entry to pop from
+    // Push initial guard state
     try {
       window.history.pushState({ choresGuard: true, ts: Date.now() }, "", window.location.href);
     } catch {}
 
-    // Re-prime guard on the very first user interaction (touch, pointer, scroll, or click)
-    // with capture: true so it runs inside the active user gesture context.
-    // This satisfies Chrome's History Manipulation Intervention so the back button is trapped
-    // even on the main screen without needing to navigate to another page first.
     const armOnFirstGesture = () => {
       if (isExiting) return;
       try {
@@ -76,7 +141,6 @@ export function useBackToExit({
         try {
           const handled = onCloseOpenModalsRef.current();
           if (handled) {
-            // Restore guard for next back press
             try {
               window.history.pushState({ choresGuard: true, ts: Date.now() }, "", window.location.href);
             } catch {}
@@ -92,7 +156,6 @@ export function useBackToExit({
 
       // 2. User is on root view with no modal open
       if (exitArmedRef.current) {
-        // SECOND PRESS CONFIRMED! EXIT APP NOW!
         isExiting = true;
         exitArmedRef.current = false;
         setShowExitToast(false);
@@ -106,16 +169,14 @@ export function useBackToExit({
           window.close();
         } catch {}
 
-        // Unwind the landing entry to exit the site/tab/PWA
         window.history.back();
         return;
       }
 
-      // FIRST PRESS: Arm the exit state and show toast
+      // First press: arm exit state and show toast
       exitArmedRef.current = true;
       setShowExitToast(true);
 
-      // Immediately push a fresh guard so the browser can catch the SECOND back press
       try {
         window.history.pushState({ choresGuard: true, ts: Date.now() }, "", window.location.href);
       } catch {}

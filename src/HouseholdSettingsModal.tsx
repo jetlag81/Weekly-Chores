@@ -144,7 +144,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
 
   // QR Code & Pairing
   const [selectedKidForQr, setSelectedKidForQr] = useState<string>(currentKidName);
-  const [tunnelUrl, setTunnelUrl] = useState<string>("https://michigan-stops-disciplinary-incorporate.trycloudflare.com");
+  const [tunnelUrl, setTunnelUrl] = useState<string>("https://silent-option-circle-medical.trycloudflare.com");
   const [qrTarget, setQrTarget] = useState<"tunnel" | "local">("tunnel");
   const [copiedQrLink, setCopiedQrLink] = useState(false);
 

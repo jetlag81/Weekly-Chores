@@ -52,9 +52,9 @@ export const DEFAULT_USER_PROFILES: Record<string, UserProfile> = {
   meghan: {
     id: "meghan",
     firstName: "Meghan",
-    lastName: "Voth",
-    displayName: "Meghan Voth",
-    initials: "MV",
+    lastName: "Ginter",
+    displayName: "Meghan Ginter",
+    initials: "MG",
     birthday: "1983-09-20",
     email: "meghan@example.com",
     avatarEmoji: "👑",

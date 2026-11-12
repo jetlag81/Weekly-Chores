@@ -1,6 +1,6 @@
 // Mobile & Desktop Parent Room Inspection & Weekly Sign-Off Modal
 // Allows Parents (Thom & Meghan) to walk the house on Sunday, inspect bedrooms, laundry,
-// and routines, calculate allowances, and stamp the official sign-off (✓ TV / MV) across all devices.
+// and routines, calculate allowances, and stamp the official sign-off (✓ TV / MG) across all devices.
 
 import React, { useState, useMemo } from "react";
 import confetti from "canvas-confetti";
@@ -272,7 +272,7 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
         activeSyncWeek,
         weekLabel,
         timestamp: Date.now(),
-        signedBy: "Thom & Meghan (TV / MV)",
+        signedBy: "Thom & Meghan (TV / MG)",
         parentNotes: parentNotes.trim() || undefined,
         totalAmount: totalHouseholdPayout,
         items: payoutItems
@@ -307,7 +307,7 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
                   Sunday Inspection
                 </span>
                 <span className="text-xs text-amber-100 font-medium hidden sm:inline">
-                  Parents Thom & Meghan (TV / MV)
+                  Parents Thom & Meghan (TV / MG)
                 </span>
               </div>
               <h2 className="text-lg sm:text-xl font-black mt-0.5 leading-tight">
@@ -376,7 +376,7 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
                       : "bg-amber-200 text-amber-950"
                   }`}
                 >
-                  {signOffStatus.done ? `✓ ${activeParentAdmin === "Meghan" ? "MV" : "TV"}` : "Initials Needed"}
+                  {signOffStatus.done ? `✓ ${activeParentAdmin === "Meghan" ? "MG" : "TV"}` : "Initials Needed"}
                 </span>
               </div>
               <p className="text-[11px] opacity-80">
@@ -672,7 +672,7 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
         <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 shrink-0 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-xs text-slate-500 text-center sm:text-left">
             <span className="font-bold text-slate-700">Official Stamp:</span> Stamping{" "}
-            <span className="font-mono font-bold text-slate-900">✓ TV / MV</span> updates row 18 in the printable
+            <span className="font-mono font-bold text-slate-900">✓ TV / MG</span> updates row 18 in the printable
             matrix across all synced devices.
           </div>
 
@@ -702,7 +702,7 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 text-emerald-200" />
-                  <span>Approve & Sign (✓ TV / MV)</span>
+                  <span>Approve & Sign (✓ TV / MG)</span>
                 </>
               )}
             </button>

@@ -170,7 +170,7 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
               <div>
                 <h4 className="font-extrabold text-sm text-slate-800">No allowance history archived yet</h4>
                 <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                  When you conduct Sunday inspection and tap <strong>Approve & Sign (✓ TV / MV)</strong>, the finalized allowance payouts are automatically logged and tracked here.
+                  When you conduct Sunday inspection and tap <strong>Approve & Sign (✓ TV / MG)</strong>, the finalized allowance payouts are automatically logged and tracked here.
                 </p>
               </div>
             </div>

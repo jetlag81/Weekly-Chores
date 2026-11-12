@@ -21,7 +21,7 @@ export interface AllowancePayoutRecord {
   activeSyncWeek: string;
   weekLabel: string;
   timestamp: number;
-  signedBy: string; // "Thom & Meghan (TV / MV)"
+  signedBy: string; // "Thom & Meghan (TV / MG)"
   parentNotes?: string;
   totalAmount: number;
   items: KidPayoutDetail[];

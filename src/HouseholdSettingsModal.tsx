@@ -74,6 +74,7 @@ import {
 } from "./giphyService";
 import { QRCodeDisplay } from "./QRCodeDisplay";
 import { isStandalone, promptPwaInstall } from "./pwaManager";
+import { getHouseholdSetupConfig } from "./householdOnboardingConfig";
 
 export type SettingsTab =
   | "appearance"
@@ -99,6 +100,9 @@ interface HouseholdSettingsModalProps {
   onSwitchToKid?: (kidName: string) => void;
   onOpenRewardPayoutModal?: (kidName?: string) => void;
   onClearCompletedTasks?: () => void;
+  onOpenCleanSlateModal?: () => void;
+  onLaunchSpotlightTour?: () => void;
+  onRestoreThomPreset?: () => void;
   viewingAsParent?: "Thom" | "Meghan";
 }
 
@@ -118,6 +122,9 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
   onSwitchToKid,
   onOpenRewardPayoutModal,
   onClearCompletedTasks,
+  onOpenCleanSlateModal,
+  onLaunchSpotlightTour,
+  onRestoreThomPreset,
   viewingAsParent
 }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
@@ -595,6 +602,91 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
               <div className="p-3 bg-slate-100 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 💡 <strong>Tip:</strong> System mode automatically switches with your phone or computer’s dark mode schedule (sunrise/sunset).
               </div>
+
+              {/* Clean Slate First-Run Onboarding & Guided Tour Controls (Parent Mode) */}
+              {viewMode === "parent" && (
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-950/60 via-slate-900 to-purple-950/50 border border-indigo-500/30 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <div className="text-xs font-black text-white flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-amber-400" />
+                        <span>Clean Slate Setup &amp; Guided Hub Tour</span>
+                      </div>
+                      <p className="text-[11px] text-slate-300 mt-0.5">
+                        Test the brand-new 7-step First-Run Household Onboarding Wizard, replay the 6-stop Spotlight Coachmark Tour, or restore Thom's Family Preset anytime.
+                      </p>
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const cfg = getHouseholdSetupConfig();
+                    return (
+                      <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                        <div className="text-slate-300">
+                          <span className="text-slate-500 font-bold">Home Region:</span>{" "}
+                          <span className="font-black text-emerald-300">
+                            {cfg.address.countryCode === "CA" ? "🇨🇦 Canada (CAD)" : "🇺🇸 United States (USD)"}
+                          </span>
+                          {cfg.address.city && (
+                            <span className="text-slate-400"> • {cfg.address.city}, {cfg.address.provinceOrState}</span>
+                          )}
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                          cfg.isCleanSlateActive
+                            ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                            : "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+                        }`}>
+                          {cfg.isCleanSlateActive ? "Clean Slate Active" : "Thom's Family Preset"}
+                        </span>
+                      </div>
+                    );
+                  })()}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                    {onOpenCleanSlateModal && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onOpenCleanSlateModal();
+                        }}
+                        className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Clean Slate Wizard</span>
+                      </button>
+                    )}
+
+                    {onLaunchSpotlightTour && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onLaunchSpotlightTour();
+                        }}
+                        className="py-2.5 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <Zap className="w-3.5 h-3.5" />
+                        <span>6-Stop Hub Tour</span>
+                      </button>
+                    )}
+
+                    {onRestoreThomPreset && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onRestoreThomPreset();
+                        }}
+                        className="py-2.5 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Restore Thom's Preset</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

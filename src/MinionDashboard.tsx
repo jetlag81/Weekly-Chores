@@ -115,6 +115,8 @@ import {
 } from "./userProfiles";
 import { FamilyChatDrawer } from "./FamilyChatDrawer";
 import { getUnreadChatCount, subscribeToFamilyChat } from "./familyChat";
+import { KidWelcomeOnboardingModal } from "./KidWelcomeOnboardingModal";
+import { getHouseholdSetupConfig } from "./householdOnboardingConfig";
 
 interface MinionDashboardProps {
   kidName: string;
@@ -219,6 +221,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>("appearance");
   const [rewardProfile, setRewardProfile] = useState<KidRewardProfile>(() => getKidRewardProfile(kidName));
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showKidWelcomeModal, setShowKidWelcomeModal] = useState(false);
   const [profileVersion, setProfileVersion] = useState(0);
 
   // Kid user profile with Age, Age Tier, Birthday, and Autonomy permissions
@@ -231,13 +234,18 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const kidBdayDays = getDaysUntilBirthday(kidProfile.birthday);
   const kidDisplayName = getPreferredName(kidProfile, currentKid.name);
 
-  // When a kid first accepts an invite, automatically open the profile customizer so they can pick a nickname, emoji & color
+  // When a kid first accepts an invite or enters after Clean Slate setup, automatically open the age-tiered Kid Welcome customizer
   useEffect(() => {
     try {
       const justPaired = sessionStorage.getItem("household_just_paired_kid");
       if (justPaired && justPaired.toLowerCase() === currentKid.name.toLowerCase()) {
         sessionStorage.removeItem("household_just_paired_kid");
-        setShowProfileModal(true);
+        setShowKidWelcomeModal(true);
+        return;
+      }
+      const cfg = getHouseholdSetupConfig();
+      if (cfg.isCleanSlateActive && !cfg.kidWelcomeCompleted?.[currentKid.name.toLowerCase()]) {
+        setShowKidWelcomeModal(true);
       }
     } catch {}
   }, [currentKid.name]);
@@ -346,6 +354,10 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     }
     if (showKidRewardModal) {
       setShowKidRewardModal(false);
+      return true;
+    }
+    if (showKidWelcomeModal) {
+      setShowKidWelcomeModal(false);
       return true;
     }
     if (showProfileModal) {
@@ -1233,20 +1245,20 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                 {kidAgeTier === "teen" ? (
                   <button
                     type="button"
-                    onClick={() => setShowProfileModal(true)}
+                    onClick={() => setShowKidWelcomeModal(true)}
                     className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 shrink-0 hover:bg-indigo-100 transition cursor-pointer"
-                    title="Teen Autonomy Mode (12+) • Profile & Email enabled"
+                    title="Teen Autonomy Mode (12+) • Tap for 3-Step Profile, Wallet, Wishlist & Social Setup"
                   >
-                    ⚡ Teen
+                    ⚡ Teen 12+ Setup
                   </button>
                 ) : (
                   <button
                     type="button"
-                    onClick={() => setShowProfileModal(true)}
+                    onClick={() => setShowKidWelcomeModal(true)}
                     className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0 hover:bg-amber-100 transition cursor-pointer"
-                    title="Junior Explorer Mode (≤11) • High Visual Stimulation"
+                    title="Junior Explorer Mode (≤11) • Tap for Kid-Safe Basic Setup"
                   >
-                    🌟 Junior
+                    🌟 Junior Setup
                   </button>
                 )}
               </div>
@@ -2750,6 +2762,17 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
           }}
         />
       )}
+
+      {/* Age-Tiered Kid First-Run Welcome & Profile Customization Modal (12+ vs 11 & Under) */}
+      <KidWelcomeOnboardingModal
+        isOpen={showKidWelcomeModal}
+        kidName={currentKid.name}
+        onClose={() => setShowKidWelcomeModal(false)}
+        onComplete={(updatedProfile, updatedRewards) => {
+          setProfileVersion(v => v + 1);
+          setRewardProfile(updatedRewards);
+        }}
+      />
 
       {/* Household Real-Time Family Chat Drawer */}
       <FamilyChatDrawer

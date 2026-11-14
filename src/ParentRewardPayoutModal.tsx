@@ -293,46 +293,18 @@ export const ParentRewardPayoutModal: React.FC<ParentRewardPayoutModalProps> = (
               <span className="text-[10px] text-slate-500 font-medium">({allKidsList.length} kids)</span>
             </div>
 
-            {/* Region Switcher with Auto-Country Detection */}
-            <div className="flex items-center gap-1 bg-slate-800/90 p-0.5 rounded-xl border border-slate-700/80">
-              <span className="text-[10px] text-slate-400 font-bold px-1.5 flex items-center gap-1">
-                <Globe className="w-3 h-3 text-slate-400" />
-                <span className="hidden xs:inline">Store:</span>
+            {/* Home Address Region & Wallet Badge (replaces manual Country Switcher) */}
+            <div
+              className="flex items-center gap-1.5 bg-slate-800/90 px-2.5 py-1 rounded-xl border border-slate-700/80"
+              title="Region & Currency automatically configured from Household Home Address"
+            >
+              <Globe className="w-3 h-3 text-amber-400 shrink-0" />
+              <span className="text-[10px] font-black text-slate-200">
+                {region === "CA" ? "🇨🇦 Canada (CAD)" : "🇺🇸 United States (USD)"}
               </span>
-              <button
-                type="button"
-                onClick={() => handleSwitchRegion("CA")}
-                className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition cursor-pointer flex items-center gap-1 ${
-                  region === "CA"
-                    ? "bg-amber-500 text-slate-950 shadow-2xs"
-                    : "text-slate-400 hover:text-white"
-                }`}
-                title="Canadian Stores (CAD) - Official & Amazon.ca"
-              >
-                <span>🇨🇦 CA</span>
-                {region === "CA" && isAutoDetected && (
-                  <span className="text-[8px] bg-slate-950/25 text-slate-900 px-1 rounded-sm uppercase tracking-tighter font-extrabold">
-                    Auto
-                  </span>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSwitchRegion("US")}
-                className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition cursor-pointer flex items-center gap-1 ${
-                  region === "US"
-                    ? "bg-amber-500 text-slate-950 shadow-2xs"
-                    : "text-slate-400 hover:text-white"
-                }`}
-                title="United States Stores (USD) - Official & Amazon.com"
-              >
-                <span>🇺🇸 US</span>
-                {region === "US" && isAutoDetected && (
-                  <span className="text-[8px] bg-slate-950/25 text-slate-900 px-1 rounded-sm uppercase tracking-tighter font-extrabold">
-                    Auto
-                  </span>
-                )}
-              </button>
+              <span className="text-[8.5px] font-extrabold uppercase tracking-tight bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.2 rounded-md">
+                Home Address
+              </span>
             </div>
           </div>
 

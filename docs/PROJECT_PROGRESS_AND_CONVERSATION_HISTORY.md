@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-14 15:04:00
+> **Export Date**: 2026-11-14 16:18:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -119,6 +119,18 @@
 19. **Streamlined Weekly Chore Checkbox Persistence & Off-Week Curbside Inactive State** (weekly_chores_household_hub.tsx, src/SwipeableScheduleDayView.tsx, src/householdTypes.ts):
     - Fixed a state bug in `handleUpdateSingleWeeklyChore` and `getSingleWeeklyStatus` where tapping the checkbox on `Clean Basement`, `Curbside Recycling`, or `Curbside Waste` triggered the update handler but failed to persist `done: updatedDone` in `choreEdits` and broke early out of the `activeWeekDays` loop in `getSingleWeeklyStatus` before checking `s.done` whenever `who` was assigned.
     - Exported `isCurbsideActiveOnDate` in `src/householdTypes.ts` and updated both the Swipeable Day View (`SwipeableScheduleDayView.tsx`) and 7-Day Table View (`weekly_chores_household_hub.tsx`) so the off-week curbside task (`Curbside Recycling` or `Curbside Waste`, whichever is not scheduled on this week's Thursday) is displayed greyed out and inactive (`Off-Week` badge, disabled checkbox & selector) rather than appearing clickable or disappearing without context.
+
+20. **"Clean Slate" First-Run Onboarding Wizard, Age-Tiered Kid Welcome Flow, Mobile Wallet Links & 6-Stop Spotlight Hub Tour** (src/householdOnboardingConfig.ts, src/CleanSlateOnboardingModal.tsx, src/HubSpotlightTourOverlay.tsx, src/KidWelcomeOnboardingModal.tsx, src/rewardAccounts.ts, src/ParentRewardPayoutModal.tsx, src/HouseholdSettingsModal.tsx, src/MinionDashboard.tsx, weekly_chores_household_hub.tsx):
+    - Built the 7-step **Clean Slate First-Run Onboarding Wizard** (`CleanSlateOnboardingModal.tsx`) with safe non-destructive testing (`Start Clean Slate Wizard` & `Restore Thom's Family Preset` in the Settings gear menu and Household Settings):
+      1. **Step 1 — Admin Account & Home Street Address**: Live street address autocomplete (OpenStreetMap Photon + instant CA/US fallback) that auto-detects Country (`CA`/`US`) and Currency (`CAD`/`USD`), eliminating the manual Country Switcher in `ParentRewardPayoutModal.tsx`, plus municipal curbside waste/recycling schedule setup.
+      2. **Step 2 — Household Members, Pets & Ecosystem Links**: Link **Google Pay (G-Pay)**, **Apple Pay / Apple Cash**, **Interac e-Transfer**, **Google Family Link & Calendar**, **Apple Family Sharing**, and **Xbox / PlayStation / Nintendo Switch Parental Controls**; add Co-Parents, Kids (with live `⚡ 12+ Teen Tier` vs `🌟 11 & Under Junior Tier` badge computation), and Pets (which auto-generate tailored Pet Care chores in Step 4).
+      3. **Step 3 — Special Occupancy & Custody Schedules**: Per-kid occupancy presets (`Full-Time`, `Alternating Bi-Weekly` with Transition Day, Time, and `[ 🏠 Here This Week | 👋 Away This Week ]` anchor, `Weekends Only`, `Casual`).
+      4. **Step 4 — Week Start Day & Smart Chore Starter Packs**: Select preferred week start day (`Monday`, `Sunday`, `Saturday`, `Friday`) + 1-tap toggleable Smart Starter Packs (`Pet Care`, `Daily Kitchen`, `Kid Rooms/Laundry`, `Basement & Curbside`) with inline editable descriptions, photo proof toggles, and `+ Add Custom Chore`.
+      5. **Step 5 — Weekly/Monthly Reward Structure**: Supports `Monetary Allowance`, `Screen Time / Gaming`, `Points & Prize Store`, `Hybrid`, and `Custom Reward System` (custom unit name, icon, goal) + `Weekly / Bi-Weekly / Monthly` payout cadence + preferred mobile wallet (`G-Pay`, `Apple Pay`, `Interac`, `Cash`).
+      6. **Step 6 — Roll Out Invites & Launch Guided Hub Tour**: Generates per-member 6-digit invite codes with copy/share support, builds the live 2-sheet household schedule (`buildSheetDataFromOnboarding`), and launches the **6-Stop Interactive Spotlight Coachmark Tour** (`HubSpotlightTourOverlay.tsx`).
+    - Built the **Age-Tiered Kid First-Run Welcome Modal** (`KidWelcomeOnboardingModal.tsx`):
+      - **Ages 12 & Up (`⚡ 12+ Teen Autonomy`)**: 3-step self-onboarding (Nickname/Bio/Emoji/Color -> G-Pay/Apple Pay/Wishlist/Goal -> Gamertags & Socials).
+      - **Ages 11 & Under (`🌟 11 & Under Junior Explorer`)**: Simplified kid-safe 1-step onboarding (Nickname, Giant Avatar Emoji, Theme Color, and Simple Prize Goal — no social handles, external store links, or email fields).
 
 ---
 
@@ -5184,3 +5196,39 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   - Exported `isCurbsideActiveOnDate` from [`src/householdTypes.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/householdTypes.ts) to evaluate this week's Thursday pickup against the bi-weekly recycling/waste rotation.
   - Rendered the non-scheduled curbside task at 50% opacity with dashed borders, a disabled `—` checkbox, strikethrough title, and an `Off-Week` badge (`Inactive this week • Next Thursday pickup`).
 - Rebuilt and deployed the updated APK to the connected Google Pixel 9 Pro.
+
+---
+
+### Turn 186
+**Date / Time**: 2026-11-14T16:18:00Z
+
+**User Prompt**:
+> We need to start thinking about an initialized version of the app. Like a "clean slate" mode. I'd like to work on the workflow that a brand new user would go through after first installing the app. Something like this:
+> 1. Create Admin account (maybe include home address so that we don't need the country switcher in the reward menu)
+> 2. Add household members & pets (but don't invite yet)
+> 3. Set any special occupancy schedules
+> 4. Add daily and weekly chores (descriptions and tasks involved) - ask what day of the week they would like as the start day
+> 5. Run the admin through a tutorial as they go, pointing out features
+> 6. Set weekly reward structure (Monetary allowance? Screen time? Points system? - weekly or monthly payout?)
+> 7. Roll out invites
+>
+> Plus:
+> - Link G-Pay or Apple Pay
+> - Age-tiered split kid profiles (12 & up customize social, shopping, gamertags, G-Pay/Apple Pay; 11 & under basic settings only)
+
+**Summary of Work Delivered**:
+- Created [`src/householdOnboardingConfig.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/householdOnboardingConfig.ts):
+  - Full data model and `localStorage` persistence for `HouseholdSetupConfig`, including `HouseholdAddressConfig`, `EcosystemIntegrationConfig`, `RewardSystemConfig`, and `buildSheetDataFromOnboarding`.
+  - Live street address autocomplete (`searchStreetAddressAutocomplete`) via OpenStreetMap Photon geocoder + instant CA/US fallback that auto-detects Country (`CA`/`US`) and Currency (`CAD`/`USD`).
+  - Safe non-destructive backup/restore helpers (`backupCurrentHouseholdBeforeCleanSlate`, `restoreThomsFamilyPresetConfig`).
+- Updated [`src/rewardAccounts.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/rewardAccounts.ts) and [`src/ParentRewardPayoutModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentRewardPayoutModal.tsx):
+  - Added **Google Pay (G-Pay)** (`gpay`), **Apple Pay / Apple Cash** (`applepay`), and **Interac e-Transfer** (`interac`) to `REWARD_PLATFORMS`.
+  - Replaced the manual `Store: [ 🇨🇦 CA | 🇺🇸 US ]` Country Switcher in the Reward Payout modal with a `Home Address` Region & Currency badge derived automatically from the household's home street address.
+- Created [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx):
+  - 6/7-step Clean Slate First-Run Wizard covering Admin Account & Home Street Address, Family Members (with live `12+ Teen Tier` vs `11 & Under Junior Tier` detection) & Pets + Ecosystem/Wallet Links, Occupancy & Bi-Weekly Custody Schedules, Week Start Day & Smart Chore Starter Packs, Weekly/Monthly/Custom Reward Structure, and Roll Out Invites & Launch Guided Hub Tour.
+- Created [`src/HubSpotlightTourOverlay.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/HubSpotlightTourOverlay.tsx):
+  - Interactive 6-Stop Spotlight Coachmark Tour that guides the Admin across the Weekly Schedule, Auto-Assign, Monthly Calendar, Sunday Room Inspection & Photo Proofs, Master Chore & Occupancy Hub, and Household Settings / Invite Codes.
+- Created [`src/KidWelcomeOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/KidWelcomeOnboardingModal.tsx) and wired into [`src/MinionDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/MinionDashboard.tsx):
+  - **Ages 12 & Up (`⚡ 12+ Teen Autonomy`)**: 3-step self-onboarding (Nickname/Bio/Emoji/Color -> G-Pay/Apple Pay/Wishlist/Goal -> Gamertags & Socials).
+  - **Ages 11 & Under (`🌟 11 & Under Junior Explorer`)**: Kid-safe 1-step onboarding (Nickname, Giant Avatar Emoji, Theme Color, and Simple Prize Goal).
+- Wired quick-launch controls (`Clean Slate Setup Wizard`, `Replay 6-Stop Hub Tour`, `Restore Thom's Preset`) into the top-right Settings gear menu in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx) and inside [`src/HouseholdSettingsModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/HouseholdSettingsModal.tsx).

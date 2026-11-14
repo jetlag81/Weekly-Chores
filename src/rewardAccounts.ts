@@ -95,6 +95,16 @@ export function isRegionAutoDetected(): boolean {
 export function getStoredRewardRegion(): RewardRegion {
   if (typeof window === "undefined") return "CA";
   try {
+    // 1. Check Household Home Address configuration first (set during Clean Slate Onboarding or Settings)
+    const rawSetup = localStorage.getItem("weekly_chores_household_setup_config_v1");
+    if (rawSetup) {
+      const parsed = JSON.parse(rawSetup);
+      const addrCountry = parsed?.address?.countryCode;
+      if (addrCountry === "CA" || addrCountry === "US") {
+        return addrCountry;
+      }
+    }
+    // 2. Fallback to stored region or timezone detection
     const saved = localStorage.getItem(STORAGE_KEY_REWARD_REGION);
     if (saved === "CA" || saved === "US") {
       return saved;
@@ -291,13 +301,52 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     giftCardLabel: "Open Wishlist / Send Card"
   },
   {
+    id: "gpay",
+    name: "Google Pay (G-Pay)",
+    category: "wallet",
+    iconEmoji: "💳",
+    badgeColor: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+    placeholder: "Phone or Gmail (e.g. sydney@gmail.com)",
+    helpText: "Google Pay / Google Wallet email or phone number for instant allowance transfers",
+    officialUrl: () => "https://pay.google.com/",
+    amazonUrl: () => "https://pay.google.com/",
+    giftCardUrl: () => "https://pay.google.com/",
+    giftCardLabel: "Open Google Pay"
+  },
+  {
+    id: "applepay",
+    name: "Apple Pay / Apple Cash",
+    category: "wallet",
+    iconEmoji: "🍎",
+    badgeColor: "bg-slate-400/15 text-slate-200 border-slate-400/30",
+    placeholder: "iMessage Phone or Apple ID",
+    helpText: "Apple Cash / Apple Pay phone number or iCloud email for family transfers",
+    officialUrl: () => "https://www.apple.com/apple-cash/",
+    amazonUrl: () => "https://www.apple.com/apple-cash/",
+    giftCardUrl: () => "https://www.apple.com/apple-cash/",
+    giftCardLabel: "Open Apple Pay"
+  },
+  {
+    id: "interac",
+    name: "Interac e-Transfer",
+    category: "wallet",
+    iconEmoji: "🏦",
+    badgeColor: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+    placeholder: "Email or Mobile # for e-Transfer",
+    helpText: "Canadian Interac e-Transfer auto-deposit email or phone number",
+    officialUrl: () => "https://www.interac.ca/en/consumers/products/interac-e-transfer/",
+    amazonUrl: () => "https://www.interac.ca/en/consumers/products/interac-e-transfer/",
+    giftCardUrl: () => "https://www.interac.ca/en/consumers/products/interac-e-transfer/",
+    giftCardLabel: "Send e-Transfer"
+  },
+  {
     id: "cashapp",
-    name: "Cash App / Debit",
+    name: "Cash App / Venmo",
     category: "wallet",
     iconEmoji: "🟢",
     badgeColor: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-    placeholder: "$Cashtag (e.g. $SydneyChores)",
-    helpText: "Cash App $cashtag or debit card username",
+    placeholder: "$Cashtag or @Venmo (e.g. $SydneyChores)",
+    helpText: "Cash App $cashtag or Venmo @username",
     officialUrl: (handle) => {
       const clean = handle ? handle.replace(/^\$/, "") : "";
       return clean ? `https://cash.app/$${clean}` : "https://cash.app/";

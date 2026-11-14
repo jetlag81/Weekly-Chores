@@ -130,6 +130,17 @@ import {
   type UserProfile,
   type ProfileTierOverride
 } from "./src/userProfiles";
+import { CleanSlateOnboardingModal } from "./src/CleanSlateOnboardingModal";
+import { HubSpotlightTourOverlay } from "./src/HubSpotlightTourOverlay";
+import {
+  buildSheetDataFromOnboarding,
+  getHouseholdSetupConfig,
+  restoreThomsFamilyPresetConfig,
+  type HouseholdSetupConfig,
+  type OnboardingMemberDraft,
+  type OnboardingPetDraft,
+  type OnboardingChoreDraft
+} from "./src/householdOnboardingConfig";
 
 const STORAGE_KEY = 'weekly_chores_canvas_sheet_data_v5';
 
@@ -1976,7 +1987,8 @@ function App({
   deleteItem,
   insertItem,
   moveItem,
-  followLink
+  followLink,
+  onReplaceSheetData
 }) {
   var _a, _b, _c;
   const [deletedChoreKeys, setDeletedChoreKeys] = useState(() => new Set());
@@ -1999,6 +2011,8 @@ function App({
   const [rewardPayoutKid, setRewardPayoutKid] = useState<string>("Sydney");
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showCleanSlateModal, setShowCleanSlateModal] = useState(false);
+  const [showSpotlightTour, setShowSpotlightTour] = useState(false);
   const [showPhotoInboxModal, setShowPhotoInboxModal] = useState(false);
   const [selectedReviewProof, setSelectedReviewProof] = useState<ChorePhotoProof | null>(null);
   const [photoRequestsVersion, setPhotoRequestsVersion] = useState(0);
@@ -3547,6 +3561,14 @@ function App({
       setShowActivityDrawer(false);
       return true;
     }
+    if (showCleanSlateModal) {
+      setShowCleanSlateModal(false);
+      return true;
+    }
+    if (showSpotlightTour) {
+      setShowSpotlightTour(false);
+      return true;
+    }
     if (showSettingsModal) {
       setShowSettingsModal(false);
       return true;
@@ -3656,13 +3678,83 @@ function App({
     showAddPetModal,
     editingPrintableChore,
     deletingChoreTarget,
-    showInviteModal
+    showInviteModal,
+    showCleanSlateModal,
+    showSpotlightTour
   ]);
 
   const { showExitToast: showParentExitToast, message: parentExitToastMsg } = useBackToExit({
     enabled: deviceSession.role !== "kid",
     onCloseOpenModals: handleDismissAnyParentModal
   });
+
+  const handleCompleteCleanSlateOnboarding = useCallback((
+    config: HouseholdSetupConfig,
+    members: OnboardingMemberDraft[],
+    pets: OnboardingPetDraft[],
+    chores: OnboardingChoreDraft[],
+    startSpotlightTour: boolean
+  ) => {
+    const newSheetData = buildSheetDataFromOnboarding(config, members, pets, chores, activeSyncWeek);
+    if (onReplaceSheetData) {
+      onReplaceSheetData(newSheetData);
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newSheetData));
+    } catch {}
+    setDeletedChoreKeys(new Set());
+    setChoreEdits({});
+    setCustomAddedChores([]);
+    setCustomMasterChores([]);
+    if (config.rewards?.monthlyBonusDescription) {
+      setMonthlyIncentive(config.rewards.monthlyBonusDescription);
+      try {
+        localStorage.setItem("weekly_chores_monthly_incentive", config.rewards.monthlyBonusDescription);
+      } catch {}
+    }
+    if (config.rewards?.monthlyGoalTarget) {
+      setMonthlyGoalTarget(config.rewards.monthlyGoalTarget);
+      try {
+        localStorage.setItem("weekly_chores_monthly_target", String(config.rewards.monthlyGoalTarget));
+      } catch {}
+    }
+    setProfilesVersion(v => v + 1);
+    setShowCleanSlateModal(false);
+    if (startSpotlightTour) {
+      setParentViewPreference("table");
+      try {
+        localStorage.setItem("parent_view_mode_preference", "table");
+      } catch {}
+      setActiveTab("matrix");
+      setShowSpotlightTour(true);
+    }
+    setNotice(`✨ Clean Slate Setup Complete! Welcome to ${config.householdName} (${config.address.countryCode === "CA" ? "🇨🇦 CAD" : "🇺🇸 USD"})!`);
+    setTimeout(() => setNotice(null), 5000);
+  }, [activeSyncWeek, onReplaceSheetData]);
+
+  const handleRestoreThomsPreset = useCallback(() => {
+    restoreThomsFamilyPresetConfig();
+    if (onReplaceSheetData) {
+      onReplaceSheetData(INITIAL_SHEET_DATA);
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_SHEET_DATA));
+      localStorage.setItem("weekly_chores_monthly_incentive", "$15 Allowance Bonus & Choice of Friday Family Dinner");
+      localStorage.setItem("weekly_chores_monthly_target", "25");
+    } catch {}
+    setDeletedChoreKeys(new Set());
+    setChoreEdits({});
+    setCustomAddedChores([]);
+    setCustomMasterChores([]);
+    setActiveParentAdmin("Thom");
+    setMonthlyIncentive("$15 Allowance Bonus & Choice of Friday Family Dinner");
+    setMonthlyGoalTarget(25);
+    setProfilesVersion(v => v + 1);
+    setShowCleanSlateModal(false);
+    setShowSpotlightTour(false);
+    setNotice("🏠 Restored Thom's Family Preset (Thom, Meghan, Sydney, Cadence, Mason, Koda, Keyanna & 6 Pets)!");
+    setTimeout(() => setNotice(null), 4500);
+  }, [onReplaceSheetData]);
   const handleSaveAsDefault = async () => {
     try {
       const rawData = localStorage.getItem(STORAGE_KEY);
@@ -6628,6 +6720,16 @@ function App({
           onSwitchParentAdmin={handleSwitchActiveAdmin}
           lastInspectedKid={lastInspectedKid}
           onClearCompletedTasks={() => handleClearAllCompletedTasks(true)}
+          onOpenCleanSlateModal={() => setShowCleanSlateModal(true)}
+          onLaunchSpotlightTour={() => {
+            setParentViewPreference("table");
+            try {
+              localStorage.setItem("parent_view_mode_preference", "table");
+            } catch {}
+            setActiveTab("matrix");
+            setShowSpotlightTour(true);
+          }}
+          onRestoreThomPreset={handleRestoreThomsPreset}
           onRegisterDismissModal={(fn) => { parentMobileCloserRef.current = fn; }}
         />
 
@@ -6763,6 +6865,14 @@ function App({
           />
         )}
 
+        {/* Clean Slate 7-Step Household Onboarding Wizard Modal */}
+        <CleanSlateOnboardingModal
+          isOpen={showCleanSlateModal}
+          onClose={() => setShowCleanSlateModal(false)}
+          onCompleteOnboarding={handleCompleteCleanSlateOnboarding}
+          onRestoreThomPreset={handleRestoreThomsPreset}
+        />
+
         {/* Mobile "Press back again to exit" Toast */}
         <BackToExitToast visible={showParentExitToast} message={parentExitToastMsg} />
       </div>
@@ -6897,6 +7007,53 @@ function App({
                       <div>
                         <ThemeToggle variant="pill" className="w-full flex" />
                       </div>
+
+                      <div className="border-t border-slate-100 dark:border-slate-800" />
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowSettingsMenu(false);
+                          setShowCleanSlateModal(true);
+                        }}
+                        className="w-full px-2.5 py-2 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50/70 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-950/70 flex items-center justify-between transition cursor-pointer text-left"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-amber-500" />
+                          <span>Clean Slate Setup Wizard</span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-indigo-400" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowSettingsMenu(false);
+                          setShowSpotlightTour(true);
+                        }}
+                        className="w-full px-2.5 py-2 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 flex items-center justify-between transition cursor-pointer text-left"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Award className="w-4 h-4 text-emerald-500" />
+                          <span>Replay 6-Stop Hub Tour</span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowSettingsMenu(false);
+                          handleRestoreThomsPreset();
+                        }}
+                        className="w-full px-2.5 py-2 rounded-xl text-xs font-bold text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 flex items-center justify-between transition cursor-pointer text-left"
+                      >
+                        <div className="flex items-center gap-2">
+                          <RotateCcw className="w-4 h-4 text-amber-500" />
+                          <span>Restore Thom's Preset</span>
+                        </div>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                      </button>
 
                       <div className="border-t border-slate-100 dark:border-slate-800" />
 
@@ -8723,8 +8880,29 @@ function App({
             setTimeout(() => setNotice(null), 3500);
           }}
           onClearCompletedTasks={() => handleClearAllCompletedTasks(true)}
+          onOpenCleanSlateModal={() => setShowCleanSlateModal(true)}
+          onLaunchSpotlightTour={() => setShowSpotlightTour(true)}
+          onRestoreThomPreset={handleRestoreThomsPreset}
         />
       )}
+
+      {/* Clean Slate 7-Step Household Onboarding Wizard Modal */}
+      <CleanSlateOnboardingModal
+        isOpen={showCleanSlateModal}
+        onClose={() => setShowCleanSlateModal(false)}
+        onCompleteOnboarding={handleCompleteCleanSlateOnboarding}
+        onRestoreThomPreset={handleRestoreThomsPreset}
+      />
+
+      {/* Interactive 6-Stop Spotlight Coachmark Tour Overlay */}
+      <HubSpotlightTourOverlay
+        isOpen={showSpotlightTour}
+        onClose={() => setShowSpotlightTour(false)}
+        onNavigateTab={(tab) => setActiveTab(tab)}
+        onSetScheduleViewMode={(mode) => setScheduleViewMode(mode)}
+        onOpenAutoAssignPreview={() => setShowAutoAssignModal(true)}
+        onOpenInspectionPreview={() => setShowInspectionModal(true)}
+      />
 
       {/* Parent Photo Proofs Review Modal (Detail View) */}
       {selectedReviewProof && (
@@ -9050,6 +9228,7 @@ export default function AppWrapper() {
           insertItem={insertItem}
           moveItem={moveItem}
           followLink={followLink}
+          onReplaceSheetData={setSheetData}
         />
       </ErrorBoundary>
     </div>

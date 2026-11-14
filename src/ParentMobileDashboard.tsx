@@ -95,6 +95,9 @@ interface ParentMobileDashboardProps {
   onSwitchParentAdmin?: (admin: "Thom" | "Meghan") => void;
   lastInspectedKid?: string | null;
   onClearCompletedTasks?: () => void;
+  onOpenCleanSlateModal?: () => void;
+  onLaunchSpotlightTour?: () => void;
+  onRestoreThomPreset?: () => void;
   onRegisterDismissModal?: (fn: () => boolean) => void;
 }
 
@@ -130,6 +133,9 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   onSwitchParentAdmin,
   lastInspectedKid,
   onClearCompletedTasks,
+  onOpenCleanSlateModal,
+  onLaunchSpotlightTour,
+  onRestoreThomPreset,
   onRegisterDismissModal
 }) => {
   const [internalAdmin, setInternalAdmin] = useState<"Thom" | "Meghan">(() => getStoredActiveParentAdmin());
@@ -1127,6 +1133,9 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
             unpairKid(kName);
           }}
           onClearCompletedTasks={onClearCompletedTasks}
+          onOpenCleanSlateModal={onOpenCleanSlateModal}
+          onLaunchSpotlightTour={onLaunchSpotlightTour}
+          onRestoreThomPreset={onRestoreThomPreset}
         />
       )}
 

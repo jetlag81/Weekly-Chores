@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-13 18:42:00
+> **Export Date**: 2026-11-13 19:03:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -93,6 +93,12 @@
       - Added `<` / `>` **Previous / Next Day** navigation buttons in the modal header so users can step through days directly inside the modal.
       - Added a **Day View** shortcut button in the header to jump straight to that date in the Weekly Schedule Day View.
       - Added a custody & curbside event banner at the top of the modal when applicable, and filtered the modal's chore list to only display chores actually scheduled or active on that specific day of the week.
+
+15. **Auto-Assign Schedule & Inline Modals Mobile Safe-Area & Scroll Fix** (weekly_chores_household_hub.tsx):
+    - Diagnosed and fixed the "frozen" **Auto-Assign Schedule** popup (`showAutoAssignModal`) on mobile screens where the modal card exceeded the Pixel 9 Pro viewport height without `modal-safe-area`, `max-h-full flex flex-col`, or `overflow-y-auto flex-1`, pushing both the top `X` button and bottom `Cancel` / `Distribute` buttons completely off-screen.
+    - Added `.modal-safe-area`, `max-h-full flex flex-col`, `shrink-0` headers/footers, and `overflow-y-auto flex-1` bodies to `showAutoAssignModal` as well as `showAddRemoveChoreModal`, `showCombineModal`, `showAddPetModal`, `editingPrintableChore`, and `deletingChoreTarget`.
+    - Fixed the occupant role badge inside `showAutoAssignModal` to use `normalizeRole(m.role)` so Thom and Meghan accurately display `(Parent)` instead of `(Kid)`.
+    - Registered all remaining inline modals (`showAddPetModal`, `editingPrintableChore`, `deletingChoreTarget`, `showInviteModal`) in `handleDismissAnyParentModal` for hardware Back button dismissal.
 
 ---
 
@@ -5068,3 +5074,18 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   - Added `<` / `>` **Previous / Next Day** buttons in the modal header to step between days without closing the modal.
   - Added a **Day View** button to jump directly to that day in the Weekly Schedule Swipeable Day View.
   - Added a special-event banner (custody arrival/departure & curbside nights) and filtered the modal's chore list to only show chores scheduled for that day of the week.
+
+---
+
+### Turn 180
+**Date / Time**: 2026-11-13T19:03:00Z
+
+**User Prompt**:
+> The Auto-Assign pop-up just froze on me
+
+**Summary of Work Delivered**:
+- Captured a live screenshot from the Pixel 9 Pro (`pixel_freeze.png`) and identified why the **Auto-Assign Schedule** modal (`showAutoAssignModal`) appeared frozen:
+  - The modal lacked `.modal-safe-area`, `max-h-full flex flex-col`, and `overflow-y-auto flex-1`, causing its content to extend taller than the phone screen so the top header (`X` button) was pushed behind/above the Android status bar and the bottom footer (`Cancel` and `Distribute Daily & Weekly Chores` buttons) was pushed off the bottom of the screen with no vertical scroll enabled.
+- Updated `showAutoAssignModal` (along with `showAddRemoveChoreModal`, `showCombineModal`, `showAddPetModal`, `editingPrintableChore`, and `deletingChoreTarget`) in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx) to include `.modal-safe-area`, `max-h-full flex flex-col`, pinned `shrink-0` headers and footers, and a scrollable `overflow-y-auto flex-1` body (plus backdrop tap-to-close).
+- Fixed the role badge inside `showAutoAssignModal` from `m.role === "Overseer Supreme" ? "Parent" : "Kid"` to `normalizeRole(m.role)` so Thom and Meghan show `(Parent)` instead of `(Kid)`.
+- Added all remaining inline modals to `handleDismissAnyParentModal` for Android Back button support, rebuilt the APK, and verified on the connected Pixel 9 Pro.

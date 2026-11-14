@@ -4480,23 +4480,29 @@ function App({
 
     // 1. Check choreEdits first (immediate state / patch)
     const edit = choreEdits[choreIndex] || (tLower ? choreEdits[tLower] : null) || (cKey ? choreEdits[cKey] : null);
+    let hasExplicitDone = false;
     if (edit && edit.who && isMemberOrSpecialGroup(edit.who)) {
       who = getCanonicalMemberName(edit.who);
     }
     if (edit && edit.done !== undefined) {
       done = !!edit.done;
+      hasExplicitDone = true;
     }
 
-    // 2. Check activeWeekDays in monthSchedule (populated by Auto-Assign)
-    if (!who && activeWeekDays && activeWeekDays.length > 0) {
+    // 2. Check activeWeekDays in monthSchedule (populated by Auto-Assign & checkbox toggles)
+    if (activeWeekDays && activeWeekDays.length > 0) {
       for (let i = activeWeekDays.length - 1; i >= 0; i--) {
         const d = activeWeekDays[i];
         const s = getChoreStatus(d.dateKey, choreIndex, taskTitle);
-        if (s.who && isMemberOrSpecialGroup(s.who)) {
-          who = getCanonicalMemberName(s.who);
-          break;
+        if (!hasExplicitDone && s && s.hasExplicitRecord && s.done !== undefined) {
+          done = !!s.done;
+          hasExplicitDone = true;
+        } else if (!hasExplicitDone && s && s.done) {
+          done = true;
         }
-        if (s.done) done = true;
+        if (!who && s && s.who && isMemberOrSpecialGroup(s.who)) {
+          who = getCanonicalMemberName(s.who);
+        }
       }
     }
 
@@ -4506,7 +4512,7 @@ function App({
       return r.index_ === choreIndex || taskTitle && String(r.task || ((_a2 = r.row) == null ? void 0 : _a2[0]) || "").toLowerCase().trim() === tLower;
     });
     if (cr && cr.row) {
-      if (cr.row[14] === true || String(cr.row[14]).toLowerCase() === "true") {
+      if (!hasExplicitDone && (cr.row[14] === true || String(cr.row[14]).toLowerCase() === "true")) {
         done = true;
       }
       if (!who) {
@@ -4543,73 +4549,69 @@ function App({
     const updatedDone = "done" in patch ? patch.done : current.done;
     const tLower = String(taskTitle || "").toLowerCase();
     const cKey = getChoreCanonicalKey(taskTitle);
+    const norm = normalizeTaskName(taskTitle);
     const dayOffset = tLower.includes("recycling") || tLower.includes("waste") || tLower.includes("curbside") ? 3 : tLower.includes("basement") || tLower.includes("saturday") ? 5 : 6;
+    if ("done" in patch && updatedDone) {
+      playChoreCompletionSound();
+    }
     setMonthSchedule(prev => {
       const next = {
         ...prev
       };
       activeWeekDays.forEach(d => {
         const curDay = next[d.dateKey] || {};
-        const curChore = curDay[choreIndex] || {
+        const curChore = curDay[choreIndex] || (cKey ? curDay[cKey] : null) || {
           who: "",
           done: false,
           kidsDone: {}
         };
         const updatedEntry = {
-          ...{
-            ...curChore
-          },
+          ...curChore,
           who: updatedWho,
           done: updatedDone
         };
         next[d.dateKey] = {
-          ...{
-            ...curDay
-          },
+          ...curDay,
           [choreIndex]: updatedEntry
         };
         if (taskTitle) {
           next[d.dateKey][taskTitle] = updatedEntry;
+          next[d.dateKey][taskTitle.toLowerCase()] = updatedEntry;
           next[d.dateKey][taskTitle.toLowerCase().trim()] = updatedEntry;
         }
         if (cKey) {
           next[d.dateKey][cKey] = updatedEntry;
         }
+        if (norm) {
+          next[d.dateKey][norm] = updatedEntry;
+        }
       });
       return next;
     });
     setChoreEdits(prev => {
-      const cur = prev[choreIndex] || {};
+      const cur = prev[choreIndex] || (tLower ? prev[tLower.trim()] : null) || (cKey ? prev[cKey] : null) || {};
       const targetChore = choreRows.find(r => r.index_ === choreIndex);
       const existingRow = [...(cur.row || (targetChore == null ? void 0 : targetChore.row) || new Array(15).fill(""))];
       const whoCol = 1 + dayOffset * 2;
       const doneCol = 2 + dayOffset * 2;
       if ("who" in patch) existingRow[whoCol] = updatedWho;
-      if ("done" in patch) existingRow[doneCol] = updatedDone;
+      if ("done" in patch) {
+        existingRow[doneCol] = updatedDone;
+        existingRow[14] = updatedDone;
+      }
       const tKey = String(taskTitle || (targetChore == null ? void 0 : targetChore.task) || "").toLowerCase().trim();
       const updatedObj = {
-        ...{
-          ...cur
-        },
+        ...cur,
         row: existingRow,
         rotationGroup: updatedWho,
-        who: updatedWho
+        who: updatedWho,
+        done: updatedDone
       };
       return {
-        ...{
-          ...{
-            ...{
-              ...prev
-            },
-            [choreIndex]: updatedObj
-          },
-          ...(tKey ? {
-            [tKey]: updatedObj
-          } : {})
-        },
-        ...(cKey ? {
-          [cKey]: updatedObj
-        } : {})
+        ...prev,
+        [choreIndex]: updatedObj,
+        ...(tKey ? { [tKey]: updatedObj } : {}),
+        ...(cKey ? { [cKey]: updatedObj } : {})
       };
     });
     const pRow = findPrintableRow(taskTitle);
@@ -4643,7 +4645,17 @@ function App({
       patch,
       activeWeekDays: (activeWeekDays || []).map(d => d.dateKey)
     });
-    setNotice(`Updated "${taskTitle || "Chore"}": Assigned to ${updatedWho || "unassigned"}`);
+    syncChoreToFirestore(
+      (deviceSession == null ? void 0 : deviceSession.householdId) || "household_family_hub",
+      activeWeekDays[dayOffset]?.dateKey || activeWeekDays[0]?.dateKey || "weekly",
+      choreIndex,
+      { who: updatedWho, done: updatedDone }
+    );
+    if ("done" in patch) {
+      setNotice(`Marked "${taskTitle || "Chore"}" as ${updatedDone ? "completed \u2713" : "pending"}`);
+    } else {
+      setNotice(`Updated "${taskTitle || "Chore"}": Assigned to ${updatedWho || "unassigned"}`);
+    }
     setTimeout(() => setNotice(null), 3e3);
   };
   const signOffChore = useMemo(() => {
@@ -7378,21 +7390,6 @@ function App({
         if (!item.isSectionHeader && isSignOffChore(item.task)) {
           return false;
         }
-        if (!item.isSectionHeader) {
-          const tLower = (item.task || "").toLowerCase();
-          const isCurbside = tLower.includes("curbside") || tLower.includes("recycling") || tLower.includes("waste");
-          if (isCurbside) {
-            const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr) || { year: 2026, month: 9, day: 19 };
-            const thuDate = (activeWeekDays && activeWeekDays[3]) || {
-              year: parsedStart.year,
-              month: parsedStart.month,
-              day: parsedStart.day + 3
-            };
-            if (thuDate && !isCurbsideActiveOnDate(item.task, thuDate.year, thuDate.month, thuDate.day)) {
-              return false;
-            }
-          }
-        }
         return true;
       }).map((item, idx) => {
         var _a2, _b2;
@@ -7411,6 +7408,15 @@ function App({
         const isSpecialKidChore = getSpecificKidForChore(taskTitle);
         const isKidsChecklistTask = isKidsChecklistChore(taskTitle) && !isSpecialKidChore;
         const isStreamlined = isStreamlinedWeeklyTask(taskTitle, choreFreq);
+        const tLower = String(taskTitle || "").toLowerCase();
+        const isCurbside = tLower.includes("curbside") || tLower.includes("recycling") || tLower.includes("waste");
+        const parsedStartForCurb = parseDateKey(activeSyncWeek || sheetStartDateStr) || { year: 2026, month: 9, day: 19 };
+        const thuDateForCurb = (activeWeekDays && activeWeekDays[3]) || {
+          year: parsedStartForCurb.year,
+          month: parsedStartForCurb.month,
+          day: parsedStartForCurb.day + 3
+        };
+        const isOffWeekCurbside = isCurbside && thuDateForCurb && !isCurbsideActiveOnDate(taskTitle, thuDateForCurb.year, thuDateForCurb.month, thuDateForCurb.day);
         const rawDescription = (cr.notes && String(cr.notes).trim())
           ? String(cr.notes).trim()
           : ((_b2 = cr.row) == null ? void 0 : _b2[1]) && (isKidsChecklistTask || isStreamlined) && !familyMembers.some(m => m.name.toLowerCase() === String(cr.row[1]).trim().toLowerCase())
@@ -7428,7 +7434,7 @@ function App({
                       : taskTitle.toLowerCase().includes("waste")
                         ? "- Roll waste bin to curb Thursday evening for Friday pickup (Bi-Weekly)"
                         : "";
-        return <tr key={`row-${cr.index_}-${taskTitle}`} className="chore-row bg-white dark:bg-slate-900 hover:bg-slate-50/60 dark:hover:bg-slate-800/60 transition-colors" style={{ borderBottom: "1px solid #C55A11" }}><td className="py-2 px-2.5 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-900 align-middle sticky left-0 z-10 print:static shadow-[2px_0_5px_-1px_rgba(0,0,0,0.12)]" style={{ borderLeft: "1px solid #C55A11", borderRight: isDark ? "1.5px solid #334155" : "1.5px solid #475569" }}><div className="leading-snug text-slate-900 dark:text-slate-100 font-semibold text-[11.5px]">{mainTitle}</div>{subTitle && <div className="text-[10px] text-slate-600 dark:text-slate-400 font-normal mt-0.5 leading-tight">{subTitle}</div>}</td>{isKidsChecklistTask ? (() => {
+        return <tr key={`row-${cr.index_}-${taskTitle}`} className={`chore-row transition-colors ${isOffWeekCurbside ? "bg-slate-100/80 dark:bg-slate-900/50 opacity-50 select-none" : "bg-white dark:bg-slate-900 hover:bg-slate-50/60 dark:hover:bg-slate-800/60"}`} style={{ borderBottom: "1px solid #C55A11" }}><td className={`py-2 px-2.5 align-middle sticky left-0 z-10 print:static shadow-[2px_0_5px_-1px_rgba(0,0,0,0.12)] ${isOffWeekCurbside ? "bg-slate-100 dark:bg-slate-900/90 text-slate-400 dark:text-slate-500" : "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"}`} style={{ borderLeft: "1px solid #C55A11", borderRight: isDark ? "1.5px solid #334155" : "1.5px solid #475569" }}><div className={`leading-snug font-semibold text-[11.5px] ${isOffWeekCurbside ? "line-through text-slate-400 dark:text-slate-500" : "text-slate-900 dark:text-slate-100"}`}>{mainTitle}</div>{subTitle && <div className="text-[10px] text-slate-600 dark:text-slate-400 font-normal mt-0.5 leading-tight">{subTitle}</div>}</td>{isKidsChecklistTask ? (() => {
           const weeklyKidsDone = getWeeklyKidsStatus(cr.index_, taskTitle);
           const minionInitials = [
             { code: "SG", name: "Sydney" },
@@ -7446,6 +7452,9 @@ function App({
           const singleStatus = getSingleWeeklyStatus(cr.index_, taskTitle);
           const cleanWho = toFirstName(singleStatus.who);
           const streamlinedMember = getMember(cleanWho);
+          if (isOffWeekCurbside) {
+            return <React.Fragment><td colSpan={8} className="py-2 px-2.5 text-[11px] text-slate-400 dark:text-slate-500 italic align-middle bg-slate-100/80 dark:bg-slate-900/50" style={{ borderRight: isDark ? "1.5px solid #334155" : "1.5px solid #475569" }}>Inactive this week (Bi-weekly rotation) • {rawDescription}</td><td colSpan={4} className="py-2 px-2.5 align-middle bg-slate-100/80 dark:bg-slate-900/50" style={{ borderRight: isDark ? "1.5px solid #334155" : "1.5px solid #475569" }}><span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400">Off-Week</span></td><td colSpan={2} className="py-2 px-2 align-middle bg-slate-100/80 dark:bg-slate-900/50 text-center" style={{ borderRight: "1px solid #C55A11" }}><span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">—</span></td></React.Fragment>;
+          }
           return <React.Fragment><td colSpan={8} className="py-2 px-2.5 text-[11px] text-slate-900 dark:text-slate-200 font-medium align-middle bg-white dark:bg-slate-900" style={{ borderRight: isDark ? "1.5px solid #334155" : "1.5px solid #475569" }}>{rawDescription}</td><td colSpan={4} className="py-2 px-2.5 align-middle bg-white dark:bg-slate-900" style={{ borderRight: isDark ? "1.5px solid #334155" : "1.5px solid #475569" }}><div className="flex items-baseline gap-1.5 text-[11px]"><span className="font-semibold text-slate-900 dark:text-slate-200 shrink-0">Who:</span><div className={`flex-1 min-w-0 rounded px-1.5 py-0.5 ${streamlinedMember ? "border shadow-2xs" : ""}`} style={streamlinedMember ? getMemberBadgeStyle(streamlinedMember, isDark) : undefined}><select value={cleanWho} onChange={e => handleUpdateSingleWeeklyChore(cr.index_, taskTitle, {
             who: toFirstName(e.target.value)
           })} className="w-full text-[11px] py-0.5 px-0 bg-transparent font-bold focus:outline-none cursor-pointer" style={{ color: streamlinedMember ? (isDark ? streamlinedMember.darkText || "#F1F5F9" : streamlinedMember.text || "#334155") : (isDark ? "#F1F5F9" : "#0F172A") }}><option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"></option>{standardWhoOptions.map(name => <option key={name} value={name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold">{name}</option>)}{cleanWho && !standardWhoOptions.includes(cleanWho) && !isDescriptionOrPlaceholderText(cleanWho) && <option key={cleanWho} value={cleanWho} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold">{cleanWho}</option>}</select></div></div></td><td colSpan={2} className="py-2 px-2 align-middle bg-white dark:bg-slate-900 text-left" style={{ borderRight: "1px solid #C55A11" }}><button type="button" onClick={() => handleUpdateSingleWeeklyChore(cr.index_, taskTitle, {

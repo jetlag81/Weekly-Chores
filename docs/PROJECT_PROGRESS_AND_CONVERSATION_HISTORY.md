@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-13 20:58:00
+> **Export Date**: 2026-11-14 15:04:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -115,6 +115,10 @@
     - Diagnosed and fixed a critical Android theme bug where tapping any `<select>` dropdown in the native Android app opened a giant white box displaying the blue Capacitor `X` splash logo (`@drawable/splash`) over the option rows.
     - Root cause: `MainActivity` was configured with `android:theme="@style/AppTheme.NoActionBarLaunch"` which defined `<item name="android:background">@drawable/splash</item>` (a `View`-level attribute rather than `android:windowBackground`), causing every native Android `AlertDialog` and `ListView` row spawned by WebView `<select>` elements to inherit `@drawable/splash` as its view background.
     - Removed `<item name="android:background">@drawable/splash</item>` from `styles.xml`, aligned `AppTheme.NoActionBarLaunch` with `Theme.AppCompat.DayNight.NoActionBar`, and explicitly called `setTheme(R.style.AppTheme_NoActionBar)` in `MainActivity.onCreate()`.
+
+19. **Streamlined Weekly Chore Checkbox Persistence & Off-Week Curbside Inactive State** (weekly_chores_household_hub.tsx, src/SwipeableScheduleDayView.tsx, src/householdTypes.ts):
+    - Fixed a state bug in `handleUpdateSingleWeeklyChore` and `getSingleWeeklyStatus` where tapping the checkbox on `Clean Basement`, `Curbside Recycling`, or `Curbside Waste` triggered the update handler but failed to persist `done: updatedDone` in `choreEdits` and broke early out of the `activeWeekDays` loop in `getSingleWeeklyStatus` before checking `s.done` whenever `who` was assigned.
+    - Exported `isCurbsideActiveOnDate` in `src/householdTypes.ts` and updated both the Swipeable Day View (`SwipeableScheduleDayView.tsx`) and 7-Day Table View (`weekly_chores_household_hub.tsx`) so the off-week curbside task (`Curbside Recycling` or `Curbside Waste`, whichever is not scheduled on this week's Thursday) is displayed greyed out and inactive (`Off-Week` badge, disabled checkbox & selector) rather than appearing clickable or disappearing without context.
 
 ---
 
@@ -5163,3 +5167,20 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   - `MainActivity` was running under `AppTheme.NoActionBarLaunch`, which contained `<item name="android:background">@drawable/splash</item>`. Because `android:background` applies to every native Android `View` created under the Activity context, Android WebView's native `<select>` `AlertDialog` and its `CheckedTextView` rows were painting `@drawable/splash` (the white Capacitor splash bitmap) over the list options.
 - Removed `<item name="android:background">@drawable/splash</item>` from `styles.xml` and added `setTheme(R.style.AppTheme_NoActionBar)` at the start of `MainActivity.onCreate()`.
 - Rebuilt and deployed the fixed APK to the connected Google Pixel 9 Pro.
+
+---
+
+### Turn 185
+**Date / Time**: 2026-11-14T15:04:00Z
+
+**User Prompt**:
+> On my current weekly schedule view on my Pixel, the clean basement, curbside recycling and curbside waste checkboxes are registering that I tap them, but the checkboxes don't fill. I'd also like the curbside task that isn't relevent to the week to be greyed out or inactive somehow.
+
+**Summary of Work Delivered**:
+- Fixed the checkbox state persistence bug for streamlined weekly tasks (`Clean Basement`, `Curbside Recycling`, `Curbside Waste`, and `Deep Clean Herd Feeding Station`) in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx):
+  - Updated `handleUpdateSingleWeeklyChore` to persist `done: updatedDone` (and `existingRow[14] = updatedDone`) inside `choreEdits`, play the completion chime, sync to Firestore, and display an accurate completion toast (`Marked "..." as completed ✓`).
+  - Updated `getSingleWeeklyStatus` so it no longer breaks out of the `activeWeekDays` loop upon finding `s.who` before reading `s.done`.
+- Added greyed-out / inactive styling for the off-week curbside task in both [`SwipeableScheduleDayView.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/SwipeableScheduleDayView.tsx) (Day View) and [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx) (7-Day View):
+  - Exported `isCurbsideActiveOnDate` from [`src/householdTypes.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/householdTypes.ts) to evaluate this week's Thursday pickup against the bi-weekly recycling/waste rotation.
+  - Rendered the non-scheduled curbside task at 50% opacity with dashed borders, a disabled `—` checkbox, strikethrough title, and an `Off-Week` badge (`Inactive this week • Next Thursday pickup`).
+- Rebuilt and deployed the updated APK to the connected Google Pixel 9 Pro.

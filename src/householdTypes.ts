@@ -245,3 +245,23 @@ export function getChoreFreq(cr: any): { frequency: "daily" | "weekly" | "biweek
   return { frequency: "daily", dayOfWeek: 0 };
 }
 
+export function isCurbsideActiveOnDate(taskName: string, year: number, month: number, day: number): boolean {
+  const lower = String(taskName || "").toLowerCase();
+  const isRecycling = lower.includes("recycling");
+  const isWaste = lower.includes("waste");
+  if (!isRecycling && !isWaste) return true;
+  const targetDate = new Date(year, month, day, 12, 0, 0);
+  const recyclingAnchor = new Date(2026, 9, 15, 12, 0, 0);
+  const diffDays = Math.round((targetDate.getTime() - recyclingAnchor.getTime()) / (1000 * 60 * 60 * 24));
+  const diffWeeks = Math.round(diffDays / 7);
+  const cycleIndex = ((diffWeeks % 2) + 2) % 2;
+  if (isRecycling) {
+    return cycleIndex === 0;
+  }
+  if (isWaste) {
+    return cycleIndex === 1;
+  }
+  return true;
+}
+
+

@@ -17,7 +17,8 @@ import {
   isStreamlinedWeeklyTask,
   getChoreFreq,
   getBiWeeklyStatus,
-  isLaundryChore
+  isLaundryChore,
+  isCurbsideActiveOnDate
 } from './householdTypes';
 
 interface SwipeableScheduleDayViewProps {
@@ -413,9 +414,52 @@ export const SwipeableScheduleDayView: React.FC<SwipeableScheduleDayViewProps> =
               }
 
               if (isStreamlined) {
+                const tLower = String(taskTitle || "").toLowerCase();
+                const isCurbside = tLower.includes("curbside") || tLower.includes("recycling") || tLower.includes("waste");
+                const thuDate = new Date(parsedStart.year, parsedStart.month, parsedStart.day + 3);
+                const isOffWeekCurbside = isCurbside && !isCurbsideActiveOnDate(taskTitle, thuDate.getFullYear(), thuDate.getMonth(), thuDate.getDate());
+
                 const singleStatus = getSingleWeeklyStatus(cr.index_, taskTitle);
                 const cleanWho = toFirstName(singleStatus.who);
                 const streamlinedMember = getMember(cleanWho);
+
+                if (isOffWeekCurbside) {
+                  return (
+                    <div
+                      key={`weekly-streamlined-${cr.index_}`}
+                      className="p-3 rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 bg-slate-100/60 dark:bg-slate-900/40 opacity-50 select-none flex items-center justify-between gap-3"
+                    >
+                      <button
+                        type="button"
+                        disabled
+                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-2 border-slate-300 dark:border-slate-700 bg-slate-200/60 dark:bg-slate-800/60 text-slate-400 dark:text-slate-500 cursor-not-allowed"
+                        title="Not scheduled this week (Bi-weekly rotation)"
+                      >
+                        <span className="text-xs font-bold">—</span>
+                      </button>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h4 className="text-sm font-bold truncate text-slate-400 dark:text-slate-500 line-through">
+                            {taskTitle}
+                          </h4>
+                          <span className="text-[9.5px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                            Off-Week
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                          Inactive this week • Next Thursday pickup
+                        </p>
+                      </div>
+
+                      <div className="shrink-0">
+                        <div className="rounded-xl px-2.5 py-1 text-xs font-bold border border-slate-200 dark:border-slate-800 bg-slate-200/50 dark:bg-slate-800/50 text-slate-400 dark:text-slate-500 cursor-not-allowed">
+                          Off-Week
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
 
                 return (
                   <div
@@ -444,7 +488,7 @@ export const SwipeableScheduleDayView: React.FC<SwipeableScheduleDayViewProps> =
                         {taskTitle}
                       </h4>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                        Weekly Household Chore
+                        {isCurbside ? "Active This Week • Thursday Evening Curbside" : "Weekly Household Chore"}
                       </p>
                     </div>
 

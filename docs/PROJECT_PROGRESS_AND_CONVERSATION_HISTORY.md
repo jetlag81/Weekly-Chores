@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-13 19:03:00
+> **Export Date**: 2026-11-13 19:26:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -99,6 +99,11 @@
     - Added `.modal-safe-area`, `max-h-full flex flex-col`, `shrink-0` headers/footers, and `overflow-y-auto flex-1` bodies to `showAutoAssignModal` as well as `showAddRemoveChoreModal`, `showCombineModal`, `showAddPetModal`, `editingPrintableChore`, and `deletingChoreTarget`.
     - Fixed the occupant role badge inside `showAutoAssignModal` to use `normalizeRole(m.role)` so Thom and Meghan accurately display `(Parent)` instead of `(Kid)`.
     - Registered all remaining inline modals (`showAddPetModal`, `editingPrintableChore`, `deletingChoreTarget`, `showInviteModal`) in `handleDismissAnyParentModal` for hardware Back button dismissal.
+
+16. **6-Column Vertical Action Toolbar & Monthly Calendar Month Selector Relocation** (weekly_chores_household_hub.tsx):
+    - Moved the **Month Selector** (`< November 2026 > Today`) out of the top Admin Hub header and placed it directly above the calendar grid inside the **Monthly Calendar** tab (`activeTab === "month"`), paired with an `✨ Auto-Assign` button and the monthly completion progress bar.
+    - Converted the 6 top header action buttons (`Inspect`, `Photos`, `Nudge`, `Ledger`, `Rewards`, `Reset`) into a 6-column grid (`grid-cols-6 gap-1.5`) of narrower, taller vertical-stacked tiles (`flex-col items-center justify-center py-2 px-1`) with status dots/badges so all 6 fit completely within the mobile screen width without horizontal scrolling or clipping.
+    - Moved the `notice` toast banner inside `<header>` below `--safe-area-inset-top` so notifications never overlap the Android status bar clock.
 
 ---
 
@@ -5089,3 +5094,17 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Updated `showAutoAssignModal` (along with `showAddRemoveChoreModal`, `showCombineModal`, `showAddPetModal`, `editingPrintableChore`, and `deletingChoreTarget`) in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx) to include `.modal-safe-area`, `max-h-full flex flex-col`, pinned `shrink-0` headers and footers, and a scrollable `overflow-y-auto flex-1` body (plus backdrop tap-to-close).
 - Fixed the role badge inside `showAutoAssignModal` from `m.role === "Overseer Supreme" ? "Parent" : "Kid"` to `normalizeRole(m.role)` so Thom and Meghan show `(Parent)` instead of `(Kid)`.
 - Added all remaining inline modals to `handleDismissAnyParentModal` for Android Back button support, rebuilt the APK, and verified on the connected Pixel 9 Pro.
+
+---
+
+### Turn 181
+**Date / Time**: 2026-11-13T19:26:00Z
+
+**User Prompt**:
+> In Monthly Calendar, let's move the month selector down to just above the calendar page and then turn the buttons that are currently beside it into narrower but taller buttons that will fit within the screen
+
+**Summary of Work Delivered**:
+- Moved the **Month Selector** (`< November 2026 > Today`) from the top Admin Hub header into the **Monthly Calendar** view (`activeTab === "month"`), positioned directly above the calendar grid alongside `✨ Auto-Assign`, the monthly completion progress bar, and `Sync Current Week`.
+- Converted the 6 action buttons in the top Admin Hub header (`Inspect`, `Photos`, `Nudge`, `Ledger`, `Rewards`, `Reset`) into a 6-column equal-width grid (`grid grid-cols-6 gap-1.5`) of narrower, taller vertical-stacked buttons (`flex-col items-center justify-center gap-1 py-2 px-1`) so all 6 buttons fit cleanly on screen at once without horizontal scrolling or clipping.
+- Moved the `notice` toast banner inside `<header>` below `--safe-area-inset-top` so status notifications never overlap the Android status bar clock.
+- Rebuilt and deployed the updated APK to the connected Google Pixel 9 Pro.

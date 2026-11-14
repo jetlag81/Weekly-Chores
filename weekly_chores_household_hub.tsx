@@ -6759,21 +6759,21 @@ function App({
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors">
-      {notice && (
-        <div className="no-print bg-emerald-600 dark:bg-emerald-700 text-white px-4 py-2.5 text-sm font-medium flex items-center justify-between shadow-md transition-all">
-          <div className="flex items-center gap-2">
-            <CircleCheck className="w-4 h-4 text-emerald-200" />
-            <span>{notice}</span>
-          </div>
-          <button onClick={() => setNotice(null)} className="text-emerald-100 hover:text-white">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
       <header
         className="no-print bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-sm sticky top-0 z-30 transition-colors"
         style={{ paddingTop: "calc(0.625rem + max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)))" }}
       >
+        {notice && (
+          <div className="no-print bg-emerald-600 dark:bg-emerald-700 text-white px-4 py-2 text-xs sm:text-sm font-medium flex items-center justify-between shadow-xs mb-1">
+            <div className="flex items-center gap-2">
+              <CircleCheck className="w-4 h-4 text-emerald-200 shrink-0" />
+              <span>{notice}</span>
+            </div>
+            <button onClick={() => setNotice(null)} className="text-emerald-100 hover:text-white p-1 shrink-0">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-col gap-2.5">
           {/* Top Bar: Title, Mobile Switch, and Quick Icon Group */}
           <div className="flex items-center justify-between gap-1.5">
@@ -6909,93 +6909,61 @@ function App({
             </div>
           </div>
 
-          {/* Row 2: Horizontal Scrolling Action Strip */}
-          <div className="overflow-x-auto no-scrollbar flex items-center gap-1.5 py-0.5 -mx-3 px-3 sm:mx-0 sm:px-0">
-            {/* Month Navigator */}
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800/90 rounded-xl p-1 border border-slate-200 dark:border-slate-700/80 shadow-2xs shrink-0">
-              <button
-                onClick={handlePrevMonth}
-                className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-                title="Previous Month"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <div className="px-2 text-xs font-bold text-slate-800 dark:text-slate-200 min-w-[95px] text-center select-none">
-                {MONTH_NAMES[selectedMonth]} {selectedYear}
-              </div>
-              <button
-                onClick={handleNextMonth}
-                className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-                title="Next Month"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-              <button
-                onClick={handleCurrentMonth}
-                className="ml-1 text-[11px] px-2 py-0.5 rounded-md bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 font-bold transition shadow-2xs cursor-pointer"
-              >
-                Today
-              </button>
-            </div>
-
+          {/* Row 2: 6-Column Grid of Narrower, Taller Action Buttons Fitting Within Screen */}
+          <div className="grid grid-cols-6 gap-1.5 py-0.5">
             {/* Sunday Inspection */}
             <button
               type="button"
               onClick={() => setShowInspectionModal(true)}
-              className={`shrink-0 flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 border rounded-xl transition cursor-pointer shadow-2xs ${signOffStatus.done
+              className={`relative flex flex-col items-center justify-center gap-1 py-2 px-1 border rounded-xl transition cursor-pointer shadow-2xs active:scale-95 ${signOffStatus.done
                   ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60"
                   : "bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-700/60 hover:bg-amber-100 dark:hover:bg-amber-900/60"
                 }`}
-              title="Conduct Sunday room inspection and sign off weekly allowances"
+              title={`Sunday Inspection (${signOffStatus.done ? "Completed" : "Pending"})`}
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-              <span>Inspection</span>
               <span
-                className={`text-[9px] font-black px-1.5 py-0.2 rounded font-mono ${signOffStatus.done
-                    ? "bg-emerald-200 dark:bg-emerald-900/80 text-emerald-950 dark:text-emerald-100"
-                    : "bg-amber-200 dark:bg-amber-900/80 text-amber-950 dark:text-amber-100"
-                  }`}
-              >
-                {signOffStatus.done ? "✓ Done" : "Pending"}
-              </span>
+                className={`absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full ${signOffStatus.done ? "bg-emerald-500" : "bg-amber-500 animate-pulse"}`}
+              />
+              <ShieldCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="text-[10px] sm:text-xs font-bold leading-tight truncate max-w-full">Inspect</span>
             </button>
 
             {/* Photo Proofs */}
             <button
               type="button"
               onClick={() => setShowPhotoInboxModal(true)}
-              className="shrink-0 flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-900 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 rounded-xl transition cursor-pointer shadow-2xs relative"
+              className="relative flex flex-col items-center justify-center gap-1 py-2 px-1 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-900 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/60 rounded-xl transition cursor-pointer shadow-2xs active:scale-95"
               title="Review chore completion photos submitted by kids"
             >
-              <Camera className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              <span>Photo Proofs</span>
               {getPendingPhotoProofsCount() > 0 && (
-                <span className="text-[9px] font-black px-1.5 py-0.2 rounded-full bg-rose-500 text-white font-mono animate-pulse">
+                <span className="absolute -top-1 -right-1 text-[9px] font-black px-1.5 py-0.2 rounded-full bg-rose-500 text-white font-mono animate-pulse">
                   {getPendingPhotoProofsCount()}
                 </span>
               )}
+              <Camera className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span className="text-[10px] sm:text-xs font-bold leading-tight truncate max-w-full">Photos</span>
             </button>
 
             {/* Nudge */}
             <button
               type="button"
               onClick={() => setShowNudgeModal(true)}
-              className="shrink-0 flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-orange-50 dark:bg-orange-950/40 hover:bg-orange-100 dark:hover:bg-orange-900/60 text-orange-900 dark:text-orange-300 border border-orange-300 dark:border-orange-700/60 rounded-xl transition cursor-pointer shadow-2xs"
+              className="flex flex-col items-center justify-center gap-1 py-2 px-1 bg-orange-50 dark:bg-orange-950/40 hover:bg-orange-100 dark:hover:bg-orange-900/60 text-orange-900 dark:text-orange-300 border border-orange-300 dark:border-orange-700/60 rounded-xl transition cursor-pointer shadow-2xs active:scale-95"
               title="Send Remote Nudge or Praise to Kids"
             >
-              <Sparkles className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
-              <span>Nudge</span>
+              <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-orange-600 dark:text-orange-400 shrink-0" />
+              <span className="text-[10px] sm:text-xs font-bold leading-tight truncate max-w-full">Nudge</span>
             </button>
 
             {/* Ledger */}
             <button
               type="button"
               onClick={() => setShowAllowanceLedger(true)}
-              className="shrink-0 flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 rounded-xl transition cursor-pointer shadow-2xs"
+              className="flex flex-col items-center justify-center gap-1 py-2 px-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 rounded-xl transition cursor-pointer shadow-2xs active:scale-95"
               title="Open Household Allowance Ledger & Payment History"
             >
-              <DollarSign className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>Ledger</span>
+              <DollarSign className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="text-[10px] sm:text-xs font-bold leading-tight truncate max-w-full">Ledger</span>
             </button>
 
             {/* Rewards */}
@@ -7005,22 +6973,22 @@ function App({
                 setRewardPayoutKid(allKidsList[0] || "Sydney");
                 setShowRewardPayoutModal(true);
               }}
-              className="shrink-0 flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-900 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 rounded-xl transition cursor-pointer shadow-2xs"
+              className="flex flex-col items-center justify-center gap-1 py-2 px-1 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-900 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 rounded-xl transition cursor-pointer shadow-2xs active:scale-95"
               title="Open Kid Reward Accounts & 1-Click Digital Gift Card Payouts"
             >
-              <Gift className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-              <span>Rewards</span>
+              <Gift className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-purple-600 dark:text-purple-400 shrink-0" />
+              <span className="text-[10px] sm:text-xs font-bold leading-tight truncate max-w-full">Rewards</span>
             </button>
 
             {/* Reset Tasks */}
             <button
               type="button"
               onClick={() => handleClearAllCompletedTasks(true)}
-              className="shrink-0 flex items-center gap-1.5 text-xs font-bold px-2.5 py-1.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-700/60 rounded-xl transition cursor-pointer shadow-2xs"
+              className="flex flex-col items-center justify-center gap-1 py-2 px-1 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-900 dark:text-rose-300 border border-rose-300 dark:border-rose-700/60 rounded-xl transition cursor-pointer shadow-2xs active:scale-95"
               title="Clear all completed tasks and activity logs for a fresh install rollout"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-              <span>Reset Tasks</span>
+              <RotateCcw className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-rose-600 dark:text-rose-400 shrink-0" />
+              <span className="text-[10px] sm:text-xs font-bold leading-tight truncate max-w-full">Reset</span>
             </button>
           </div>
         </div>
@@ -7243,15 +7211,15 @@ function App({
               </div>
             </div>
           )}
-        </div>{activeTab === "month" && <div className="space-y-3"><div className="no-print bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 px-3.5 py-2.5 shadow-2xs flex flex-wrap items-center justify-between gap-2 text-xs transition-colors"><div className="flex items-center gap-3 min-w-0"><div className="flex items-baseline gap-1.5"><span className="text-sm sm:text-base font-black text-slate-900 dark:text-white">{monthStats.totalCompleted}/{monthStats.totalScheduled}</span><span className="text-[11px] text-slate-500 dark:text-slate-400">done ({monthStats.completionRate}%)</span></div><div className="w-20 sm:w-28 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden"><div className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style={{
+        </div>{activeTab === "month" && <div className="space-y-2.5"><div className="no-print bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 px-3 py-2.5 shadow-2xs space-y-2 text-xs transition-colors"><div className="flex items-center justify-between gap-2"><div className="flex items-center bg-slate-100 dark:bg-slate-800/90 rounded-xl p-1 border border-slate-200 dark:border-slate-700/80 shadow-2xs"><button onClick={handlePrevMonth} className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer" title="Previous Month"><ChevronLeft className="w-4 h-4" /></button><div className="px-2 text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white min-w-[105px] text-center select-none">{MONTH_NAMES[selectedMonth]} {selectedYear}</div><button onClick={handleNextMonth} className="p-1 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer" title="Next Month"><ChevronRight className="w-4 h-4" /></button><button onClick={handleCurrentMonth} className="ml-1 text-[11px] px-2 py-0.5 rounded-md bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 font-bold transition shadow-2xs cursor-pointer">Today</button></div><div className="flex items-center gap-1.5"><button type="button" onClick={() => setShowAutoAssignModal(true)} className="px-2.5 py-1.5 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 text-[11px] font-bold rounded-lg transition cursor-pointer flex items-center gap-1 shadow-2xs" title="Auto-assign chores for this month"><Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /><span>Auto-Assign</span></button></div></div><div className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-100 dark:border-slate-800"><div className="flex items-center gap-2.5 min-w-0"><div className="flex items-baseline gap-1.5"><span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">{monthStats.totalCompleted}/{monthStats.totalScheduled}</span><span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400">completed ({monthStats.completionRate}%)</span></div><div className="w-16 sm:w-28 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden"><div className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" style={{
         width: `${monthStats.completionRate}%`
-      }} /></div></div><div className="flex items-center gap-2"><span className="hidden md:inline-flex items-center gap-1.5 text-[11px] bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-blue-800 dark:text-blue-300 px-2.5 py-1 rounded-lg"><span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" /><span>{"Synced Week: "}<strong>{activeSyncWeek}</strong></span></span><button onClick={() => {
+      }} /></div></div><button onClick={() => {
         const cur = getCurrentWeekMonday();
         const currentWeek = getWeekDaysForDate(cur.year, cur.month, cur.day);
         handleSetSyncWeek(currentWeek);
         handleAutoAssignCurrentWeek();
         setActiveTab("matrix");
-      }} className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[11px] font-bold rounded-lg transition cursor-pointer" title={`Sync and distribute chores for current week (${activeSyncWeek})`}>Sync &amp; Distribute Week</button></div></div><div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden"><div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/90 text-center">{DAY_STYLES.map((day) => <div key={day.name} className="py-2 px-0.5 font-extrabold text-[10px] sm:text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center justify-center"><span className="sm:hidden">{day.short.slice(0, 3)}</span><span className="hidden sm:inline">{day.short}</span></div>)}</div><div className="divide-y divide-slate-200 dark:divide-slate-800">{calendarWeeks.map((week, weekIdx) => {
+      }} className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-[10px] font-bold rounded-md transition cursor-pointer shrink-0" title={`Sync and distribute chores for current week (${activeSyncWeek})`}>Sync Current Week</button></div></div><div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden"><div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/90 text-center">{DAY_STYLES.map((day) => <div key={day.name} className="py-2 px-0.5 font-extrabold text-[10px] sm:text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center justify-center"><span className="sm:hidden">{day.short.slice(0, 3)}</span><span className="hidden sm:inline">{day.short}</span></div>)}</div><div className="divide-y divide-slate-200 dark:divide-slate-800">{calendarWeeks.map((week, weekIdx) => {
         const synced = isWeekSyncedToSheet(week);
         return <div key={weekIdx} id={synced ? "active-calendar-week" : void 0} className={`grid grid-cols-7 divide-x divide-slate-200 dark:divide-slate-800 transition-colors ${synced ? "bg-indigo-50/20 dark:bg-indigo-950/15" : ""}`}>{week.map((dayObj, dayIdx) => {
           const {

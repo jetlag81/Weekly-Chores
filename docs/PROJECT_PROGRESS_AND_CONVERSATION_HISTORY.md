@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-13 18:15:00
+> **Export Date**: 2026-11-13 18:30:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -74,6 +74,13 @@
     - Implemented the **Two-Step Family Onboarding Flow**:
       1. **Parent Setup**: Parents create basic member profiles (legal first/last name, birthday, role, occupancy).
       2. **Post-Invite Kid Customization**: When a kid accepts their invite via QR link or 6-character code, Kid Mode automatically opens their Profile Customizer (`household_just_paired_kid` trigger) and displays a `+ Nickname` chip in their header. Field-level permissions (`canEditProfileField`) allow all kids to customize their **nickname**, **avatar emoji**, and **favorite color** (plus **bio** and **email** for teens 12+), while keeping legal name, birthday, role, residency, and tier overrides locked to parents.
+
+13. **Dedicated Parent Admin Space & Compact Weekly Schedule Header** (weekly_chores_household_hub.tsx):
+    - Removed the `👑 Thom | 👑 Meghan` profile switcher from the top of the Admin Hub so each parent's hub is a dedicated personal admin space (`Thom's Hub [Parent]`), with parent page links available inside the **Household Hub** roster table (`Page ↗`).
+    - Scoped the **Month Overview** summary banner strictly to the `Monthly Calendar` tab (`activeTab === "month"`), eliminating duplicate active-week banners above the Weekly Schedule.
+    - Compacted the **Weekly Schedule** card header from 6 stacked rows (~280px) into a sleek 2-row toolbar (~76px):
+      - Row 1: `Weekly Schedule`, concise custody status badge, and `[ Day | 7-Day ]` toggle on the same horizontal row.
+      - Row 2: Compact single-line action strip (`Filter chores...`, `✨ Distribute`, `Clear`, and desktop `🖨️ Print`).
 
 ---
 
@@ -5013,3 +5020,20 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   - Parents set up basic member profiles (legal name, birthday, role, occupancy) first.
   - When a kid accepts an invite via QR link or 6-character code, `sessionStorage.setItem("household_just_paired_kid", ...)` automatically launches their Profile Customizer modal upon entering Kid Mode (and shows a `+ Nickname` chip in their header if they haven't picked one yet).
   - Enforced granular field-level permissions (`canEditProfileField`): all kids can edit their **nickname**, **avatar emoji**, and **favorite color**; teens (12+) can additionally edit their **bio** and **email**; legal name, birthday, residency, role, and tier overrides remain locked to parents.
+
+---
+
+### Turn 178
+**Date / Time**: 2026-11-13T18:25:00Z
+
+**User Prompt**:
+> We can take out the profile switcher at the top of "Thom's Hub." Each parent should have their own admin space. The header for Weekly Schedule in the same view is also pretty large and clunky. I have it on screen now if you want to take a screenshot.
+
+**Summary of Work Delivered**:
+- Captured a live screenshot from the Pixel 9 Pro (`pixel_schedule_header_current.png`) to inspect the top switcher and the 6-row stacked Weekly Schedule header.
+- **Dedicated Parent Space**: Removed the `👑 Thom | 👑 Meghan` profile switcher from both the mobile action strip and desktop header in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx), replacing it with a clean `Parent` badge next to `{Parent}'s Hub` so each parent has their own dedicated admin space.
+- **Scoped Month Overview Card**: Restricted the `Month Overview` banner (`0 / 390 completed` + duplicate `Active Week` box) to only render on the **Monthly Calendar** tab (`activeTab === "month"`).
+- **Streamlined 2-Row Weekly Schedule Header**: Replaced the tall 6-row stacked header (`Weekly Schedule` title, multi-line `Active Week` pill, subtitle, `Day View / 7-Day Table` toggle, search input, `Clear Names`, `Distribute Current Week`, and `Print Schedule`) with a compact 2-row toolbar:
+  - Row 1: `Weekly Schedule` title + custody status pill on the left, and `[ Day | 7-Day ]` toggle on the right.
+  - Row 2: Single-line filter & action bar (`Filter chores...`, `✨ Distribute`, `Clear`, and desktop `🖨️ Print`).
+- Rebuilt and streamed the updated APK directly to the Pixel 9 Pro via ADB and verified with a live screenshot.

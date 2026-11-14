@@ -6755,9 +6755,9 @@ function App({
         style={{ paddingTop: "calc(0.625rem + max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)))" }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex flex-col gap-2.5">
-          {/* Top Bar: Title, Parent Switcher, Mobile Switch, and Quick Icon Group */}
+          {/* Top Bar: Title, Mobile Switch, and Quick Icon Group */}
           <div className="flex items-center justify-between gap-1.5">
-            {/* Left: Brand Identity & Active Parent Switcher */}
+            {/* Left: Brand Identity */}
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-br from-rose-500 via-amber-500 to-teal-500 flex items-center justify-center text-white shadow-md shrink-0">
                 <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -6765,27 +6765,11 @@ function App({
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h1 className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white truncate">
-                    {activeParentAdmin}&apos;s Hub
+                    {getPreferredName(getUserProfile(activeParentAdmin), activeParentAdmin)}&apos;s Hub
                   </h1>
-
-                  {/* Desktop Active Parent Switcher */}
-                  <div className="hidden sm:inline-flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0">
-                    {(["Thom", "Meghan"] as const).map(parent => (
-                      <button
-                        key={parent}
-                        type="button"
-                        onClick={() => handleSwitchActiveParent(parent)}
-                        className={`px-2 py-0.5 rounded-md text-[11px] font-black transition cursor-pointer flex items-center gap-1 ${activeParentAdmin === parent
-                            ? "bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-2xs"
-                            : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                          }`}
-                        title={`Switch to ${parent}'s Admin Hub`}
-                      >
-                        <span>👑</span>
-                        <span>{parent}</span>
-                      </button>
-                    ))}
-                  </div>
+                  <span className="hidden sm:inline-flex text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 whitespace-nowrap">
+                    Parent
+                  </span>
                 </div>
                 <p className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
                   Week of {activeSyncWeek}
@@ -6907,25 +6891,6 @@ function App({
 
           {/* Row 2: Horizontal Scrolling Action Strip */}
           <div className="overflow-x-auto no-scrollbar flex items-center gap-1.5 py-0.5 -mx-3 px-3 sm:mx-0 sm:px-0">
-            {/* Mobile Active Parent Switcher */}
-            <div className="sm:hidden inline-flex items-center bg-slate-100 dark:bg-slate-800/90 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700/80 shadow-2xs shrink-0">
-              {(["Thom", "Meghan"] as const).map(parent => (
-                <button
-                  key={parent}
-                  type="button"
-                  onClick={() => handleSwitchActiveParent(parent)}
-                  className={`px-2 py-1 rounded-lg text-xs font-black transition cursor-pointer flex items-center gap-1 ${activeParentAdmin === parent
-                      ? "bg-white dark:bg-slate-700 text-amber-600 dark:text-amber-400 shadow-2xs"
-                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                    }`}
-                  title={`Switch to ${parent}'s Admin Hub`}
-                >
-                  <span>👑</span>
-                  <span>{parent}</span>
-                </button>
-              ))}
-            </div>
-
             {/* Month Navigator */}
             <div className="flex items-center bg-slate-100 dark:bg-slate-800/90 rounded-xl p-1 border border-slate-200 dark:border-slate-700/80 shadow-2xs shrink-0">
               <button
@@ -7258,7 +7223,7 @@ function App({
               </div>
             </div>
           )}
-        </div><div className="no-print bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 mb-5 shadow-sm flex flex-wrap items-center justify-between gap-4 transition-colors"><div className="flex items-center gap-6"><div><p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Month Overview</p><div className="flex items-baseline gap-2 mt-0.5"><span className="text-xl font-bold text-slate-900 dark:text-white">{monthStats.totalCompleted}{" / "}{monthStats.totalScheduled}</span><span className="text-xs text-slate-500 dark:text-slate-400">completed</span></div></div><div className="hidden sm:block w-36"><div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-1 font-medium"><span>Progress</span><span>{monthStats.completionRate}%</span></div><div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden"><div className="bg-emerald-500 h-2 rounded-full transition-all duration-500" style={{
+        </div>{activeTab === "month" && <div className="no-print bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 mb-5 shadow-sm flex flex-wrap items-center justify-between gap-4 transition-colors"><div className="flex items-center gap-6"><div><p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Month Overview</p><div className="flex items-baseline gap-2 mt-0.5"><span className="text-xl font-bold text-slate-900 dark:text-white">{monthStats.totalCompleted}{" / "}{monthStats.totalScheduled}</span><span className="text-xs text-slate-500 dark:text-slate-400">completed</span></div></div><div className="hidden sm:block w-36"><div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-1 font-medium"><span>Progress</span><span>{monthStats.completionRate}%</span></div><div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden"><div className="bg-emerald-500 h-2 rounded-full transition-all duration-500" style={{
         width: `${monthStats.completionRate}%`
       }} /></div></div></div><div className="flex items-center gap-3 text-xs"><div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 text-blue-800 dark:text-blue-300 px-3 py-1.5 rounded-lg"><span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" /><span>{"Active Week: "}<strong>{activeSyncWeek}</strong>{" • "}{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || "Cadence & Mason arrive Sun Oct 18 @ 5 PM"}</span></div><button onClick={() => {
         const cur = getCurrentWeekMonday();
@@ -7266,7 +7231,7 @@ function App({
         handleSetSyncWeek(currentWeek);
         handleAutoAssignCurrentWeek();
         setActiveTab("matrix");
-      }} className="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-bold rounded-lg transition" title={`Sync and distribute chores for current week (${activeSyncWeek})`}>Sync & Distribute Week</button></div></div>{activeTab === "month" && <div className="space-y-4"><div className="grid grid-cols-7 gap-2 text-center">{DAY_STYLES.map((day, idx) => <div key={day.name} className="py-2.5 px-1 rounded-t-lg font-bold text-xs uppercase tracking-wider text-white shadow-sm flex flex-col items-center justify-center" style={{
+      }} className="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-bold rounded-lg transition" title={`Sync and distribute chores for current week (${activeSyncWeek})`}>Sync & Distribute Week</button></div></div>}{activeTab === "month" && <div className="space-y-4"><div className="grid grid-cols-7 gap-2 text-center">{DAY_STYLES.map((day, idx) => <div key={day.name} className="py-2.5 px-1 rounded-t-lg font-bold text-xs uppercase tracking-wider text-white shadow-sm flex flex-col items-center justify-center" style={{
         backgroundColor: day.color
       }}><span>{day.name}</span><span className="text-[10px] font-normal opacity-90 hidden sm:inline">{"Day "}{idx + 1}</span></div>)}</div><div className="space-y-3">{calendarWeeks.map((week, weekIdx) => {
         const synced = isWeekSyncedToSheet(week);
@@ -7377,7 +7342,7 @@ function App({
             })}</div>}</div>;
           })}{dayChores.length > 3 && <button onClick={() => setActiveDayModal(dateKey)} className="w-full text-center text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:underline pt-0.5">+{dayChores.length - 3}{" more"}</button>}{dayChores.length === 0 && <div className="text-[10px] text-slate-400 dark:text-slate-500 italic py-2 text-center">No chores</div>}</div></div><button onClick={() => setActiveDayModal(dateKey)} className="mt-2 w-full py-1 text-[10px] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/60 dark:border-slate-700 rounded text-center font-semibold transition">Manage Day</button></div>;
         })}</div></div>;
-      })}</div></div>}{activeTab === "matrix" && <div className="space-y-4"><div id="printable-schedule-card" className="bg-white dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-800 shadow-sm overflow-hidden"><div className="no-print p-4 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><h2 className="text-base font-bold text-slate-900 dark:text-white">Weekly Schedule</h2><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-pink-50 dark:bg-pink-950/50 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-800/60 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />{"Active Week: "}{activeSyncWeek}{" • "}{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || "Cadence & Mason arrive Sun Oct 18 @ 5 PM"}</span></div><p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{scheduleViewMode === "day" ? "Touch Swipeable Day View (Mobile Optimized)" : "Single-page Letter Landscape Layout - Printed.pdf"}</p></div><div className="flex flex-wrap items-center gap-2"><div className="inline-flex items-center bg-slate-200 dark:bg-slate-700/80 p-0.5 rounded-xl border border-slate-300 dark:border-slate-600 shrink-0 shadow-2xs"><button type="button" onClick={() => setScheduleViewMode("day")} className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${scheduleViewMode === "day" ? "bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-2xs" : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"}`} title="Switch to Swipeable Day View"><CalendarDays className="w-3.5 h-3.5" /><span>Day View</span></button><button type="button" onClick={() => setScheduleViewMode("table")} className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${scheduleViewMode === "table" ? "bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-2xs" : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"}`} title="Switch to Full 7-Day Spreadsheet Table"><LayoutGrid className="w-3.5 h-3.5" /><span>7-Day Table</span></button></div><div className="relative"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" /><input type="text" placeholder="Search schedule chores..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div><button onClick={() => {
+      })}</div></div>}{activeTab === "matrix" && <div className="space-y-4"><div id="printable-schedule-card" className="bg-white dark:bg-slate-900 rounded-xl border border-slate-300 dark:border-slate-800 shadow-sm overflow-hidden"><div className="no-print px-3 py-2.5 sm:px-4 sm:py-3 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 space-y-2"><div className="flex items-center justify-between gap-2"><div className="min-w-0"><h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight">Weekly Schedule</h2><div className="text-[10px] sm:text-[11px] font-semibold text-pink-600 dark:text-pink-400 flex items-center gap-1 truncate mt-0.5"><span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse shrink-0" /><span className="truncate">{(activeWeekBwSummary == null ? void 0 : activeWeekBwSummary.text) || `Week of ${activeSyncWeek}`}</span></div></div><div className="inline-flex items-center bg-slate-200 dark:bg-slate-700/80 p-0.5 rounded-xl border border-slate-300 dark:border-slate-600 shrink-0 shadow-2xs"><button type="button" onClick={() => setScheduleViewMode("day")} className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer flex items-center gap-1 ${scheduleViewMode === "day" ? "bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-2xs" : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"}`} title="Switch to Swipeable Day View"><CalendarDays className="w-3.5 h-3.5" /><span>Day</span></button><button type="button" onClick={() => setScheduleViewMode("table")} className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer flex items-center gap-1 ${scheduleViewMode === "table" ? "bg-white dark:bg-indigo-600 text-indigo-700 dark:text-white shadow-2xs" : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"}`} title="Switch to Full 7-Day Spreadsheet Table"><LayoutGrid className="w-3.5 h-3.5" /><span>7-Day</span></button></div></div><div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar"><div className="relative flex-1 min-w-[140px] max-w-xs"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" /><input type="text" placeholder="Filter chores..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full pl-7 pr-2.5 py-1 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500" /></div><button onClick={handleAutoAssignCurrentWeek} className="shrink-0 flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/60 transition shadow-2xs cursor-pointer" title="Automatically distribute chores across active members for current week"><Sparkles className="w-3 h-3 text-amber-600 dark:text-amber-400" /><span>Distribute</span></button><button onClick={() => {
         const parsedStart = parseDateKey(activeSyncWeek || sheetStartDateStr) || { year: 2026, month: 9, day: 19 };
         const weekDays = getWeekDaysForDate(parsedStart.year, parsedStart.month, parsedStart.day);
         setMonthSchedule(prev => {
@@ -7408,7 +7373,7 @@ function App({
         }
         setNotice("Cleared daily & weekly WHO/DONE assignments for a blank printable template!");
         setTimeout(() => setNotice(null), 3000);
-      }} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/80 transition shadow-2xs cursor-pointer" title="Clear WHO/DONE cells to print a blank fill-in sheet"><span>Clear Names (Blank Sheet)</span></button><button onClick={handleAutoAssignCurrentWeek} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/60 transition shadow-2xs cursor-pointer" title="Automatically distribute chores across active members for current week"><Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /><span>Distribute Current Week</span></button><button onClick={() => window.print()} className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 bg-slate-900 dark:bg-indigo-600 text-white rounded-lg hover:bg-slate-800 dark:hover:bg-indigo-500 transition shadow-2xs cursor-pointer" title="Print 1-page Letter Landscape schedule"><span>🖨️ Print Schedule</span></button></div></div>{scheduleViewMode === "day" ? (
+      }} className="shrink-0 flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/80 transition shadow-2xs cursor-pointer" title="Clear WHO/DONE cells to print a blank fill-in sheet"><span>Clear</span></button>{scheduleViewMode === "table" && <button onClick={() => window.print()} className="shrink-0 hidden sm:flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 bg-slate-900 dark:bg-indigo-600 text-white rounded-lg hover:bg-slate-800 dark:hover:bg-indigo-500 transition shadow-2xs cursor-pointer" title="Print 1-page Letter Landscape schedule"><span>🖨️ Print</span></button>}</div></div>{scheduleViewMode === "day" ? (
       <SwipeableScheduleDayView
         selectedDayIdx={selectedScheduleDayIdx}
         onSelectDayIdx={setSelectedScheduleDayIdx}

@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-13 18:30:00
+> **Export Date**: 2026-11-13 18:42:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -81,6 +81,18 @@
     - Compacted the **Weekly Schedule** card header from 6 stacked rows (~280px) into a sleek 2-row toolbar (~76px):
       - Row 1: `Weekly Schedule`, concise custody status badge, and `[ Day | 7-Day ]` toggle on the same horizontal row.
       - Row 2: Compact single-line action strip (`Filter chores...`, `✨ Distribute`, `Clear`, and desktop `🖨️ Print`).
+
+14. **Google Calendar-Style Monthly Calendar Grid & Interactive Day Detail Modal** (weekly_chores_household_hub.tsx):
+    - Redesigned the **Monthly Calendar** tab (`activeTab === "month"`) from 5 separate stacked week cards with tall 160px cells into a unified, single-card Google Calendar month grid.
+    - Each day cell is a clean, tappable button showing:
+      - The date number (with an indigo circle highlight on `Today`), plus mini event icons for Custody Arrival/Departure (`🏠`/`👋`) and Thursday Curbside Waste/Recycling (`🗑️`/`♻️`).
+      - **Mobile**: A compact completion pill (`0/6`, turning emerald when complete) and up to 5 colored assignee/status dots so all 5 weeks fit comfortably on one mobile screen.
+      - **Desktop/Tablet**: Up to 2 slim Google Calendar-style event bars with member color dots and a `+X more` summary.
+    - Upgraded the **Day Schedule Modal** (`activeDayModal`, opened when tapping any calendar cell):
+      - Added `.modal-safe-area` and `max-h-full` for Android status/navigation bar clearance.
+      - Added `<` / `>` **Previous / Next Day** navigation buttons in the modal header so users can step through days directly inside the modal.
+      - Added a **Day View** shortcut button in the header to jump straight to that date in the Weekly Schedule Day View.
+      - Added a custody & curbside event banner at the top of the modal when applicable, and filtered the modal's chore list to only display chores actually scheduled or active on that specific day of the week.
 
 ---
 
@@ -5037,3 +5049,22 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   - Row 1: `Weekly Schedule` title + custody status pill on the left, and `[ Day | 7-Day ]` toggle on the right.
   - Row 2: Single-line filter & action bar (`Filter chores...`, `✨ Distribute`, `Clear`, and desktop `🖨️ Print`).
 - Rebuilt and streamed the updated APK directly to the Pixel 9 Pro via ADB and verified with a live screenshot.
+
+---
+
+### Turn 179
+**Date / Time**: 2026-11-13T18:38:00Z
+
+**User Prompt**:
+> K, let's work on the Monthly Calendar now. It is extremely crowded. Can we make it more like Google Calendar month view and when you click on a day, it opens that day and displays more information?
+
+**Summary of Work Delivered**:
+- Redesigned the **Monthly Calendar** (`activeTab === "month"`) in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx) into a clean, single-card Google Calendar month grid:
+  - Replaced the 5 separate week cards, per-week subheaders, and 160px-tall inline chore cards with a unified 7-column calendar grid.
+  - Made every day cell a direct tap target (`onClick={() => setActiveDayModal(dateKey)}`) featuring the date number (indigo circle for `Today`), mini status icons (`🏠`/`👋` for 5 PM custody transitions, `♻️`/`🗑️` for Thursday curbside nights), a compact `done/total` pill + colored assignee dots on mobile, and compact Google Calendar event bars on desktop.
+  - Added a slim legend bar below the calendar (`Today`, `Completed`, `Custody 5 PM`, `Curbside`).
+- Upgraded the **Day Schedule Detail Modal** (`activeDayModal`):
+  - Added `.modal-safe-area` and `max-h-full` for Pixel safe-area compliance.
+  - Added `<` / `>` **Previous / Next Day** buttons in the modal header to step between days without closing the modal.
+  - Added a **Day View** button to jump directly to that day in the Weekly Schedule Swipeable Day View.
+  - Added a special-event banner (custody arrival/departure & curbside nights) and filtered the modal's chore list to only show chores scheduled for that day of the week.

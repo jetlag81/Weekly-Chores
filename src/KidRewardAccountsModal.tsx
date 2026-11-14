@@ -109,7 +109,7 @@ export const KidRewardAccountsModal: React.FC<KidRewardAccountsModalProps> = ({
                   {kidName}&apos;s Reward Hub
                 </h2>
                 <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full font-mono">
-                  Minion Rewards
+                  My Rewards
                 </span>
               </div>
               <p className="text-[11px] text-white/80 font-medium">

@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-12 14:15:00
+> **Export Date**: 2026-11-13 18:15:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -59,7 +59,21 @@
     - Redesigned Thom's Admin Hub header on mobile viewports into a streamlined 2-row layout:
       - Row 1: Brand title and Parent Switcher (👑 Thom / Meghan) on left; prominent `[ 📱 Mobile ]` quick-switch button and compact utility icons (Activity Bell with badge, Family Chat with unread badge, Cloud Sync status, Settings) on right.
       - Row 2: Sleek horizontal-scrolling action chip bar (`overflow-x-auto no-scrollbar`) containing Month Navigator, Sunday Inspection, Photo Proofs, Nudge, Ledger, Rewards, and Reset Tasks.
-    - Converted the dense Household Roster card (Supreme Overlords, Minions, Dogs, Cats) into an interactive collapsible `<details>` accordion with animated chevron, reclaiming over 150px of vertical space on mobile so the schedule table is immediately visible without scrolling.
+    - Converted the dense Household Roster card into an interactive collapsible accordion with animated chevron, reclaiming over 150px of vertical space on mobile so the schedule table is immediately visible without scrolling.
+
+11. **Swipeable Weekly Schedule Day View for Mobile & Admin Hub** (src/SwipeableScheduleDayView.tsx, src/householdTypes.ts, weekly_chores_household_hub.tsx):
+    - Built an interactive, touch-swipeable Day View (`SwipeableScheduleDayView`) to replace the compressed 7-column schedule table on mobile viewports.
+    - Features a `[ 📱 Day View | 📊 7-Day Table ]` toggle in the Weekly Schedule toolbar (defaulting to Day View on mobile screens `< 640px` and 7-Day Table on desktop).
+    - Includes a 7-day pill selector strip (`Mon`–`Sun`) with live per-day completion counters (`done/total`), a `Today` highlight badge, and left/right touch-swipe gesture support (`onTouchStart` / `onTouchEnd` with 50px threshold) plus prev/next chevrons that seamlessly cross week boundaries.
+    - Renders full-width, touch-friendly cards for **Daily Tasks** (with inline WHO dropdown and completion checkbox) and **Weekly Tasks & Checklists** (expandable per-kid Bedroom/Bathroom/Laundry checklists, Thursday Curbside Waste/Recycling status, and Sunday Parent Sign-Off & Inspection trigger).
+
+12. **Role Terminology Modernization (`Parent` / `Kid`), Profile Nicknames & Two-Step Post-Invite Kid Onboarding** (src/userProfiles.ts, src/UserProfileModal.tsx, src/MinionDashboard.tsx, src/ParentMobileDashboard.tsx, src/FamilyChatDrawer.tsx, src/KidPairingScreen.tsx, weekly_chores_household_hub.tsx):
+    - Removed embedded `"Supreme Overlord"`, `"Overseer Supreme"`, and `"Minion"` role terminology across the entire UI, replacing with clean `"Parent"` and `"Kid"` roles (while preserving `Adult` / `Teen (12+)` / `Junior (≤11)` age tiers and automatic migration for legacy stored profiles).
+    - Added an optional **Nickname** (`nickname?: string`) field to `UserProfile`, the **Add Household Member** modal, and `UserProfileModal`.
+    - Implemented `getPreferredName(profile, fallback)` so nicknames appear naturally in dashboard headers, greetings, profile cards, roster badges, and Family Chat while keeping legal first names (`firstName`) on chore schedule dropdowns so historical completions and rotations remain 100% intact.
+    - Implemented the **Two-Step Family Onboarding Flow**:
+      1. **Parent Setup**: Parents create basic member profiles (legal first/last name, birthday, role, occupancy).
+      2. **Post-Invite Kid Customization**: When a kid accepts their invite via QR link or 6-character code, Kid Mode automatically opens their Profile Customizer (`household_just_paired_kid` trigger) and displays a `+ Nickname` chip in their header. Field-level permissions (`canEditProfileField`) allow all kids to customize their **nickname**, **avatar emoji**, and **favorite color** (plus **bio** and **email** for teens 12+), while keeping legal name, birthday, role, residency, and tier overrides locked to parents.
 
 ---
 
@@ -4963,3 +4977,39 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - **Collapsible Household Roster Accordion**: Converted the bulky ~180px human & pet roster card into an expandable `<details>` accordion (`Household Roster (6 Members • 3 Pets) ▾`), freeing up ~150px of vertical screen real estate.
 - **Sub-bar Optimization**: Streamlined tab navigation (`Weekly Schedule`, `Monthly Calendar`, `Leaderboard & Stats`, `Household Hub`, `Minion Mode`) with horizontal touch scrolling.
 - **Live Verification**: Rebuilt APK headlessly and streamed directly to connected Google Pixel 9 Pro via ADB, capturing a live screenshot to verify the clean, uncluttered interface.
+
+---
+
+### Turn 176
+**Date / Time**: 2026-11-13T17:30:00Z
+
+**User Prompt**:
+> Right. So, still on Thom's Hub, the weekly schedule is very compressed. What if we made it a day view that can be swiped to the left or right to change days?
+
+**Summary of Work Delivered**:
+- Created [`src/SwipeableScheduleDayView.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/SwipeableScheduleDayView.tsx) and [`src/householdTypes.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/householdTypes.ts) and wired them into the Weekly Schedule tab in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx).
+- Added a `[ 📱 Day View | 📊 7-Day Table ]` view switcher in the Weekly Schedule toolbar, defaulting to `Day View` on mobile viewports (`< 640px`).
+- Built a 7-day horizontal pill strip (`Mon`–`Sun`) showing live completion badges (`done/total`) and a `Today` indicator, paired with horizontal touch-swipe gestures (left/right swipe with 50px threshold) and prev/next day arrows that seamlessly step into the previous or next week.
+- Rendered spacious, mobile-friendly cards for each day's **Daily Tasks** (with inline WHO dropdown and large completion checkbox) and **Weekly Tasks & Checklists** (expandable per-kid Bedroom/Bathroom/Laundry checklists, Thursday Curbside status, and Sunday Parent Inspection button).
+
+---
+
+### Turn 177
+**Date / Time**: 2026-11-13T18:05:00Z
+
+**User Prompt**:
+> We'll hold off on avatars for now.
+>
+> I'd like to get rid of the embedded Supreme Overlord and Minions. Instead, let's give a nickname option in the profile creation. Ideally, the parent will set up basic profiles for the family first and then the kids can do some customization after they accept the invites.
+
+**Summary of Work Delivered**:
+- **Role Terminology Modernization (`Parent` / `Kid`)**:
+  - Replaced embedded `"Supreme Overlord"`, `"Overseer Supreme"`, and `"Minion"` labels across [`src/userProfiles.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/userProfiles.ts), [`src/UserProfileModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/UserProfileModal.tsx), [`src/MinionDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/MinionDashboard.tsx), [`src/ParentMobileDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentMobileDashboard.tsx), [`src/FamilyChatDrawer.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/FamilyChatDrawer.tsx), [`src/KidPairingScreen.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/KidPairingScreen.tsx), [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx), and supporting modals with plain `"Parent"` and `"Kid"` roles (plus `Adult` / `Teen (12+)` / `Junior (≤11)` age tiers).
+  - Added `isParentRole(role)` and `normalizeRole(role)` with automatic migration in `getStoredUserProfiles()` so existing spreadsheet/localStorage profiles seamlessly upgrade to `"Parent"` / `"Kid"`.
+- **Nickname Support (`nickname?: string`)**:
+  - Added an optional **Nickname** field in both the **Add Household Member** modal and `UserProfileModal`.
+  - Added `getPreferredName(profile, fallback)` so nicknames appear across greetings, dashboard headers, profile cards, roster badges, and Family Chat while preserving legal first names (`firstName`) on chore assignments.
+- **Two-Step Family Onboarding & Post-Invite Kid Customization**:
+  - Parents set up basic member profiles (legal name, birthday, role, occupancy) first.
+  - When a kid accepts an invite via QR link or 6-character code, `sessionStorage.setItem("household_just_paired_kid", ...)` automatically launches their Profile Customizer modal upon entering Kid Mode (and shows a `+ Nickname` chip in their header if they haven't picked one yet).
+  - Enforced granular field-level permissions (`canEditProfileField`): all kids can edit their **nickname**, **avatar emoji**, and **favorite color**; teens (12+) can additionally edit their **bio** and **email**; legal name, birthday, residency, role, and tier overrides remain locked to parents.

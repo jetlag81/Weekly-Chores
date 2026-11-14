@@ -110,6 +110,7 @@ import {
   calculateAge,
   getAgeTier,
   getDaysUntilBirthday,
+  getPreferredName,
   type UserProfile
 } from "./userProfiles";
 import { FamilyChatDrawer } from "./FamilyChatDrawer";
@@ -177,8 +178,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const kidMembers = React.useMemo(() => {
     return familyMembers.filter(
       m => m.active !== false &&
-           m.role !== "Supreme Overlord" &&
-           m.role !== "Overseer Supreme"
+           !/parent|overlord|overseer/i.test(String(m.role || ""))
     );
   }, [familyMembers]);
 
@@ -186,7 +186,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
     m => m.name.toLowerCase() === kidName.toLowerCase()
   ) || {
     name: kidName,
-    role: "Minion",
+    role: "Kid",
     color: "#6366F1",
     bg: "#EEF2FF",
     text: "#4338CA"
@@ -229,6 +229,18 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
   const kidAge = calculateAge(kidProfile.birthday);
   const kidAgeTier = getAgeTier(kidAge, currentKid.role);
   const kidBdayDays = getDaysUntilBirthday(kidProfile.birthday);
+  const kidDisplayName = getPreferredName(kidProfile, currentKid.name);
+
+  // When a kid first accepts an invite, automatically open the profile customizer so they can pick a nickname, emoji & color
+  useEffect(() => {
+    try {
+      const justPaired = sessionStorage.getItem("household_just_paired_kid");
+      if (justPaired && justPaired.toLowerCase() === currentKid.name.toLowerCase()) {
+        sessionStorage.removeItem("household_just_paired_kid");
+        setShowProfileModal(true);
+      }
+    } catch {}
+  }, [currentKid.name]);
   const [inspectingSibling, setInspectingSibling] = useState<{
     name: string;
     color?: string;
@@ -617,7 +629,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         id: m.id || m.name,
         name: m.name,
         color: m.color || "#6366F1",
-        role: m.role || "Minion",
+        role: m.role || "Kid",
         residency: m.type === "biweekly" ? "Bi-Weekly" : m.type === "casual" ? "Casual" : "Full-Time",
         type: m.type,
         done,
@@ -1201,11 +1213,23 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                   onClick={() => setShowProfileModal(true)}
                   className="font-black text-sm sm:text-base text-slate-900 dark:text-white leading-tight truncate hover:text-indigo-600 transition flex items-center gap-1 cursor-pointer text-left"
                 >
-                  <span>{kidProfile.firstName || currentKid.name}</span>
-                  {kidProfile.lastName && (
+                  <span>{kidDisplayName}</span>
+                  {kidProfile.nickname ? (
+                    <span className="text-slate-400 font-semibold text-xs hidden sm:inline">({kidProfile.firstName || currentKid.name})</span>
+                  ) : kidProfile.lastName ? (
                     <span className="text-slate-400 font-semibold text-xs hidden sm:inline">{kidProfile.lastName}</span>
-                  )}
+                  ) : null}
                 </button>
+                {!kidProfile.nickname && (
+                  <button
+                    type="button"
+                    onClick={() => setShowProfileModal(true)}
+                    className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-pink-50 dark:bg-pink-950/50 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-800 shrink-0 hover:bg-pink-100 transition cursor-pointer"
+                    title="Personalize your nickname, emoji & color"
+                  >
+                    + Nickname
+                  </button>
+                )}
                 {kidAgeTier === "teen" ? (
                   <button
                     type="button"
@@ -1482,7 +1506,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-snug">
                     {isMyKidLeading
-                      ? `Amazing job, ${currentKid.name}! You're on track to win "${monthlyIncentive}"!`
+                      ? `Amazing job, ${kidDisplayName}! You're on track to win "${monthlyIncentive}"!`
                       : leaderKid
                       ? `You have ${kidMonthlyCompletions} chores done — only ${choresBehind} behind ${leaderKid.name} for 1st place!`
                       : `Keep completing your daily chores to climb the leaderboard!`}
@@ -1535,7 +1559,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                 <div>
                   <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
                     <Trophy className="w-4 h-4 text-amber-500" />
-                    <span>Minions Leaderboard</span>
+                    <span>Family Leaderboard</span>
                   </h3>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">Live rankings for {MONTH_NAMES[selectedMonth]} {selectedYear}</p>
                 </div>
@@ -1780,7 +1804,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-[11px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-600 via-pink-600 to-purple-600 bg-clip-text text-transparent">
-                          Junior Minion HQ
+                          My Chore HQ
                         </span>
                         <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
                           ⭐ {kidMonthlyCompletions} Stars
@@ -2308,7 +2332,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             {/* Weekly Minion Tasks (Personal Laundry & Bedroom Checklist) */}
             <div className="space-y-2.5 pt-2">
               <h2 className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 px-1 flex items-center gap-1.5">
-                <span>Weekly Minion Checklist</span>
+                <span>My Weekly Checklist</span>
                 <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal">(Do Once a Week)</span>
               </h2>
 
@@ -2733,7 +2757,7 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
         onClose={() => setShowChatDrawer(false)}
         currentUser={{
           name: currentKid.name,
-          role: currentKid.role || "Minion",
+          role: currentKid.role || "Kid",
           color: currentKid.color || "#6366F1"
         }}
         familyMembers={familyMembers}

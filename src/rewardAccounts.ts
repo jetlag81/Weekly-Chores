@@ -177,7 +177,7 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     category: "gaming",
     iconEmoji: "🟩",
     badgeColor: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-    placeholder: "GamerTag (e.g. MasterMinion)",
+    placeholder: "GamerTag (e.g. ChoreChamp)",
     helpText: "Xbox Live Gamertag for Game Pass or Store credit",
     officialUrl: (_handle, _amount, region = "US") =>
       region === "CA"
@@ -201,7 +201,7 @@ export const REWARD_PLATFORMS: RewardPlatformConfig[] = [
     category: "gaming",
     iconEmoji: "🟦",
     badgeColor: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    placeholder: "PSN Online ID (e.g. MinionGamer)",
+    placeholder: "PSN Online ID (e.g. ChoreGamer)",
     helpText: "PlayStation Network Online ID for PS Store credit",
     officialUrl: (_handle, _amount, region = "US") =>
       region === "CA"

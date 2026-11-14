@@ -111,7 +111,7 @@ export const ParentPhotoInboxModal: React.FC<ParentPhotoInboxModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-indigo-200 font-semibold mt-0.5">
-                Verify pictures submitted by minions upon task completion
+                Verify pictures submitted by kids upon task completion
               </p>
             </div>
           </div>
@@ -206,7 +206,7 @@ export const ParentPhotoInboxModal: React.FC<ParentPhotoInboxModalProps> = ({
                   : "No chore photos found for this filter."}
               </div>
               <p className="text-xs text-slate-500 max-w-xs mx-auto">
-                When kids mark chores done and attach photos in Minion Mode, they will appear here.
+                When kids mark chores done and attach photos in Kid Mode, they will appear here.
               </p>
             </div>
           ) : (

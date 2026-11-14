@@ -62,7 +62,7 @@ export const SiblingChoreDetailModal: React.FC<SiblingChoreDetailModalProps> = (
   const rewardProfile = getKidRewardProfile(sibling.name);
   const siblingProfile = getUserProfile(sibling.name, sibling);
   const siblingAge = calculateAge(siblingProfile.birthday);
-  const siblingAgeTier = getAgeTier(siblingAge, "Minion");
+  const siblingAgeTier = getAgeTier(siblingAge, "Kid");
 
   const doneChores = chores.filter(c => c.done);
   const pendingChores = chores.filter(c => !c.done);

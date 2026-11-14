@@ -67,7 +67,7 @@ export const GifCelebrationModal: React.FC<GifCelebrationModalProps> = ({
       } else if (variant === "praise") {
         setHeadline("Parent Praise! ⭐");
       } else if (variant === "nudge") {
-        setHeadline(isJunior ? "Cheer Nudge! 🌟" : "Minion Nudge! 🧹");
+        setHeadline(isJunior ? "Cheer Nudge! 🌟" : "Chore Nudge! 🧹");
       } else {
         const phrase = GOOD_JOB_PHRASES[Math.floor(Math.random() * GOOD_JOB_PHRASES.length)];
         setHeadline(phrase);

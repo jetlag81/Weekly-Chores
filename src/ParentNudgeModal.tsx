@@ -192,7 +192,7 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
   };
 
   const handleSend = () => {
-    const defaultNudgeHeadline = isJunior ? "You Can Do It! 🌟" : "Minion Nudge! 🧹";
+    const defaultNudgeHeadline = isJunior ? "You Can Do It! 🌟" : "Chore Nudge! 🧹";
     const defaultNudgeMsg = isJunior ? "Almost done! A quick tidy up and you're all set!" : "Time for a quick chore touch-up!";
     const finalHeadline = headline.trim() || (nudgeType === "praise" ? "Awesome Job! ⭐" : defaultNudgeHeadline);
     const finalMsg = message.trim() || (nudgeType === "praise" ? "Keep up the fantastic work!" : defaultNudgeMsg);
@@ -688,7 +688,7 @@ export const ParentNudgeModal: React.FC<ParentNudgeModalProps> = ({
                           ? [
                               "🌟 You Got This",
                               "👏 Cheering",
-                              "🚀 Super Minion",
+                              "🚀 Super Helper",
                               "🐶 Cute Pets",
                               "🎮 Level Up",
                               "🧹 Quick Clean",

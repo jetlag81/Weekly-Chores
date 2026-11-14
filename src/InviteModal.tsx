@@ -40,8 +40,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
 }) => {
   const kidMembers = familyMembers.filter(
     m => m.active !== false &&
-         m.role !== "Supreme Overlord" &&
-         m.role !== "Overseer Supreme"
+         !/parent|overlord|overseer/i.test(String(m.role || ""))
   );
 
   const [activeTab, setActiveTab] = useState<"invite" | "manage">("invite");
@@ -138,8 +137,8 @@ export const InviteModal: React.FC<InviteModalProps> = ({
               <Smartphone className="w-5 h-5 text-indigo-100" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold leading-tight">Device Pairing &amp; Minions</h3>
-              <p className="text-xs text-indigo-100">Pair iOS, Android, or PC &bull; Manage Minion Devices</p>
+              <h3 className="text-base font-extrabold leading-tight">Device Pairing &amp; Kids</h3>
+              <p className="text-xs text-indigo-100">Pair iOS, Android, or PC &bull; Manage Kid Devices</p>
             </div>
           </div>
           <button
@@ -177,7 +176,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
             }`}
           >
             <Users className="w-3.5 h-3.5" />
-            <span>Paired Minions ({kidMembers.length})</span>
+            <span>Paired Kids ({kidMembers.length})</span>
           </button>
         </div>
 
@@ -233,7 +232,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                     <span>Kid-Safe Device Pairing</span>
                   </div>
                   <p>
-                    No email or password needed for kids! Generates a unique 6-character code that securely pairs their device directly into <strong>Minion Mode</strong>.
+                    No email or password needed for kids! Generates a unique 6-character code that securely pairs their device directly into <strong>Kid Mode</strong>.
                   </p>
                 </div>
 
@@ -330,7 +329,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-2xs transition cursor-pointer no-underline"
                     >
-                      <span>Open Minion Mode ↗</span>
+                      <span>Open Kid Mode ↗</span>
                     </a>
                     <button
                       type="button"
@@ -357,7 +356,7 @@ export const InviteModal: React.FC<InviteModalProps> = ({
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-slate-600 text-[11px] leading-relaxed text-left space-y-1">
                   <div><strong>📱 Phone / Tablet:</strong> Use <strong>📱 Phone (Instant Scan)</strong> — it connects immediately with HTTPS across cellular data or Wi-Fi with zero firewall blocks.</div>
-                  <div><strong>💻 Testing on PC:</strong> Click <em>&quot;Open Minion Mode ↗&quot;</em> to open in another browser tab or Edge.</div>
+                  <div><strong>💻 Testing on PC:</strong> Click <em>&quot;Open Kid Mode ↗&quot;</em> to open in another browser tab or Edge.</div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 pt-2">
@@ -376,13 +375,13 @@ export const InviteModal: React.FC<InviteModalProps> = ({
                     }}
                     className="py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl transition text-xs cursor-pointer shadow-xs"
                   >
-                    Preview Minion Mode
+                    Preview Kid Mode
                   </button>
                 </div>
               </div>
             )
           ) : (
-            /* Manage Paired Minions Tab */
+            /* Manage Paired Kids Tab */
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>

@@ -307,7 +307,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
     }
   };
 
-  // Parent Action Handlers in Minion Mode
+  // Parent Action Handlers in Kid Mode
   const handleActionWithPin = (action: "admin" | "inspect" | "unpair") => {
     const isValid = Boolean(viewingAsParent) || isUnlocked || pinInput === parentPin || pinInput === "1234" || pinInput === "0000";
     if (isValid) {
@@ -400,7 +400,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
                 Household Settings
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                {viewMode === "minion" ? `Minion Mode • ${currentKidName}` : "Parent Command Hub"}
+                {viewMode === "minion" ? `Kid Mode • ${currentKidName}` : "Parent Command Hub"}
               </p>
             </div>
           </div>
@@ -467,7 +467,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
               }`}
             >
               <QrCode className="w-3.5 h-3.5" />
-              <span>Minion QR</span>
+              <span>Kid QR</span>
             </button>
 
             <button
@@ -1038,7 +1038,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
                 </div>
               )}
 
-              {/* Minion Mode Individual Banner */}
+              {/* Kid Mode Individual Banner */}
               {viewMode === "minion" && (
                 <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60">
                   <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-xs shrink-0">
@@ -1164,7 +1164,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
             <div className="space-y-4">
               <div>
                 <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                  Minion QR Code &amp; Device Pairing
+                  Kid QR Code &amp; Device Pairing
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Scan with your phone or tablet camera to open this kid’s chore dashboard instantly.
@@ -1267,7 +1267,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
               </div>
 
               {viewMode === "minion" ? (
-                /* Enhanced Parent Access for Minion Mode */
+                /* Enhanced Parent Access for Kid Mode */
                 <div className="space-y-4 pt-1">
                   {/* PIN Entry & Verification Card */}
                   <div className="bg-slate-50 dark:bg-slate-800/60 p-4 sm:p-5 rounded-3xl border border-slate-200 dark:border-slate-700 space-y-3.5">
@@ -1404,7 +1404,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
                             Parent Command Hub
                           </div>
                           <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                            Exit Minion Mode and manage all chores, allowances &amp; schedules
+                            Exit Kid Mode and manage all chores, allowances &amp; schedules
                           </div>
                         </div>
                       </div>
@@ -1555,10 +1555,10 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
                     )}
                   </div>
 
-                  {/* Switch to Kid Minion Mode shortcut */}
+                  {/* Switch to Kid Kid Mode shortcut */}
                   <div className="p-4 bg-indigo-50/50 dark:bg-indigo-950/30 rounded-2xl border border-indigo-200/60 dark:border-indigo-900/60 space-y-2">
                     <div className="text-xs font-black text-indigo-950 dark:text-indigo-200">
-                      Switch to Minion View:
+                      Switch to Kid View:
                     </div>
                     <div className="grid grid-cols-3 gap-2">
                       {allKidsList.map(kName => (

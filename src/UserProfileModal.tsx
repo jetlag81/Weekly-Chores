@@ -1,6 +1,6 @@
-// User Profile Modal: Age Tiers, Autonomy Controls, Birthdays & Contact Management
-// Supports Teen Autonomy (12+) with Email, Junior Visual Stimulation (<=11),
-// and Full Parent Administrative Oversight.
+// User Profile Modal: Parent-managed basics + kid personalization
+// Parents set legal name, birthday, residency & tier. Kids personalize nickname,
+// emoji & color; teens (12+) can also edit bio & email.
 
 import React, { useState, useEffect } from "react";
 import {
@@ -31,7 +31,9 @@ import {
   canProfileSelfManage,
   getDaysUntilBirthday,
   saveUserProfile,
-  getUserProfile
+  getUserProfile,
+  canEditProfileField,
+  getPreferredName
 } from "./userProfiles";
 import { DatePickerDropdown } from "./DatePickerDropdown";
 
@@ -84,6 +86,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
   const [firstName, setFirstName] = useState(profile.firstName || "");
   const [lastName, setLastName] = useState(profile.lastName || "");
+  const [nickname, setNickname] = useState(profile.nickname || "");
   const [birthday, setBirthday] = useState(profile.birthday || "");
   const [tierOverride, setTierOverride] = useState<ProfileTierOverride>(profile.tierOverride || "auto");
   const [email, setEmail] = useState(profile.email || "");
@@ -99,10 +102,11 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     setProfile(current);
     setFirstName(current.firstName || "");
     setLastName(current.lastName || "");
+    setNickname(current.nickname || "");
     setBirthday(current.birthday || "");
     setTierOverride(current.tierOverride || "auto");
     setEmail(current.email || "");
-    setAvatarEmoji(current.avatarEmoji || (current.role === "Supreme Overlord" ? "👑" : "🎒"));
+    setAvatarEmoji(current.avatarEmoji || "🎒");
     setBio(current.bio || "");
     setFavoriteColor(current.favoriteColor || "#4F46E5");
     setSavedNotice(false);
@@ -115,22 +119,26 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   const daysToBday = getDaysUntilBirthday(birthday);
   const liveInitials = generateInitials(firstName, lastName);
 
-  // Autonomy rule: 12 and up or parent can manage email and profile details
-  const hasEmailAutonomy = isParent || ageTier === "teen" || ageTier === "adult";
-  const hasProfileAutonomy = isParent || ageTier === "teen" || ageTier === "adult";
+  // Field-level permissions: parents edit everything; kids personalize; teens also get bio & email
+  const can = (field: Parameters<typeof canEditProfileField>[0]) => canEditProfileField(field, isParent, ageTier);
+  const hasEmailAutonomy = can("email");
+  const canEditLegalName = can("firstName");
+  const canEditBio = can("bio");
+  const headerName = nickname.trim() || firstName || targetMemberName;
 
   const handleSave = () => {
     const updated: UserProfile = {
       ...profile,
-      firstName: firstName.trim() || profile.firstName,
-      lastName: lastName.trim() || profile.lastName,
-      displayName: `${firstName.trim()} ${lastName.trim()}`.trim(),
-      initials: liveInitials,
-      birthday: birthday || void 0,
+      firstName: canEditLegalName ? (firstName.trim() || profile.firstName) : profile.firstName,
+      lastName: canEditLegalName ? (lastName.trim() || profile.lastName) : profile.lastName,
+      nickname: nickname.trim() || undefined,
+      displayName: canEditLegalName ? `${firstName.trim()} ${lastName.trim()}`.trim() : profile.displayName,
+      initials: canEditLegalName ? liveInitials : profile.initials,
+      birthday: can("birthday") ? (birthday || void 0) : profile.birthday,
       tierOverride: isParent ? tierOverride : profile.tierOverride,
       email: hasEmailAutonomy ? email.trim() : profile.email,
       avatarEmoji,
-      bio: bio.trim(),
+      bio: canEditBio ? bio.trim() : profile.bio,
       favoriteColor
     };
 
@@ -166,26 +174,26 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-black tracking-tight">{firstName || targetMemberName} {lastName}</h3>
+                <h3 className="text-lg font-black tracking-tight">{headerName}</h3>
                 {ageTier === "adult" ? (
                   <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 shadow-xs flex items-center gap-1">
-                    <span>👑 Supreme Overlord</span>
+                    <span>{profile.role === "Parent" ? "Parent" : "Adult"}</span>
                     {tierOverride !== "auto" && <span className="bg-amber-900/20 px-1 rounded text-[9px] font-black">Override</span>}
                   </span>
                 ) : ageTier === "teen" ? (
                   <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-950 shadow-xs flex items-center gap-1">
-                    <span>⚡ Teen Minion (12+)</span>
+                    <span>Teen (12+)</span>
                     {tierOverride !== "auto" && <span className="bg-indigo-950/20 px-1 rounded text-[9px] font-black">Override</span>}
                   </span>
                 ) : (
                   <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-amber-300 text-amber-950 shadow-xs animate-pulse flex items-center gap-1">
-                    <span>🌟 Junior Minion (≤11)</span>
+                    <span>Kid (≤11)</span>
                     {tierOverride !== "auto" && <span className="bg-amber-950/20 px-1 rounded text-[9px] font-black">Override</span>}
                   </span>
                 )}
               </div>
               <p className="text-xs text-white/80 font-medium">
-                {currentAge !== null ? `Age ${currentAge} • ` : ""}{profile.residency} Occupant
+                {nickname.trim() ? `${firstName} ${lastName} • ` : ""}{currentAge !== null ? `Age ${currentAge} • ` : ""}{profile.residency}
               </p>
             </div>
           </div>
@@ -205,8 +213,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             <div className="flex items-center gap-2">
               <span className="text-xl">🎈</span>
               <div>
-                <span className="font-extrabold">Junior Explorer Mode!</span>
-                <p className="text-[11px] text-amber-800">Visual stimulation active • High-energy chore badges & celebration effects enabled</p>
+                <span className="font-extrabold">Junior Mode</span>
+                <p className="text-[11px] text-amber-800">{isParent ? "Simpler, more visual experience with extra celebration effects." : "Pick a nickname, emoji & color to make your profile yours!"}</p>
               </div>
             </div>
             {daysToBday !== null && daysToBday <= 30 && (
@@ -224,8 +232,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               <div>
-                <span className="font-extrabold">Teen Autonomy Mode Active</span>
-                <p className="text-[11px] text-indigo-700 dark:text-indigo-300">You have full control to customize your profile, bio, and email address for chore alerts</p>
+                <span className="font-extrabold">Teen Profile (12+)</span>
+                <p className="text-[11px] text-indigo-700 dark:text-indigo-300">{isParent ? "Can personalize their nickname, emoji, color, bio & email." : "Personalize your nickname, emoji, color, bio & email for chore alerts."}</p>
               </div>
             </div>
           </div>
@@ -233,7 +241,32 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
         {/* Form Body */}
         <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto text-xs text-slate-700 dark:text-slate-200">
-          {/* First & Last Name */}
+          {/* Nickname (kids can set this themselves) */}
+          <div>
+            <label className="block font-bold text-slate-800 dark:text-slate-200 mb-1 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Heart className="w-3.5 h-3.5 text-rose-500" />
+                <span>Nickname</span>
+              </span>
+              <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Optional • shown in greetings & chat</span>
+            </label>
+            <input
+              type="text"
+              value={nickname}
+              onChange={e => setNickname(e.target.value.slice(0, 24))}
+              maxLength={24}
+              placeholder={firstName ? `e.g. what should we call ${firstName}?` : "e.g. Syd, Bubba, Captain..."}
+              className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          {/* First & Last Name (parent-managed) */}
+          {!canEditLegalName && (
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 -mb-2 flex items-center gap-1">
+              <Lock className="w-3 h-3" />
+              <span>Legal name, birthday & residency are set by a parent.</span>
+            </p>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block font-bold text-slate-800 dark:text-slate-200 mb-1">
@@ -243,7 +276,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 type="text"
                 value={firstName}
                 onChange={e => setFirstName(e.target.value)}
-                disabled={!hasProfileAutonomy}
+                disabled={!canEditLegalName}
                 placeholder="First Name..."
                 className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
               />
@@ -257,7 +290,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   type="text"
                   value={lastName}
                   onChange={e => setLastName(e.target.value)}
-                  disabled={!hasProfileAutonomy}
+                  disabled={!canEditLegalName}
                   placeholder="Last Name..."
                   className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
                 />
@@ -285,7 +318,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               <DatePickerDropdown
                 value={birthday}
                 onChange={setBirthday}
-                disabled={!isParent && ageTier === "junior"}
+                disabled={!can("birthday")}
                 placeholder="MM/DD/YYYY"
               />
             </div>
@@ -316,7 +349,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   <span>Parent Admin Override: Profile Experience & Tier</span>
                 </label>
                 <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-200 dark:bg-indigo-900/80 text-indigo-900 dark:text-indigo-200 shadow-2xs">
-                  Parent Control 👑
+                  Parent Control
                 </span>
               </div>
               <p className="text-[11px] text-slate-600 dark:text-slate-300">
@@ -330,9 +363,9 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     className="w-full p-2.5 rounded-xl border border-indigo-300 dark:border-indigo-700 bg-white dark:bg-slate-800 font-bold text-slate-900 dark:text-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-xs"
                   >
                     <option value="auto">Auto (Calculate from Birthday: {currentAge !== null ? `${currentAge} yrs` : "N/A"})</option>
-                    <option value="junior">🌟 Junior Minion (≤11) - Visual stimulation & restrictions</option>
-                    <option value="teen">⚡ Teen Minion (12+) - Autonomy & email access</option>
-                    <option value="adult">👑 Adult / Supreme Overlord - Full administrative power</option>
+                    <option value="junior">Junior (≤11) - Simpler visual experience, parent-managed email</option>
+                    <option value="teen">Teen (12+) - Can edit bio & email</option>
+                    <option value="adult">Adult - Full access</option>
                   </select>
                 </div>
                 <div className="p-2 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-indigo-100 dark:border-indigo-900/40 text-[11px] flex items-center">
@@ -370,7 +403,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 ) : (
                   <span className="text-[10px] font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.2 rounded-full border border-amber-200 dark:border-amber-800 flex items-center gap-1">
                     <Lock className="w-2.5 h-2.5" />
-                    <span>Restricted (≤11)</span>
+                    <span>Parent-managed (≤11)</span>
                   </span>
                 )}
               </label>
@@ -392,9 +425,9 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               <div className="p-3 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/70 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 flex items-start gap-2.5">
                 <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div className="space-y-0.5">
-                  <span className="font-bold text-xs">Email input is locked for Junior Minions (under 12)</span>
+                  <span className="font-bold text-xs">Email is managed by a parent for kids under 12</span>
                   <p className="text-[11px] text-amber-800 dark:text-amber-300">
-                    To protect younger minions, contact email addresses can only be added or modified by parents (Supreme Overlords) in Household Settings.
+                    Ask a parent to add or change this email in Household Settings.
                   </p>
                 </div>
               </div>
@@ -457,7 +490,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               type="text"
               value={bio}
               onChange={e => setBio(e.target.value)}
-              placeholder="e.g. Chore Master & Robux Collector..."
+              placeholder="e.g. Chore champion & dog walker..."
+              disabled={!canEditBio}
               className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
@@ -472,7 +506,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 <span>Profile saved!</span>
               </span>
             ) : (
-              <span>Initials & profile sync across devices</span>
+              <span>Profile syncs across devices</span>
             )}
           </div>
           <div className="flex items-center gap-2">

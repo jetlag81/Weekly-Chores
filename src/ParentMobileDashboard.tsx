@@ -50,7 +50,7 @@ import {
   type ChorePhotoProof,
   type ChorePhotoRequest
 } from "./chorePhotoTypes";
-import { getStoredActiveParentAdmin, saveActiveParentAdmin } from "./userProfiles";
+import { getStoredActiveParentAdmin, saveActiveParentAdmin, getUserProfile, getPreferredName } from "./userProfiles";
 
 interface FamilyMember {
   name: string;
@@ -424,10 +424,10 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <h1 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight leading-tight truncate">
-                  {currentAdmin}'s Hub
+                  {getPreferredName(getUserProfile(currentAdmin), currentAdmin)}&apos;s Hub
                 </h1>
                 <span className="hidden sm:inline-flex text-[9px] font-extrabold px-1.5 py-0.2 rounded-md bg-amber-400/20 text-amber-700 dark:text-amber-400 border border-amber-400/30 whitespace-nowrap">
-                  👑 {currentAdmin === "Thom" ? "Supreme Overlord" : "Overseer Supreme"}
+                  Parent
                 </span>
               </div>
               <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
@@ -620,7 +620,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
             <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mb-1.5 group-hover:scale-105 transition">
               <Users className="w-5 h-5" />
             </div>
-            <span className="text-xs font-black text-white leading-tight">Minions</span>
+            <span className="text-xs font-black text-white leading-tight">Kids</span>
           </button>
         </div>
 
@@ -723,7 +723,15 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-black text-white text-sm leading-tight">{kidName}</h4>
+                        {(() => {
+                          const kp = getUserProfile(kidName, mem);
+                          const pref = getPreferredName(kp, kidName);
+                          return (
+                            <h4 className="font-black text-white text-sm leading-tight">
+                              {pref}{kp.nickname ? <span className="text-slate-400 font-semibold text-xs ml-1">({kidName})</span> : null}
+                            </h4>
+                          );
+                        })()}
                         {mem?.age && (
                           <span className="text-[10px] font-semibold text-slate-400 bg-slate-700/60 px-1.5 py-0.2 rounded">
                             Age {mem.age}
@@ -786,7 +794,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                       type="button"
                       onClick={() => onSwitchToMinionMode(kidName)}
                       className="px-2 py-1 rounded-xl text-[11px] font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 transition flex items-center gap-1 cursor-pointer"
-                      title={`Open ${kidName}'s Dedicated Minion Page`}
+                      title={`Open ${kidName}'s Kid Page`}
                     >
                       <Users className="w-3 h-3 text-indigo-400" />
                       <span className="hidden xs:inline">Page ↗</span>

@@ -78,7 +78,7 @@ export const InstallPwaModal: React.FC<InstallPwaModalProps> = ({ onClose }) => 
                 Weekly Chores Hub
               </div>
               <div className="text-[11px] text-slate-500 font-medium">
-                Family &bull; Minion Mode &bull; Real-time Sync
+                Family &bull; Kid Mode &bull; Real-time Sync
               </div>
               <div className="text-[10px] text-emerald-700 font-bold flex items-center gap-1 pt-0.5">
                 <CheckCircle2 className="w-3 h-3 text-emerald-600" />

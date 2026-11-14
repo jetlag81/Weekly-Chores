@@ -1,16 +1,18 @@
-// User Profiles Service: Age Tiers, Autonomy Rules, Birthdays & Contact Info
-// - Age split: 12 and up have autonomy over profile & email address
-// - 11 and under: Junior Minion mode with restricted autonomy & high visual stimulation
-// - First & last name tracking with automatic initial generation
+// User Profiles Service: Roles, Age Tiers, Autonomy Rules, Birthdays & Contact Info
+// - Roles: "Parent" | "Kid" (legacy "Supreme Overlord" / "Overseer Supreme" / "Minion" values are migrated)
+// - Age split: 12 and up (Teen) get bio & email autonomy; 11 and under (Junior) get a simpler, more visual experience
+// - Parents set up the legal name, birthday & residency; kids personalize nickname, emoji & color after accepting invites
 
 export type AgeTier = "junior" | "teen" | "adult";
 export type ProfileTierOverride = "auto" | "junior" | "teen" | "adult";
+export type HouseholdRole = "Parent" | "Kid";
 
 export interface UserProfile {
   id: string; // Unique identifier (e.g. "sydney", "thom")
   name?: string; // Convenience alias for displayName / member name
-  firstName: string;
+  firstName: string; // Legal first name — also the key used for chore assignments (parent-managed)
   lastName: string;
+  nickname?: string; // Friendly name shown in greetings, profile cards, dashboards & chat
   displayName: string;
   initials: string;
   birthday?: string; // YYYY-MM-DD
@@ -18,17 +20,69 @@ export interface UserProfile {
   tierOverride?: ProfileTierOverride; // Parent admin override ("auto" | "junior" | "teen" | "adult")
   avatarEmoji?: string;
   bio?: string;
-  role: "Supreme Overlord" | "Minion";
+  role: HouseholdRole;
   residency: "Full-Time" | "Bi-Weekly" | "Casual";
   favoriteColor?: string;
   updatedAt?: number;
 }
 
+/**
+ * True for parent roles, including legacy stored values from earlier app versions.
+ */
+export function isParentRole(role?: string | null): boolean {
+  const r = String(role || "").toLowerCase();
+  return r === "parent" || r.includes("parent") || r === "supreme overlord" || r === "overseer supreme" || r === "adult";
+}
+
+/**
+ * Normalizes any stored/legacy role value to "Parent" | "Kid".
+ */
+export function normalizeRole(role?: string | null): HouseholdRole {
+  return isParentRole(role) ? "Parent" : "Kid";
+}
+
+/**
+ * Name to show in greetings, headers & chat: nickname if set, otherwise first name.
+ * Chore assignments should keep using firstName.
+ */
+export function getPreferredName(profile?: Partial<UserProfile> | null, fallback = ""): string {
+  if (!profile) return fallback;
+  const nick = String(profile.nickname || "").trim();
+  return nick || String(profile.firstName || "").trim() || fallback;
+}
+
+export type ProfileField =
+  | "firstName" | "lastName" | "birthday" | "residency" | "role" | "tierOverride"
+  | "nickname" | "avatarEmoji" | "favoriteColor"
+  | "bio" | "email";
+
+/**
+ * Field-level edit permissions:
+ * - Parents: everything
+ * - All kids: nickname, avatar emoji, favorite color
+ * - Teens (12+): additionally bio & email
+ * - Legal name, birthday, residency, role & tier: parent-only
+ */
+export function canEditProfileField(field: ProfileField, editorIsParent: boolean, tier: AgeTier): boolean {
+  if (editorIsParent) return true;
+  switch (field) {
+    case "nickname":
+    case "avatarEmoji":
+    case "favoriteColor":
+      return true;
+    case "bio":
+    case "email":
+      return tier === "teen" || tier === "adult";
+    default:
+      return false;
+  }
+}
+
 const STORAGE_KEY_PROFILES = "weekly_chores_user_profiles_v1";
 
-// Sensible initial household profiles with realistic age split:
-// Thom (Adult / Supreme Overlord)
-// Meghan (Adult / Supreme Overlord)
+// Initial household profiles (parents can edit these in Household Settings):
+// Thom (Parent)
+// Meghan (Parent)
 // Sydney (Age 14 -> Teen 12+ with autonomy & email)
 // Cadence (Age 13 -> Teen 12+ with autonomy & email)
 // Mason (Age 10 -> Junior <=11 with visual stimulation & locked email)
@@ -44,8 +98,8 @@ export const DEFAULT_USER_PROFILES: Record<string, UserProfile> = {
     birthday: "1981-06-15",
     email: "thomvoth@gmail.com",
     avatarEmoji: "👑",
-    bio: "Supreme Overlord & Household Hub Commander",
-    role: "Supreme Overlord",
+    bio: "",
+    role: "Parent",
     residency: "Full-Time",
     favoriteColor: "#2563EB"
   },
@@ -58,8 +112,8 @@ export const DEFAULT_USER_PROFILES: Record<string, UserProfile> = {
     birthday: "1983-09-20",
     email: "meghan@example.com",
     avatarEmoji: "👑",
-    bio: "Supreme Overlord & Sunday Inspection Chief",
-    role: "Supreme Overlord",
+    bio: "",
+    role: "Parent",
     residency: "Full-Time",
     favoriteColor: "#8B5CF6"
   },
@@ -72,8 +126,8 @@ export const DEFAULT_USER_PROFILES: Record<string, UserProfile> = {
     birthday: "2012-05-18", // 14 years old
     email: "sydney.voth@example.com",
     avatarEmoji: "✨",
-    bio: "Senior Minion • Chore Master & Robux Collector",
-    role: "Minion",
+    bio: "",
+    role: "Kid",
     residency: "Full-Time",
     favoriteColor: "#0D9488"
   },
@@ -86,8 +140,8 @@ export const DEFAULT_USER_PROFILES: Record<string, UserProfile> = {
     birthday: "2013-10-12", // 13 years old
     email: "cadence.voth@example.com",
     avatarEmoji: "🎨",
-    bio: "Teen Minion • Creative Organizer",
-    role: "Minion",
+    bio: "",
+    role: "Kid",
     residency: "Bi-Weekly",
     favoriteColor: "#EC4899"
   },
@@ -100,8 +154,8 @@ export const DEFAULT_USER_PROFILES: Record<string, UserProfile> = {
     birthday: "2016-04-08", // 10 years old (Junior)
     email: "", // Under 12: restricted
     avatarEmoji: "⚡",
-    bio: "Junior Minion Explorer • Fast Task Finisher",
-    role: "Minion",
+    bio: "",
+    role: "Kid",
     residency: "Bi-Weekly",
     favoriteColor: "#EA580C"
   },
@@ -114,8 +168,8 @@ export const DEFAULT_USER_PROFILES: Record<string, UserProfile> = {
     birthday: "2017-08-25", // 9 years old (Junior)
     email: "", // Under 12: restricted
     avatarEmoji: "🚀",
-    bio: "Junior Star Minion • Animal Helper",
-    role: "Minion",
+    bio: "",
+    role: "Kid",
     residency: "Casual",
     favoriteColor: "#0284C7"
   },
@@ -128,8 +182,8 @@ export const DEFAULT_USER_PROFILES: Record<string, UserProfile> = {
     birthday: "2019-11-14", // 7 years old (Junior)
     email: "", // Under 12: restricted
     avatarEmoji: "🦄",
-    bio: "Junior Star Minion • Joyful Helper",
-    role: "Minion",
+    bio: "",
+    role: "Kid",
     residency: "Casual",
     favoriteColor: "#D97706"
   }
@@ -157,13 +211,13 @@ export function calculateAge(birthday?: string, referenceDate: Date = new Date()
  * - Otherwise:
  *   - junior: <= 11
  *   - teen: 12 to 17
- *   - adult: >= 18 or Supreme Overlord
+ *   - adult: >= 18 or Parent role
  */
 export function getAgeTier(age: number | null, role?: string, tierOverride?: ProfileTierOverride): AgeTier {
   if (tierOverride && tierOverride !== "auto") {
     return tierOverride;
   }
-  const isParent = role === "Supreme Overlord" || role === "Overseer Supreme" || String(role || "").toLowerCase().includes("parent");
+  const isParent = isParentRole(role);
   if (isParent) return "adult";
   if (age === null) return "junior"; // Default safe tier if unknown
   if (age >= 18) return "adult";
@@ -266,7 +320,13 @@ export function getStoredUserProfiles(): Record<string, UserProfile> {
     const raw = localStorage.getItem(STORAGE_KEY_PROFILES);
     if (!raw) return { ...DEFAULT_USER_PROFILES };
     const parsed = JSON.parse(raw);
-    return { ...DEFAULT_USER_PROFILES, ...parsed };
+    const merged: Record<string, UserProfile> = { ...DEFAULT_USER_PROFILES, ...parsed };
+    // Migrate legacy role labels ("Supreme Overlord" / "Overseer Supreme" / "Minion") to Parent / Kid
+    Object.keys(merged).forEach(key => {
+      const p = merged[key];
+      if (p) merged[key] = { ...p, role: normalizeRole(p.role) };
+    });
+    return merged;
   } catch {
     return { ...DEFAULT_USER_PROFILES };
   }
@@ -282,6 +342,8 @@ export function saveUserProfile(profile: UserProfile): void {
     const updated: UserProfile = {
       ...profile,
       id,
+      role: normalizeRole(profile.role),
+      nickname: (profile.nickname || "").trim() || undefined,
       displayName: `${profile.firstName.trim()} ${profile.lastName.trim()}`.trim() || profile.firstName.trim(),
       initials: generateInitials(profile.firstName, profile.lastName),
       updatedAt: Date.now()
@@ -315,19 +377,18 @@ export function getUserProfile(nameOrId: string, memberInfo?: any): UserProfile 
   const firstName = parts[0] || rawName;
   const lastName = parts.slice(1).join(" ") || "Voth";
   const initials = generateInitials(firstName, lastName);
-  const role = memberInfo?.role === "Supreme Overlord" || memberInfo?.role === "Overseer Supreme"
-    ? "Supreme Overlord"
-    : "Minion";
+  const role = normalizeRole(memberInfo?.role);
 
   const synthetic: UserProfile = {
     id: cleanId || firstName.toLowerCase(),
     firstName,
     lastName,
+    nickname: memberInfo?.nickname || undefined,
     displayName: `${firstName} ${lastName}`.trim(),
     initials,
     role,
     residency: memberInfo?.residency || (memberInfo?.type === "biweekly" ? "Bi-Weekly" : memberInfo?.type === "casual" ? "Casual" : "Full-Time"),
-    avatarEmoji: role === "Supreme Overlord" ? "👑" : "🎒",
+    avatarEmoji: role === "Parent" ? "🏠" : "🎒",
     favoriteColor: memberInfo?.color || "#6366F1"
   };
 

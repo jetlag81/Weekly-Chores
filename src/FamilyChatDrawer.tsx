@@ -25,6 +25,7 @@ import {
   setChatLastReadTimestamp
 } from "./familyChat";
 import { searchFamilyGiphyGifs, type GiphyGifItem } from "./giphyService";
+import { getUserProfile, getPreferredName, normalizeRole } from "./userProfiles";
 
 interface FamilyChatDrawerProps {
   isOpen: boolean;
@@ -197,7 +198,8 @@ export const FamilyChatDrawer: React.FC<FamilyChatDrawerProps> = ({
   const isParent = currentUser.name.toLowerCase() === "thom" ||
                   currentUser.name.toLowerCase() === "meghan" ||
                   currentUser.role?.toLowerCase().includes("overlord") ||
-                  currentUser.role?.toLowerCase().includes("overseer");
+                  currentUser.role?.toLowerCase().includes("overseer") ||
+                  currentUser.role?.toLowerCase().includes("parent");
 
   if (!isOpen) return null;
 
@@ -281,7 +283,7 @@ export const FamilyChatDrawer: React.FC<FamilyChatDrawerProps> = ({
                     className="w-2 h-2 rounded-full"
                     style={{ backgroundColor: m.color || "#6366F1" }}
                   />
-                  <span>{m.name}</span>
+                  <span>{getPreferredName(getUserProfile(m.name, m), m.name)}</span>
                 </div>
               );
             })}
@@ -310,11 +312,11 @@ export const FamilyChatDrawer: React.FC<FamilyChatDrawerProps> = ({
                       {getMemberInitials(msg.senderName)}
                     </span>
                     <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                      {msg.senderName}
+                      {getPreferredName(getUserProfile(msg.senderName), msg.senderName)}
                     </span>
                     {msg.senderRole && (
                       <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-semibold">
-                        {msg.senderRole}
+                        {normalizeRole(msg.senderRole)}
                       </span>
                     )}
                     <span className="text-[10px] text-slate-400 dark:text-slate-500">

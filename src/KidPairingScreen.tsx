@@ -36,6 +36,9 @@ export const KidPairingScreen: React.FC<KidPairingScreenProps> = ({
             parentPin: "1234"
           };
           saveDeviceSession(newSession);
+          try {
+            sessionStorage.setItem("household_just_paired_kid", newSession.kidName || "");
+          } catch {}
           onPairedSuccess(newSession);
         } else {
           setError(res.error || "Invite code expired or invalid. Please check with your parent.");
@@ -73,6 +76,9 @@ export const KidPairingScreen: React.FC<KidPairingScreenProps> = ({
       };
 
       saveDeviceSession(newSession);
+      try {
+        sessionStorage.setItem("household_just_paired_kid", newSession.kidName || "");
+      } catch {}
       onPairedSuccess(newSession);
     } finally {
       setLoading(false);
@@ -128,7 +134,7 @@ export const KidPairingScreen: React.FC<KidPairingScreenProps> = ({
               disabled={loading}
               className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl shadow-md transition flex items-center justify-center gap-2 text-xs cursor-pointer"
             >
-              <span>{loading ? "Connecting to Household..." : "Start My Chores (Minion Mode)"}</span>
+              <span>{loading ? "Connecting to Household..." : "Start My Chores (Kid Mode)"}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
@@ -156,7 +162,7 @@ export const KidPairingScreen: React.FC<KidPairingScreenProps> = ({
                 <span>👑</span>
                 <span>Thom's Page</span>
               </div>
-              <span className="text-[10px] text-amber-800 font-medium">Supreme Overlord</span>
+              <span className="text-[10px] text-amber-800 font-medium">Parent</span>
             </button>
             <button
               type="button"
@@ -167,7 +173,7 @@ export const KidPairingScreen: React.FC<KidPairingScreenProps> = ({
                 <span>👑</span>
                 <span>Meghan's Page</span>
               </div>
-              <span className="text-[10px] text-purple-800 font-medium">Overseer Supreme</span>
+              <span className="text-[10px] text-purple-800 font-medium">Parent</span>
             </button>
           </div>
           <p className="text-[10px] text-slate-400">

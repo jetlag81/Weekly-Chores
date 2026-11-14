@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-13 19:42:00
+> **Export Date**: 2026-11-13 20:36:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -105,6 +105,11 @@
     - Converted the 6 top header action buttons (`Inspect`, `Photos`, `Nudge`, `Ledger`, `Rewards`, `Reset`) into a 6-column grid (`grid-cols-6 gap-1.5`) of narrower, taller vertical-stacked tiles (`flex-col items-center justify-center py-2 px-1`) with status dots/badges so all 6 fit completely within the mobile screen width without horizontal scrolling or clipping.
     - Moved the `notice` toast banner inside `<header>` below `--safe-area-inset-top` so notifications never overlap the Android status bar clock.
     - Restored a vibrant pink/magenta border (`border-2 border-pink-500 shadow-[inset_0_0_12px_rgba(236,72,153,0.22)]`) and subtle pink cell tint (`bg-pink-50/35 dark:bg-pink-950/20`) around the current week row in the Monthly Calendar grid, plus a `Current Week` legend indicator.
+
+17. **7-Day Schedule Table View: Sticky Left Task Column & Wider Day Columns** (weekly_chores_household_hub.tsx):
+    - Upgraded `#printable-schedule-table` (`scheduleViewMode === "table"`) with a responsive `min-w-[920px] lg:min-w-full print:min-w-0` layout so the 15 columns (`TASK` + 7 `WHO` + 7 `DONE`) no longer squish into a ~380px mobile viewport.
+    - Made the left `TASK` column (`19%` / `~175px` wide) sticky (`sticky left-0 z-10 print:static` with a subtle right drop shadow) across the `FOR THE WEEK OF` header, `TASK` sub-header, `Daily Tasks` / `Weekly Tasks` section headers, every chore row, the decorative color band, and `Weekly Sign-Off` so chore names stay pinned on the left while scrolling horizontally across `Mon–Sun`.
+    - Widened each day's `WHO` (`8.1%` / `~75px`) and `DONE` (`3.47%` / `~32px`) columns so full first names (`Thom`, `Meghan`, `Sydney`, `Cadence`, `Mason`) are clearly readable without 2-letter truncation, and added a mobile swipe hint banner above the table.
 
 ---
 
@@ -5121,4 +5126,20 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 **Summary of Work Delivered**:
 - Added a crisp 2px pink/magenta border overlay (`border-2 border-pink-500 shadow-[inset_0_0_12px_rgba(236,72,153,0.22)]`) and subtle pink cell background tint (`bg-pink-50/35 dark:bg-pink-950/20`) around the current/active week row in the **Monthly Calendar** grid ([`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx)).
 - Added a `Current Week` indicator to the calendar legend bar below the month grid.
+- Rebuilt and deployed the updated APK to the connected Google Pixel 9 Pro.
+
+---
+
+### Turn 183
+**Date / Time**: 2026-11-13T20:36:00Z
+
+**User Prompt**:
+> The 7-day view is still pretty cramped. Anything we can do there?
+> *(Selected: Sticky Task Column + Wider Day Columns)*
+
+**Summary of Work Delivered**:
+- Upgraded the **7-Day Table View** (`#printable-schedule-table` when `scheduleViewMode === "table"`) in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx):
+  - Added `min-w-[920px] lg:min-w-full print:min-w-0` so the 15 table columns have generous breathing room on mobile (~175px for `TASK`, ~75px for each day's `WHO` dropdown, ~32px for each day's `DONE` checkbox) while keeping 1-page Letter Landscape printing intact (`print:min-w-0`).
+  - Pinned the left `TASK` column (`sticky left-0 z-10 print:static` with right shadow) across the `FOR THE WEEK OF` header, `TASK` sub-header, `Daily Tasks` & `Weekly Tasks` section headers, all chore rows, the color band, and `Weekly Sign-Off` so chore titles stay anchored on the left while scrolling across `Mon–Sun`.
+  - Added a mobile swipe hint bar (`↔️ Swipe left/right across Mon–Sun • Tasks stay pinned`) above the table and increased row/button tap target height.
 - Rebuilt and deployed the updated APK to the connected Google Pixel 9 Pro.

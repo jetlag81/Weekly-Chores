@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-13 19:26:00
+> **Export Date**: 2026-11-13 19:42:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -104,6 +104,7 @@
     - Moved the **Month Selector** (`< November 2026 > Today`) out of the top Admin Hub header and placed it directly above the calendar grid inside the **Monthly Calendar** tab (`activeTab === "month"`), paired with an `✨ Auto-Assign` button and the monthly completion progress bar.
     - Converted the 6 top header action buttons (`Inspect`, `Photos`, `Nudge`, `Ledger`, `Rewards`, `Reset`) into a 6-column grid (`grid-cols-6 gap-1.5`) of narrower, taller vertical-stacked tiles (`flex-col items-center justify-center py-2 px-1`) with status dots/badges so all 6 fit completely within the mobile screen width without horizontal scrolling or clipping.
     - Moved the `notice` toast banner inside `<header>` below `--safe-area-inset-top` so notifications never overlap the Android status bar clock.
+    - Restored a vibrant pink/magenta border (`border-2 border-pink-500 shadow-[inset_0_0_12px_rgba(236,72,153,0.22)]`) and subtle pink cell tint (`bg-pink-50/35 dark:bg-pink-950/20`) around the current week row in the Monthly Calendar grid, plus a `Current Week` legend indicator.
 
 ---
 
@@ -5107,4 +5108,17 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Moved the **Month Selector** (`< November 2026 > Today`) from the top Admin Hub header into the **Monthly Calendar** view (`activeTab === "month"`), positioned directly above the calendar grid alongside `✨ Auto-Assign`, the monthly completion progress bar, and `Sync Current Week`.
 - Converted the 6 action buttons in the top Admin Hub header (`Inspect`, `Photos`, `Nudge`, `Ledger`, `Rewards`, `Reset`) into a 6-column equal-width grid (`grid grid-cols-6 gap-1.5`) of narrower, taller vertical-stacked buttons (`flex-col items-center justify-center gap-1 py-2 px-1`) so all 6 buttons fit cleanly on screen at once without horizontal scrolling or clipping.
 - Moved the `notice` toast banner inside `<header>` below `--safe-area-inset-top` so status notifications never overlap the Android status bar clock.
+- Rebuilt and deployed the updated APK to the connected Google Pixel 9 Pro.
+
+---
+
+### Turn 182
+**Date / Time**: 2026-11-13T19:42:00Z
+
+**User Prompt**:
+> Now just a visual to highlight the current week in month view. I think there was a pink/magenta border before.
+
+**Summary of Work Delivered**:
+- Added a crisp 2px pink/magenta border overlay (`border-2 border-pink-500 shadow-[inset_0_0_12px_rgba(236,72,153,0.22)]`) and subtle pink cell background tint (`bg-pink-50/35 dark:bg-pink-950/20`) around the current/active week row in the **Monthly Calendar** grid ([`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx)).
+- Added a `Current Week` indicator to the calendar legend bar below the month grid.
 - Rebuilt and deployed the updated APK to the connected Google Pixel 9 Pro.

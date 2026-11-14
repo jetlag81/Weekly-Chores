@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-13 20:36:00
+> **Export Date**: 2026-11-13 20:58:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -110,6 +110,11 @@
     - Upgraded `#printable-schedule-table` (`scheduleViewMode === "table"`) with a responsive `min-w-[920px] lg:min-w-full print:min-w-0` layout so the 15 columns (`TASK` + 7 `WHO` + 7 `DONE`) no longer squish into a ~380px mobile viewport.
     - Made the left `TASK` column (`19%` / `~175px` wide) sticky (`sticky left-0 z-10 print:static` with a subtle right drop shadow) across the `FOR THE WEEK OF` header, `TASK` sub-header, `Daily Tasks` / `Weekly Tasks` section headers, every chore row, the decorative color band, and `Weekly Sign-Off` so chore names stay pinned on the left while scrolling horizontally across `Mon–Sun`.
     - Widened each day's `WHO` (`8.1%` / `~75px`) and `DONE` (`3.47%` / `~32px`) columns so full first names (`Thom`, `Meghan`, `Sydney`, `Cadence`, `Mason`) are clearly readable without 2-letter truncation, and added a mobile swipe hint banner above the table.
+
+18. **Android Native `<select>` Dropdown Splash-Drawable Background Fix** (android/app/src/main/res/values/styles.xml, android/app/src/main/java/com/household/choreshub/MainActivity.java):
+    - Diagnosed and fixed a critical Android theme bug where tapping any `<select>` dropdown in the native Android app opened a giant white box displaying the blue Capacitor `X` splash logo (`@drawable/splash`) over the option rows.
+    - Root cause: `MainActivity` was configured with `android:theme="@style/AppTheme.NoActionBarLaunch"` which defined `<item name="android:background">@drawable/splash</item>` (a `View`-level attribute rather than `android:windowBackground`), causing every native Android `AlertDialog` and `ListView` row spawned by WebView `<select>` elements to inherit `@drawable/splash` as its view background.
+    - Removed `<item name="android:background">@drawable/splash</item>` from `styles.xml`, aligned `AppTheme.NoActionBarLaunch` with `Theme.AppCompat.DayNight.NoActionBar`, and explicitly called `setTheme(R.style.AppTheme_NoActionBar)` in `MainActivity.onCreate()`.
 
 ---
 
@@ -5143,3 +5148,18 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   - Pinned the left `TASK` column (`sticky left-0 z-10 print:static` with right shadow) across the `FOR THE WEEK OF` header, `TASK` sub-header, `Daily Tasks` & `Weekly Tasks` section headers, all chore rows, the color band, and `Weekly Sign-Off` so chore titles stay anchored on the left while scrolling across `Mon–Sun`.
   - Added a mobile swipe hint bar (`↔️ Swipe left/right across Mon–Sun • Tasks stay pinned`) above the table and increased row/button tap target height.
 - Rebuilt and deployed the updated APK to the connected Google Pixel 9 Pro.
+
+---
+
+### Turn 184
+**Date / Time**: 2026-11-13T20:58:00Z
+
+**User Prompt**:
+> take a screenshot. When I try to open a dropdown in the 7-day view, that is what I get
+
+**Summary of Work Delivered**:
+- Captured a live screenshot from the Pixel 9 Pro (`pixel_7day_dropdown.png`) showing a giant white dialog box with the blue Capacitor `X` splash logo covering the `<select>` dropdown options.
+- Identified the root cause in [`android/app/src/main/res/values/styles.xml`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/android/app/src/main/res/values/styles.xml) and [`MainActivity.java`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/android/app/src/main/java/com/household/choreshub/MainActivity.java):
+  - `MainActivity` was running under `AppTheme.NoActionBarLaunch`, which contained `<item name="android:background">@drawable/splash</item>`. Because `android:background` applies to every native Android `View` created under the Activity context, Android WebView's native `<select>` `AlertDialog` and its `CheckedTextView` rows were painting `@drawable/splash` (the white Capacitor splash bitmap) over the list options.
+- Removed `<item name="android:background">@drawable/splash</item>` from `styles.xml` and added `setTheme(R.style.AppTheme_NoActionBar)` at the start of `MainActivity.onCreate()`.
+- Rebuilt and deployed the fixed APK to the connected Google Pixel 9 Pro.

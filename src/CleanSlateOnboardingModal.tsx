@@ -694,10 +694,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-emerald-300 font-black uppercase tracking-wider text-[11px]">
                     <MapPin className="w-4 h-4 text-emerald-400" />
-                    <span>2. Home Street Address (Country &amp; Currency)</span>
+                    <span>2. Home Street Address</span>
                   </div>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
-                    {selectedAddress.countryCode === "CA" ? "🇨🇦 Canada (CAD $)" : "🇺🇸 USA (USD $)"}
+                    {selectedAddress.countryCode === "CA" ? "🇨🇦 Canada" : "🇺🇸 United States"}
                   </span>
                 </div>
 
@@ -719,8 +719,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                       }}
                       className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:outline-none focus:border-emerald-500"
                     >
-                      <option value="CA">🇨🇦 Canada (CAD $)</option>
-                      <option value="US">🇺🇸 United States (USD $)</option>
+                      <option value="CA">🇨🇦 Canada</option>
+                      <option value="US">🇺🇸 United States</option>
                     </select>
                   </div>
 
@@ -779,13 +779,28 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                               {s.formattedAddress}
                             </span>
                           </div>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 shrink-0">
-                            {s.countryCode === "CA" ? "🇨🇦 CAD" : "🇺🇸 USD"}
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-emerald-300 shrink-0">
+                            {s.countryCode === "CA" ? "🇨🇦 CA" : "🇺🇸 US"}
                           </span>
                         </button>
                       ))}
                     </div>
                   )}
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-400 mb-0.5">
+                    House Number &amp; Street Name (for Household &amp; Emergency Info)
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedAddress.street}
+                    onChange={(e) =>
+                      setSelectedAddress(prev => ({ ...prev, street: e.target.value }))
+                    }
+                    placeholder="e.g. 123 Portage Ave"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
+                  />
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
@@ -828,55 +843,6 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                       placeholder={selectedAddress.countryCode === "CA" ? "R3B 2E9" : "10001"}
                       className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-mono"
                     />
-                  </div>
-                </div>
-
-                {/* Municipal Curbside Schedule */}
-                <div className="pt-2 border-t border-slate-700/70 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 mb-1">
-                      Municipal Curbside Bin Night
-                    </label>
-                    <select
-                      value={curbsidePickupDay}
-                      onChange={(e) => setCurbsidePickupDay(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
-                    >
-                      <option value="Sunday Evening (Monday Pickup)" className="bg-slate-900 text-white">Sunday Evening (Mon Pickup)</option>
-                      <option value="Monday Evening (Tuesday Pickup)" className="bg-slate-900 text-white">Monday Evening (Tue Pickup)</option>
-                      <option value="Tuesday Evening (Wednesday Pickup)" className="bg-slate-900 text-white">Tuesday Evening (Wed Pickup)</option>
-                      <option value="Wednesday Evening (Thursday Pickup)" className="bg-slate-900 text-white">Wednesday Evening (Thu Pickup)</option>
-                      <option value="Thursday Evening (Friday Pickup)" className="bg-slate-900 text-white">Thursday Evening (Fri Pickup)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 mb-1">
-                      This Week&apos;s Alternating Bin
-                    </label>
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setCurbsideCurrentWeekType("recycling")}
-                        className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold border transition cursor-pointer ${
-                          curbsideCurrentWeekType === "recycling"
-                            ? "bg-sky-500/20 border-sky-400 text-sky-300"
-                            : "bg-slate-900 border-slate-700 text-slate-400"
-                        }`}
-                      >
-                        ♻️ Recycling Week
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setCurbsideCurrentWeekType("waste")}
-                        className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold border transition cursor-pointer ${
-                          curbsideCurrentWeekType === "waste"
-                            ? "bg-amber-500/20 border-amber-400 text-amber-300"
-                            : "bg-slate-900 border-slate-700 text-slate-400"
-                        }`}
-                      >
-                        🗑️ Waste Week
-                      </button>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -1342,6 +1308,65 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                       {day}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Municipal Curbside Waste & Recycling Schedule */}
+              <div className="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-3.5 space-y-2.5">
+                <div className="flex items-center gap-2 text-sky-300 font-black uppercase tracking-wider text-[11px]">
+                  <Calendar className="w-4 h-4 text-sky-400" />
+                  <span>Municipal Curbside Waste &amp; Recycling Schedule</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 mb-1">
+                      Curbside Bin Night
+                    </label>
+                    <select
+                      value={curbsidePickupDay}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setCurbsidePickupDay(val);
+                        setHasInitializedChores(false);
+                      }}
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
+                    >
+                      <option value="Sunday Evening (Monday Pickup)" className="bg-slate-900 text-white">Sunday Evening (Mon Pickup)</option>
+                      <option value="Monday Evening (Tuesday Pickup)" className="bg-slate-900 text-white">Monday Evening (Tue Pickup)</option>
+                      <option value="Tuesday Evening (Wednesday Pickup)" className="bg-slate-900 text-white">Tuesday Evening (Wed Pickup)</option>
+                      <option value="Wednesday Evening (Thursday Pickup)" className="bg-slate-900 text-white">Wednesday Evening (Thu Pickup)</option>
+                      <option value="Thursday Evening (Friday Pickup)" className="bg-slate-900 text-white">Thursday Evening (Fri Pickup)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 mb-1">
+                      This Week&apos;s Alternating Bin
+                    </label>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setCurbsideCurrentWeekType("recycling")}
+                        className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold border transition cursor-pointer ${
+                          curbsideCurrentWeekType === "recycling"
+                            ? "bg-sky-500/20 border-sky-400 text-sky-300"
+                            : "bg-slate-900 border-slate-700 text-slate-400"
+                        }`}
+                      >
+                        ♻️ Recycling Week
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCurbsideCurrentWeekType("waste")}
+                        className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold border transition cursor-pointer ${
+                          curbsideCurrentWeekType === "waste"
+                            ? "bg-amber-500/20 border-amber-400 text-amber-300"
+                            : "bg-slate-900 border-slate-700 text-slate-400"
+                        }`}
+                      >
+                        🗑️ Waste Week
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 

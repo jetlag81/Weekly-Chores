@@ -330,6 +330,18 @@ export async function searchStreetAddressAutocomplete(
   const activeCountry: RewardRegion =
     countryFilter || (looksUS && !looksCanadian ? "US" : "CA");
   const ccLower = activeCountry.toLowerCase();
+  const leadingNumMatch = clean.match(/^\s*(\d+[A-Za-z]?)\s+(.+)/);
+  const typedHouseNum = leadingNumMatch ? leadingNumMatch[1] : "";
+
+  const ensureHouseNumber = (returnedHouseNum: string | undefined, roadName: string): string => {
+    const rawNum = (returnedHouseNum || "").trim();
+    const road = (roadName || "").trim();
+    if (rawNum) return `${rawNum} ${road}`.trim();
+    if (typedHouseNum && road && !road.toLowerCase().startsWith(typedHouseNum.toLowerCase())) {
+      return `${typedHouseNum} ${road}`.trim();
+    }
+    return road || clean;
+  };
 
   // 1. Primary: Nominatim strictly filtered by selected country (ca / us)
   try {
@@ -350,9 +362,8 @@ export async function searchStreetAddressAutocomplete(
       if (Array.isArray(items) && items.length > 0) {
         const mapped: AddressSuggestion[] = items.map((item: any) => {
           const a = item.address || {};
-          const houseNum = a.house_number ? `${a.house_number} ` : "";
           const road = a.road || a.pedestrian || a.residential || "";
-          const street = `${houseNum}${road}`.trim() || clean;
+          const street = ensureHouseNumber(a.house_number, road);
           const city = a.city || a.town || a.village || a.municipality || a.county || "";
           const stateProvince = a.state || a.province || "";
           const postalCode = a.postcode || "";
@@ -398,9 +409,7 @@ export async function searchStreetAddressAutocomplete(
         const mapped: AddressSuggestion[] = data.features
           .map((f: any) => {
             const p = f.properties || {};
-            const houseNum = p.housenumber ? `${p.housenumber} ` : "";
-            const streetName = p.street || p.name || "";
-            const street = `${houseNum}${streetName}`.trim();
+            const street = ensureHouseNumber(p.housenumber, p.street || p.name || "");
             const city = p.city || p.town || p.locality || p.county || "";
             const stateProvince = p.state || "";
             const postalCode = p.postcode || "";

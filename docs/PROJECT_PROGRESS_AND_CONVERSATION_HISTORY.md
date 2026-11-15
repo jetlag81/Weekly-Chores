@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-14 19:14:00
+> **Export Date**: 2026-11-15 08:46:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -5246,4 +5246,19 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   1. Added `ACCESS_COARSE_LOCATION` and `ACCESS_FINE_LOCATION` permissions to [`android/app/src/main/AndroidManifest.xml`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/android/app/src/main/AndroidManifest.xml) so Android WebView can prompt for GPS/location access.
   2. Upgraded `searchStreetAddressAutocomplete` in [`src/householdOnboardingConfig.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/householdOnboardingConfig.ts) to query OpenStreetMap Nominatim with strict `countrycodes=ca`/`us` filtering and optional GPS `viewbox` bias (falling back to country-biased Photon and local fallback), plus added `reverseGeocodeCoordinates(lat, lon)` for GPS-to-street-address lookup.
   3. Updated Step 1 of [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) to place the **1. Select Country First** dropdown (`🇨🇦 Canada (CAD $)` / `🇺🇸 United States (USD $)`) and **Use My Current Location** GPS button at the top of the Home Street Address card, and replaced the duplicate country dropdown in the City/Province/Postal grid with an editable **Postal / ZIP Code** field.
+- Rebuilt and deployed the updated APK to the connected Pixel 9 Pro (`47171FDAP000A2`).
+
+---
+
+### Turn 188
+**Date / Time**: 2026-11-15T08:46:00Z
+
+**User Prompt**:
+> In step 1, I don't think we need to say that currency is part of the reason for the home address. We can just add the home address and the currency can update in the background. It also doesn't populate the house number in the address search, and I feel like it should. This would allow for emergency information to be accessed (possibly for a future safety feature I am considering). I also think the Municipal schedule should be moved to a different step (it just feels strange to me to have it on the first step)
+
+**Summary of Work Delivered**:
+- Refined Step 1 & Step 4 of [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) and [`src/householdOnboardingConfig.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/householdOnboardingConfig.ts):
+  1. **Silent Background Currency Detection**: Removed currency wording (`CAD $` / `USD $`) from Step 1's Home Street Address UI while keeping Country (`CA`/`US`) and Currency (`CAD`/`USD`) silently synced in the background.
+  2. **House Number Preservation & Explicit Field**: Updated `searchStreetAddressAutocomplete` with `ensureHouseNumber()` so any leading house number typed by the user is preserved even when OSM/Nominatim/Photon only returns a street-level polygon, and added an explicit **House Number & Street Name (for Household & Emergency Info)** field in Step 1.
+  3. **Relocated Municipal Curbside Schedule**: Moved **Municipal Curbside Bin Night** and **This Week's Alternating Bin** out of Step 1 and into **Step 4 (Chores & Start Day)** right alongside the Smart Starter Chore Packs.
 - Rebuilt and deployed the updated APK to the connected Pixel 9 Pro (`47171FDAP000A2`).

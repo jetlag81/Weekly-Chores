@@ -68,6 +68,7 @@ interface CleanSlateOnboardingModalProps {
     startSpotlightTour: boolean;
   }) => void;
   onRestoreThomPreset?: () => void;
+  onRegisterBackHandler?: (fn: (() => boolean) | null) => void;
 }
 
 const MEMBER_COLORS = [
@@ -85,9 +86,11 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
   isOpen,
   onClose,
   onCompleteOnboarding,
-  onRestoreThomPreset
+  onRestoreThomPreset,
+  onRegisterBackHandler
 }) => {
   const [step, setStep] = useState<number>(1);
+  const [showExitConfirm, setShowExitConfirm] = useState<boolean>(false);
   const totalSteps = 6;
 
   // Step 1: Admin & Address State
@@ -246,6 +249,32 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       setHasInitializedChores(true);
     }
   }, [step, hasInitializedChores, pets, selectedAddress, curbsidePickupDay, curbsideBiWeekly, curbsideCurrentWeekType]);
+
+  // Register Android hardware Back button handler:
+  // - Steps 2..6 -> go back 1 step
+  // - Step 1 -> open "Do you want to exit the setup wizard?" prompt
+  // - If exit prompt is already open -> dismiss prompt
+  useEffect(() => {
+    if (!onRegisterBackHandler) return;
+    if (!isOpen) {
+      onRegisterBackHandler(null);
+      setShowExitConfirm(false);
+      return;
+    }
+    onRegisterBackHandler(() => {
+      if (showExitConfirm) {
+        setShowExitConfirm(false);
+        return true;
+      }
+      if (step > 1) {
+        setStep(s => Math.max(1, s - 1));
+        return true;
+      }
+      setShowExitConfirm(true);
+      return true;
+    });
+    return () => onRegisterBackHandler(null);
+  }, [isOpen, step, showExitConfirm, onRegisterBackHandler]);
 
   if (!isOpen) return null;
 
@@ -521,7 +550,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
   return (
     <div
       className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto modal-safe-area"
-      onClick={onClose}
+      onClick={() => setShowExitConfirm(true)}
     >
       <div
         className="bg-slate-900 border border-slate-700/80 rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden my-auto flex flex-col max-h-full text-slate-100"
@@ -566,7 +595,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
               )}
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => setShowExitConfirm(true)}
                 className="w-8 h-8 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition cursor-pointer"
                 title="Close Wizard"
               >
@@ -1807,7 +1836,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
           ) : (
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => setShowExitConfirm(true)}
               className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 font-bold text-xs transition cursor-pointer"
             >
               Cancel
@@ -1835,6 +1864,50 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
           )}
         </div>
       </div>
+
+      {/* Exit Setup Wizard Confirmation Prompt */}
+      {showExitConfirm && (
+        <div
+          className="fixed inset-0 z-[60] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 modal-safe-area"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowExitConfirm(false);
+          }}
+        >
+          <div
+            className="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4 text-slate-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-1.5">
+              <h3 className="text-base font-black text-white">
+                Exit Setup Wizard?
+              </h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Do you want to exit the Clean Slate Setup Wizard? Any unsaved entries from this session will be discarded.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowExitConfirm(false)}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition cursor-pointer"
+              >
+                Keep Editing
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowExitConfirm(false);
+                  onClose();
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs transition cursor-pointer"
+              >
+                Exit Wizard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -3543,26 +3543,31 @@ function App({
     nudgeMessage: ""
   });
 
-  // Ref for child MobileParentDashboard internal modals
+  // Ref for child MobileParentDashboard & CleanSlateOnboardingModal internal back handlers
   const parentMobileCloserRef = useRef<() => boolean>(() => false);
+  const cleanSlateBackRef = useRef<(() => boolean) | null>(null);
 
   // Mobile Web App "Press Back Again to Exit" & Modal Dismiss Handler (Parent Hub)
   const handleDismissAnyParentModal = useCallback((): boolean => {
-    // 1. Check if child mobile dashboard has open modal (settings, photo inbox, photo review)
+    // 1. Check if Clean Slate Onboarding Wizard is open (steps 2-6 go back; step 1 prompts exit)
+    if (showCleanSlateModal) {
+      if (cleanSlateBackRef.current && cleanSlateBackRef.current()) {
+        return true;
+      }
+      setShowCleanSlateModal(false);
+      return true;
+    }
+    // 2. Check if child mobile dashboard has open modal (settings, photo inbox, photo review)
     if (parentMobileCloserRef.current && parentMobileCloserRef.current()) {
       return true;
     }
-    // 2. Check parent hub modals & drawers
+    // 3. Check parent hub modals & drawers
     if (showChatDrawer) {
       setShowChatDrawer(false);
       return true;
     }
     if (showActivityDrawer) {
       setShowActivityDrawer(false);
-      return true;
-    }
-    if (showCleanSlateModal) {
-      setShowCleanSlateModal(false);
       return true;
     }
     if (showSpotlightTour) {
@@ -6871,6 +6876,7 @@ function App({
           onClose={() => setShowCleanSlateModal(false)}
           onCompleteOnboarding={handleCompleteCleanSlateOnboarding}
           onRestoreThomPreset={handleRestoreThomsPreset}
+          onRegisterBackHandler={(fn) => { cleanSlateBackRef.current = fn; }}
         />
 
         {/* Mobile "Press back again to exit" Toast */}
@@ -8892,6 +8898,7 @@ function App({
         onClose={() => setShowCleanSlateModal(false)}
         onCompleteOnboarding={handleCompleteCleanSlateOnboarding}
         onRestoreThomPreset={handleRestoreThomsPreset}
+        onRegisterBackHandler={(fn) => { cleanSlateBackRef.current = fn; }}
       />
 
       {/* Interactive 6-Stop Spotlight Coachmark Tour Overlay */}

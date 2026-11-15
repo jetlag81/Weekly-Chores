@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-15 08:46:00
+> **Export Date**: 2026-11-15 08:57:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -5250,6 +5250,20 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 
 ---
 
+### Turn 189
+**Date / Time**: 2026-11-15T08:57:00Z
+
+**User Prompt**:
+> Great! I think we should implement a "do you want to exit the setup wizard" function if the back button (the native Android back button) is pressed. I've exited too often just by trying to go back a screen and I think a user might get annoyed. If the user is on any step but 1, pressing back should go to the previous step. If they are on step 1, the prompt should activate.
+
+**Summary of Work Delivered**:
+- Wired native Android hardware Back button step navigation & exit confirmation into [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) and [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx):
+  - **Steps 2–6**: Pressing the Android Back button navigates back to the previous wizard step (`step - 1`) instead of closing the wizard.
+  - **Step 1** (or tapping `X` / Cancel / backdrop): Activates the **"Exit Setup Wizard?"** confirmation prompt with **Keep Editing** and **Exit Wizard** actions; pressing Back while the confirmation prompt is open dismisses the prompt safely.
+- Rebuilt and deployed the updated APK to the connected Pixel 9 Pro (`47171FDAP000A2`).
+
+---
+
 ### Turn 188
 **Date / Time**: 2026-11-15T08:46:00Z
 
@@ -5261,4 +5275,18 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   1. **Silent Background Currency Detection**: Removed currency wording (`CAD $` / `USD $`) from Step 1's Home Street Address UI while keeping Country (`CA`/`US`) and Currency (`CAD`/`USD`) silently synced in the background.
   2. **House Number Preservation & Explicit Field**: Updated `searchStreetAddressAutocomplete` with `ensureHouseNumber()` so any leading house number typed by the user is preserved even when OSM/Nominatim/Photon only returns a street-level polygon, and added an explicit **House Number & Street Name (for Household & Emergency Info)** field in Step 1.
   3. **Relocated Municipal Curbside Schedule**: Moved **Municipal Curbside Bin Night** and **This Week's Alternating Bin** out of Step 1 and into **Step 4 (Chores & Start Day)** right alongside the Smart Starter Chore Packs.
+- Rebuilt and deployed the updated APK to the connected Pixel 9 Pro (`47171FDAP000A2`).
+
+---
+
+### Turn 189
+**Date / Time**: 2026-11-15T08:57:00Z
+
+**User Prompt**:
+> Great! I think we should implement a "do you want to exit the setup wizard" function if the back button (the native Android back button) is pressed. I've exited too often just by trying to go back a screen and I think a user might get annoyed. If the user is on any step but 1, pressing back should go to the previous step. If they are on step 1, the prompt should activate.
+
+**Summary of Work Delivered**:
+- Wired native Android hardware Back button step navigation & exit confirmation into [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) and [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx):
+  - **Steps 2–6**: Pressing the Android Back button navigates back to the previous wizard step (`step - 1`) instead of closing the wizard.
+  - **Step 1** (or tapping `X` / Cancel / backdrop): Activates the **"Exit Setup Wizard?"** confirmation prompt with **Keep Editing** and **Exit Wizard** actions; pressing Back while the confirmation prompt is open dismisses the prompt safely.
 - Rebuilt and deployed the updated APK to the connected Pixel 9 Pro (`47171FDAP000A2`).

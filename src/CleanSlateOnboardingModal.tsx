@@ -1454,7 +1454,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="font-bold text-white text-xs">
-                          {adminName.trim() || "Primary Parent"} {adminLastName.trim()}
+                          {adminFirstName.trim() || "Primary Parent"} {adminLastName.trim()}
                         </span>
                         {adminNickname.trim() && (
                           <span className="text-[10px] text-slate-400">({adminNickname.trim()})</span>

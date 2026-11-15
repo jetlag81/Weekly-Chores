@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-15 10:20:00
+> **Export Date**: 2026-11-15 10:47:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,10 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Phone Number Capture & Contact Sync in Clean Slate Onboarding** (src/CleanSlateOnboardingModal.tsx, src/householdOnboardingConfig.ts):
+1. **Fixed Step 2 ReferenceError (`adminName` → `adminFirstName`)** (src/CleanSlateOnboardingModal.tsx):
+   - Replaced `adminName.trim()` with `adminFirstName.trim()` in the Step 2 Primary Parent Admin row, resolving the crash when advancing from Step 1 to Step 2.
+
+2. **Phone Number Capture & Contact Sync in Clean Slate Onboarding** (src/CleanSlateOnboardingModal.tsx, src/householdOnboardingConfig.ts):
    - Added **Admin Phone Number** (`adminPhone`) to Step 1 and persisted on `HouseholdSetupConfig`.
    - Added **Phone Number** fields to Step 2 Co-Parent (`coParentPhone`) and Kids (`kidPhone`) forms, and updated contact pickers (`navigator.contacts.select(['name', 'tel'])`) to auto-populate both names and phone numbers.
    - Displayed saved phone numbers under each member in the Step 2 Household Members hierarchy.
@@ -5354,3 +5357,16 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   2. **Co-Parent & Kid Phone Numbers (Step 2)**: Added `coParentPhone` and `kidPhone` (`type="tel"`) fields in Step 2 and updated `handlePickCoParentContact` / `handlePickKidContact` to request `["name", "tel"]` so device contacts auto-populate phone numbers alongside names.
   3. **Household Members Display**: Rendered saved phone numbers beneath the Primary Parent Admin, Co-Parent(s), and Kids rows in Step 2.
 - Rebuilt and deployed the updated APK to the connected Pixel 9 Pro (`47171FDAP000A2`).
+
+---
+
+### Turn 193
+**Date / Time**: 2026-11-15T10:47:00Z
+
+**User Prompt**:
+> Getting an error now when I try to click next out of step 1. Take a screenshot
+
+**Summary of Work Delivered**:
+- Captured screenshot from the connected Pixel 9 Pro (`47171FDAP000A2`), identifying `ReferenceError: adminName is not defined` when entering Step 2.
+- Fixed the typo in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) (`adminName.trim()` → `adminFirstName.trim()`).
+- Rebuilt and deployed the updated APK to `47171FDAP000A2`.

@@ -8,6 +8,11 @@
 // 6. Roll Out Invites -> Launches Step 7 (Live Interactive Spotlight Coachmark Tour on the Hub)
 
 import React, { useState, useEffect } from "react";
+import { Capacitor, registerPlugin } from "@capacitor/core";
+
+const NativeContactPicker = registerPlugin<{
+  pickContact: () => Promise<{ name?: string; phoneNumber?: string }>;
+}>("ContactPicker");
 import {
   Sparkles,
   MapPin,
@@ -371,64 +376,79 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
     setCoParentContactNote(null);
   };
 
-  const handlePickCoParentContact = async () => {
+  const pickSingleDeviceContact = async (): Promise<{
+    fullName: string;
+    phone: string;
+    unsupported?: boolean;
+  } | null> => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const res = await NativeContactPicker.pickContact();
+        return {
+          fullName: (res?.name || "").trim(),
+          phone: (res?.phoneNumber || "").trim()
+        };
+      } catch (err: any) {
+        if (String(err?.message || err).toLowerCase().includes("cancel")) {
+          return null;
+        }
+        return { fullName: "", phone: "", unsupported: true };
+      }
+    }
+
     const nav = navigator as Navigator & {
       contacts?: {
         select?: (props: string[], opts?: { multiple?: boolean }) => Promise<Array<{ name?: string[]; tel?: string[] }>>;
       };
     };
     if (!nav.contacts?.select) {
-      setCoParentContactNote("Contact picker isn't available in this WebView — enter Co-Parent details below.");
-      setCoParentMode("manual");
-      return;
+      return { fullName: "", phone: "", unsupported: true };
     }
     try {
       const picked = await nav.contacts.select(["name", "tel"], { multiple: false });
       const fullName = (picked[0]?.name?.[0] || "").trim();
       const phone = (picked[0]?.tel?.[0] || "").trim();
-      if (fullName || phone) {
-        if (fullName) {
-          const parts = fullName.split(/\s+/);
-          setCoParentFirstName(parts[0] || "");
-          setCoParentLastName(parts.slice(1).join(" ") || adminLastName.trim() || "");
-        }
-        if (phone) setCoParentPhone(phone);
-        setCoParentContactNote(`Loaded "${fullName || phone}" from contacts — review & tap Add.`);
-        setCoParentMode("manual");
-      }
+      if (!fullName && !phone) return null;
+      return { fullName, phone };
     } catch {
-      setCoParentMode("manual");
+      return null;
     }
   };
 
+  const handlePickCoParentContact = async () => {
+    const contact = await pickSingleDeviceContact();
+    if (!contact) return;
+    if (contact.unsupported) {
+      setCoParentContactNote("Contact picker isn't available here — enter Co-Parent details below.");
+      setCoParentMode("manual");
+      return;
+    }
+    if (contact.fullName) {
+      const parts = contact.fullName.split(/\s+/);
+      setCoParentFirstName(parts[0] || "");
+      setCoParentLastName(parts.slice(1).join(" ") || adminLastName.trim() || "");
+    }
+    if (contact.phone) setCoParentPhone(contact.phone);
+    setCoParentContactNote(`Loaded "${contact.fullName || contact.phone}" from contacts — review & tap Add Co-Parent.`);
+    setCoParentMode("manual");
+  };
+
   const handlePickKidContact = async () => {
-    const nav = navigator as Navigator & {
-      contacts?: {
-        select?: (props: string[], opts?: { multiple?: boolean }) => Promise<Array<{ name?: string[]; tel?: string[] }>>;
-      };
-    };
-    if (!nav.contacts?.select) {
-      setKidContactNote("Contact picker isn't available in this WebView — enter Kid details below.");
+    const contact = await pickSingleDeviceContact();
+    if (!contact) return;
+    if (contact.unsupported) {
+      setKidContactNote("Contact picker isn't available here — enter Kid details below.");
       setKidMode("manual");
       return;
     }
-    try {
-      const picked = await nav.contacts.select(["name", "tel"], { multiple: false });
-      const fullName = (picked[0]?.name?.[0] || "").trim();
-      const phone = (picked[0]?.tel?.[0] || "").trim();
-      if (fullName || phone) {
-        if (fullName) {
-          const parts = fullName.split(/\s+/);
-          setKidFirstName(parts[0] || "");
-          setKidLastName(parts.slice(1).join(" ") || adminLastName.trim() || "");
-        }
-        if (phone) setKidPhone(phone);
-        setKidContactNote(`Loaded "${fullName || phone}" — pick their Birthday & tap Add to Household.`);
-        setKidMode("manual");
-      }
-    } catch {
-      setKidMode("manual");
+    if (contact.fullName) {
+      const parts = contact.fullName.split(/\s+/);
+      setKidFirstName(parts[0] || "");
+      setKidLastName(parts.slice(1).join(" ") || adminLastName.trim() || "");
     }
+    if (contact.phone) setKidPhone(contact.phone);
+    setKidContactNote(`Loaded "${contact.fullName || contact.phone}" — pick their Birthday & tap Add to Household.`);
+    setKidMode("manual");
   };
 
   const handleAddKidToHousehold = () => {

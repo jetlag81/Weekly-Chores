@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-15 10:47:00
+> **Export Date**: 2026-11-15 10:52:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,11 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Fixed Step 2 ReferenceError (`adminName` → `adminFirstName`)** (src/CleanSlateOnboardingModal.tsx):
+1. **Native Android Contact Picker Plugin for Onboarding** (android/app/src/main/java/com/household/choreshub/ContactPickerPlugin.java, MainActivity.java, src/CleanSlateOnboardingModal.tsx):
+   - Added a native Capacitor `ContactPickerPlugin` using Android's `Intent.ACTION_PICK` (`ContactsContract.CommonDataKinds.Phone.CONTENT_URI`) — opens the system Contacts picker directly on Android without requiring broad `READ_CONTACTS` permissions.
+   - Wired Co-Parent **Choose Existing Contact** and Kids **Existing Contact** buttons in Step 2 to populate First Name, Last Name, and Phone Number from the selected contact.
+
+2. **Fixed Step 2 ReferenceError (`adminName` → `adminFirstName`)** (src/CleanSlateOnboardingModal.tsx):
    - Replaced `adminName.trim()` with `adminFirstName.trim()` in the Step 2 Primary Parent Admin row, resolving the crash when advancing from Step 1 to Step 2.
 
 2. **Phone Number Capture & Contact Sync in Clean Slate Onboarding** (src/CleanSlateOnboardingModal.tsx, src/householdOnboardingConfig.ts):
@@ -5369,4 +5373,18 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 **Summary of Work Delivered**:
 - Captured screenshot from the connected Pixel 9 Pro (`47171FDAP000A2`), identifying `ReferenceError: adminName is not defined` when entering Step 2.
 - Fixed the typo in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) (`adminName.trim()` → `adminFirstName.trim()`).
+- Rebuilt and deployed the updated APK to `47171FDAP000A2`.
+
+---
+
+### Turn 194
+**Date / Time**: 2026-11-15T10:52:00Z
+
+**User Prompt**:
+> In step 2, when I click Choose Existing Contact, nothing happens
+
+**Summary of Work Delivered**:
+- Identified that Android Capacitor WebView does not expose the Web Contact Picker API (`navigator.contacts.select`).
+- Built a native Capacitor Android plugin [`ContactPickerPlugin.java`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/android/app/src/main/java/com/household/choreshub/ContactPickerPlugin.java) registered in [`MainActivity.java`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/android/app/src/main/java/com/household/choreshub/MainActivity.java) that launches Android's native `Intent.ACTION_PICK` (`ContactsContract.CommonDataKinds.Phone.CONTENT_URI`) and returns `{ name, phoneNumber }`.
+- Wired `pickSingleDeviceContact` in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) to invoke `ContactPicker.pickContact()` on native Android and populate Co-Parent and Kid name + phone fields.
 - Rebuilt and deployed the updated APK to `47171FDAP000A2`.

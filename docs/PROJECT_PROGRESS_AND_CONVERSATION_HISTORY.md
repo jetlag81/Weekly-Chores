@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-15 08:57:00
+> **Export Date**: 2026-11-15 09:16:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,12 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Giphy API 100 Calls/Hr Rate-Limiter, Quota Monitor & Zero-Downtime Fallback** (src/giphyService.ts, src/HouseholdSettingsModal.tsx, src/ParentNudgeModal.tsx):
+1. **Clean Slate Onboarding Step 2 Family App Links, Quick Batch Add & Step 5 Payment Links** (src/CleanSlateOnboardingModal.tsx):
+   - Focused Step 2 (`Family, Pets & Apps`) on **Family App Account Links** (`Google Family Link`, `Apple Family Sharing`, `Microsoft Family Safety`) with an honest platform-API privacy note.
+   - Added **Quick Batch Add** (comma/line-separated `Name Age` or `Name (Parent)` parsing) and optional **Device Contact Picker** (`navigator.contacts.select`) in Step 2.
+   - Moved **Link Payment Apps** (`Google Pay`, `Apple Pay`, and `Interac e-Transfer` for Canada) into Step 5 (`Rewards & Wallets`).
+
+2. **Giphy API 100 Calls/Hr Rate-Limiter, Quota Monitor & Zero-Downtime Fallback** (src/giphyService.ts, src/HouseholdSettingsModal.tsx, src/ParentNudgeModal.tsx):
    - Automatic sliding 60-minute window call logger in localStorage.
    - Soft limit at 80 calls/hr that pauses background preloading to preserve quota for user searches.
    - Hard limit at 95 calls/hr that protects from 429 lockouts.
@@ -5289,4 +5294,20 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Wired native Android hardware Back button step navigation & exit confirmation into [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) and [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx):
   - **Steps 2–6**: Pressing the Android Back button navigates back to the previous wizard step (`step - 1`) instead of closing the wizard.
   - **Step 1** (or tapping `X` / Cancel / backdrop): Activates the **"Exit Setup Wizard?"** confirmation prompt with **Keep Editing** and **Exit Wizard** actions; pressing Back while the confirmation prompt is open dismisses the prompt safely.
+- Rebuilt and deployed the updated APK to the connected Pixel 9 Pro (`47171FDAP000A2`).
+
+---
+
+### Turn 190
+**Date / Time**: 2026-11-15T09:16:00Z
+
+**User Prompt**:
+> Perfect. Now, step 2 I think should begin with just the family app account link. Payment app links we'll leave until the allowance and rewards section. The goal for any family apps would be to pull family member information, making it quicker to add members to the household. Google Family Link, Apple Family Sharing and Microsoft Family Safety for sure (but will my app be able to pull the desired information from them?). Is it worth linking apps like Kids360 or FamilyWall?
+
+**Summary of Work Delivered**:
+- Refactored Step 2 & Step 5 in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx):
+  1. **Step 2 — Family App Account Links Only**: Removed Google Pay, Apple Pay, and Switch/PSN from Step 2 and focused the top card on **Google Family Link**, **Apple Family Sharing**, and **Microsoft Family Safety**, with a transparent note explaining that Google/Apple/Microsoft block third-party apps from auto-reading Family Group rosters for privacy.
+  2. **Step 2 — Quick Batch Add & Contact Picker**: Added `handleBatchAddMembers` (parses comma/newline entries like `Sydney 15, Cadence 13, Mason 10, Alex (Parent)`) and `handlePickDeviceContacts` (`navigator.contacts.select`) so families can add multiple members in one step.
+  3. **Step 5 — Moved Payment App Links**: Moved **Google Pay**, **Apple Pay**, and **Interac e-Transfer** (when Canada is selected) toggles into **Step 5 (Rewards & Wallets)** alongside Preferred Payout Wallet / Method.
+- Explained API limitations for Google Family Link, Apple Family Sharing, Microsoft Family Safety, and why closed consumer apps like Kids360 and FamilyWall are not worth linking.
 - Rebuilt and deployed the updated APK to the connected Pixel 9 Pro (`47171FDAP000A2`).

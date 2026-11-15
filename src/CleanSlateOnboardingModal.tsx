@@ -137,6 +137,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
   const [newMemberNickname, setNewMemberNickname] = useState("");
   const [newMemberRole, setNewMemberRole] = useState<"Parent" | "Kid">("Kid");
   const [newMemberAge, setNewMemberAge] = useState<number>(13);
+  const [batchMemberInput, setBatchMemberInput] = useState("");
+  const [batchAddFeedback, setBatchAddFeedback] = useState<string | null>(null);
 
   const [pets, setPets] = useState<OnboardingPetDraft[]>([]);
   const [newPetName, setNewPetName] = useState("");
@@ -306,6 +308,96 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
     setMembers(prev => [...prev, newMem]);
     setNewMemberName("");
     setNewMemberNickname("");
+  };
+
+  const handleBatchAddMembers = () => {
+    const tokens = batchMemberInput
+      .split(/[\n,;]+/)
+      .map(t => t.trim())
+      .filter(Boolean);
+    if (tokens.length === 0) return;
+
+    const baseIdx = members.length + 1;
+    const timestamp = Date.now();
+    const added: OnboardingMemberDraft[] = [];
+
+    tokens.forEach((token, i) => {
+      const isParent = /\bparent\b/i.test(token);
+      const ageMatch = token.match(/(?:^|\s|\(|:)(\d{1,2})(?:\)|\s|$)/);
+      const parsedAge = ageMatch ? Number(ageMatch[1]) : 12;
+      const cleanName = token
+        .replace(/\(?\bparent\b\)?/gi, "")
+        .replace(/\(?\b\d{1,2}\)?/g, "")
+        .replace(/[:\-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      if (!cleanName) return;
+      const idx = baseIdx + added.length;
+      const role: "Parent" | "Kid" = isParent ? "Parent" : "Kid";
+      const age = role === "Parent" ? 35 : Math.max(3, Math.min(25, parsedAge || 12));
+
+      added.push({
+        id: `${cleanName.toLowerCase().replace(/\s+/g, "_")}_${timestamp}_${i}`,
+        firstName: cleanName,
+        lastName: adminLastName.trim() || "",
+        nickname: "",
+        role,
+        age,
+        residency: "Full-Time",
+        color: MEMBER_COLORS[idx % MEMBER_COLORS.length],
+        avatarEmoji: role === "Parent" ? "🏠" : age >= 12 ? "🎧" : "🚀",
+        inviteCode: generateInviteCodeForMember(cleanName, idx)
+      });
+    });
+
+    if (added.length > 0) {
+      setMembers(prev => [...prev, ...added]);
+      setBatchMemberInput("");
+      setBatchAddFeedback(`Added ${added.length} member${added.length === 1 ? "" : "s"}.`);
+      setTimeout(() => setBatchAddFeedback(null), 3500);
+    }
+  };
+
+  const handlePickDeviceContacts = async () => {
+    const nav = navigator as Navigator & {
+      contacts?: { select?: (props: string[], opts?: { multiple?: boolean }) => Promise<Array<{ name?: string[] }>> };
+    };
+    if (!nav.contacts?.select) {
+      setBatchAddFeedback("Contact picker isn't supported in this WebView — use Quick Batch Add above.");
+      setTimeout(() => setBatchAddFeedback(null), 4000);
+      return;
+    }
+    try {
+      const picked = await nav.contacts.select(["name"], { multiple: true });
+      const names = picked
+        .map(c => (c.name?.[0] || "").trim().split(/\s+/)[0])
+        .filter(Boolean);
+      if (names.length === 0) return;
+
+      const baseIdx = members.length + 1;
+      const timestamp = Date.now();
+      const added: OnboardingMemberDraft[] = names.map((cleanName, i) => {
+        const idx = baseIdx + i;
+        return {
+          id: `${cleanName.toLowerCase().replace(/\s+/g, "_")}_${timestamp}_c${i}`,
+          firstName: cleanName,
+          lastName: adminLastName.trim() || "",
+          nickname: "",
+          role: "Kid",
+          age: 12,
+          residency: "Full-Time",
+          color: MEMBER_COLORS[idx % MEMBER_COLORS.length],
+          avatarEmoji: "🎧",
+          inviteCode: generateInviteCodeForMember(cleanName, idx)
+        };
+      });
+      setMembers(prev => [...prev, ...added]);
+      setBatchAddFeedback(`Imported ${added.length} from contacts (adjust ages below if needed).`);
+      setTimeout(() => setBatchAddFeedback(null), 4000);
+    } catch {
+      // User cancelled contact picker
+    }
   };
 
   const handleRemoveMember = (id: string) => {
@@ -878,51 +970,20 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
             </div>
           )}
 
-          {/* STEP 2: FAMILY ECOSYSTEM (G-PAY / APPLE PAY / APPS), MEMBERS (12+ vs <=11) & PETS */}
+          {/* STEP 2: FAMILY APP ACCOUNT LINKS, QUICK BATCH ADD, MEMBERS (12+ vs <=11) & PETS */}
           {step === 2 && (
             <div className="space-y-4">
-              {/* Mobile Wallets & Family Ecosystem Links */}
+              {/* Family App Account Links */}
               <div className="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-3.5 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-amber-300 font-black uppercase tracking-wider text-[11px]">
-                    <CreditCard className="w-4 h-4 text-amber-400" />
-                    <span>Link Wallets & Family Ecosystem Apps</span>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-indigo-300 font-black uppercase tracking-wider text-[11px]">
+                    <Users className="w-4 h-4 text-indigo-400" />
+                    <span>Family App Account Links</span>
                   </div>
-                  <span className="text-[10px] text-slate-400">Tap to enable for your household</span>
+                  <span className="text-[10px] text-slate-400">Optional ecosystem links</span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setGooglePayLinked(v => !v)}
-                    className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
-                      googlePayLinked
-                        ? "bg-sky-500/20 border-sky-400 text-sky-200"
-                        : "bg-slate-900/70 border-slate-700 text-slate-400"
-                    }`}
-                  >
-                    <div>
-                      <div className="font-bold text-xs">💳 Google Pay</div>
-                      <div className="text-[10px] opacity-80">1-Tap G-Pay Transfers</div>
-                    </div>
-                    {googlePayLinked && <Check className="w-4 h-4 text-sky-400 shrink-0" />}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setApplePayLinked(v => !v)}
-                    className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
-                      applePayLinked
-                        ? "bg-slate-200/20 border-slate-300 text-white"
-                        : "bg-slate-900/70 border-slate-700 text-slate-400"
-                    }`}
-                  >
-                    <div>
-                      <div className="font-bold text-xs">🍎 Apple Pay</div>
-                      <div className="text-[10px] opacity-80">Apple Cash / Wallet</div>
-                    </div>
-                    {applePayLinked && <Check className="w-4 h-4 text-white shrink-0" />}
-                  </button>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
 
                   <button
                     type="button"
@@ -934,8 +995,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                     }`}
                   >
                     <div>
-                      <div className="font-bold text-xs">👨‍👩‍👧 Google Family</div>
-                      <div className="text-[10px] opacity-80">Family Link & Calendar</div>
+                      <div className="font-bold text-xs">👨‍👩‍👧 Google Family Link</div>
+                      <div className="text-[10px] opacity-80">Android & Google Calendar</div>
                     </div>
                     {googleFamilyLink && <Check className="w-4 h-4 text-emerald-400 shrink-0" />}
                   </button>
@@ -950,7 +1011,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                     }`}
                   >
                     <div>
-                      <div className="font-bold text-xs">☁️ Apple Family</div>
+                      <div className="font-bold text-xs">☁️ Apple Family Sharing</div>
                       <div className="text-[10px] opacity-80">iOS Screen Time & iCloud</div>
                     </div>
                     {appleFamilySharing && <Check className="w-4 h-4 text-indigo-400 shrink-0" />}
@@ -966,27 +1027,55 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                     }`}
                   >
                     <div>
-                      <div className="font-bold text-xs">🟩 Xbox / MS Family</div>
-                      <div className="text-[10px] opacity-80">Console Screen Time</div>
+                      <div className="font-bold text-xs">🟩 Microsoft Family Safety</div>
+                      <div className="text-[10px] opacity-80">Xbox & Windows Controls</div>
                     </div>
                     {xboxFamily && <Check className="w-4 h-4 text-emerald-400 shrink-0" />}
                   </button>
+                </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setNintendoSwitchParental(v => !v)}
-                    className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
-                      nintendoSwitchParental
-                        ? "bg-rose-500/20 border-rose-400 text-rose-200"
-                        : "bg-slate-900/70 border-slate-700 text-slate-400"
-                    }`}
-                  >
-                    <div>
-                      <div className="font-bold text-xs">🎮 Switch / PSN</div>
-                      <div className="text-[10px] opacity-80">Console Bonus Time</div>
-                    </div>
-                    {nintendoSwitchParental && <Check className="w-4 h-4 text-rose-400 shrink-0" />}
-                  </button>
+                <p className="text-[11px] text-slate-400 leading-relaxed bg-slate-900/50 border border-slate-700/60 rounded-xl px-2.5 py-2">
+                  <span className="font-bold text-slate-300">Note on auto-import:</span> Google, Apple, and Microsoft block third-party apps from reading Family Group rosters for privacy. Linking here saves your household preferences — use <span className="text-indigo-300 font-semibold">Quick Batch Add</span> below to add everyone in one tap.
+                </p>
+
+                {/* Quick Batch Add */}
+                <div className="bg-slate-900/60 border border-slate-700/70 rounded-xl p-2.5 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-bold text-indigo-300">Quick Batch Add (Comma or Line Separated)</span>
+                    <button
+                      type="button"
+                      onClick={handlePickDeviceContacts}
+                      className="text-[10px] font-bold text-sky-300 hover:text-sky-200 px-2 py-0.5 rounded-md bg-sky-500/15 border border-sky-400/30 transition cursor-pointer"
+                    >
+                      📇 Pick Contacts
+                    </button>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={batchMemberInput}
+                      onChange={(e) => setBatchMemberInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleBatchAddMembers();
+                        }
+                      }}
+                      placeholder="e.g. Sydney 15, Cadence 13, Mason 10, Alex (Parent)"
+                      className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-indigo-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleBatchAddMembers}
+                      disabled={!batchMemberInput.trim()}
+                      className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-bold transition cursor-pointer shrink-0"
+                    >
+                      Add All
+                    </button>
+                  </div>
+                  {batchAddFeedback && (
+                    <div className="text-[11px] text-emerald-300 font-semibold">{batchAddFeedback}</div>
+                  )}
                 </div>
               </div>
 
@@ -1629,6 +1718,67 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                       <option value="cashapp" className="bg-slate-900 text-white">🟢 Cash App / Venmo</option>
                       <option value="cash" className="bg-slate-900 text-white">💵 Cash / In-Person</option>
                     </select>
+                  </div>
+
+                  {/* Link Payment Apps */}
+                  <div className="sm:col-span-2 pt-1 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">
+                        Link Payment Apps for Allowance Payouts
+                      </label>
+                      <span className="text-[10px] text-slate-400">Tap to enable</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setGooglePayLinked(v => !v)}
+                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
+                          googlePayLinked
+                            ? "bg-sky-500/20 border-sky-400 text-sky-200"
+                            : "bg-slate-900/70 border-slate-700 text-slate-400"
+                        }`}
+                      >
+                        <div>
+                          <div className="font-bold text-xs">💳 Google Pay</div>
+                          <div className="text-[10px] opacity-80">1-Tap G-Pay Transfers</div>
+                        </div>
+                        {googlePayLinked && <Check className="w-4 h-4 text-sky-400 shrink-0" />}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setApplePayLinked(v => !v)}
+                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
+                          applePayLinked
+                            ? "bg-slate-200/20 border-slate-300 text-white"
+                            : "bg-slate-900/70 border-slate-700 text-slate-400"
+                        }`}
+                      >
+                        <div>
+                          <div className="font-bold text-xs">🍎 Apple Pay</div>
+                          <div className="text-[10px] opacity-80">Apple Cash / Wallet</div>
+                        </div>
+                        {applePayLinked && <Check className="w-4 h-4 text-white shrink-0" />}
+                      </button>
+
+                      {selectedAddress.countryCode === "CA" && (
+                        <button
+                          type="button"
+                          onClick={() => setInteracLinked(v => !v)}
+                          className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
+                            interacLinked
+                              ? "bg-amber-500/20 border-amber-400 text-amber-200"
+                              : "bg-slate-900/70 border-slate-700 text-slate-400"
+                          }`}
+                        >
+                          <div>
+                            <div className="font-bold text-xs">🏦 Interac e-Transfer</div>
+                            <div className="text-[10px] opacity-80">CAD Bank Transfers</div>
+                          </div>
+                          {interacLinked && <Check className="w-4 h-4 text-amber-400 shrink-0" />}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {(rewardMode === "monetary" || rewardMode === "hybrid") && (

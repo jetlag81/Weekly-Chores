@@ -41,6 +41,7 @@ import {
   getHouseholdSetupConfig,
   saveHouseholdSetupConfig,
   searchStreetAddressAutocomplete,
+  resolveGooglePlaceDetails,
   reverseGeocodeCoordinates,
   buildSmartStarterChores,
   backupCurrentHouseholdBeforeCleanSlate,
@@ -110,6 +111,11 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
   const [addressQuery, setAddressQuery] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const [placesSessionToken, setPlacesSessionToken] = useState<string>(() =>
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now()}_${Math.random().toString(36).slice(2)}`
+  );
   const [isLocatingDevice, setIsLocatingDevice] = useState(false);
   const [locationNotice, setLocationNotice] = useState<string | null>(null);
   const [deviceCoords, setDeviceCoords] = useState<{ lat: number; lon: number } | null>(null);
@@ -212,7 +218,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       const results = await searchStreetAddressAutocomplete(
         addressQuery,
         selectedAddress.countryCode,
-        deviceCoords
+        deviceCoords,
+        placesSessionToken
       );
       if (!cancelled) {
         setAddressSuggestions(results);
@@ -303,12 +310,26 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
 
   if (!isOpen) return null;
 
-  const handleSelectSuggestion = (s: AddressSuggestion) => {
+  const handleSelectSuggestion = async (s: AddressSuggestion) => {
     setSelectedAddress(s);
     setAddressQuery(s.formattedAddress);
     setAddressSuggestions([]);
     if (s.countryCode === "CA") {
       setInteracLinked(true);
+    }
+    if (s.placeId) {
+      const token = placesSessionToken;
+      setPlacesSessionToken(
+        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `${Date.now()}_${Math.random().toString(36).slice(2)}`
+      );
+      const detailed = await resolveGooglePlaceDetails(s.placeId, s, token);
+      setSelectedAddress(detailed);
+      setAddressQuery(detailed.formattedAddress);
+      if (detailed.countryCode === "CA") {
+        setInteracLinked(true);
+      }
     }
   };
 
@@ -598,8 +619,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
         newPetType === "Dog"
           ? "Feed breakfast & supper, outdoor walk/yard routine, fresh water"
           : newPetType === "Cat"
-          ? "Feed morning & evening, scoop litter box daily, fresh water"
-          : "Daily feeding, habitat check & fresh water"
+            ? "Feed morning & evening, scoop litter box daily, fresh water"
+            : "Daily feeding, habitat check & fresh water"
     };
     setPets(prev => [...prev, newPet]);
     setNewPetName("");
@@ -703,8 +724,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
             rewardMode === "screentime"
               ? `${screenTimeMinutes} mins Bonus Screen Time`
               : rewardMode === "custom"
-              ? `${customGoalTarget} ${customUnitName}`
-              : `$${baseAllowanceAmount} Weekly Allowance`,
+                ? `${customGoalTarget} ${customUnitName}`
+                : `$${baseAllowanceAmount} Weekly Allowance`,
           targetGoalAmount: baseAllowanceAmount || 15,
           platforms: {
             ...(m.gpayHandle ? { gpay: m.gpayHandle } : {}),
@@ -717,16 +738,16 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
 
     try {
       localStorage.setItem("weekly_chores_user_profiles_v1", JSON.stringify(newProfilesMap));
-    } catch {}
+    } catch { }
 
     const inspectionDay =
       weekStartDay === "Monday"
         ? "Sunday"
         : weekStartDay === "Sunday"
-        ? "Saturday"
-        : weekStartDay === "Saturday"
-        ? "Friday"
-        : "Thursday";
+          ? "Saturday"
+          : weekStartDay === "Saturday"
+            ? "Friday"
+            : "Thursday";
 
     saveHouseholdSetupConfig({
       isCleanSlateActive: true,
@@ -801,8 +822,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
         rewardMode === "custom"
           ? `${customUnitIcon} ${customGoalTarget} ${customUnitName} (${monthlyBonusPrize})`
           : rewardMode === "screentime"
-          ? `🎮 ${screenTimeMinutes}m Screen Time + ${monthlyBonusPrize}`
-          : monthlyBonusPrize,
+            ? `🎮 ${screenTimeMinutes}m Screen Time + ${monthlyBonusPrize}`
+            : monthlyBonusPrize,
       monthlyGoalTarget,
       startSpotlightTour: launchTourAfterFinish
     });
@@ -884,13 +905,12 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                   key={s.num}
                   type="button"
                   onClick={() => setStep(s.num)}
-                  className={`py-1 px-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer truncate ${
-                    isActive
+                  className={`py-1 px-1.5 rounded-lg text-[10px] font-bold transition flex items-center justify-center gap-1 cursor-pointer truncate ${isActive
                       ? "bg-white text-indigo-950 shadow-xs font-black"
                       : isDone
-                      ? "bg-emerald-500/30 text-emerald-100 border border-emerald-400/40"
-                      : "bg-white/10 text-white/70 hover:bg-white/20"
-                  }`}
+                        ? "bg-emerald-500/30 text-emerald-100 border border-emerald-400/40"
+                        : "bg-white/10 text-white/70 hover:bg-white/20"
+                    }`}
                 >
                   <span>{isDone ? "✓" : s.num}</span>
                   <span className="hidden sm:inline truncate">{s.label}</span>
@@ -1205,11 +1225,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                     <button
                       type="button"
                       onClick={() => setCoParentMode("manual")}
-                      className={`py-2 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                        coParentMode === "manual"
+                      className={`py-2 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${coParentMode === "manual"
                           ? "bg-amber-500/20 border-amber-400 text-amber-200"
                           : "bg-slate-900/70 border-slate-700 text-slate-300 hover:border-slate-500"
-                      }`}
+                        }`}
                     >
                       <span>✏️ Create New</span>
                     </button>
@@ -1306,11 +1325,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                   <button
                     type="button"
                     onClick={() => setKidMode("manual")}
-                    className={`py-2 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                      kidMode === "manual"
+                    className={`py-2 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${kidMode === "manual"
                         ? "bg-indigo-500/20 border-indigo-400 text-indigo-200"
                         : "bg-slate-900/70 border-slate-700 text-slate-300 hover:border-slate-500"
-                    }`}
+                      }`}
                   >
                     <span>✏️ Create Manually</span>
                   </button>
@@ -1431,11 +1449,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                       setJustAddedKid(false);
                       setTimeout(() => document.getElementById("onboarding-kid-firstname")?.focus(), 50);
                     }}
-                    className={`py-1.5 px-2 rounded-xl border text-[11px] font-bold transition cursor-pointer ${
-                      justAddedKid
+                    className={`py-1.5 px-2 rounded-xl border text-[11px] font-bold transition cursor-pointer ${justAddedKid
                         ? "bg-indigo-500/20 border-indigo-400 text-indigo-200"
                         : "bg-slate-900/70 border-slate-700 text-slate-300 hover:border-slate-500"
-                    }`}
+                      }`}
                   >
                     + Add Another Kid
                   </button>
@@ -1545,8 +1562,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                         m.ageStatusOverride === "teen"
                           ? true
                           : m.ageStatusOverride === "junior"
-                          ? false
-                          : m.age >= 12;
+                            ? false
+                            : m.age >= 12;
                       return (
                         <div
                           key={m.id}
@@ -1568,11 +1585,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                                   <span className="text-[10px] text-slate-400">({m.nickname})</span>
                                 )}
                                 <span
-                                  className={`text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md ${
-                                    isTeen
+                                  className={`text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md ${isTeen
                                       ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
                                       : "bg-teal-500/20 text-teal-300 border border-teal-500/30"
-                                  }`}
+                                    }`}
                                 >
                                   {isTeen
                                     ? `Age ${m.age}${m.ageStatusOverride && m.ageStatusOverride !== "auto" ? " (Overridden)" : ""} • 12+ Teen`
@@ -1704,11 +1720,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                               key={preset}
                               type="button"
                               onClick={() => handleUpdateMemberResidency(m.id, preset)}
-                              className={`px-2 py-1.5 rounded-lg text-[10px] font-bold border transition cursor-pointer ${
-                                m.residency === preset
+                              className={`px-2 py-1.5 rounded-lg text-[10px] font-bold border transition cursor-pointer ${m.residency === preset
                                   ? "bg-pink-500/25 border-pink-400 text-pink-200 font-black"
                                   : "bg-slate-800 border-slate-700 text-slate-400 hover:text-white"
-                              }`}
+                                }`}
                             >
                               {preset}
                             </button>
@@ -1762,22 +1777,20 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                         <button
                           type="button"
                           onClick={() => setCustodyIsHereThisWeek(true)}
-                          className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold border transition cursor-pointer ${
-                            custodyIsHereThisWeek
+                          className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold border transition cursor-pointer ${custodyIsHereThisWeek
                               ? "bg-emerald-500/25 border-emerald-400 text-emerald-200"
                               : "bg-slate-900 border-slate-700 text-slate-400"
-                          }`}
+                            }`}
                         >
                           🏠 Here
                         </button>
                         <button
                           type="button"
                           onClick={() => setCustodyIsHereThisWeek(false)}
-                          className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold border transition cursor-pointer ${
-                            !custodyIsHereThisWeek
+                          className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold border transition cursor-pointer ${!custodyIsHereThisWeek
                               ? "bg-amber-500/25 border-amber-400 text-amber-200"
                               : "bg-slate-900 border-slate-700 text-slate-400"
-                          }`}
+                            }`}
                         >
                           👋 Away
                         </button>
@@ -1809,11 +1822,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                       key={day}
                       type="button"
                       onClick={() => setWeekStartDay(day)}
-                      className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
-                        weekStartDay === day
+                      className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer ${weekStartDay === day
                           ? "bg-indigo-600 border-indigo-400 text-white shadow-sm"
                           : "bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800"
-                      }`}
+                        }`}
                     >
                       {day}
                     </button>
@@ -1856,22 +1868,20 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                       <button
                         type="button"
                         onClick={() => setCurbsideCurrentWeekType("recycling")}
-                        className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold border transition cursor-pointer ${
-                          curbsideCurrentWeekType === "recycling"
+                        className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold border transition cursor-pointer ${curbsideCurrentWeekType === "recycling"
                             ? "bg-sky-500/20 border-sky-400 text-sky-300"
                             : "bg-slate-900 border-slate-700 text-slate-400"
-                        }`}
+                          }`}
                       >
                         ♻️ Recycling Week
                       </button>
                       <button
                         type="button"
                         onClick={() => setCurbsideCurrentWeekType("waste")}
-                        className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold border transition cursor-pointer ${
-                          curbsideCurrentWeekType === "waste"
+                        className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold border transition cursor-pointer ${curbsideCurrentWeekType === "waste"
                             ? "bg-amber-500/20 border-amber-400 text-amber-300"
                             : "bg-slate-900 border-slate-700 text-slate-400"
-                        }`}
+                          }`}
                       >
                         🗑️ Waste Week
                       </button>
@@ -1906,11 +1916,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                         key={pk.id}
                         type="button"
                         onClick={() => handleTogglePack(pk.id)}
-                        className={`py-1.5 px-2 rounded-xl text-[11px] font-bold border transition cursor-pointer ${
-                          anyOn
+                        className={`py-1.5 px-2 rounded-xl text-[11px] font-bold border transition cursor-pointer ${anyOn
                             ? "bg-emerald-500/20 border-emerald-400 text-emerald-200"
                             : "bg-slate-900 border-slate-700 text-slate-400"
-                        }`}
+                          }`}
                       >
                         {pk.label}
                       </button>
@@ -1923,11 +1932,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                   {chores.map((c) => (
                     <div
                       key={c.id}
-                      className={`p-2.5 rounded-xl border transition ${
-                        c.enabled
+                      className={`p-2.5 rounded-xl border transition ${c.enabled
                           ? "bg-slate-900 border-slate-700"
                           : "bg-slate-900/40 border-slate-800 opacity-50"
-                      }`}
+                        }`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <label className="flex items-start gap-2 cursor-pointer flex-1 min-w-0">
@@ -1975,11 +1983,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                                 )
                               )
                             }
-                            className={`p-1 rounded-lg border text-[10px] transition cursor-pointer ${
-                              c.requirePhotoProof
+                            className={`p-1 rounded-lg border text-[10px] transition cursor-pointer ${c.requirePhotoProof
                                 ? "bg-amber-500/20 border-amber-400 text-amber-300"
                                 : "bg-slate-800 border-slate-700 text-slate-500"
-                            }`}
+                              }`}
                             title="Require Photo Proof"
                           >
                             <Camera className="w-3.5 h-3.5" />
@@ -2057,11 +2064,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                       key={rm.id}
                       type="button"
                       onClick={() => setRewardMode(rm.id as RewardMode)}
-                      className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
-                        rewardMode === rm.id
+                      className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${rewardMode === rm.id
                           ? "bg-amber-500/20 border-amber-400 text-amber-100 shadow-xs"
                           : "bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800"
-                      }`}
+                        }`}
                     >
                       <div className="font-bold text-xs">{rm.title}</div>
                       <div className="text-[10px] text-slate-400 mt-0.5">{rm.desc}</div>
@@ -2081,11 +2087,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                           key={cad}
                           type="button"
                           onClick={() => setRewardCadence(cad)}
-                          className={`py-1.5 px-2 rounded-lg text-[11px] font-bold capitalize border transition cursor-pointer ${
-                            rewardCadence === cad
+                          className={`py-1.5 px-2 rounded-lg text-[11px] font-bold capitalize border transition cursor-pointer ${rewardCadence === cad
                               ? "bg-indigo-600 border-indigo-400 text-white"
                               : "bg-slate-900 border-slate-700 text-slate-400"
-                          }`}
+                            }`}
                         >
                           {cad}
                         </button>
@@ -2124,11 +2129,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                       <button
                         type="button"
                         onClick={() => setGooglePayLinked(v => !v)}
-                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
-                          googlePayLinked
+                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${googlePayLinked
                             ? "bg-sky-500/20 border-sky-400 text-sky-200"
                             : "bg-slate-900/70 border-slate-700 text-slate-400"
-                        }`}
+                          }`}
                       >
                         <div>
                           <div className="font-bold text-xs">💳 Google Pay</div>
@@ -2140,11 +2144,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                       <button
                         type="button"
                         onClick={() => setApplePayLinked(v => !v)}
-                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
-                          applePayLinked
+                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${applePayLinked
                             ? "bg-slate-200/20 border-slate-300 text-white"
                             : "bg-slate-900/70 border-slate-700 text-slate-400"
-                        }`}
+                          }`}
                       >
                         <div>
                           <div className="font-bold text-xs">🍎 Apple Pay</div>
@@ -2157,11 +2160,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                         <button
                           type="button"
                           onClick={() => setInteracLinked(v => !v)}
-                          className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
-                            interacLinked
+                          className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${interacLinked
                               ? "bg-amber-500/20 border-amber-400 text-amber-200"
                               : "bg-slate-900/70 border-slate-700 text-slate-400"
-                          }`}
+                            }`}
                         >
                           <div>
                             <div className="font-bold text-xs">🏦 Interac e-Transfer</div>
@@ -2303,8 +2305,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                               {m.role === "Parent"
                                 ? "Full Co-Parent Admin Hub access"
                                 : isTeen
-                                ? "Age 12+ Welcome Flow: Nickname, Theme, G-Pay/Apple Pay, Gamertags & Wishlists"
-                                : "Age 11 & Under Welcome Flow: Kid-safe Nickname, Emoji & Favorite Color"}
+                                  ? "Age 12+ Welcome Flow: Nickname, Theme, G-Pay/Apple Pay, Gamertags & Wishlists"
+                                  : "Age 11 & Under Welcome Flow: Kid-safe Nickname, Emoji & Favorite Color"}
                             </div>
                           </div>
 
@@ -2317,7 +2319,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                                 );
                                 setCopiedCodeId(m.id);
                                 setTimeout(() => setCopiedCodeId(null), 2000);
-                              } catch {}
+                              } catch { }
                             }}
                             className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[11px] flex items-center gap-1 shrink-0 cursor-pointer"
                           >

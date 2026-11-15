@@ -255,6 +255,79 @@ export interface AddressSuggestion {
   postalCode: string;
   countryCode: RewardRegion;
   currency: "CAD" | "USD";
+  placeId?: string;
+}
+
+const getGooglePlacesApiKey = (): string => {
+  try {
+    return String((import.meta as any).env?.VITE_GOOGLE_PLACES_API_KEY || "").trim();
+  } catch {
+    return "";
+  }
+};
+
+export async function resolveGooglePlaceDetails(
+  placeId: string,
+  fallback: AddressSuggestion,
+  sessionToken?: string
+): Promise<AddressSuggestion> {
+  const apiKey = getGooglePlacesApiKey();
+  if (!apiKey || !placeId) return fallback;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const qp = sessionToken ? `?sessionToken=${encodeURIComponent(sessionToken)}` : "";
+    const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}${qp}`, {
+      method: "GET",
+      headers: {
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": "formattedAddress,addressComponents"
+      },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) return fallback;
+    const data = await res.json();
+    const comps: Array<{ longText?: string; shortText?: string; types?: string[] }> =
+      Array.isArray(data?.addressComponents) ? data.addressComponents : [];
+
+    const getComp = (type: string, useShort = false): string => {
+      const match = comps.find(c => Array.isArray(c.types) && c.types.includes(type));
+      if (!match) return "";
+      return (useShort ? match.shortText || match.longText : match.longText || match.shortText) || "";
+    };
+
+    const streetNumber = getComp("street_number");
+    const route = getComp("route");
+    const street = [streetNumber, route].filter(Boolean).join(" ").trim() || fallback.street;
+    const city =
+      getComp("locality") ||
+      getComp("sublocality") ||
+      getComp("postal_town") ||
+      getComp("administrative_area_level_2") ||
+      fallback.city;
+    const stateProvince = getComp("administrative_area_level_1", true) || fallback.stateProvince;
+    const postalCode = getComp("postal_code") || fallback.postalCode;
+    const rawCountry = getComp("country", true).toUpperCase();
+    const countryCode: RewardRegion = rawCountry === "US" ? "US" : rawCountry === "CA" ? "CA" : fallback.countryCode;
+    const currency = countryCode === "CA" ? "CAD" : "USD";
+    const formattedAddress = (data?.formattedAddress || fallback.formattedAddress).trim();
+
+    return {
+      formattedAddress,
+      street,
+      city,
+      stateProvince,
+      postalCode,
+      countryCode,
+      currency,
+      placeId
+    };
+  } catch {
+    return fallback;
+  }
 }
 
 // Curated instant fallback suggestions + live OpenStreetMap Photon geocoder
@@ -318,7 +391,8 @@ const OFFLINE_ADDRESS_SUGGESTIONS: AddressSuggestion[] = [
 export async function searchStreetAddressAutocomplete(
   query: string,
   countryFilter?: RewardRegion,
-  biasCoords?: { lat: number; lon: number } | null
+  biasCoords?: { lat: number; lon: number } | null,
+  sessionToken?: string
 ): Promise<AddressSuggestion[]> {
   const clean = (query || "").trim();
   if (clean.length < 3) return [];
@@ -348,7 +422,76 @@ export async function searchStreetAddressAutocomplete(
     return road || clean;
   };
 
-  // 1. Primary: Nominatim strictly filtered by selected country (ca / us)
+  // 0. Primary: Google Places API (New) Autocomplete when VITE_GOOGLE_PLACES_API_KEY is configured
+  const googleApiKey = getGooglePlacesApiKey();
+  if (googleApiKey) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      const body: Record<string, any> = {
+        input: clean,
+        includedRegionCodes: [ccLower],
+        includedPrimaryTypes: ["street_address", "subpremise", "premise", "route"]
+      };
+      if (sessionToken) {
+        body.sessionToken = sessionToken;
+      }
+      if (biasCoords) {
+        body.locationBias = {
+          circle: {
+            center: { latitude: biasCoords.lat, longitude: biasCoords.lon },
+            radius: 50000.0
+          }
+        };
+      }
+      const res = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": googleApiKey,
+          "X-Goog-FieldMask":
+            "suggestions.placePrediction.placeId,suggestions.placePrediction.text.text,suggestions.placePrediction.structuredFormat"
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        const suggestions = Array.isArray(data?.suggestions) ? data.suggestions : [];
+        const mapped: AddressSuggestion[] = suggestions
+          .map((item: any): AddressSuggestion | null => {
+            const pred = item?.placePrediction;
+            if (!pred) return null;
+            const mainText = String(pred.structuredFormat?.mainText?.text || "").trim();
+            const secondaryText = String(pred.structuredFormat?.secondaryText?.text || "").trim();
+            const fullText = String(pred.text?.text || [mainText, secondaryText].filter(Boolean).join(", ")).trim();
+            const secParts = secondaryText.split(",").map(p => p.trim()).filter(Boolean);
+            const city = secParts[0] || "";
+            const stateProvince = secParts[1] || "";
+            const street = ensureHouseNumber(undefined, mainText || fullText);
+            return {
+              formattedAddress: fullText,
+              street,
+              city,
+              stateProvince,
+              postalCode: "",
+              countryCode: activeCountry,
+              currency: activeCountry === "CA" ? "CAD" : "USD",
+              placeId: pred.placeId
+            };
+          })
+          .filter((s: AddressSuggestion | null): s is AddressSuggestion => Boolean(s && s.formattedAddress));
+
+        if (mapped.length > 0) return mapped.slice(0, 5);
+      }
+    } catch {
+      // Fall through to Nominatim / Photon
+    }
+  }
+
+  // 1. Secondary (Free OSM): Nominatim strictly filtered by selected country (ca / us)
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);

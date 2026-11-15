@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-15 10:52:00
+> **Export Date**: 2026-11-15 12:41:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,11 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Native Android Contact Picker Plugin for Onboarding** (android/app/src/main/java/com/household/choreshub/ContactPickerPlugin.java, MainActivity.java, src/CleanSlateOnboardingModal.tsx):
+1. **Google Places API (New) Primary Address Autocomplete with OSM Fallback** (src/householdOnboardingConfig.ts, src/CleanSlateOnboardingModal.tsx, .env.example):
+   - Added Google Places API (New) `places:autocomplete` as the primary street address autocomplete provider when `VITE_GOOGLE_PLACES_API_KEY` is configured, with session token bundling (`placesSessionToken`) and `resolveGooglePlaceDetails` for exact street number, city, province/state, and postal/ZIP extraction.
+   - Preserved automatic fallback to OpenStreetMap Nominatim → Komoot Photon → offline synthesis whenever the key is absent, rate-limited, or offline.
+
+2. **Native Android Contact Picker Plugin for Onboarding** (android/app/src/main/java/com/household/choreshub/ContactPickerPlugin.java, MainActivity.java, src/CleanSlateOnboardingModal.tsx):
    - Added a native Capacitor `ContactPickerPlugin` using Android's `Intent.ACTION_PICK` (`ContactsContract.CommonDataKinds.Phone.CONTENT_URI`) — opens the system Contacts picker directly on Android without requiring broad `READ_CONTACTS` permissions.
    - Wired Co-Parent **Choose Existing Contact** and Kids **Existing Contact** buttons in Step 2 to populate First Name, Last Name, and Phone Number from the selected contact.
 
@@ -5387,4 +5391,19 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Identified that Android Capacitor WebView does not expose the Web Contact Picker API (`navigator.contacts.select`).
 - Built a native Capacitor Android plugin [`ContactPickerPlugin.java`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/android/app/src/main/java/com/household/choreshub/ContactPickerPlugin.java) registered in [`MainActivity.java`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/android/app/src/main/java/com/household/choreshub/MainActivity.java) that launches Android's native `Intent.ACTION_PICK` (`ContactsContract.CommonDataKinds.Phone.CONTENT_URI`) and returns `{ name, phoneNumber }`.
 - Wired `pickSingleDeviceContact` in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) to invoke `ContactPicker.pickContact()` on native Android and populate Co-Parent and Kid name + phone fields.
+- Rebuilt and deployed the updated APK to `47171FDAP000A2`.
+
+---
+
+### Turn 195
+**Date / Time**: 2026-11-15T12:41:00Z
+
+**User Prompt**:
+> Yes, let's add Google Places integration as the primary
+
+**Summary of Work Delivered**:
+- Integrated **Google Places API (New)** as the primary address autocomplete provider in [`src/householdOnboardingConfig.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/householdOnboardingConfig.ts), [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx), and [`.env.example`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/.env.example):
+  1. Reads `VITE_GOOGLE_PLACES_API_KEY` and calls `https://places.googleapis.com/v1/places:autocomplete` with country filtering (`includedRegionCodes`), street/premise types, optional GPS `locationBias`, and `sessionToken` bundling.
+  2. Added `resolveGooglePlaceDetails` (`GET https://places.googleapis.com/v1/places/{placeId}`) on suggestion tap to populate exact street number, street, city, province/state, and postal/ZIP code, then rotates the session token.
+  3. Automatically falls back to Nominatim → Photon → local synthesis if `VITE_GOOGLE_PLACES_API_KEY` is not set or fails.
 - Rebuilt and deployed the updated APK to `47171FDAP000A2`.

@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-15 09:16:00
+> **Export Date**: 2026-11-15 09:57:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,13 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Clean Slate Onboarding Step 2 Family App Links, Quick Batch Add & Step 5 Payment Links** (src/CleanSlateOnboardingModal.tsx):
+1. **Clean Slate Onboarding Step 2 Structured Family Flow** (src/CleanSlateOnboardingModal.tsx, src/householdOnboardingConfig.ts):
+   - Removed the non-syncing Family App Account Links card from Step 2.
+   - Added **Family Structure** selector (*Traditional*, *Blended*, *Single Parent*) at the top of Step 2.
+   - Added dedicated **Co-Parent Setup** (shown for Traditional/Blended) with *Choose Existing Contact* and *Create New* options, listing Co-Parents directly below the primary parent.
+   - Added structured **Kids Setup** with *Existing Contact*, *Create Manually* (First Name, Last Name, Nickname, Birthday calendar picker, Override Auto Age Status), *Add to Household*, and quick actions (*Add Another Kid*, *Add Pets*, *Finish Step*).
+
+2. **Clean Slate Onboarding Step 2 Family App Links, Quick Batch Add & Step 5 Payment Links** (src/CleanSlateOnboardingModal.tsx):
    - Focused Step 2 (`Family, Pets & Apps`) on **Family App Account Links** (`Google Family Link`, `Apple Family Sharing`, `Microsoft Family Safety`) with an honest platform-API privacy note.
    - Added **Quick Batch Add** (comma/line-separated `Name Age` or `Name (Parent)` parsing) and optional **Device Contact Picker** (`navigator.contacts.select`) in Step 2.
    - Moved **Link Payment Apps** (`Google Pay`, `Apple Pay`, and `Interac e-Transfer` for Canada) into Step 5 (`Rewards & Wallets`).
@@ -5310,4 +5316,21 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   2. **Step 2 — Quick Batch Add & Contact Picker**: Added `handleBatchAddMembers` (parses comma/newline entries like `Sydney 15, Cadence 13, Mason 10, Alex (Parent)`) and `handlePickDeviceContacts` (`navigator.contacts.select`) so families can add multiple members in one step.
   3. **Step 5 — Moved Payment App Links**: Moved **Google Pay**, **Apple Pay**, and **Interac e-Transfer** (when Canada is selected) toggles into **Step 5 (Rewards & Wallets)** alongside Preferred Payout Wallet / Method.
 - Explained API limitations for Google Family Link, Apple Family Sharing, Microsoft Family Safety, and why closed consumer apps like Kids360 and FamilyWall are not worth linking.
+- Rebuilt and deployed the updated APK to the connected Pixel 9 Pro (`47171FDAP000A2`).
+
+---
+
+### Turn 191
+**Date / Time**: 2026-11-15T09:57:00Z
+
+**User Prompt**:
+> Yes let's get rid of that. I think Step 2 should then start with a parenting structure question, "what best describes your family?" Maybe a drop-down menu with the options Traditional, Blended or Single Parent.
+> Then the Co-Parent setup (if applicable) should be its own step. First option will be to choose an existing contact followed by a Create New option. When completed, that profile will be listed just below the initial user's. For the kids, I want to start with Existing Contact, followed by Create Manually. Manual will be First and Last Name, Nickname, Birthday from a drop-down calendar and then Override Auto Age Status. When done those, there should be an Add to Household, at which point the profile will be listed beneath the Co-Parent's at the start of a Kids subsection of the Household Members. Then there will be Add Another Kid, Add Pets or Finish options.
+
+**Summary of Work Delivered**:
+- Removed the non-syncing Family App Account Links card from Step 2 and rebuilt Step 2 in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) and [`src/householdOnboardingConfig.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/householdOnboardingConfig.ts):
+  1. **Family Structure Dropdown**: Starts Step 2 with `"What best describes your family?"` (`Traditional`, `Blended`, `Single Parent`), saved on `HouseholdSetupConfig.familyStructure`.
+  2. **Co-Parent Setup**: Shown when `Traditional` or `Blended` is selected; offers **Choose Existing Contact** (`navigator.contacts.select` with graceful fallback) and **Create New** (First Name, Last Name, Nickname), inserting Co-Parent profiles directly below the primary user in Household Members.
+  3. **Kids Setup**: Offers **Existing Contact** and **Create Manually** (First Name, Last Name, Nickname, Birthday `<input type="date">` calendar picker with auto age calculation, and **Override Auto Age Status** dropdown), plus **Add to Household**, **+ Add Another Kid**, **Add Pets**, and **Finish Step →** actions.
+  4. **Hierarchical Household Members List**: Displays Primary Parent Admin first, Co-Parent(s) directly below, and a **Kids** subsection beneath Co-Parent(s).
 - Rebuilt and deployed the updated APK to the connected Pixel 9 Pro (`47171FDAP000A2`).

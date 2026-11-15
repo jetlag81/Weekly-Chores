@@ -71,6 +71,8 @@ export interface OnboardingMemberDraft {
   color: string;
   avatarEmoji: string;
   inviteCode: string;
+  birthday?: string;
+  ageStatusOverride?: "auto" | "teen" | "junior";
   gpayHandle?: string;
   applePayHandle?: string;
 }
@@ -106,6 +108,7 @@ export interface HouseholdSetupConfig {
   adminNickname: string;
   adminEmail: string;
   adminPin: string;
+  familyStructure?: "Traditional" | "Blended" | "Single Parent";
   address: HouseholdAddressConfig;
   ecosystem: FamilyEcosystemConfig;
   weekStartDay: WeekStartDay;

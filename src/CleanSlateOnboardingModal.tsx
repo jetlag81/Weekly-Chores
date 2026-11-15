@@ -137,6 +137,21 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
   const [newMemberNickname, setNewMemberNickname] = useState("");
   const [newMemberRole, setNewMemberRole] = useState<"Parent" | "Kid">("Kid");
   const [newMemberAge, setNewMemberAge] = useState<number>(13);
+  const [familyStructure, setFamilyStructure] = useState<"Traditional" | "Blended" | "Single Parent">("Traditional");
+  const [coParentMode, setCoParentMode] = useState<"choose" | "manual">("choose");
+  const [coParentFirstName, setCoParentFirstName] = useState("");
+  const [coParentLastName, setCoParentLastName] = useState("");
+  const [coParentNickname, setCoParentNickname] = useState("");
+  const [coParentContactNote, setCoParentContactNote] = useState<string | null>(null);
+  const [kidMode, setKidMode] = useState<"choose" | "manual">("manual");
+  const [kidFirstName, setKidFirstName] = useState("");
+  const [kidLastName, setKidLastName] = useState("");
+  const [kidNickname, setKidNickname] = useState("");
+  const [kidBirthday, setKidBirthday] = useState("");
+  const [kidAgeOverride, setKidAgeOverride] = useState<"auto" | "teen" | "junior">("auto");
+  const [kidContactNote, setKidContactNote] = useState<string | null>(null);
+  const [justAddedKid, setJustAddedKid] = useState(false);
+  const [showPetsSection, setShowPetsSection] = useState(false);
   const [batchMemberInput, setBatchMemberInput] = useState("");
   const [batchAddFeedback, setBatchAddFeedback] = useState<string | null>(null);
 
@@ -308,6 +323,127 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
     setMembers(prev => [...prev, newMem]);
     setNewMemberName("");
     setNewMemberNickname("");
+  };
+
+  const calculateAgeFromBirthday = (birthdayStr: string): number => {
+    if (!birthdayStr) return 12;
+    const birth = new Date(birthdayStr + "T00:00:00");
+    if (Number.isNaN(birth.getTime())) return 12;
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+      age -= 1;
+    }
+    return Math.max(3, Math.min(25, age));
+  };
+
+  const handleAddCoParent = () => {
+    const cleanFirst = coParentFirstName.trim();
+    if (!cleanFirst) return;
+    const idx = members.length + 1;
+    const newParent: OnboardingMemberDraft = {
+      id: `${cleanFirst.toLowerCase().replace(/\s+/g, "_")}_${Date.now()}`,
+      firstName: cleanFirst,
+      lastName: coParentLastName.trim() || adminLastName.trim() || "",
+      nickname: coParentNickname.trim(),
+      role: "Parent",
+      age: 35,
+      residency: "Full-Time",
+      color: MEMBER_COLORS[idx % MEMBER_COLORS.length],
+      avatarEmoji: "🏠",
+      inviteCode: generateInviteCodeForMember(cleanFirst, idx)
+    };
+    // Keep Parents directly below initial user and before Kids
+    setMembers(prev => {
+      const parents = prev.filter(m => m.role === "Parent");
+      const kids = prev.filter(m => m.role !== "Parent");
+      return [...parents, newParent, ...kids];
+    });
+    setCoParentFirstName("");
+    setCoParentLastName("");
+    setCoParentNickname("");
+    setCoParentContactNote(null);
+  };
+
+  const handlePickCoParentContact = async () => {
+    const nav = navigator as Navigator & {
+      contacts?: { select?: (props: string[], opts?: { multiple?: boolean }) => Promise<Array<{ name?: string[] }>> };
+    };
+    if (!nav.contacts?.select) {
+      setCoParentContactNote("Contact picker isn't available in this WebView — enter Co-Parent details below.");
+      setCoParentMode("manual");
+      return;
+    }
+    try {
+      const picked = await nav.contacts.select(["name"], { multiple: false });
+      const fullName = (picked[0]?.name?.[0] || "").trim();
+      if (fullName) {
+        const parts = fullName.split(/\s+/);
+        setCoParentFirstName(parts[0] || "");
+        setCoParentLastName(parts.slice(1).join(" ") || adminLastName.trim() || "");
+        setCoParentContactNote(`Loaded "${fullName}" from contacts — review & tap Add Co-Parent.`);
+        setCoParentMode("manual");
+      }
+    } catch {
+      setCoParentMode("manual");
+    }
+  };
+
+  const handlePickKidContact = async () => {
+    const nav = navigator as Navigator & {
+      contacts?: { select?: (props: string[], opts?: { multiple?: boolean }) => Promise<Array<{ name?: string[] }>> };
+    };
+    if (!nav.contacts?.select) {
+      setKidContactNote("Contact picker isn't available in this WebView — enter Kid details below.");
+      setKidMode("manual");
+      return;
+    }
+    try {
+      const picked = await nav.contacts.select(["name"], { multiple: false });
+      const fullName = (picked[0]?.name?.[0] || "").trim();
+      if (fullName) {
+        const parts = fullName.split(/\s+/);
+        setKidFirstName(parts[0] || "");
+        setKidLastName(parts.slice(1).join(" ") || adminLastName.trim() || "");
+        setKidContactNote(`Loaded "${fullName}" — pick their Birthday & tap Add to Household.`);
+        setKidMode("manual");
+      }
+    } catch {
+      setKidMode("manual");
+    }
+  };
+
+  const handleAddKidToHousehold = () => {
+    const cleanFirst = kidFirstName.trim();
+    if (!cleanFirst) return;
+    const idx = members.length + 1;
+    const computedAge = calculateAgeFromBirthday(kidBirthday);
+    const effectiveIsTeen =
+      kidAgeOverride === "teen" ? true : kidAgeOverride === "junior" ? false : computedAge >= 12;
+
+    const newKid: OnboardingMemberDraft = {
+      id: `${cleanFirst.toLowerCase().replace(/\s+/g, "_")}_${Date.now()}`,
+      firstName: cleanFirst,
+      lastName: kidLastName.trim() || adminLastName.trim() || "",
+      nickname: kidNickname.trim(),
+      role: "Kid",
+      age: computedAge,
+      birthday: kidBirthday || undefined,
+      ageStatusOverride: kidAgeOverride,
+      residency: "Full-Time",
+      color: MEMBER_COLORS[idx % MEMBER_COLORS.length],
+      avatarEmoji: effectiveIsTeen ? "🎧" : "🚀",
+      inviteCode: generateInviteCodeForMember(cleanFirst, idx)
+    };
+    setMembers(prev => [...prev, newKid]);
+    setKidFirstName("");
+    setKidLastName("");
+    setKidNickname("");
+    setKidBirthday("");
+    setKidAgeOverride("auto");
+    setKidContactNote(null);
+    setJustAddedKid(true);
   };
 
   const handleBatchAddMembers = () => {
@@ -562,6 +698,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       adminNickname: finalAdminNick,
       adminEmail: adminEmail.trim(),
       adminPin: adminPin.trim() || "1234",
+      familyStructure,
       address: {
         formattedAddress: selectedAddress.formattedAddress || addressQuery.trim() || "Canada",
         street: selectedAddress.street || addressQuery.trim(),
@@ -970,197 +1107,361 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
             </div>
           )}
 
-          {/* STEP 2: FAMILY APP ACCOUNT LINKS, QUICK BATCH ADD, MEMBERS (12+ vs <=11) & PETS */}
+          {/* STEP 2: FAMILY STRUCTURE, CO-PARENT SETUP, KIDS & PETS */}
           {step === 2 && (
             <div className="space-y-4">
-              {/* Family App Account Links */}
-              <div className="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-3.5 space-y-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-indigo-300 font-black uppercase tracking-wider text-[11px]">
-                    <Users className="w-4 h-4 text-indigo-400" />
-                    <span>Family App Account Links</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400">Optional ecosystem links</span>
+              {/* 1. Parenting Structure Question */}
+              <div className="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-3.5 space-y-2">
+                <div className="flex items-center gap-2 text-indigo-300 font-black uppercase tracking-wider text-[11px]">
+                  <Users className="w-4 h-4 text-indigo-400" />
+                  <span>Family Structure</span>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-
-                  <button
-                    type="button"
-                    onClick={() => setGoogleFamilyLink(v => !v)}
-                    className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
-                      googleFamilyLink
-                        ? "bg-emerald-500/20 border-emerald-400 text-emerald-200"
-                        : "bg-slate-900/70 border-slate-700 text-slate-400"
-                    }`}
-                  >
-                    <div>
-                      <div className="font-bold text-xs">👨‍👩‍👧 Google Family Link</div>
-                      <div className="text-[10px] opacity-80">Android & Google Calendar</div>
-                    </div>
-                    {googleFamilyLink && <Check className="w-4 h-4 text-emerald-400 shrink-0" />}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setAppleFamilySharing(v => !v)}
-                    className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
-                      appleFamilySharing
-                        ? "bg-indigo-500/20 border-indigo-400 text-indigo-200"
-                        : "bg-slate-900/70 border-slate-700 text-slate-400"
-                    }`}
-                  >
-                    <div>
-                      <div className="font-bold text-xs">☁️ Apple Family Sharing</div>
-                      <div className="text-[10px] opacity-80">iOS Screen Time & iCloud</div>
-                    </div>
-                    {appleFamilySharing && <Check className="w-4 h-4 text-indigo-400 shrink-0" />}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setXboxFamily(v => !v)}
-                    className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
-                      xboxFamily
-                        ? "bg-emerald-600/20 border-emerald-500 text-emerald-200"
-                        : "bg-slate-900/70 border-slate-700 text-slate-400"
-                    }`}
-                  >
-                    <div>
-                      <div className="font-bold text-xs">🟩 Microsoft Family Safety</div>
-                      <div className="text-[10px] opacity-80">Xbox & Windows Controls</div>
-                    </div>
-                    {xboxFamily && <Check className="w-4 h-4 text-emerald-400 shrink-0" />}
-                  </button>
-                </div>
-
-                <p className="text-[11px] text-slate-400 leading-relaxed bg-slate-900/50 border border-slate-700/60 rounded-xl px-2.5 py-2">
-                  <span className="font-bold text-slate-300">Note on auto-import:</span> Google, Apple, and Microsoft block third-party apps from reading Family Group rosters for privacy. Linking here saves your household preferences — use <span className="text-indigo-300 font-semibold">Quick Batch Add</span> below to add everyone in one tap.
-                </p>
-
-                {/* Quick Batch Add */}
-                <div className="bg-slate-900/60 border border-slate-700/70 rounded-xl p-2.5 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-bold text-indigo-300">Quick Batch Add (Comma or Line Separated)</span>
-                    <button
-                      type="button"
-                      onClick={handlePickDeviceContacts}
-                      className="text-[10px] font-bold text-sky-300 hover:text-sky-200 px-2 py-0.5 rounded-md bg-sky-500/15 border border-sky-400/30 transition cursor-pointer"
-                    >
-                      📇 Pick Contacts
-                    </button>
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={batchMemberInput}
-                      onChange={(e) => setBatchMemberInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          handleBatchAddMembers();
-                        }
-                      }}
-                      placeholder="e.g. Sydney 15, Cadence 13, Mason 10, Alex (Parent)"
-                      className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-indigo-400"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleBatchAddMembers}
-                      disabled={!batchMemberInput.trim()}
-                      className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-bold transition cursor-pointer shrink-0"
-                    >
-                      Add All
-                    </button>
-                  </div>
-                  {batchAddFeedback && (
-                    <div className="text-[11px] text-emerald-300 font-semibold">{batchAddFeedback}</div>
-                  )}
-                </div>
+                <label className="block text-xs font-bold text-slate-200">
+                  What best describes your family?
+                </label>
+                <select
+                  value={familyStructure}
+                  onChange={(e) => setFamilyStructure(e.target.value as "Traditional" | "Blended" | "Single Parent")}
+                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:outline-none focus:border-indigo-400"
+                >
+                  <option value="Traditional" className="bg-slate-900 text-white">Traditional (Two-Parent Household)</option>
+                  <option value="Blended" className="bg-slate-900 text-white">Blended (Co-Parenting / Step-Family)</option>
+                  <option value="Single Parent" className="bg-slate-900 text-white">Single Parent Household</option>
+                </select>
               </div>
 
-              {/* Add Household Members (Split Kid Profiles: 12 & Up vs 11 & Under) */}
+              {/* 2. Co-Parent Setup (if applicable) */}
+              {familyStructure !== "Single Parent" && (
+                <div className="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-3.5 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-amber-300 font-black uppercase tracking-wider text-[11px]">
+                      <Users className="w-4 h-4 text-amber-400" />
+                      <span>Co-Parent Setup</span>
+                    </div>
+                    <span className="text-[10px] text-slate-400">Added below your profile</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={handlePickCoParentContact}
+                      className="py-2 px-3 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-200 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                    >
+                      <span>📇 Choose Existing Contact</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCoParentMode("manual")}
+                      className={`py-2 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                        coParentMode === "manual"
+                          ? "bg-amber-500/20 border-amber-400 text-amber-200"
+                          : "bg-slate-900/70 border-slate-700 text-slate-300 hover:border-slate-500"
+                      }`}
+                    >
+                      <span>✏️ Create New</span>
+                    </button>
+                  </div>
+
+                  {coParentContactNote && (
+                    <div className="text-[11px] text-sky-300 bg-sky-500/10 border border-sky-400/30 rounded-lg px-2.5 py-1.5">
+                      {coParentContactNote}
+                    </div>
+                  )}
+
+                  {coParentMode === "manual" && (
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end pt-1">
+                      <div className="sm:col-span-4">
+                        <label className="block text-[10px] font-bold text-slate-400 mb-0.5">First Name *</label>
+                        <input
+                          type="text"
+                          value={coParentFirstName}
+                          onChange={(e) => setCoParentFirstName(e.target.value)}
+                          placeholder="e.g. Meghan"
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
+                        />
+                      </div>
+                      <div className="sm:col-span-3">
+                        <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Last Name</label>
+                        <input
+                          type="text"
+                          value={coParentLastName}
+                          onChange={(e) => setCoParentLastName(e.target.value)}
+                          placeholder={adminLastName || "Last Name"}
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
+                        />
+                      </div>
+                      <div className="sm:col-span-3">
+                        <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Nickname (Opt)</label>
+                        <input
+                          type="text"
+                          value={coParentNickname}
+                          onChange={(e) => setCoParentNickname(e.target.value)}
+                          placeholder="e.g. Meg"
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <button
+                          type="button"
+                          onClick={handleAddCoParent}
+                          disabled={!coParentFirstName.trim()}
+                          className="w-full py-1.5 px-3 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-white font-bold text-xs flex items-center justify-center gap-1 transition cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 3. Kids Setup */}
               <div className="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-3.5 space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2 text-indigo-300 font-black uppercase tracking-wider text-[11px]">
                     <Users className="w-4 h-4 text-indigo-400" />
-                    <span>Add Co-Parents & Kids (No Invites Sent Yet)</span>
+                    <span>Add Kids</span>
                   </div>
                   <span className="text-[10px] text-amber-300 font-bold">
-                    Age 12+ unlocks Gamertags, Wallets & Wishlists
+                    Age 12+ unlocks Gamertags, Wallets &amp; Wishlists
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
-                  <div className="sm:col-span-4">
-                    <label className="block text-[10px] font-bold text-slate-400 mb-0.5">
-                      First Name *
-                    </label>
-                    <input
-                      type="text"
-                      value={newMemberName}
-                      onChange={(e) => setNewMemberName(e.target.value)}
-                      placeholder="e.g. Sydney"
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
-                    />
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handlePickKidContact}
+                    className="py-2 px-3 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/40 text-sky-200 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                  >
+                    <span>📇 Existing Contact</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setKidMode("manual")}
+                    className={`py-2 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                      kidMode === "manual"
+                        ? "bg-indigo-500/20 border-indigo-400 text-indigo-200"
+                        : "bg-slate-900/70 border-slate-700 text-slate-300 hover:border-slate-500"
+                    }`}
+                  >
+                    <span>✏️ Create Manually</span>
+                  </button>
+                </div>
+
+                {kidContactNote && (
+                  <div className="text-[11px] text-sky-300 bg-sky-500/10 border border-sky-400/30 rounded-lg px-2.5 py-1.5">
+                    {kidContactNote}
                   </div>
-                  <div className="sm:col-span-3">
-                    <label className="block text-[10px] font-bold text-slate-400 mb-0.5">
-                      Nickname (Opt)
-                    </label>
-                    <input
-                      type="text"
-                      value={newMemberNickname}
-                      onChange={(e) => setNewMemberNickname(e.target.value)}
-                      placeholder="e.g. Syd"
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Role</label>
-                    <select
-                      value={newMemberRole}
-                      onChange={(e) => setNewMemberRole(e.target.value === "Parent" ? "Parent" : "Kid")}
-                      className="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-bold"
-                    >
-                      <option value="Kid" className="bg-slate-900 text-white">Kid</option>
-                      <option value="Parent" className="bg-slate-900 text-white">Parent</option>
-                    </select>
-                  </div>
-                  {newMemberRole === "Kid" && (
-                    <div className="sm:col-span-1">
-                      <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Age</label>
-                      <input
-                        type="number"
-                        min={3}
-                        max={22}
-                        value={newMemberAge}
-                        onChange={(e) => setNewMemberAge(Number(e.target.value) || 10)}
-                        className="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-bold text-center"
-                      />
+                )}
+
+                {kidMode === "manual" && (
+                  <div className="space-y-2.5 pt-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-0.5">First Name *</label>
+                        <input
+                          id="onboarding-kid-firstname"
+                          type="text"
+                          value={kidFirstName}
+                          onChange={(e) => setKidFirstName(e.target.value)}
+                          placeholder="e.g. Sydney"
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Last Name</label>
+                        <input
+                          type="text"
+                          value={kidLastName}
+                          onChange={(e) => setKidLastName(e.target.value)}
+                          placeholder={adminLastName || "Last Name"}
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Nickname (Opt)</label>
+                        <input
+                          type="text"
+                          value={kidNickname}
+                          onChange={(e) => setKidNickname(e.target.value)}
+                          placeholder="e.g. Syd"
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
+                        />
+                      </div>
                     </div>
-                  )}
-                  <div className={newMemberRole === "Kid" ? "sm:col-span-2" : "sm:col-span-3"}>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-0.5">
+                          Birthday {kidBirthday ? `(Age ${calculateAgeFromBirthday(kidBirthday)})` : "(Calendar Picker)"}
+                        </label>
+                        <input
+                          type="date"
+                          value={kidBirthday}
+                          onChange={(e) => setKidBirthday(e.target.value)}
+                          max={new Date().toISOString().split("T")[0]}
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-0.5">
+                          Override Auto Age Status
+                        </label>
+                        <select
+                          value={kidAgeOverride}
+                          onChange={(e) => setKidAgeOverride(e.target.value as "auto" | "teen" | "junior")}
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-bold"
+                        >
+                          <option value="auto" className="bg-slate-900 text-white">
+                            Auto ({kidBirthday ? (calculateAgeFromBirthday(kidBirthday) >= 12 ? "12+ Teen Profile" : "11 & Under Basic") : "From Birthday"})
+                          </option>
+                          <option value="teen" className="bg-slate-900 text-white">
+                            Override: 12+ Teen (Social/Shopping/Gamertags)
+                          </option>
+                          <option value="junior" className="bg-slate-900 text-white">
+                            Override: 11 &amp; Under (Basic Kid-Safe)
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+
                     <button
                       type="button"
-                      onClick={handleAddMember}
-                      className="w-full py-1.5 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-1 transition cursor-pointer"
+                      onClick={handleAddKidToHousehold}
+                      disabled={!kidFirstName.trim()}
+                      className="w-full py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>Add</span>
+                      <span>Add to Household</span>
                     </button>
+                  </div>
+                )}
+
+                {/* Quick Next Action Options */}
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setKidMode("manual");
+                      setKidFirstName("");
+                      setKidLastName("");
+                      setKidNickname("");
+                      setKidBirthday("");
+                      setKidAgeOverride("auto");
+                      setJustAddedKid(false);
+                      setTimeout(() => document.getElementById("onboarding-kid-firstname")?.focus(), 50);
+                    }}
+                    className={`py-1.5 px-2 rounded-xl border text-[11px] font-bold transition cursor-pointer ${
+                      justAddedKid
+                        ? "bg-indigo-500/20 border-indigo-400 text-indigo-200"
+                        : "bg-slate-900/70 border-slate-700 text-slate-300 hover:border-slate-500"
+                    }`}
+                  >
+                    + Add Another Kid
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPetsSection(true);
+                      setTimeout(() => document.getElementById("onboarding-pets-card")?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 60);
+                    }}
+                    className="py-1.5 px-2 rounded-xl border bg-amber-500/15 border-amber-400/40 text-amber-200 hover:bg-amber-500/25 text-[11px] font-bold transition cursor-pointer"
+                  >
+                    🐾 Add Pets
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep(3)}
+                    className="py-1.5 px-2 rounded-xl border bg-emerald-600/20 border-emerald-400/50 text-emerald-200 hover:bg-emerald-600/30 text-[11px] font-bold transition cursor-pointer"
+                  >
+                    Finish Step →
+                  </button>
+                </div>
+              </div>
+
+              {/* 4. Household Members Hierarchy */}
+              <div className="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-3.5 space-y-2.5">
+                <div className="text-[11px] font-black uppercase tracking-wider text-slate-300">
+                  Household Members ({1 + members.length})
+                </div>
+
+                {/* Initial User */}
+                <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-900/90 border border-indigo-500/40">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0 bg-indigo-500/25 border border-indigo-400">
+                      👑
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-white text-xs">
+                          {adminName.trim() || "Primary Parent"} {adminLastName.trim()}
+                        </span>
+                        {adminNickname.trim() && (
+                          <span className="text-[10px] text-slate-400">({adminNickname.trim()})</span>
+                        )}
+                        <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                          Primary Parent Admin (You)
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Member List */}
-                <div className="space-y-1.5 pt-1">
-                  {members.length === 0 ? (
-                    <div className="text-center py-3 text-slate-400 bg-slate-900/50 rounded-xl border border-dashed border-slate-700">
-                      Add your co-parent and kids above. Kids 12 &amp; up get full profile customization (gamertags, shopping wishlists, G-Pay/Apple Pay); 11 &amp; under get kid-safe basic settings.
+                {/* Co-Parent(s) listed just below initial user */}
+                {members.filter(m => m.role === "Parent").map((m) => (
+                  <div
+                    key={m.id}
+                    className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-900 border border-amber-500/30"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0"
+                        style={{ backgroundColor: m.color + "30", border: `1.5px solid ${m.color}` }}
+                      >
+                        {m.avatarEmoji}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-bold text-white text-xs">
+                            {m.firstName} {m.lastName}
+                          </span>
+                          {m.nickname && (
+                            <span className="text-[10px] text-slate-400">({m.nickname})</span>
+                          )}
+                          <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            Co-Parent Admin
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveMember(m.id)}
+                      className="p-1 text-slate-400 hover:text-rose-400 transition cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+
+                {/* Kids Subsection */}
+                <div className="pt-1 space-y-1.5">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-purple-300 px-1">
+                    Kids ({members.filter(m => m.role === "Kid").length})
+                  </div>
+                  {members.filter(m => m.role === "Kid").length === 0 ? (
+                    <div className="text-center py-2.5 px-3 text-[11px] text-slate-400 bg-slate-900/50 rounded-xl border border-dashed border-slate-700">
+                      No kids added yet — use Existing Contact or Create Manually above.
                     </div>
                   ) : (
-                    members.map((m) => {
-                      const isTeen = m.role === "Kid" && m.age >= 12;
+                    members.filter(m => m.role === "Kid").map((m) => {
+                      const isTeen =
+                        m.ageStatusOverride === "teen"
+                          ? true
+                          : m.ageStatusOverride === "junior"
+                          ? false
+                          : m.age >= 12;
                       return (
                         <div
                           key={m.id}
@@ -1175,26 +1476,27 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                             </span>
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-bold text-white">{m.firstName}</span>
+                                <span className="font-bold text-white text-xs">
+                                  {m.firstName} {m.lastName}
+                                </span>
                                 {m.nickname && (
                                   <span className="text-[10px] text-slate-400">({m.nickname})</span>
                                 )}
                                 <span
-                                  className={`text-[9.5px] font-extrabold px-1.5 py-0.2 rounded-md ${
-                                    m.role === "Parent"
-                                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                                      : isTeen
+                                  className={`text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md ${
+                                    isTeen
                                       ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
                                       : "bg-teal-500/20 text-teal-300 border border-teal-500/30"
                                   }`}
                                 >
-                                  {m.role === "Parent"
-                                    ? "Parent Admin"
-                                    : isTeen
-                                    ? `Age ${m.age} • 12+ Teen (Social/Shopping/Gamertags/Wallets)`
-                                    : `Age ${m.age} • 11 & Under (Basic Kid-Safe Settings)`}
+                                  {isTeen
+                                    ? `Age ${m.age}${m.ageStatusOverride && m.ageStatusOverride !== "auto" ? " (Overridden)" : ""} • 12+ Teen`
+                                    : `Age ${m.age}${m.ageStatusOverride && m.ageStatusOverride !== "auto" ? " (Overridden)" : ""} • 11 & Under Basic`}
                                 </span>
                               </div>
+                              {m.birthday && (
+                                <div className="text-[10px] text-slate-400">DOB: {m.birthday}</div>
+                              )}
                             </div>
                           </div>
                           <button
@@ -1211,67 +1513,69 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                 </div>
               </div>
 
-              {/* Add Pets */}
-              <div className="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-3.5 space-y-2.5">
-                <div className="flex items-center gap-2 text-amber-300 font-black uppercase tracking-wider text-[11px]">
-                  <PawPrint className="w-4 h-4 text-amber-400" />
-                  <span>Household Pets (Auto-Suggests Pet Care Chores in Step 4)</span>
-                </div>
+              {/* 5. Add Pets */}
+              {(showPetsSection || pets.length > 0) && (
+                <div id="onboarding-pets-card" className="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-3.5 space-y-2.5">
+                  <div className="flex items-center gap-2 text-amber-300 font-black uppercase tracking-wider text-[11px]">
+                    <PawPrint className="w-4 h-4 text-amber-400" />
+                    <span>Household Pets (Auto-Suggests Pet Care Chores in Step 4)</span>
+                  </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
-                  <div className="sm:col-span-5">
-                    <input
-                      type="text"
-                      value={newPetName}
-                      onChange={(e) => setNewPetName(e.target.value)}
-                      placeholder="Pet Name (e.g. Ellie, Casey)"
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
-                    />
-                  </div>
-                  <div className="sm:col-span-3">
-                    <select
-                      value={newPetType}
-                      onChange={(e) => setNewPetType(e.target.value as any)}
-                      className="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-bold"
-                    >
-                      <option value="Dog" className="bg-slate-900 text-white">🐶 Dog</option>
-                      <option value="Cat" className="bg-slate-900 text-white">🐱 Cat</option>
-                      <option value="Other" className="bg-slate-900 text-white">🐾 Other Pet</option>
-                    </select>
-                  </div>
-                  <div className="sm:col-span-4">
-                    <button
-                      type="button"
-                      onClick={handleAddPet}
-                      className="w-full py-1.5 px-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center justify-center gap-1 transition cursor-pointer"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Add Pet</span>
-                    </button>
-                  </div>
-                </div>
-
-                {pets.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {pets.map((p) => (
-                      <span
-                        key={p.id}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-amber-200"
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+                    <div className="sm:col-span-5">
+                      <input
+                        type="text"
+                        value={newPetName}
+                        onChange={(e) => setNewPetName(e.target.value)}
+                        placeholder="Pet Name (e.g. Ellie, Casey)"
+                        className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
+                      />
+                    </div>
+                    <div className="sm:col-span-3">
+                      <select
+                        value={newPetType}
+                        onChange={(e) => setNewPetType(e.target.value as any)}
+                        className="w-full px-2 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-bold"
                       >
-                        <span>{p.type === "Dog" ? "🐶" : p.type === "Cat" ? "🐱" : "🐾"}</span>
-                        <span>{p.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemovePet(p.id)}
-                          className="text-slate-400 hover:text-rose-400 ml-1 cursor-pointer"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
+                        <option value="Dog" className="bg-slate-900 text-white">🐶 Dog</option>
+                        <option value="Cat" className="bg-slate-900 text-white">🐱 Cat</option>
+                        <option value="Other" className="bg-slate-900 text-white">🐾 Other Pet</option>
+                      </select>
+                    </div>
+                    <div className="sm:col-span-4">
+                      <button
+                        type="button"
+                        onClick={handleAddPet}
+                        className="w-full py-1.5 px-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center justify-center gap-1 transition cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Pet</span>
+                      </button>
+                    </div>
                   </div>
-                )}
-              </div>
+
+                  {pets.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {pets.map((p) => (
+                        <span
+                          key={p.id}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-700 text-xs font-bold text-amber-200"
+                        >
+                          <span>{p.type === "Dog" ? "🐶" : p.type === "Cat" ? "🐱" : "🐾"}</span>
+                          <span>{p.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemovePet(p.id)}
+                            className="text-slate-400 hover:text-rose-400 ml-1 cursor-pointer"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

@@ -99,6 +99,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
   const [adminLastName, setAdminLastName] = useState("");
   const [adminNickname, setAdminNickname] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
+  const [adminPhone, setAdminPhone] = useState("");
   const [adminPin, setAdminPin] = useState("1234");
 
   const [addressQuery, setAddressQuery] = useState("");
@@ -142,11 +143,13 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
   const [coParentFirstName, setCoParentFirstName] = useState("");
   const [coParentLastName, setCoParentLastName] = useState("");
   const [coParentNickname, setCoParentNickname] = useState("");
+  const [coParentPhone, setCoParentPhone] = useState("");
   const [coParentContactNote, setCoParentContactNote] = useState<string | null>(null);
   const [kidMode, setKidMode] = useState<"choose" | "manual">("manual");
   const [kidFirstName, setKidFirstName] = useState("");
   const [kidLastName, setKidLastName] = useState("");
   const [kidNickname, setKidNickname] = useState("");
+  const [kidPhone, setKidPhone] = useState("");
   const [kidBirthday, setKidBirthday] = useState("");
   const [kidAgeOverride, setKidAgeOverride] = useState<"auto" | "teen" | "junior">("auto");
   const [kidContactNote, setKidContactNote] = useState<string | null>(null);
@@ -352,7 +355,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       residency: "Full-Time",
       color: MEMBER_COLORS[idx % MEMBER_COLORS.length],
       avatarEmoji: "🏠",
-      inviteCode: generateInviteCodeForMember(cleanFirst, idx)
+      inviteCode: generateInviteCodeForMember(cleanFirst, idx),
+      phoneNumber: coParentPhone.trim() || undefined
     };
     // Keep Parents directly below initial user and before Kids
     setMembers(prev => {
@@ -363,12 +367,15 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
     setCoParentFirstName("");
     setCoParentLastName("");
     setCoParentNickname("");
+    setCoParentPhone("");
     setCoParentContactNote(null);
   };
 
   const handlePickCoParentContact = async () => {
     const nav = navigator as Navigator & {
-      contacts?: { select?: (props: string[], opts?: { multiple?: boolean }) => Promise<Array<{ name?: string[] }>> };
+      contacts?: {
+        select?: (props: string[], opts?: { multiple?: boolean }) => Promise<Array<{ name?: string[]; tel?: string[] }>>;
+      };
     };
     if (!nav.contacts?.select) {
       setCoParentContactNote("Contact picker isn't available in this WebView — enter Co-Parent details below.");
@@ -376,13 +383,17 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       return;
     }
     try {
-      const picked = await nav.contacts.select(["name"], { multiple: false });
+      const picked = await nav.contacts.select(["name", "tel"], { multiple: false });
       const fullName = (picked[0]?.name?.[0] || "").trim();
-      if (fullName) {
-        const parts = fullName.split(/\s+/);
-        setCoParentFirstName(parts[0] || "");
-        setCoParentLastName(parts.slice(1).join(" ") || adminLastName.trim() || "");
-        setCoParentContactNote(`Loaded "${fullName}" from contacts — review & tap Add Co-Parent.`);
+      const phone = (picked[0]?.tel?.[0] || "").trim();
+      if (fullName || phone) {
+        if (fullName) {
+          const parts = fullName.split(/\s+/);
+          setCoParentFirstName(parts[0] || "");
+          setCoParentLastName(parts.slice(1).join(" ") || adminLastName.trim() || "");
+        }
+        if (phone) setCoParentPhone(phone);
+        setCoParentContactNote(`Loaded "${fullName || phone}" from contacts — review & tap Add.`);
         setCoParentMode("manual");
       }
     } catch {
@@ -392,7 +403,9 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
 
   const handlePickKidContact = async () => {
     const nav = navigator as Navigator & {
-      contacts?: { select?: (props: string[], opts?: { multiple?: boolean }) => Promise<Array<{ name?: string[] }>> };
+      contacts?: {
+        select?: (props: string[], opts?: { multiple?: boolean }) => Promise<Array<{ name?: string[]; tel?: string[] }>>;
+      };
     };
     if (!nav.contacts?.select) {
       setKidContactNote("Contact picker isn't available in this WebView — enter Kid details below.");
@@ -400,13 +413,17 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       return;
     }
     try {
-      const picked = await nav.contacts.select(["name"], { multiple: false });
+      const picked = await nav.contacts.select(["name", "tel"], { multiple: false });
       const fullName = (picked[0]?.name?.[0] || "").trim();
-      if (fullName) {
-        const parts = fullName.split(/\s+/);
-        setKidFirstName(parts[0] || "");
-        setKidLastName(parts.slice(1).join(" ") || adminLastName.trim() || "");
-        setKidContactNote(`Loaded "${fullName}" — pick their Birthday & tap Add to Household.`);
+      const phone = (picked[0]?.tel?.[0] || "").trim();
+      if (fullName || phone) {
+        if (fullName) {
+          const parts = fullName.split(/\s+/);
+          setKidFirstName(parts[0] || "");
+          setKidLastName(parts.slice(1).join(" ") || adminLastName.trim() || "");
+        }
+        if (phone) setKidPhone(phone);
+        setKidContactNote(`Loaded "${fullName || phone}" — pick their Birthday & tap Add to Household.`);
         setKidMode("manual");
       }
     } catch {
@@ -431,6 +448,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       age: computedAge,
       birthday: kidBirthday || undefined,
       ageStatusOverride: kidAgeOverride,
+      phoneNumber: kidPhone.trim() || undefined,
       residency: "Full-Time",
       color: MEMBER_COLORS[idx % MEMBER_COLORS.length],
       avatarEmoji: effectiveIsTeen ? "🎧" : "🚀",
@@ -440,6 +458,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
     setKidFirstName("");
     setKidLastName("");
     setKidNickname("");
+    setKidPhone("");
     setKidBirthday("");
     setKidAgeOverride("auto");
     setKidContactNote(null);
@@ -621,6 +640,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       color: "#2563EB",
       avatarEmoji: "👑",
       inviteCode: generateInviteCodeForMember(finalAdminName, 0),
+      phoneNumber: adminPhone.trim() || undefined,
       gpayHandle: googlePayHandle.trim() || adminEmail.trim(),
       applePayHandle: applePayHandle.trim()
     };
@@ -697,6 +717,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       adminLastName: finalAdminLast,
       adminNickname: finalAdminNick,
       adminEmail: adminEmail.trim(),
+      adminPhone: adminPhone.trim() || undefined,
       adminPin: adminPin.trim() || "1234",
       familyStructure,
       address: {
@@ -921,13 +942,25 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-slate-300 mb-1">
-                      Admin Email (for Google/Apple Family & Wallets)
+                      Admin Email (for Google/Apple Family &amp; Wallets)
                     </label>
                     <input
                       type="email"
                       value={adminEmail}
                       onChange={(e) => setAdminEmail(e.target.value)}
                       placeholder="parent@gmail.com"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                      Admin Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      value={adminPhone}
+                      onChange={(e) => setAdminPhone(e.target.value)}
+                      placeholder="(555) 123-4567"
                       className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold focus:outline-none focus:border-indigo-500"
                     />
                   </div>
@@ -1169,47 +1202,61 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                   )}
 
                   {coParentMode === "manual" && (
-                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end pt-1">
-                      <div className="sm:col-span-4">
-                        <label className="block text-[10px] font-bold text-slate-400 mb-0.5">First Name *</label>
-                        <input
-                          type="text"
-                          value={coParentFirstName}
-                          onChange={(e) => setCoParentFirstName(e.target.value)}
-                          placeholder="e.g. Meghan"
-                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
-                        />
+                    <div className="space-y-2 pt-1">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 mb-0.5">First Name *</label>
+                          <input
+                            type="text"
+                            value={coParentFirstName}
+                            onChange={(e) => setCoParentFirstName(e.target.value)}
+                            placeholder="e.g. Meghan"
+                            className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Last Name</label>
+                          <input
+                            type="text"
+                            value={coParentLastName}
+                            onChange={(e) => setCoParentLastName(e.target.value)}
+                            placeholder={adminLastName || "Last Name"}
+                            className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Nickname (Opt)</label>
+                          <input
+                            type="text"
+                            value={coParentNickname}
+                            onChange={(e) => setCoParentNickname(e.target.value)}
+                            placeholder="e.g. Meg"
+                            className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
+                          />
+                        </div>
                       </div>
-                      <div className="sm:col-span-3">
-                        <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Last Name</label>
-                        <input
-                          type="text"
-                          value={coParentLastName}
-                          onChange={(e) => setCoParentLastName(e.target.value)}
-                          placeholder={adminLastName || "Last Name"}
-                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
-                        />
-                      </div>
-                      <div className="sm:col-span-3">
-                        <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Nickname (Opt)</label>
-                        <input
-                          type="text"
-                          value={coParentNickname}
-                          onChange={(e) => setCoParentNickname(e.target.value)}
-                          placeholder="e.g. Meg"
-                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <button
-                          type="button"
-                          onClick={handleAddCoParent}
-                          disabled={!coParentFirstName.trim()}
-                          className="w-full py-1.5 px-3 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-white font-bold text-xs flex items-center justify-center gap-1 transition cursor-pointer"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                          <span>Add</span>
-                        </button>
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
+                        <div className="sm:col-span-9">
+                          <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Phone Number</label>
+                          <input
+                            type="tel"
+                            value={coParentPhone}
+                            onChange={(e) => setCoParentPhone(e.target.value)}
+                            placeholder="(555) 123-4567"
+                            className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
+                          />
+                        </div>
+                        <div className="sm:col-span-3">
+                          <button
+                            type="button"
+                            onClick={handleAddCoParent}
+                            disabled={!coParentFirstName.trim()}
+                            className="w-full py-1.5 px-3 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-white font-bold text-xs flex items-center justify-center gap-1 transition cursor-pointer"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Add Co-Parent</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1291,7 +1338,19 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-0.5">
+                          Phone Number (If Applicable)
+                        </label>
+                        <input
+                          type="tel"
+                          value={kidPhone}
+                          onChange={(e) => setKidPhone(e.target.value)}
+                          placeholder="(555) 123-4567"
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
+                        />
+                      </div>
                       <div>
                         <label className="block text-[10px] font-bold text-slate-400 mb-0.5">
                           Birthday {kidBirthday ? `(Age ${calculateAgeFromBirthday(kidBirthday)})` : "(Calendar Picker)"}
@@ -1404,6 +1463,9 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                           Primary Parent Admin (You)
                         </span>
                       </div>
+                      {adminPhone.trim() && (
+                        <div className="text-[10px] text-slate-400">📞 {adminPhone.trim()}</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1433,6 +1495,9 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                             Co-Parent Admin
                           </span>
                         </div>
+                        {m.phoneNumber && (
+                          <div className="text-[10px] text-slate-400">📞 {m.phoneNumber}</div>
+                        )}
                       </div>
                     </div>
                     <button
@@ -1494,8 +1559,11 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                                     : `Age ${m.age}${m.ageStatusOverride && m.ageStatusOverride !== "auto" ? " (Overridden)" : ""} • 11 & Under Basic`}
                                 </span>
                               </div>
-                              {m.birthday && (
-                                <div className="text-[10px] text-slate-400">DOB: {m.birthday}</div>
+                              {(m.birthday || m.phoneNumber) && (
+                                <div className="text-[10px] text-slate-400 flex items-center gap-2 flex-wrap">
+                                  {m.birthday && <span>DOB: {m.birthday}</span>}
+                                  {m.phoneNumber && <span>📞 {m.phoneNumber}</span>}
+                                </div>
                               )}
                             </div>
                           </div>

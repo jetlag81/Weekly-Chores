@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-15 09:57:00
+> **Export Date**: 2026-11-15 10:20:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,12 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Clean Slate Onboarding Step 2 Structured Family Flow** (src/CleanSlateOnboardingModal.tsx, src/householdOnboardingConfig.ts):
+1. **Phone Number Capture & Contact Sync in Clean Slate Onboarding** (src/CleanSlateOnboardingModal.tsx, src/householdOnboardingConfig.ts):
+   - Added **Admin Phone Number** (`adminPhone`) to Step 1 and persisted on `HouseholdSetupConfig`.
+   - Added **Phone Number** fields to Step 2 Co-Parent (`coParentPhone`) and Kids (`kidPhone`) forms, and updated contact pickers (`navigator.contacts.select(['name', 'tel'])`) to auto-populate both names and phone numbers.
+   - Displayed saved phone numbers under each member in the Step 2 Household Members hierarchy.
+
+2. **Clean Slate Onboarding Step 2 Structured Family Flow** (src/CleanSlateOnboardingModal.tsx, src/householdOnboardingConfig.ts):
    - Removed the non-syncing Family App Account Links card from Step 2.
    - Added **Family Structure** selector (*Traditional*, *Blended*, *Single Parent*) at the top of Step 2.
    - Added dedicated **Co-Parent Setup** (shown for Traditional/Blended) with *Choose Existing Contact* and *Create New* options, listing Co-Parents directly below the primary parent.
@@ -5333,4 +5338,19 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   2. **Co-Parent Setup**: Shown when `Traditional` or `Blended` is selected; offers **Choose Existing Contact** (`navigator.contacts.select` with graceful fallback) and **Create New** (First Name, Last Name, Nickname), inserting Co-Parent profiles directly below the primary user in Household Members.
   3. **Kids Setup**: Offers **Existing Contact** and **Create Manually** (First Name, Last Name, Nickname, Birthday `<input type="date">` calendar picker with auto age calculation, and **Override Auto Age Status** dropdown), plus **Add to Household**, **+ Add Another Kid**, **Add Pets**, and **Finish Step →** actions.
   4. **Hierarchical Household Members List**: Displays Primary Parent Admin first, Co-Parent(s) directly below, and a **Kids** subsection beneath Co-Parent(s).
+- Rebuilt and deployed the updated APK to the connected Pixel 9 Pro (`47171FDAP000A2`).
+
+---
+
+### Turn 192
+**Date / Time**: 2026-11-15T10:20:00Z
+
+**User Prompt**:
+> We should put in a phone number field for the household admin and then populate from contact or manually enter phone numbers for the co-parent and, if applicable, kids.
+
+**Summary of Work Delivered**:
+- Added phone number support across Step 1 and Step 2 in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) and [`src/householdOnboardingConfig.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/householdOnboardingConfig.ts):
+  1. **Household Admin Phone Number (Step 1)**: Added `adminPhone` input (`type="tel"`) in Step 1 and saved it to `HouseholdSetupConfig.adminPhone` and the primary admin draft.
+  2. **Co-Parent & Kid Phone Numbers (Step 2)**: Added `coParentPhone` and `kidPhone` (`type="tel"`) fields in Step 2 and updated `handlePickCoParentContact` / `handlePickKidContact` to request `["name", "tel"]` so device contacts auto-populate phone numbers alongside names.
+  3. **Household Members Display**: Rendered saved phone numbers beneath the Primary Parent Admin, Co-Parent(s), and Kids rows in Step 2.
 - Rebuilt and deployed the updated APK to the connected Pixel 9 Pro (`47171FDAP000A2`).

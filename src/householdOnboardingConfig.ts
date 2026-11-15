@@ -73,6 +73,7 @@ export interface OnboardingMemberDraft {
   inviteCode: string;
   birthday?: string;
   ageStatusOverride?: "auto" | "teen" | "junior";
+  phoneNumber?: string;
   gpayHandle?: string;
   applePayHandle?: string;
 }
@@ -107,6 +108,7 @@ export interface HouseholdSetupConfig {
   adminLastName: string;
   adminNickname: string;
   adminEmail: string;
+  adminPhone?: string;
   adminPin: string;
   familyStructure?: "Traditional" | "Blended" | "Single Parent";
   address: HouseholdAddressConfig;

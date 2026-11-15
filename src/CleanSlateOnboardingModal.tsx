@@ -29,12 +29,14 @@ import {
   RotateCcw,
   Copy,
   X,
-  Camera
+  Camera,
+  LocateFixed
 } from "lucide-react";
 import {
   getHouseholdSetupConfig,
   saveHouseholdSetupConfig,
   searchStreetAddressAutocomplete,
+  reverseGeocodeCoordinates,
   buildSmartStarterChores,
   backupCurrentHouseholdBeforeCleanSlate,
   restoreThomsFamilyPresetConfig,
@@ -99,6 +101,9 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
   const [addressQuery, setAddressQuery] = useState("");
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const [isLocatingDevice, setIsLocatingDevice] = useState(false);
+  const [locationNotice, setLocationNotice] = useState<string | null>(null);
+  const [deviceCoords, setDeviceCoords] = useState<{ lat: number; lon: number } | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<AddressSuggestion>({
     formattedAddress: "",
     street: "",
@@ -167,7 +172,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const [launchTourAfterFinish, setLaunchTourAfterFinish] = useState<boolean>(true);
 
-  // Address autocomplete effect
+  // Address autocomplete effect (strictly filtered by selected country + optional GPS bias)
   useEffect(() => {
     if (!addressQuery || addressQuery.trim().length < 3) {
       setAddressSuggestions([]);
@@ -176,17 +181,57 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
     let cancelled = false;
     setIsSearchingAddress(true);
     const timer = setTimeout(async () => {
-      const results = await searchStreetAddressAutocomplete(addressQuery);
+      const results = await searchStreetAddressAutocomplete(
+        addressQuery,
+        selectedAddress.countryCode,
+        deviceCoords
+      );
       if (!cancelled) {
         setAddressSuggestions(results);
         setIsSearchingAddress(false);
       }
-    }, 280);
+    }, 300);
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [addressQuery]);
+  }, [addressQuery, selectedAddress.countryCode, deviceCoords]);
+
+  const handleUseCurrentLocation = () => {
+    if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
+      setLocationNotice("Location services are unavailable on this device. Please select your country and type your address.");
+      return;
+    }
+    setIsLocatingDevice(true);
+    setLocationNotice(null);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const coords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        setDeviceCoords(coords);
+        const resolved = await reverseGeocodeCoordinates(coords.lat, coords.lon);
+        setIsLocatingDevice(false);
+        if (resolved) {
+          setSelectedAddress(resolved);
+          setAddressQuery(resolved.formattedAddress || resolved.street);
+          setAddressSuggestions([]);
+          if (resolved.countryCode === "CA") {
+            setInteracLinked(true);
+          }
+        } else {
+          setLocationNotice("Located your GPS coordinates! Now start typing your street name to narrow down local results.");
+        }
+      },
+      (err) => {
+        setIsLocatingDevice(false);
+        if (err.code === 1) {
+          setLocationNotice("Location permission denied. Select your Country below and type your street address.");
+        } else {
+          setLocationNotice("Could not get GPS fix right now. Select your Country below and type your address.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  };
 
   // Populate smart starter chores when entering Step 4
   useEffect(() => {
@@ -644,27 +689,73 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                 </div>
               </div>
 
-              {/* Full Street Address with Autocomplete */}
+              {/* Full Street Address with Country Filter, GPS Location & Autocomplete */}
               <div className="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-3.5 space-y-3">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-emerald-300 font-black uppercase tracking-wider text-[11px]">
                     <MapPin className="w-4 h-4 text-emerald-400" />
-                    <span>2. Home Street Address (Auto-Sets Country & Currency)</span>
+                    <span>2. Home Street Address (Country &amp; Currency)</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
                     {selectedAddress.countryCode === "CA" ? "🇨🇦 Canada (CAD $)" : "🇺🇸 USA (USD $)"}
                   </span>
                 </div>
 
+                {/* Step 2a: Country Dropdown First + Use Current Location Button */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                      1. Select Country First
+                    </label>
+                    <select
+                      value={selectedAddress.countryCode}
+                      onChange={(e) => {
+                        const code = e.target.value === "US" ? "US" : "CA";
+                        setSelectedAddress(prev => ({
+                          ...prev,
+                          countryCode: code,
+                          currency: code === "CA" ? "CAD" : "USD"
+                        }));
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="CA">🇨🇦 Canada (CAD $)</option>
+                      <option value="US">🇺🇸 United States (USD $)</option>
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col justify-end">
+                    <button
+                      type="button"
+                      onClick={handleUseCurrentLocation}
+                      disabled={isLocatingDevice}
+                      className="w-full py-2 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 font-black text-xs flex items-center justify-center gap-1.5 transition cursor-pointer disabled:opacity-60"
+                    >
+                      <LocateFixed className={`w-4 h-4 ${isLocatingDevice ? "animate-spin" : ""}`} />
+                      <span>{isLocatingDevice ? "Detecting Location..." : "Use My Current Location"}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {locationNotice && (
+                  <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-300 font-semibold">
+                    {locationNotice}
+                  </div>
+                )}
+
                 <div className="relative">
                   <label className="block text-[11px] font-bold text-slate-300 mb-1">
-                    Search Street Address or Postal / ZIP Code
+                    2. Search Street Address in {selectedAddress.countryCode === "CA" ? "Canada" : "the United States"}
                   </label>
                   <input
                     type="text"
                     value={addressQuery}
                     onChange={(e) => setAddressQuery(e.target.value)}
-                    placeholder="Start typing street address (e.g. 123 Portage Ave, Winnipeg...)"
+                    placeholder={
+                      selectedAddress.countryCode === "CA"
+                        ? "Start typing address (e.g. 123 Portage Ave, Winnipeg...)"
+                        : "Start typing address (e.g. 350 Fifth Ave, New York...)"
+                    }
                     className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold focus:outline-none focus:border-emerald-500"
                   />
                   {isSearchingAddress && (
@@ -726,23 +817,17 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-400 mb-0.5">
-                      Country & Store
+                      {selectedAddress.countryCode === "CA" ? "Postal Code" : "ZIP Code"}
                     </label>
-                    <select
-                      value={selectedAddress.countryCode}
-                      onChange={(e) => {
-                        const code = e.target.value === "US" ? "US" : "CA";
-                        setSelectedAddress(prev => ({
-                          ...prev,
-                          countryCode: code,
-                          currency: code === "CA" ? "CAD" : "USD"
-                        }));
-                      }}
-                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-bold"
-                    >
-                      <option value="CA" className="bg-slate-900 text-white">🇨🇦 Canada (CAD)</option>
-                      <option value="US" className="bg-slate-900 text-white">🇺🇸 USA (USD)</option>
-                    </select>
+                    <input
+                      type="text"
+                      value={selectedAddress.postalCode}
+                      onChange={(e) =>
+                        setSelectedAddress(prev => ({ ...prev, postalCode: e.target.value }))
+                      }
+                      placeholder={selectedAddress.countryCode === "CA" ? "R3B 2E9" : "10001"}
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-mono"
+                    />
                   </div>
                 </div>
 

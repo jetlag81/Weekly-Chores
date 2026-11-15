@@ -310,7 +310,11 @@ const OFFLINE_ADDRESS_SUGGESTIONS: AddressSuggestion[] = [
   }
 ];
 
-export async function searchStreetAddressAutocomplete(query: string): Promise<AddressSuggestion[]> {
+export async function searchStreetAddressAutocomplete(
+  query: string,
+  countryFilter?: RewardRegion,
+  biasCoords?: { lat: number; lon: number } | null
+): Promise<AddressSuggestion[]> {
   const clean = (query || "").trim();
   if (clean.length < 3) return [];
 
@@ -323,34 +327,42 @@ export async function searchStreetAddressAutocomplete(query: string): Promise<Ad
     /\b\d{5}\b/.test(clean) ||
     /\b(NY|CA|TX|FL|WA|IL|USA|United States)\b/i.test(clean);
 
+  const activeCountry: RewardRegion =
+    countryFilter || (looksUS && !looksCanadian ? "US" : "CA");
+  const ccLower = activeCountry.toLowerCase();
+
+  // 1. Primary: Nominatim strictly filtered by selected country (ca / us)
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2200);
-    const res = await fetch(
-      `https://photon.komoot.io/api/?q=${encodeURIComponent(clean)}&limit=5&lang=en`,
-      { signal: controller.signal }
-    );
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    let url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&countrycodes=${ccLower}&accept-language=en&q=${encodeURIComponent(clean)}`;
+    if (biasCoords) {
+      // Soft ~50km viewbox bias around user's GPS coordinates without strictly locking out other cities
+      const dLat = 0.6;
+      const dLon = 0.8;
+      url += `&viewbox=${biasCoords.lon - dLon},${biasCoords.lat + dLat},${biasCoords.lon + dLon},${biasCoords.lat - dLat}`;
+    }
+    const res = await fetch(url, { signal: controller.signal });
     clearTimeout(timeoutId);
 
     if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data?.features) && data.features.length > 0) {
-        const mapped: AddressSuggestion[] = data.features.map((f: any) => {
-          const p = f.properties || {};
-          const houseNum = p.housenumber ? `${p.housenumber} ` : "";
-          const streetName = p.street || p.name || "";
-          const street = `${houseNum}${streetName}`.trim();
-          const city = p.city || p.town || p.locality || p.county || "";
-          const stateProvince = p.state || "";
-          const postalCode = p.postcode || "";
-          const rawCountry = String(p.countrycode || p.country || "").toUpperCase();
-          const isCA = rawCountry === "CA" || rawCountry.includes("CANADA") || looksCanadian;
-          const countryCode: RewardRegion = isCA ? "CA" : "US";
+      const items = await res.json();
+      if (Array.isArray(items) && items.length > 0) {
+        const mapped: AddressSuggestion[] = items.map((item: any) => {
+          const a = item.address || {};
+          const houseNum = a.house_number ? `${a.house_number} ` : "";
+          const road = a.road || a.pedestrian || a.residential || "";
+          const street = `${houseNum}${road}`.trim() || clean;
+          const city = a.city || a.town || a.village || a.municipality || a.county || "";
+          const stateProvince = a.state || a.province || "";
+          const postalCode = a.postcode || "";
+          const rawCC = String(a.country_code || ccLower).toUpperCase();
+          const countryCode: RewardRegion = rawCC === "US" ? "US" : "CA";
           const currency = countryCode === "CA" ? "CAD" : "USD";
-          const parts = [street, city, stateProvince, postalCode, isCA ? "Canada" : "USA"].filter(Boolean);
+          const parts = [street, city, stateProvince, postalCode, countryCode === "CA" ? "Canada" : "USA"].filter(Boolean);
           return {
             formattedAddress: parts.join(", "),
-            street: street || clean,
+            street,
             city,
             stateProvince,
             postalCode,
@@ -362,26 +374,155 @@ export async function searchStreetAddressAutocomplete(query: string): Promise<Ad
       }
     }
   } catch {
+    // Fall through to Photon
+  }
+
+  // 2. Secondary: Photon (appending country name + optional GPS bias)
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const countryName = activeCountry === "CA" ? "Canada" : "United States";
+    const biasedQuery = clean.toLowerCase().includes("canada") || clean.toLowerCase().includes("usa")
+      ? clean
+      : `${clean}, ${countryName}`;
+    let photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(biasedQuery)}&limit=6&lang=en`;
+    if (biasCoords) {
+      photonUrl += `&lat=${biasCoords.lat}&lon=${biasCoords.lon}`;
+    }
+    const res = await fetch(photonUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data?.features) && data.features.length > 0) {
+        const mapped: AddressSuggestion[] = data.features
+          .map((f: any) => {
+            const p = f.properties || {};
+            const houseNum = p.housenumber ? `${p.housenumber} ` : "";
+            const streetName = p.street || p.name || "";
+            const street = `${houseNum}${streetName}`.trim();
+            const city = p.city || p.town || p.locality || p.county || "";
+            const stateProvince = p.state || "";
+            const postalCode = p.postcode || "";
+            const rawCountry = String(p.countrycode || p.country || "").toUpperCase();
+            const isCA = rawCountry === "CA" || rawCountry.includes("CANADA");
+            const isUS = rawCountry === "US" || rawCountry.includes("UNITED STATES");
+            const countryCode: RewardRegion = isUS ? "US" : isCA ? "CA" : activeCountry;
+            const currency = countryCode === "CA" ? "CAD" : "USD";
+            const parts = [street, city, stateProvince, postalCode, countryCode === "CA" ? "Canada" : "USA"].filter(Boolean);
+            return {
+              formattedAddress: parts.join(", "),
+              street: street || clean,
+              city,
+              stateProvince,
+              postalCode,
+              countryCode,
+              currency
+            };
+          })
+          .filter((s: AddressSuggestion) => s.countryCode === activeCountry);
+
+        if (mapped.length > 0) return mapped.slice(0, 5);
+      }
+    }
+  } catch {
     // Fallback to smart local synthesis below
   }
 
   const qLower = clean.toLowerCase();
-  const matches = OFFLINE_ADDRESS_SUGGESTIONS.filter(s =>
-    s.formattedAddress.toLowerCase().includes(qLower)
+  const matches = OFFLINE_ADDRESS_SUGGESTIONS.filter(
+    s => s.countryCode === activeCountry && s.formattedAddress.toLowerCase().includes(qLower)
   );
 
-  const inferredCountry: RewardRegion = looksUS && !looksCanadian ? "US" : "CA";
   const synthesized: AddressSuggestion = {
-    formattedAddress: `${clean} (${inferredCountry === "CA" ? "Canada • CAD" : "United States • USD"})`,
+    formattedAddress: `${clean} (${activeCountry === "CA" ? "Canada • CAD" : "United States • USD"})`,
     street: clean,
-    city: inferredCountry === "CA" ? "Winnipeg" : "",
-    stateProvince: inferredCountry === "CA" ? "MB" : "",
+    city: activeCountry === "CA" ? "Winnipeg" : "",
+    stateProvince: activeCountry === "CA" ? "MB" : "",
     postalCode: "",
-    countryCode: inferredCountry,
-    currency: inferredCountry === "CA" ? "CAD" : "USD"
+    countryCode: activeCountry,
+    currency: activeCountry === "CA" ? "CAD" : "USD"
   };
 
   return [synthesized, ...matches].slice(0, 5);
+}
+
+/**
+ * Reverse-geocodes device GPS coordinates into a structured household street address.
+ */
+export async function reverseGeocodeCoordinates(
+  lat: number,
+  lon: number
+): Promise<AddressSuggestion | null> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4500);
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&addressdetails=1&accept-language=en`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      const data = await res.json();
+      const a = data?.address || {};
+      const houseNum = a.house_number ? `${a.house_number} ` : "";
+      const road = a.road || a.pedestrian || a.residential || "";
+      const street = `${houseNum}${road}`.trim();
+      const city = a.city || a.town || a.village || a.municipality || a.county || "";
+      const stateProvince = a.state || a.province || "";
+      const postalCode = a.postcode || "";
+      const rawCC = String(a.country_code || "CA").toUpperCase();
+      const countryCode: RewardRegion = rawCC === "US" ? "US" : "CA";
+      const currency = countryCode === "CA" ? "CAD" : "USD";
+      const parts = [street, city, stateProvince, postalCode, countryCode === "CA" ? "Canada" : "USA"].filter(Boolean);
+      return {
+        formattedAddress: parts.join(", ") || data?.display_name || "",
+        street: street || data?.display_name || "",
+        city,
+        stateProvince,
+        postalCode,
+        countryCode,
+        currency
+      };
+    }
+  } catch {
+    // Fallback to Photon reverse
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const res = await fetch(
+      `https://photon.komoot.io/reverse?lat=${lat}&lon=${lon}`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      const data = await res.json();
+      const p = data?.features?.[0]?.properties || {};
+      const houseNum = p.housenumber ? `${p.housenumber} ` : "";
+      const road = p.street || p.name || "";
+      const street = `${houseNum}${road}`.trim();
+      const city = p.city || p.town || p.locality || p.county || "";
+      const stateProvince = p.state || "";
+      const postalCode = p.postcode || "";
+      const rawCC = String(p.countrycode || "CA").toUpperCase();
+      const countryCode: RewardRegion = rawCC === "US" ? "US" : "CA";
+      const currency = countryCode === "CA" ? "CAD" : "USD";
+      const parts = [street, city, stateProvince, postalCode, countryCode === "CA" ? "Canada" : "USA"].filter(Boolean);
+      return {
+        formattedAddress: parts.join(", "),
+        street,
+        city,
+        stateProvince,
+        postalCode,
+        countryCode,
+        currency
+      };
+    }
+  } catch {}
+
+  return null;
 }
 
 /**

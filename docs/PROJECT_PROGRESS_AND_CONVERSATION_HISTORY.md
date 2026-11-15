@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-14 16:18:00
+> **Export Date**: 2026-11-14 19:14:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -5232,3 +5232,18 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   - **Ages 12 & Up (`⚡ 12+ Teen Autonomy`)**: 3-step self-onboarding (Nickname/Bio/Emoji/Color -> G-Pay/Apple Pay/Wishlist/Goal -> Gamertags & Socials).
   - **Ages 11 & Under (`🌟 11 & Under Junior Explorer`)**: Kid-safe 1-step onboarding (Nickname, Giant Avatar Emoji, Theme Color, and Simple Prize Goal).
 - Wired quick-launch controls (`Clean Slate Setup Wizard`, `Replay 6-Stop Hub Tour`, `Restore Thom's Preset`) into the top-right Settings gear menu in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx) and inside [`src/HouseholdSettingsModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/HouseholdSettingsModal.tsx).
+
+---
+
+### Turn 187
+**Date / Time**: 2026-11-14T19:14:00Z
+
+**User Prompt**:
+> Ok, we'll go through step by step. In the first step, the address search is a bit dodgy. Can we have the app enable location services? Or select the country from a dropdown menu first so that it narrows things down right away?
+
+**Summary of Work Delivered**:
+- Implemented **both** Country-first filtering and Device Location Services in Step 1 of the Clean Slate Setup Wizard:
+  1. Added `ACCESS_COARSE_LOCATION` and `ACCESS_FINE_LOCATION` permissions to [`android/app/src/main/AndroidManifest.xml`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/android/app/src/main/AndroidManifest.xml) so Android WebView can prompt for GPS/location access.
+  2. Upgraded `searchStreetAddressAutocomplete` in [`src/householdOnboardingConfig.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/householdOnboardingConfig.ts) to query OpenStreetMap Nominatim with strict `countrycodes=ca`/`us` filtering and optional GPS `viewbox` bias (falling back to country-biased Photon and local fallback), plus added `reverseGeocodeCoordinates(lat, lon)` for GPS-to-street-address lookup.
+  3. Updated Step 1 of [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) to place the **1. Select Country First** dropdown (`🇨🇦 Canada (CAD $)` / `🇺🇸 United States (USD $)`) and **Use My Current Location** GPS button at the top of the Home Street Address card, and replaced the duplicate country dropdown in the City/Province/Postal grid with an editable **Postal / ZIP Code** field.
+- Rebuilt and deployed the updated APK to the connected Pixel 9 Pro (`47171FDAP000A2`).

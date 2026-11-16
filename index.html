@@ -86,12 +86,69 @@
         }
 
         html, body, #root, #app-container {
+          color-scheme: light !important;
           height: auto !important;
           min-height: 0 !important;
           background: #ffffff !important;
+          color: #0f172a !important;
           margin: 0 !important;
           padding: 0 !important;
           overflow: visible !important;
+        }
+
+        /* Always print the Weekly Chore Schedule in classic crisp white-paper format, even when Dark Mode is enabled */
+        #printable-schedule-card {
+          background: #ffffff !important;
+          color: #0f172a !important;
+          border: none !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 100% !important;
+          overflow: visible !important;
+        }
+
+        #printable-schedule-table {
+          background: #ffffff !important;
+          color: #0f172a !important;
+        }
+
+        #printable-schedule-table thead tr:nth-child(2) th:first-child,
+        #printable-schedule-table thead tr:nth-child(2) th:first-child > div:first-child,
+        #printable-schedule-table thead tr:nth-child(3),
+        #printable-schedule-table thead tr:nth-child(3) th {
+          background-color: #ffffff !important;
+          color: #0f172a !important;
+        }
+
+        #printable-schedule-table thead tr:nth-child(3) th svg {
+          color: #0f172a !important;
+        }
+
+        #printable-schedule-table tr.chore-row,
+        #printable-schedule-table tr.chore-row td,
+        #printable-schedule-table tr.sign-off-row,
+        #printable-schedule-table tr.sign-off-row td {
+          background-color: #ffffff !important;
+          color: #0f172a !important;
+        }
+
+        #printable-schedule-table tr.chore-row td *,
+        #printable-schedule-table tr.sign-off-row td * {
+          color: #0f172a !important;
+        }
+
+        #printable-schedule-table tr.chore-row td button,
+        #printable-schedule-table tr.sign-off-row td button {
+          background-color: transparent !important;
+          border-color: #cbd5e1 !important;
+        }
+
+        #printable-schedule-table tr.section-header-row,
+        #printable-schedule-table tr.section-header-row td {
+          background-color: #002060 !important;
+          color: #ffffff !important;
         }
 
         header,
@@ -106,16 +163,6 @@
           width: 100% !important;
           margin: 0 !important;
           padding: 0 !important;
-        }
-
-        #printable-schedule-card {
-          border: none !important;
-          border-radius: 0 !important;
-          box-shadow: none !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          width: 100% !important;
-          overflow: visible !important;
         }
 
         #printable-schedule-card .overflow-x-auto {

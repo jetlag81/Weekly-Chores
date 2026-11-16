@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-15 12:41:00
+> **Export Date**: 2026-11-16 17:39:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,10 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Google Places API (New) Primary Address Autocomplete with OSM Fallback** (src/householdOnboardingConfig.ts, src/CleanSlateOnboardingModal.tsx, .env.example):
+1. **Print Stylesheet Light-Theme Override** (index.html):
+   - Updated `@media print` in `index.html` to force `color-scheme: light` and crisp white backgrounds (`#ffffff`) with dark ink (`#0f172a`) on `#printable-schedule-card`, `#printable-schedule-table`, headers, chore rows, and sign-off rows—restoring the original printable sheet format even when Dark Mode is active.
+
+2. **Google Places API (New) Primary Address Autocomplete with OSM Fallback** (src/householdOnboardingConfig.ts, src/CleanSlateOnboardingModal.tsx, .env.example):
    - Added Google Places API (New) `places:autocomplete` as the primary street address autocomplete provider when `VITE_GOOGLE_PLACES_API_KEY` is configured, with session token bundling (`placesSessionToken`) and `resolveGooglePlaceDetails` for exact street number, city, province/state, and postal/ZIP extraction.
    - Preserved automatic fallback to OpenStreetMap Nominatim → Komoot Photon → offline synthesis whenever the key is absent, rate-limited, or offline.
 
@@ -5407,3 +5410,14 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   2. Added `resolveGooglePlaceDetails` (`GET https://places.googleapis.com/v1/places/{placeId}`) on suggestion tap to populate exact street number, street, city, province/state, and postal/ZIP code, then rotates the session token.
   3. Automatically falls back to Nominatim → Photon → local synthesis if `VITE_GOOGLE_PLACES_API_KEY` is not set or fails.
 - Rebuilt and deployed the updated APK to `47171FDAP000A2`.
+
+---
+
+### Turn 196
+**Date / Time**: 2026-11-16T17:39:00Z
+
+**User Prompt**:
+> The print function went away from the original format. It looks like it wants to print in dark theme now.
+
+**Summary of Work Delivered**:
+- Updated `@media print` in [`index.html`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/index.html) to force `color-scheme: light` and override dark-mode Tailwind classes (`dark:bg-slate-900`, `dark:text-slate-100`, etc.) on `#printable-schedule-card`, `#printable-schedule-table`, `FOR THE WEEK OF:` headers, `WHO/DONE` subheaders, chore rows, and sign-off rows back to crisp white backgrounds (`#ffffff`) and dark ink (`#0f172a`), preserving the navy `#002060` section headers and 7-day color bands.

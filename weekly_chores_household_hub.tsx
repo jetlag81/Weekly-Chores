@@ -3693,14 +3693,25 @@ function App({
     onCloseOpenModals: handleDismissAnyParentModal
   });
 
-  const handleCompleteCleanSlateOnboarding = useCallback((
-    config: HouseholdSetupConfig,
-    members: OnboardingMemberDraft[],
-    pets: OnboardingPetDraft[],
-    chores: OnboardingChoreDraft[],
-    startSpotlightTour: boolean
-  ) => {
-    const newSheetData = buildSheetDataFromOnboarding(config, members, pets, chores, activeSyncWeek);
+  const handleCompleteCleanSlateOnboarding = useCallback((payload: {
+    householdName: string;
+    adminName: string;
+    members: OnboardingMemberDraft[];
+    pets: OnboardingPetDraft[];
+    chores: OnboardingChoreDraft[];
+    weekStartDay: WeekStartDay;
+    monthlyIncentive: string;
+    monthlyGoalTarget: number;
+    startSpotlightTour: boolean;
+  }) => {
+    const config = getHouseholdSetupConfig();
+    const newSheetData = buildSheetDataFromOnboarding(
+      config,
+      payload.members,
+      payload.pets,
+      payload.chores,
+      activeSyncWeek
+    );
     if (onReplaceSheetData) {
       onReplaceSheetData(newSheetData);
     }
@@ -3711,21 +3722,24 @@ function App({
     setChoreEdits({});
     setCustomAddedChores([]);
     setCustomMasterChores([]);
-    if (config.rewards?.monthlyBonusDescription) {
-      setMonthlyIncentive(config.rewards.monthlyBonusDescription);
+    if (payload.adminName) {
+      setActiveParentAdmin(payload.adminName);
+    }
+    if (payload.monthlyIncentive) {
+      setMonthlyIncentive(payload.monthlyIncentive);
       try {
-        localStorage.setItem("weekly_chores_monthly_incentive", config.rewards.monthlyBonusDescription);
+        localStorage.setItem("weekly_chores_monthly_incentive", payload.monthlyIncentive);
       } catch {}
     }
-    if (config.rewards?.monthlyGoalTarget) {
-      setMonthlyGoalTarget(config.rewards.monthlyGoalTarget);
+    if (payload.monthlyGoalTarget) {
+      setMonthlyGoalTarget(payload.monthlyGoalTarget);
       try {
-        localStorage.setItem("weekly_chores_monthly_target", String(config.rewards.monthlyGoalTarget));
+        localStorage.setItem("weekly_chores_monthly_target", String(payload.monthlyGoalTarget));
       } catch {}
     }
     setProfilesVersion(v => v + 1);
     setShowCleanSlateModal(false);
-    if (startSpotlightTour) {
+    if (payload.startSpotlightTour) {
       setParentViewPreference("table");
       try {
         localStorage.setItem("parent_view_mode_preference", "table");
@@ -3733,7 +3747,7 @@ function App({
       setActiveTab("matrix");
       setShowSpotlightTour(true);
     }
-    setNotice(`✨ Clean Slate Setup Complete! Welcome to ${config.householdName} (${config.address.countryCode === "CA" ? "🇨🇦 CAD" : "🇺🇸 USD"})!`);
+    setNotice(`✨ Clean Slate Setup Complete! Welcome to ${payload.householdName || config.householdName} (${config.address?.countryCode === "CA" ? "🇨🇦 CAD" : "🇺🇸 USD"})!`);
     setTimeout(() => setNotice(null), 5000);
   }, [activeSyncWeek, onReplaceSheetData]);
 

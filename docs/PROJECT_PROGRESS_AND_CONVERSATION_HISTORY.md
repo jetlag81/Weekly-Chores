@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 16:07:00
+> **Export Date**: 2026-11-22 16:23:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,11 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Step 6 "Review & Send Family Invites" with 11 & Under QR Device Add / Skip** (src/CleanSlateOnboardingModal.tsx):
+1. **Fixed Finish & Send Invites Callback Signature + Added SMS Text Invites** (weekly_chores_household_hub.tsx, src/CleanSlateOnboardingModal.tsx):
+   - Fixed `handleCompleteCleanSlateOnboarding` in `weekly_chores_household_hub.tsx` to accept the single payload object emitted by `CleanSlateOnboardingModal` instead of 5 positional arguments, resolving the silent failure on **Finish & Send Invites**.
+   - Added a **📱 Text Invite** (`sms:` deep link pre-filled with the recipient's phone number, invite link, and code) on Co-Parent & Kids 12+ cards in Step 6.
+
+2. **Step 6 "Review & Send Family Invites" with 11 & Under QR Device Add / Skip** (src/CleanSlateOnboardingModal.tsx):
    - Renamed Step 6 from *Roll Out Invites* to **Review & Send Family Invites** and changed the final CTA button to **Finish & Send Invites**.
    - Displayed entered member details (name, nickname, role/age/DOB, phone, address, residency, invite code) with per-member **"Good"** verification checkboxes and a **"Check All Good"** toggle.
    - Split **Kids 11 & Under** into a dedicated **Manual Device Add (QR Code)** section rendering a `QRCodeDisplay` pairing QR code for each child, alongside a **Skip Device Add (No Device)** option.
@@ -5452,3 +5456,17 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   2. Added full entered-info review cards for the Primary Parent Admin, Co-Parents, and Kids 12+, each with a **"Good"** verification checkbox (`verifiedMembers`) and a **"Check All Good"** toggle.
   3. Split **Kids 11 & Under** into a dedicated **Manual Device Add (QR Code)** subsection displaying a `QRCodeDisplay` pairing QR code and manual code per child, plus a **Skip Device Add (No Device)** toggle.
 - Rebuilt and installed the updated APK onto the connected Pixel (`47171FDAP000A2`).
+
+---
+
+### Turn 199
+**Date / Time**: 2026-11-22T16:23:00Z
+
+**User Prompt**:
+> That's pretty good. Now, when I hit Finish & Send, nothing happens. What would be the best way to send invites to the Co-Parent and 12+ kids? Just via text message?
+
+**Summary of Work Delivered**:
+- Diagnosed why **Finish & Send Invites** did nothing: `onCompleteOnboarding` in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) passed a single payload object, whereas `handleCompleteCleanSlateOnboarding` in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx) expected 5 positional arguments `(config, members, pets, chores, startSpotlightTour)`.
+- Updated `handleCompleteCleanSlateOnboarding` to accept the payload object, load `getHouseholdSetupConfig()`, build the initial schedule sheet, update `activeParentAdmin` / `monthlyIncentive` / `monthlyGoalTarget`, close the wizard, and launch the spotlight tour.
+- Added a **📱 Text Invite** (`sms:` link pre-addressed to each member's phone number with invite link & code) alongside **Copy Invite** on Co-Parent and Kids 12+ cards in Step 6.
+- Rebuilt and deployed the updated APK to `47171FDAP000A2`.

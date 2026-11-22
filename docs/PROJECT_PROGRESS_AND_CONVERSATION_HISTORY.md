@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 16:23:00
+> **Export Date**: 2026-11-22 17:48:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,12 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Fixed Finish & Send Invites Callback Signature + Added SMS Text Invites** (weekly_chores_household_hub.tsx, src/CleanSlateOnboardingModal.tsx):
+1. **Member Email Field & Native Contact Email Import** (src/CleanSlateOnboardingModal.tsx, src/householdOnboardingConfig.ts, ContactPickerPlugin.java, AndroidManifest.xml):
+   - Added Email Address fields to Step 2 Co-Parent and Kids creation forms (`coParentEmail`, `kidEmail`), saved on `OnboardingMemberDraft.email` and `UserProfile.email`.
+   - Upgraded Android `ContactPickerPlugin` (with optional `READ_CONTACTS` permission) and Web Contact Picker to auto-populate Name, Phone Number, and Email from imported contacts.
+   - Displayed member emails in Step 2 Household Members and Step 6 Review & Send Family Invites, alongside a `✉️ Email Invite` action.
+
+2. **Fixed Finish & Send Invites Callback Signature + Added SMS Text Invites** (weekly_chores_household_hub.tsx, src/CleanSlateOnboardingModal.tsx):
    - Fixed `handleCompleteCleanSlateOnboarding` in `weekly_chores_household_hub.tsx` to accept the single payload object emitted by `CleanSlateOnboardingModal` instead of 5 positional arguments, resolving the silent failure on **Finish & Send Invites**.
    - Added a **📱 Text Invite** (`sms:` deep link pre-filled with the recipient's phone number, invite link, and code) on Co-Parent & Kids 12+ cards in Step 6.
 
@@ -5469,4 +5474,19 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Diagnosed why **Finish & Send Invites** did nothing: `onCompleteOnboarding` in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) passed a single payload object, whereas `handleCompleteCleanSlateOnboarding` in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx) expected 5 positional arguments `(config, members, pets, chores, startSpotlightTour)`.
 - Updated `handleCompleteCleanSlateOnboarding` to accept the payload object, load `getHouseholdSetupConfig()`, build the initial schedule sheet, update `activeParentAdmin` / `monthlyIncentive` / `monthlyGoalTarget`, close the wizard, and launch the spotlight tour.
 - Added a **📱 Text Invite** (`sms:` link pre-addressed to each member's phone number with invite link & code) alongside **Copy Invite** on Co-Parent and Kids 12+ cards in Step 6.
+- Rebuilt and deployed the updated APK to `47171FDAP000A2`.
+
+---
+
+### Turn 200
+**Date / Time**: 2026-11-22T17:48:00Z
+
+**User Prompt**:
+> Can the send invite be an automatic function? When you hit the "Send Invite" button, can the app send the text instantly instead of opening another app?
+> Also, there should be an email field in the member creation that will also either populate from importing an existing contact or by manual input.
+
+**Summary of Work Delivered**:
+- Added **Email Address** support for Co-Parent and Kids in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) and [`src/householdOnboardingConfig.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/householdOnboardingConfig.ts), persisted to `UserProfile.email`, displayed in Step 2 & Step 6, and paired with a **✉️ Email Invite** button in Step 6.
+- Upgraded [`ContactPickerPlugin.java`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/android/app/src/main/java/com/household/choreshub/ContactPickerPlugin.java) and [`AndroidManifest.xml`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/android/app/src/main/AndroidManifest.xml) (`READ_CONTACTS` with graceful fallback) so importing an existing contact populates Name, Phone Number, and Email automatically.
+- Explained the technical & store-policy tradeoffs for automatic background SMS (`SmsManager` sideload-only vs. Cloud Functions + Twilio/Resend for Play Store & iOS).
 - Rebuilt and deployed the updated APK to `47171FDAP000A2`.

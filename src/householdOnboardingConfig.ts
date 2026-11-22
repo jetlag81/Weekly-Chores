@@ -74,6 +74,7 @@ export interface OnboardingMemberDraft {
   birthday?: string;
   ageStatusOverride?: "auto" | "teen" | "junior";
   phoneNumber?: string;
+  email?: string;
   gpayHandle?: string;
   applePayHandle?: string;
 }

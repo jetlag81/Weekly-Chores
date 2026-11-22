@@ -11,7 +11,7 @@ import React, { useState, useEffect } from "react";
 import { Capacitor, registerPlugin } from "@capacitor/core";
 
 const NativeContactPicker = registerPlugin<{
-  pickContact: () => Promise<{ name?: string; phoneNumber?: string }>;
+  pickContact: () => Promise<{ name?: string; phoneNumber?: string; email?: string }>;
 }>("ContactPicker");
 import {
   Sparkles,
@@ -156,12 +156,14 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
   const [coParentLastName, setCoParentLastName] = useState("");
   const [coParentNickname, setCoParentNickname] = useState("");
   const [coParentPhone, setCoParentPhone] = useState("");
+  const [coParentEmail, setCoParentEmail] = useState("");
   const [coParentContactNote, setCoParentContactNote] = useState<string | null>(null);
   const [kidMode, setKidMode] = useState<"choose" | "manual">("manual");
   const [kidFirstName, setKidFirstName] = useState("");
   const [kidLastName, setKidLastName] = useState("");
   const [kidNickname, setKidNickname] = useState("");
   const [kidPhone, setKidPhone] = useState("");
+  const [kidEmail, setKidEmail] = useState("");
   const [kidBirthday, setKidBirthday] = useState("");
   const [kidAgeOverride, setKidAgeOverride] = useState<"auto" | "teen" | "junior">("auto");
   const [kidContactNote, setKidContactNote] = useState<string | null>(null);
@@ -385,7 +387,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       color: MEMBER_COLORS[idx % MEMBER_COLORS.length],
       avatarEmoji: "🏠",
       inviteCode: generateInviteCodeForMember(cleanFirst, idx),
-      phoneNumber: coParentPhone.trim() || undefined
+      phoneNumber: coParentPhone.trim() || undefined,
+      email: coParentEmail.trim() || undefined
     };
     // Keep Parents directly below initial user and before Kids
     setMembers(prev => {
@@ -397,12 +400,14 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
     setCoParentLastName("");
     setCoParentNickname("");
     setCoParentPhone("");
+    setCoParentEmail("");
     setCoParentContactNote(null);
   };
 
   const pickSingleDeviceContact = async (): Promise<{
     fullName: string;
     phone: string;
+    email: string;
     unsupported?: boolean;
   } | null> => {
     if (Capacitor.isNativePlatform()) {
@@ -410,30 +415,35 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
         const res = await NativeContactPicker.pickContact();
         return {
           fullName: (res?.name || "").trim(),
-          phone: (res?.phoneNumber || "").trim()
+          phone: (res?.phoneNumber || "").trim(),
+          email: (res?.email || "").trim()
         };
       } catch (err: any) {
         if (String(err?.message || err).toLowerCase().includes("cancel")) {
           return null;
         }
-        return { fullName: "", phone: "", unsupported: true };
+        return { fullName: "", phone: "", email: "", unsupported: true };
       }
     }
 
     const nav = navigator as Navigator & {
       contacts?: {
-        select?: (props: string[], opts?: { multiple?: boolean }) => Promise<Array<{ name?: string[]; tel?: string[] }>>;
+        select?: (
+          props: string[],
+          opts?: { multiple?: boolean }
+        ) => Promise<Array<{ name?: string[]; tel?: string[]; email?: string[] }>>;
       };
     };
     if (!nav.contacts?.select) {
-      return { fullName: "", phone: "", unsupported: true };
+      return { fullName: "", phone: "", email: "", unsupported: true };
     }
     try {
-      const picked = await nav.contacts.select(["name", "tel"], { multiple: false });
+      const picked = await nav.contacts.select(["name", "tel", "email"], { multiple: false });
       const fullName = (picked[0]?.name?.[0] || "").trim();
       const phone = (picked[0]?.tel?.[0] || "").trim();
-      if (!fullName && !phone) return null;
-      return { fullName, phone };
+      const email = (picked[0]?.email?.[0] || "").trim();
+      if (!fullName && !phone && !email) return null;
+      return { fullName, phone, email };
     } catch {
       return null;
     }
@@ -453,7 +463,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       setCoParentLastName(parts.slice(1).join(" ") || adminLastName.trim() || "");
     }
     if (contact.phone) setCoParentPhone(contact.phone);
-    setCoParentContactNote(`Loaded "${contact.fullName || contact.phone}" from contacts — review & tap Add Co-Parent.`);
+    if (contact.email) setCoParentEmail(contact.email);
+    setCoParentContactNote(`Loaded "${contact.fullName || contact.phone || contact.email}" from contacts — review & tap Add Co-Parent.`);
     setCoParentMode("manual");
   };
 
@@ -471,7 +482,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       setKidLastName(parts.slice(1).join(" ") || adminLastName.trim() || "");
     }
     if (contact.phone) setKidPhone(contact.phone);
-    setKidContactNote(`Loaded "${contact.fullName || contact.phone}" — pick their Birthday & tap Add to Household.`);
+    if (contact.email) setKidEmail(contact.email);
+    setKidContactNote(`Loaded "${contact.fullName || contact.phone || contact.email}" — pick their Birthday & tap Add to Household.`);
     setKidMode("manual");
   };
 
@@ -493,6 +505,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       birthday: kidBirthday || undefined,
       ageStatusOverride: kidAgeOverride,
       phoneNumber: kidPhone.trim() || undefined,
+      email: kidEmail.trim() || undefined,
       residency: "Full-Time",
       color: MEMBER_COLORS[idx % MEMBER_COLORS.length],
       avatarEmoji: effectiveIsTeen ? "🎧" : "🚀",
@@ -503,6 +516,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
     setKidLastName("");
     setKidNickname("");
     setKidPhone("");
+    setKidEmail("");
     setKidBirthday("");
     setKidAgeOverride("auto");
     setKidContactNote(null);
@@ -685,6 +699,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       avatarEmoji: "👑",
       inviteCode: generateInviteCodeForMember(finalAdminName, 0),
       phoneNumber: adminPhone.trim() || undefined,
+      email: adminEmail.trim() || undefined,
       gpayHandle: googlePayHandle.trim() || adminEmail.trim(),
       applePayHandle: applePayHandle.trim()
     };
@@ -707,8 +722,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
         nickname: m.nickname.trim() || undefined,
         displayName: `${m.firstName.trim()} ${m.lastName.trim() || finalAdminLast}`.trim(),
         initials: generateInitials(m.firstName, m.lastName || finalAdminLast),
-        birthday: bday,
-        email: m.role === "Parent" ? adminEmail : "",
+        birthday: m.birthday || bday,
+        email: m.email || (m.role === "Parent" ? adminEmail : ""),
         avatarEmoji: m.avatarEmoji,
         bio: "",
         role: m.role,
@@ -1278,13 +1293,23 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                         </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
-                        <div className="sm:col-span-9">
+                        <div className="sm:col-span-4">
                           <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Phone Number</label>
                           <input
                             type="tel"
                             value={coParentPhone}
                             onChange={(e) => setCoParentPhone(e.target.value)}
                             placeholder="(555) 123-4567"
+                            className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
+                          />
+                        </div>
+                        <div className="sm:col-span-5">
+                          <label className="block text-[10px] font-bold text-slate-400 mb-0.5">Email Address</label>
+                          <input
+                            type="email"
+                            value={coParentEmail}
+                            onChange={(e) => setCoParentEmail(e.target.value)}
+                            placeholder="coparent@email.com"
                             className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
                           />
                         </div>
@@ -1379,7 +1404,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-400 mb-0.5">
                           Phone Number (If Applicable)
@@ -1392,6 +1417,21 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                           className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
                         />
                       </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 mb-0.5">
+                          Email Address (If Applicable)
+                        </label>
+                        <input
+                          type="email"
+                          value={kidEmail}
+                          onChange={(e) => setKidEmail(e.target.value)}
+                          placeholder="kid@email.com"
+                          className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <label className="block text-[10px] font-bold text-slate-400 mb-0.5">
                           Birthday {kidBirthday ? `(Age ${calculateAgeFromBirthday(kidBirthday)})` : "(Calendar Picker)"}
@@ -1535,8 +1575,11 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                             Co-Parent Admin
                           </span>
                         </div>
-                        {m.phoneNumber && (
-                          <div className="text-[10px] text-slate-400">📞 {m.phoneNumber}</div>
+                        {(m.phoneNumber || m.email) && (
+                          <div className="text-[10px] text-slate-400 flex items-center gap-2 flex-wrap">
+                            {m.phoneNumber && <span>📞 {m.phoneNumber}</span>}
+                            {m.email && <span>✉️ {m.email}</span>}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1598,10 +1641,11 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                                     : `Age ${m.age}${m.ageStatusOverride && m.ageStatusOverride !== "auto" ? " (Overridden)" : ""} • 11 & Under Basic`}
                                 </span>
                               </div>
-                              {(m.birthday || m.phoneNumber) && (
+                              {(m.birthday || m.phoneNumber || m.email) && (
                                 <div className="text-[10px] text-slate-400 flex items-center gap-2 flex-wrap">
                                   {m.birthday && <span>DOB: {m.birthday}</span>}
                                   {m.phoneNumber && <span>📞 {m.phoneNumber}</span>}
+                                  {m.email && <span>✉️ {m.email}</span>}
                                 </div>
                               )}
                             </div>
@@ -2393,6 +2437,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                               <div className="text-[10px] text-slate-300 flex flex-wrap gap-x-3 gap-y-0.5">
                                 {m.birthday && <span>🎂 DOB: {m.birthday}</span>}
                                 {m.phoneNumber && <span>📞 {m.phoneNumber}</span>}
+                                {m.email && <span>✉️ {m.email}</span>}
                                 <span>🗓️ {m.residency}</span>
                                 <span className="font-mono text-indigo-300 font-bold">Code: {m.inviteCode}</span>
                               </div>
@@ -2451,6 +2496,19 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                             >
                               <span>📱 Text Invite</span>
                             </a>
+
+                            {m.email && (
+                              <a
+                                href={`mailto:${encodeURIComponent(m.email)}?subject=${encodeURIComponent(
+                                  `Join ${householdName || "our Household Hub"}`
+                                )}&body=${encodeURIComponent(
+                                  `Hi ${m.firstName},\n\nJoin ${householdName || "our Household Hub"}!\nLink: ${originBase}/?${m.role === "Parent" ? "mode=parent" : `kid=${encodeURIComponent(m.firstName)}&code=${encodeURIComponent(m.inviteCode)}`}\nInvite Code: ${m.inviteCode}`
+                                )}`}
+                                className="px-2.5 py-1 rounded-lg bg-sky-600/25 hover:bg-sky-600/40 border border-sky-500/40 text-sky-200 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>✉️ Email Invite</span>
+                              </a>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -2494,6 +2552,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                                 <div className="text-[10px] text-slate-300 flex flex-wrap gap-x-3 gap-y-0.5">
                                   {m.birthday && <span>🎂 DOB: {m.birthday}</span>}
                                   {m.phoneNumber && <span>📞 {m.phoneNumber}</span>}
+                                  {m.email && <span>✉️ {m.email}</span>}
                                   <span>🗓️ {m.residency}</span>
                                 </div>
                               </div>

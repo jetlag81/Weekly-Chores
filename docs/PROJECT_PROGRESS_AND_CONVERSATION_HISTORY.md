@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-16 17:39:00
+> **Export Date**: 2026-11-22 15:35:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -5421,3 +5421,14 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 
 **Summary of Work Delivered**:
 - Updated `@media print` in [`index.html`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/index.html) to force `color-scheme: light` and override dark-mode Tailwind classes (`dark:bg-slate-900`, `dark:text-slate-100`, etc.) on `#printable-schedule-card`, `#printable-schedule-table`, `FOR THE WEEK OF:` headers, `WHO/DONE` subheaders, chore rows, and sign-off rows back to crisp white backgrounds (`#ffffff`) and dark ink (`#0f172a`), preserving the navy `#002060` section headers and 7-day color bands.
+
+---
+
+### Turn 197
+**Date / Time**: 2026-11-22T15:35:00Z
+
+**User Prompt**:
+> Provided Google Places API key for `VITE_GOOGLE_PLACES_API_KEY`
+
+**Summary of Work Delivered**:
+- Added `VITE_GOOGLE_PLACES_API_KEY` to the gitignored `.env` file and rebuilt the production bundle/APK so Google Places API (New) is active as the primary address autocomplete provider.

@@ -58,6 +58,7 @@ import {
 } from "./householdOnboardingConfig";
 import { saveUserProfile, generateInitials, type UserProfile } from "./userProfiles";
 import { saveKidRewardProfile } from "./rewardAccounts";
+import { QRCodeDisplay } from "./QRCodeDisplay";
 
 interface CleanSlateOnboardingModalProps {
   isOpen: boolean;
@@ -202,8 +203,10 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
   const [customGoalTarget, setCustomGoalTarget] = useState<number>(20);
   const [preferredPayoutRail, setPreferredPayoutRail] = useState<PayoutRail>("gpay");
 
-  // Step 6: Invites & Tour
+  // Step 6: Review & Send Family Invites & Tour
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
+  const [verifiedMembers, setVerifiedMembers] = useState<Record<string, boolean>>({});
+  const [skippedDeviceKids, setSkippedDeviceKids] = useState<Record<string, boolean>>({});
   const [launchTourAfterFinish, setLaunchTourAfterFinish] = useState<boolean>(true);
 
   // Address autocomplete effect (strictly filtered by selected country + optional GPS bias)
@@ -835,7 +838,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
     { num: 3, label: "Occupancy & Custody", icon: Calendar },
     { num: 4, label: "Chores & Start Day", icon: ListTodo },
     { num: 5, label: "Rewards & Wallets", icon: Gift },
-    { num: 6, label: "Roll Out Invites", icon: Send }
+    { num: 6, label: "Review & Send Family Invites", icon: Send }
   ];
 
   return (
@@ -2266,104 +2269,312 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
             </div>
           )}
 
-          {/* STEP 6: ROLL OUT INVITES & LAUNCH INTERACTIVE HUB TOUR */}
-          {step === 6 && (
-            <div className="space-y-4">
-              <div className="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-3.5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-emerald-300 font-black uppercase tracking-wider text-[11px]">
-                    <Send className="w-4 h-4 text-emerald-400" />
-                    <span>Roll Out Family Invites (Or Invite Later)</span>
-                  </div>
-                  <span className="text-[10px] text-slate-400">
-                    Kids customize their profile when they join
-                  </span>
-                </div>
+          {/* STEP 6: REVIEW & SEND FAMILY INVITES */}
+          {step === 6 && (() => {
+            const isKidUnder12 = (m: OnboardingMemberDraft) =>
+              m.role === "Kid" &&
+              m.ageStatusOverride !== "teen" &&
+              (m.ageStatusOverride === "junior" || m.age < 12);
 
-                {members.length === 0 ? (
-                  <div className="p-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-300">
-                    You can invite family members anytime from <strong>Household Hub → Invite Device</strong>.
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {members.map((m) => {
-                      const isTeen = m.role === "Kid" && m.age >= 12;
-                      return (
-                        <div
-                          key={m.id}
-                          className="p-3 rounded-xl bg-slate-900 border border-slate-700/80 flex items-center justify-between gap-2"
-                        >
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-base">{m.avatarEmoji}</span>
-                              <span className="font-bold text-white">{m.firstName}</span>
-                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono font-bold">
-                                Code: {m.inviteCode}
-                              </span>
-                            </div>
-                            <div className="text-[10px] text-slate-400 mt-1">
-                              {m.role === "Parent"
-                                ? "Full Co-Parent Admin Hub access"
-                                : isTeen
-                                  ? "Age 12+ Welcome Flow: Nickname, Theme, G-Pay/Apple Pay, Gamertags & Wishlists"
-                                  : "Age 11 & Under Welcome Flow: Kid-safe Nickname, Emoji & Favorite Color"}
-                            </div>
-                          </div>
+            const inviteMembers = members.filter(m => !isKidUnder12(m));
+            const juniorKids = members.filter(m => isKidUnder12(m));
+            const totalToVerify = 1 + members.length;
+            const verifiedCount =
+              (verifiedMembers["admin"] ? 1 : 0) +
+              members.filter(m => verifiedMembers[m.id]).length;
 
-                          <button
-                            type="button"
-                            onClick={() => {
-                              try {
-                                navigator.clipboard.writeText(
-                                  `Join ${householdName}! Enter invite code ${m.inviteCode} for ${m.firstName}.`
-                                );
-                                setCopiedCodeId(m.id);
-                                setTimeout(() => setCopiedCodeId(null), 2000);
-                              } catch { }
-                            }}
-                            className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[11px] flex items-center gap-1 shrink-0 cursor-pointer"
-                          >
-                            {copiedCodeId === m.id ? (
-                              <>
-                                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                <span>Copied!</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3.5 h-3.5" />
-                                <span>Copy Invite</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+            const originBase =
+              typeof window !== "undefined" && window.location.origin && !window.location.origin.startsWith("file:")
+                ? window.location.origin
+                : "https://family-chores-hub.web.app";
 
-                {/* Interactive Spotlight Tour Toggle */}
-                <label className="flex items-center justify-between gap-3 p-3 rounded-xl bg-indigo-950/50 border border-indigo-500/40 cursor-pointer">
-                  <div className="flex items-center gap-2.5">
-                    <Sparkles className="w-5 h-5 text-amber-300 shrink-0" />
-                    <div>
-                      <div className="font-bold text-white text-xs">
-                        Launch 6-Stop Interactive Hub Tour After Setup
-                      </div>
-                      <div className="text-[10px] text-indigo-200/80">
-                        Points out Weekly Schedule, Auto-Assign, Monthly Calendar, Photo Proofs, Nudge &amp; Sunday Inspection.
-                      </div>
+            return (
+              <div className="space-y-4">
+                <div className="bg-slate-800/70 border border-slate-700/80 rounded-2xl p-3.5 space-y-3">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 text-emerald-300 font-black uppercase tracking-wider text-[11px]">
+                      <Send className="w-4 h-4 text-emerald-400" />
+                      <span>Review &amp; Send Family Invites</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-slate-300 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-700">
+                        {verifiedCount}/{totalToVerify} Reviewed
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const allChecked = verifiedCount === totalToVerify;
+                          const next: Record<string, boolean> = { admin: !allChecked };
+                          members.forEach(m => {
+                            next[m.id] = !allChecked;
+                          });
+                          setVerifiedMembers(next);
+                        }}
+                        className="text-[10px] font-bold text-indigo-300 hover:text-indigo-200 underline cursor-pointer"
+                      >
+                        {verifiedCount === totalToVerify ? "Uncheck All" : "Check All Good"}
+                      </button>
                     </div>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={launchTourAfterFinish}
-                    onChange={(e) => setLaunchTourAfterFinish(e.target.checked)}
-                    className="w-4 h-4 accent-indigo-500 rounded"
-                  />
-                </label>
+
+                  {/* Primary Admin & Household Summary */}
+                  <div className="p-3 rounded-xl bg-slate-900 border border-indigo-500/40 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 space-y-0.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-base">👑</span>
+                          <span className="font-bold text-white text-xs">
+                            {adminFirstName.trim() || "Primary Parent"} {adminLastName.trim()}
+                          </span>
+                          {adminNickname.trim() && (
+                            <span className="text-[10px] text-slate-400">({adminNickname.trim()})</span>
+                          )}
+                          <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                            Primary Parent Admin
+                          </span>
+                        </div>
+                        <div className="text-[10.5px] text-slate-300 flex flex-wrap gap-x-3 gap-y-0.5 pt-0.5">
+                          <span>🏠 {householdName.trim() || "Family Hub"} ({familyStructure})</span>
+                          {adminEmail.trim() && <span>✉️ {adminEmail.trim()}</span>}
+                          {adminPhone.trim() && <span>📞 {adminPhone.trim()}</span>}
+                        </div>
+                        {(selectedAddress.street || selectedAddress.formattedAddress) && (
+                          <div className="text-[10px] text-slate-400">
+                            📍 {selectedAddress.formattedAddress || [selectedAddress.street, selectedAddress.city, selectedAddress.stateProvince].filter(Boolean).join(", ")}
+                          </div>
+                        )}
+                      </div>
+
+                      <label className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 cursor-pointer shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={!!verifiedMembers["admin"]}
+                          onChange={(e) =>
+                            setVerifiedMembers(prev => ({ ...prev, admin: e.target.checked }))
+                          }
+                          className="w-4 h-4 accent-emerald-500 rounded"
+                        />
+                        <span className="text-[11px] font-bold text-emerald-300">Good</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Co-Parents & Kids 12+ (Standard Invite Links / Codes) */}
+                  {inviteMembers.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="text-[10px] font-black uppercase tracking-wider text-indigo-300 px-1">
+                        Co-Parents &amp; Kids 12+ (Device Invites)
+                      </div>
+                      {inviteMembers.map((m) => (
+                        <div
+                          key={m.id}
+                          className="p-3 rounded-xl bg-slate-900 border border-slate-700/80 space-y-2"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 space-y-0.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-base">{m.avatarEmoji}</span>
+                                <span className="font-bold text-white text-xs">
+                                  {m.firstName} {m.lastName}
+                                </span>
+                                {m.nickname && (
+                                  <span className="text-[10px] text-slate-400">({m.nickname})</span>
+                                )}
+                                <span
+                                  className={`text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md ${
+                                    m.role === "Parent"
+                                      ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                      : "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                                  }`}
+                                >
+                                  {m.role === "Parent" ? "Co-Parent Admin" : `Age ${m.age} • 12+ Teen`}
+                                </span>
+                              </div>
+                              <div className="text-[10px] text-slate-300 flex flex-wrap gap-x-3 gap-y-0.5">
+                                {m.birthday && <span>🎂 DOB: {m.birthday}</span>}
+                                {m.phoneNumber && <span>📞 {m.phoneNumber}</span>}
+                                <span>🗓️ {m.residency}</span>
+                                <span className="font-mono text-indigo-300 font-bold">Code: {m.inviteCode}</span>
+                              </div>
+                              <div className="text-[10px] text-slate-400">
+                                {m.role === "Parent"
+                                  ? "Full Co-Parent Admin Hub access"
+                                  : "Age 12+ Welcome Flow: Nickname, Theme, G-Pay/Apple Pay, Gamertags & Wishlists"}
+                              </div>
+                            </div>
+
+                            <label className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 cursor-pointer shrink-0">
+                              <input
+                                type="checkbox"
+                                checked={!!verifiedMembers[m.id]}
+                                onChange={(e) =>
+                                  setVerifiedMembers(prev => ({ ...prev, [m.id]: e.target.checked }))
+                                }
+                                className="w-4 h-4 accent-emerald-500 rounded"
+                              />
+                              <span className="text-[11px] font-bold text-emerald-300">Good</span>
+                            </label>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                try {
+                                  navigator.clipboard.writeText(
+                                    `Join ${householdName || "our Household Hub"}! Enter invite code ${m.inviteCode} for ${m.firstName}.`
+                                  );
+                                  setCopiedCodeId(m.id);
+                                  setTimeout(() => setCopiedCodeId(null), 2000);
+                                } catch { }
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                            >
+                              {copiedCodeId === m.id ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span>Copied!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3.5 h-3.5" />
+                                  <span>Copy Invite</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Kids 11 & Under (Manual Device Add with QR Code OR Skip Device Add) */}
+                  {juniorKids.length > 0 && (
+                    <div className="space-y-2.5 pt-1">
+                      <div className="flex items-center justify-between gap-2 px-1 flex-wrap">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-teal-300">
+                          Kids 11 &amp; Under — Manual Device Add (QR Code)
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          Scan on their tablet/phone or skip if no device
+                        </span>
+                      </div>
+
+                      {juniorKids.map((m) => {
+                        const isSkipped = !!skippedDeviceKids[m.id];
+                        const pairUrl = `${originBase}/?kid=${encodeURIComponent(m.firstName)}&code=${encodeURIComponent(m.inviteCode)}`;
+                        return (
+                          <div
+                            key={m.id}
+                            className="p-3 rounded-xl bg-slate-900 border border-teal-500/30 space-y-2.5"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 space-y-0.5">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-base">{m.avatarEmoji}</span>
+                                  <span className="font-bold text-white text-xs">
+                                    {m.firstName} {m.lastName}
+                                  </span>
+                                  {m.nickname && (
+                                    <span className="text-[10px] text-slate-400">({m.nickname})</span>
+                                  )}
+                                  <span className="text-[9.5px] font-extrabold px-1.5 py-0.5 rounded-md bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                                    Age {m.age} • 11 &amp; Under
+                                  </span>
+                                </div>
+                                <div className="text-[10px] text-slate-300 flex flex-wrap gap-x-3 gap-y-0.5">
+                                  {m.birthday && <span>🎂 DOB: {m.birthday}</span>}
+                                  {m.phoneNumber && <span>📞 {m.phoneNumber}</span>}
+                                  <span>🗓️ {m.residency}</span>
+                                </div>
+                              </div>
+
+                              <label className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 cursor-pointer shrink-0">
+                                <input
+                                  type="checkbox"
+                                  checked={!!verifiedMembers[m.id]}
+                                  onChange={(e) =>
+                                    setVerifiedMembers(prev => ({ ...prev, [m.id]: e.target.checked }))
+                                  }
+                                  className="w-4 h-4 accent-emerald-500 rounded"
+                                />
+                                <span className="text-[11px] font-bold text-emerald-300">Good</span>
+                              </label>
+                            </div>
+
+                            {!isSkipped ? (
+                              <div className="flex flex-col sm:flex-row items-center gap-3 p-2.5 rounded-xl bg-slate-950/70 border border-slate-800">
+                                <QRCodeDisplay value={pairUrl} size={120} className="shrink-0" />
+                                <div className="space-y-1.5 text-center sm:text-left min-w-0 flex-1">
+                                  <div className="text-xs font-bold text-teal-200">
+                                    Scan QR on {m.firstName}&apos;s Device
+                                  </div>
+                                  <div className="text-[10.5px] text-slate-400">
+                                    Or enter manual pairing code:{" "}
+                                    <span className="font-mono font-bold text-indigo-300">{m.inviteCode}</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setSkippedDeviceKids(prev => ({ ...prev, [m.id]: true }))
+                                    }
+                                    className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold text-[11px] transition cursor-pointer"
+                                  >
+                                    Skip Device Add (No Device)
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-xl bg-slate-950/60 border border-dashed border-slate-700 text-[11px] text-slate-400">
+                                <span>Device setup skipped — manage {m.firstName} from your Parent Hub or pair later.</span>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setSkippedDeviceKids(prev => ({ ...prev, [m.id]: false }))
+                                  }
+                                  className="text-teal-300 hover:text-teal-200 font-bold shrink-0 cursor-pointer"
+                                >
+                                  Show QR
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {members.length === 0 && (
+                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 text-xs">
+                      No additional members added yet — you can invite family members anytime from{" "}
+                      <strong>Household Hub → Invite Device</strong>.
+                    </div>
+                  )}
+
+                  {/* Interactive Spotlight Tour Toggle */}
+                  <label className="flex items-center justify-between gap-3 p-3 rounded-xl bg-indigo-950/50 border border-indigo-500/40 cursor-pointer">
+                    <div className="flex items-center gap-2.5">
+                      <Sparkles className="w-5 h-5 text-amber-300 shrink-0" />
+                      <div>
+                        <div className="font-bold text-white text-xs">
+                          Launch 6-Stop Interactive Hub Tour After Setup
+                        </div>
+                        <div className="text-[10px] text-indigo-200/80">
+                          Points out Weekly Schedule, Auto-Assign, Monthly Calendar, Photo Proofs, Nudge &amp; Sunday Inspection.
+                        </div>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={launchTourAfterFinish}
+                      onChange={(e) => setLaunchTourAfterFinish(e.target.checked)}
+                      className="w-4 h-4 accent-indigo-500 rounded"
+                    />
+                  </label>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* Pinned Footer */}
@@ -2402,8 +2613,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
               onClick={handleFinishWizard}
               className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-lg transition cursor-pointer"
             >
-              <Sparkles className="w-4 h-4" />
-              <span>Finish &amp; Launch Hub 🚀</span>
+              <Send className="w-4 h-4" />
+              <span>Finish &amp; Send Invites</span>
             </button>
           )}
         </div>

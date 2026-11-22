@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 15:35:00
+> **Export Date**: 2026-11-22 16:07:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,12 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Print Stylesheet Light-Theme Override** (index.html):
+1. **Step 6 "Review & Send Family Invites" with 11 & Under QR Device Add / Skip** (src/CleanSlateOnboardingModal.tsx):
+   - Renamed Step 6 from *Roll Out Invites* to **Review & Send Family Invites** and changed the final CTA button to **Finish & Send Invites**.
+   - Displayed entered member details (name, nickname, role/age/DOB, phone, address, residency, invite code) with per-member **"Good"** verification checkboxes and a **"Check All Good"** toggle.
+   - Split **Kids 11 & Under** into a dedicated **Manual Device Add (QR Code)** section rendering a `QRCodeDisplay` pairing QR code for each child, alongside a **Skip Device Add (No Device)** option.
+
+2. **Print Stylesheet Light-Theme Override** (index.html):
    - Updated `@media print` in `index.html` to force `color-scheme: light` and crisp white backgrounds (`#ffffff`) with dark ink (`#0f172a`) on `#printable-schedule-card`, `#printable-schedule-table`, headers, chore rows, and sign-off rows—restoring the original printable sheet format even when Dark Mode is active.
 
 2. **Google Places API (New) Primary Address Autocomplete with OSM Fallback** (src/householdOnboardingConfig.ts, src/CleanSlateOnboardingModal.tsx, .env.example):
@@ -5432,3 +5437,18 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 
 **Summary of Work Delivered**:
 - Added `VITE_GOOGLE_PLACES_API_KEY` to the gitignored `.env` file and rebuilt the production bundle/APK so Google Places API (New) is active as the primary address autocomplete provider.
+
+---
+
+### Turn 198
+**Date / Time**: 2026-11-22T16:07:00Z
+
+**User Prompt**:
+> The last step, "Roll Out Family Invites," it should instead be "Review & Send Family Invites." The initial user should be able to see the entered info for each household member, check a checkbox indictaing that it is good, and then the last button should be "Finish & Send Invites." The only issue is having it split somehow so that kids 11 and under would have a manual device add with a displayed QR code for each one, or, if they don't have a device, a "skip device add" option.
+
+**Summary of Work Delivered**:
+- Rebuilt Step 6 in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx):
+  1. Renamed Step 6 to **Review & Send Family Invites** and updated the final button to **Finish & Send Invites**.
+  2. Added full entered-info review cards for the Primary Parent Admin, Co-Parents, and Kids 12+, each with a **"Good"** verification checkbox (`verifiedMembers`) and a **"Check All Good"** toggle.
+  3. Split **Kids 11 & Under** into a dedicated **Manual Device Add (QR Code)** subsection displaying a `QRCodeDisplay` pairing QR code and manual code per child, plus a **Skip Device Add (No Device)** toggle.
+- Rebuilt and installed the updated APK onto the connected Pixel (`47171FDAP000A2`).

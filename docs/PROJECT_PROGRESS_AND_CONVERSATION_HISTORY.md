@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 21:31:00
+> **Export Date**: 2026-11-22 21:39:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,11 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Parent & Co-Parent Payout Wallets Linking in Hub Screen** (src/userProfiles.ts, src/ParentMobileDashboard.tsx):
+1. **Custom Photo Avatar Upload for Parents & 12+ Teens** (src/userProfiles.ts, src/UserProfileModal.tsx, src/ParentMobileDashboard.tsx):
+   - Added `avatarUrl` to `UserProfile` (center-cropped & compressed 160x160 JPEG Data URL synced live via Firestore).
+   - Added **📷 Upload Photo** / **Remove Photo** controls in `UserProfileModal` for Parents and Kids 12+ (keeping 11 & Under on kid-safe emojis), and rendered uploaded avatars in the Profile header and Parent/Co-Parent Hub header.
+
+2. **Parent & Co-Parent Payout Wallets Linking in Hub Screen** (src/userProfiles.ts, src/ParentMobileDashboard.tsx):
    - Added `ParentPaymentWallets` (`gpayLinked`/`gpayHandle`, `applePayLinked`/`applePayHandle`, `interacLinked`/`interacEmail`, `cashAppLinked`/`cashAppHandle`) to `UserProfile`, synced live via Firestore.
    - Added a collapsible **Payout Wallets** card directly on the Parent / Co-Parent Hub screen so Co-Parents can link and save their own Google Pay, Apple Pay, Interac e-Transfer, or Cash App / Venmo handles.
 
@@ -5719,4 +5723,18 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 **Summary of Work Delivered**:
 - Added `ParentPaymentWallets` to `UserProfile` in [`src/userProfiles.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/userProfiles.ts) (automatically persisted locally and synced live to Firestore).
 - Added a collapsible **Payout Wallets** card directly on the Parent / Co-Parent Hub screen in [`src/ParentMobileDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentMobileDashboard.tsx) supporting **Google Pay (G-Pay)**, **Apple Pay / Apple Cash**, **Interac e-Transfer**, and **Cash App / Venmo**.
+- Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).
+
+---
+
+### Turn 214
+**Date / Time**: 2026-11-22T21:39:00Z
+
+**User Prompt**:
+> Can we give the parents and 12+ kids the option to upload their own avatar?
+
+**Summary of Work Delivered**:
+- Added `avatarUrl?: string` to `UserProfile` in [`src/userProfiles.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/userProfiles.ts) (synced live via Firestore across all family devices).
+- Added center-cropped 160x160 JPEG photo upload (`📷 Upload Photo` / `Remove Photo`) in [`src/UserProfileModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/UserProfileModal.tsx) gated to Parents and Kids 12+ (`ageTier === "teen" | "adult"`), keeping 11 & Under on kid-safe emojis.
+- Rendered uploaded avatars in the Profile modal header and [`src/ParentMobileDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentMobileDashboard.tsx) Hub header.
 - Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).

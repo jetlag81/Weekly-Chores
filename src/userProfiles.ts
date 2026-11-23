@@ -32,6 +32,7 @@ export interface UserProfile {
   email?: string; // Only editable if age >= 12 or parent
   tierOverride?: ProfileTierOverride; // Parent admin override ("auto" | "junior" | "teen" | "adult")
   avatarEmoji?: string;
+  avatarUrl?: string; // Compressed square Data URL photo avatar (Parents & 12+ Teens)
   bio?: string;
   role: HouseholdRole;
   residency: "Full-Time" | "Bi-Weekly" | "Casual";

@@ -465,8 +465,16 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
         <div className="flex items-center justify-between gap-2 sm:gap-3">
           {/* Brand & Parent Persona (Dedicated to this parent) */}
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center shadow-md shadow-orange-500/20 text-white shrink-0">
-              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center shadow-md shadow-orange-500/20 text-white shrink-0 overflow-hidden">
+              {getUserProfile(currentAdmin)?.avatarUrl ? (
+                <img
+                  src={getUserProfile(currentAdmin).avatarUrl}
+                  alt={currentAdmin}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
+              )}
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">

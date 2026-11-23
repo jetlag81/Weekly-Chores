@@ -91,6 +91,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   const [tierOverride, setTierOverride] = useState<ProfileTierOverride>(profile.tierOverride || "auto");
   const [email, setEmail] = useState(profile.email || "");
   const [avatarEmoji, setAvatarEmoji] = useState(profile.avatarEmoji || "🎒");
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl || "");
   const [bio, setBio] = useState(profile.bio || "");
   const [favoriteColor, setFavoriteColor] = useState(profile.favoriteColor || "#4F46E5");
   const [savedNotice, setSavedNotice] = useState(false);
@@ -107,6 +108,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     setTierOverride(current.tierOverride || "auto");
     setEmail(current.email || "");
     setAvatarEmoji(current.avatarEmoji || "🎒");
+    setAvatarUrl(current.avatarUrl || "");
     setBio(current.bio || "");
     setFavoriteColor(current.favoriteColor || "#4F46E5");
     setSavedNotice(false);
@@ -124,7 +126,34 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   const hasEmailAutonomy = can("email");
   const canEditLegalName = can("firstName");
   const canEditBio = can("bio");
+  const canUploadAvatar = profile.role === "Parent" || ageTier === "adult" || ageTier === "teen";
   const headerName = nickname.trim() || firstName || targetMemberName;
+
+  const handleAvatarFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 160;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+        const minDim = Math.min(img.width, img.height);
+        const sx = (img.width - minDim) / 2;
+        const sy = (img.height - minDim) / 2;
+        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+        const compressed = canvas.toDataURL("image/jpeg", 0.82);
+        setAvatarUrl(compressed);
+      };
+      img.src = String(reader.result || "");
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
   const handleSave = () => {
     const updated: UserProfile = {
@@ -138,6 +167,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
       tierOverride: isParent ? tierOverride : profile.tierOverride,
       email: hasEmailAutonomy ? email.trim() : profile.email,
       avatarEmoji,
+      avatarUrl: canUploadAvatar ? (avatarUrl || undefined) : undefined,
       bio: canEditBio ? bio.trim() : profile.bio,
       favoriteColor
     };
@@ -165,8 +195,12 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
           <div className="flex items-center gap-3.5 relative z-10">
             <div className="relative">
-              <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl shadow-inner border border-white/30">
-                {avatarEmoji}
+              <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl shadow-inner border border-white/30 overflow-hidden">
+                {avatarUrl && canUploadAvatar ? (
+                  <img src={avatarUrl} alt={headerName} className="w-full h-full object-cover" />
+                ) : (
+                  avatarEmoji
+                )}
               </div>
               <span className="absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded-md bg-white text-slate-900 font-extrabold text-[10px] shadow-sm tracking-wider">
                 {liveInitials}
@@ -433,6 +467,36 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               </div>
             )}
           </div>
+
+          {/* Custom Photo Avatar Upload (Parents & Kids 12+) */}
+          {canUploadAvatar && (
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-slate-800 dark:text-slate-200">Custom Photo Avatar</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400">Parents &amp; 12+ Teens</span>
+              </div>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <label className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs cursor-pointer transition shadow-xs inline-flex items-center gap-1.5">
+                  <span>📷 {avatarUrl ? "Change Photo" : "Upload Photo"}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarFileUpload}
+                    className="hidden"
+                  />
+                </label>
+                {avatarUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setAvatarUrl("")}
+                    className="px-2.5 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-rose-500/20 text-slate-700 dark:text-slate-200 hover:text-rose-400 font-bold text-xs transition cursor-pointer"
+                  >
+                    Remove Photo (Use Emoji)
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Avatar Emoji Picker */}
           <div>

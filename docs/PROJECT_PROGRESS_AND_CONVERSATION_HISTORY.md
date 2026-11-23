@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 20:34:00
+> **Export Date**: 2026-11-22 20:55:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,10 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **1-Tap Week Navigation (`‹ Prev` / `This Wk` / `Next ›`) Across Hub Views** (weekly_chores_household_hub.tsx, src/ParentMobileDashboard.tsx):
+1. **Dark-Themed Parent Nudge Modal** (src/ParentNudgeModal.tsx):
+   - Added full `#0F172A` dark-theme classes (`dark:bg-slate-900`, `dark:bg-slate-800`, `dark:border-slate-700`, `dark:text-white`) across the Parent Remote Nudge & Feedback modal (kid selector cards, praise/nudge toggles, quick presets, message input, GIF preview/vault, Giphy search, delivery screen, and Cancel button).
+
+2. **1-Tap Week Navigation (`‹ Prev` / `This Wk` / `Next ›`) Across Hub Views** (weekly_chores_household_hub.tsx, src/ParentMobileDashboard.tsx):
    - Added `handleShiftActiveWeek(deltaWeeks)` and `handleJumpToThisWeek()` so parents can jump ahead to Next Week (or back to This Week) in 1 tap from the **Weekly Schedule** toolbar, **Household Hub Master Data** header, and **Mobile Command View** 7-day strip to redistribute chores ahead of time.
 
 2. **Household Hub Master Data Dark Theme, Live Current Week & Confirmed Kids Week Toggle** (weekly_chores_household_hub.tsx):
@@ -5646,4 +5649,17 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   1. **Weekly Schedule** toolbar (right beside **Distribute** for 1-tap ahead-of-time redistribution).
   2. **Household Hub Master Data** header bar.
   3. **Parent Mobile Command View** ([`src/ParentMobileDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentMobileDashboard.tsx)) above the 7-day strip.
+- Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).
+
+---
+
+### Turn 210
+**Date / Time**: 2026-11-22T20:55:00Z
+
+**User Prompt**:
+> The other screenshot is up. It's also still in light theme so that should get adjusted, as well.
+
+**Summary of Work Delivered**:
+- Captured the Nudge modal screenshot from `47171FDAP000A2` and updated [`src/ParentNudgeModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentNudgeModal.tsx) with full dark-theme styling (`dark:bg-slate-900`, `dark:bg-slate-800`, `dark:border-slate-700`, `dark:text-white`).
+- Identified why the Co-Parent's browser displayed `Sydney (14), Cadence (13), Mason (10), Koda (9), Keyanna (7)`: `ParentNudgeModal` already computes live ages from `userProfiles`, so a fresh browser without synced `localStorage` falls back to `DEFAULT_USER_PROFILES` in [`src/userProfiles.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/userProfiles.ts).
 - Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).

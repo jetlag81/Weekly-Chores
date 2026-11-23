@@ -403,6 +403,121 @@ export function subscribeToFirestoreRewardProfiles(
   }
 }
 
+// Sync a household member's UserProfile (birthday, nickname, email, tierOverride, avatar) to Firestore
+export async function syncUserProfileToFirestore(
+  householdId: string,
+  profile: Record<string, any>
+): Promise<void> {
+  const { db } = initFirebase();
+  if (!db || !profile || !profile.id) return;
+
+  try {
+    const cleanId = String(profile.id).trim().toLowerCase();
+    const profileRef = doc(db, "households", householdId, "profiles", cleanId);
+    // Strip undefined values so Firestore setDoc never throws
+    const sanitized: Record<string, any> = {};
+    Object.keys(profile).forEach(k => {
+      if (profile[k] !== undefined) sanitized[k] = profile[k];
+    });
+    sanitized.updatedAt = profile.updatedAt || Date.now();
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 2500));
+    await Promise.race([
+      setDoc(profileRef, sanitized, { merge: true }),
+      timeoutPromise
+    ]);
+  } catch (err) {
+    console.warn("Firestore user profile sync write skipped or timed out:", err);
+  }
+}
+
+// Subscribe to real-time Firestore user profile updates across all family devices
+export function subscribeToFirestoreUserProfiles(
+  householdId: string,
+  onRemoteProfileUpdate: (profile: Record<string, any>) => void
+): Unsubscribe | null {
+  const { db } = initFirebase();
+  if (!db) return null;
+
+  try {
+    const profilesCol = collection(db, "households", householdId, "profiles");
+    return onSnapshot(
+      profilesCol,
+      snapshot => {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === "added" || change.type === "modified") {
+            const data = change.doc.data() || {};
+            if (data && (data.id || change.doc.id)) {
+              onRemoteProfileUpdate({ ...data, id: data.id || change.doc.id });
+            }
+          }
+        });
+      },
+      err => {
+        console.warn("Firestore profiles subscription error:", err);
+      }
+    );
+  } catch (err) {
+    console.warn("Could not attach Firestore profiles listener:", err);
+    return null;
+  }
+}
+
+// Sync Clean Slate / Master Household Sheet (roster, pets, master chores) to Firestore
+export async function syncHouseholdSheetToFirestore(
+  householdId: string,
+  sheetData: any[]
+): Promise<void> {
+  const { db } = initFirebase();
+  if (!db || !Array.isArray(sheetData) || sheetData.length === 0) return;
+
+  try {
+    const sheetRef = doc(db, "households", householdId, "meta", "sheetData");
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000));
+    await Promise.race([
+      setDoc(sheetRef, { payloadJson: JSON.stringify(sheetData), updatedAt: Date.now() }, { merge: true }),
+      timeoutPromise
+    ]);
+  } catch (err) {
+    console.warn("Firestore household sheet sync skipped or timed out:", err);
+  }
+}
+
+// Subscribe to real-time Master Household Sheet updates for newly paired devices
+export function subscribeToFirestoreHouseholdSheet(
+  householdId: string,
+  onRemoteSheetUpdate: (sheetData: any[], updatedAt: number) => void
+): Unsubscribe | null {
+  const { db } = initFirebase();
+  if (!db) return null;
+
+  try {
+    const sheetRef = doc(db, "households", householdId, "meta", "sheetData");
+    return onSnapshot(
+      sheetRef,
+      snap => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        if (data?.payloadJson) {
+          try {
+            const parsed = JSON.parse(data.payloadJson);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              onRemoteSheetUpdate(parsed, Number(data.updatedAt || 0));
+            }
+          } catch {
+            // ignore malformed JSON
+          }
+        }
+      },
+      err => {
+        console.warn("Firestore household sheet subscription error:", err);
+      }
+    );
+  } catch (err) {
+    console.warn("Could not attach Firestore household sheet listener:", err);
+    return null;
+  }
+}
+
 // Manage Invites (Stored in Firestore when connected, fallback to localStorage)
 export async function createKidInvite(kidName: string, householdId: string): Promise<HouseholdInvite> {
   const code = generateKidInviteCode();

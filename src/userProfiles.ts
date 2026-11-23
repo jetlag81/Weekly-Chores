@@ -3,6 +3,8 @@
 // - Age split: 12 and up (Teen) get bio & email autonomy; 11 and under (Junior) get a simpler, more visual experience
 // - Parents set up the legal name, birthday & residency; kids personalize nickname, emoji & color after accepting invites
 
+import { getStoredDeviceSession, syncUserProfileToFirestore } from "./firebaseSync";
+
 export type AgeTier = "junior" | "teen" | "adult";
 export type ProfileTierOverride = "auto" | "junior" | "teen" | "adult";
 export type HouseholdRole = "Parent" | "Kid";
@@ -333,9 +335,12 @@ export function getStoredUserProfiles(): Record<string, UserProfile> {
 }
 
 /**
- * Save user profile to storage and broadcast to peers
+ * Save user profile to storage, broadcast to peers, and sync live to Firestore
  */
-export function saveUserProfile(profile: UserProfile): void {
+export function saveUserProfile(
+  profile: UserProfile,
+  options?: { skipCloudSync?: boolean }
+): void {
   try {
     const existing = getStoredUserProfiles();
     const id = profile.id.toLowerCase().trim();
@@ -346,7 +351,7 @@ export function saveUserProfile(profile: UserProfile): void {
       nickname: (profile.nickname || "").trim() || undefined,
       displayName: `${profile.firstName.trim()} ${profile.lastName.trim()}`.trim() || profile.firstName.trim(),
       initials: generateInitials(profile.firstName, profile.lastName),
-      updatedAt: Date.now()
+      updatedAt: profile.updatedAt || Date.now()
     };
 
     existing[id] = updated;
@@ -355,6 +360,13 @@ export function saveUserProfile(profile: UserProfile): void {
     // Dispatch a local storage custom event for live multi-window sync
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("household_profile_updated", { detail: updated }));
+    }
+
+    // Push to Firestore so Co-Parent & Kid devices receive live age/birthday/profile updates
+    if (!options?.skipCloudSync) {
+      const session = getStoredDeviceSession();
+      const householdId = session?.householdId || "household_family_hub";
+      syncUserProfileToFirestore(householdId, updated);
     }
   } catch (err) {
     console.error("Error saving user profile:", err);

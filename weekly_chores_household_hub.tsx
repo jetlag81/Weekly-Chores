@@ -53,6 +53,9 @@ import {
   broadcastLocalUpdate,
   syncChoreToFirestore,
   subscribeToFirestoreSchedule,
+  subscribeToFirestoreUserProfiles,
+  syncHouseholdSheetToFirestore,
+  subscribeToFirestoreHouseholdSheet,
   getStoredFirebaseConfig,
   redeemKidInvite,
   playChoreCompletionSound,
@@ -2365,8 +2368,26 @@ function App({
       });
     });
 
+    const unsubProfiles = subscribeToFirestoreUserProfiles(householdId, (remoteProfile) => {
+      if (!remoteProfile || !remoteProfile.id) return;
+      saveUserProfile(remoteProfile as UserProfile, { skipCloudSync: true });
+      setProfilesVersion(v => v + 1);
+    });
+    const unsubSheet = subscribeToFirestoreHouseholdSheet(householdId, (remoteSheet) => {
+      if (!remoteSheet || !onReplaceSheetData) return;
+      try {
+        const localStr = localStorage.getItem(STORAGE_KEY);
+        const remoteStr = JSON.stringify(remoteSheet);
+        if (localStr !== remoteStr) {
+          localStorage.setItem(STORAGE_KEY, remoteStr);
+          onReplaceSheetData(remoteSheet);
+        }
+      } catch {}
+    });
     return () => {
       if (unsubFirestore) unsubFirestore();
+      if (unsubProfiles) unsubProfiles();
+      if (unsubSheet) unsubSheet();
     };
   }, [deviceSession == null ? void 0 : deviceSession.householdId]);
 
@@ -3737,6 +3758,7 @@ function App({
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newSheetData));
     } catch {}
+    syncHouseholdSheetToFirestore(deviceSession.householdId || "household_family_hub", newSheetData);
     setDeletedChoreKeys(new Set());
     setChoreEdits({});
     setCustomAddedChores([]);

@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 20:55:00
+> **Export Date**: 2026-11-22 21:07:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,11 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Dark-Themed Parent Nudge Modal** (src/ParentNudgeModal.tsx):
+1. **Real-Time Firestore Profile & Household Sheet Sync (Clean Slate Multi-Device)** (src/firebaseSync.ts, src/userProfiles.ts, weekly_chores_household_hub.tsx):
+   - Added `syncUserProfileToFirestore` / `subscribeToFirestoreUserProfiles` (`households/{id}/profiles/{memberId}`) so edits to birthdays, ages, nicknames, emails, avatars, and tier overrides propagate live across all paired Co-Parent and Kid devices.
+   - Added `syncHouseholdSheetToFirestore` / `subscribeToFirestoreHouseholdSheet` (`households/{id}/meta/sheetData`) so Clean Slate onboarding rosters, pets, and master chores automatically sync to every invited device.
+
+2. **Dark-Themed Parent Nudge Modal** (src/ParentNudgeModal.tsx):
    - Added full `#0F172A` dark-theme classes (`dark:bg-slate-900`, `dark:bg-slate-800`, `dark:border-slate-700`, `dark:text-white`) across the Parent Remote Nudge & Feedback modal (kid selector cards, praise/nudge toggles, quick presets, message input, GIF preview/vault, Giphy search, delivery screen, and Cancel button).
 
 2. **1-Tap Week Navigation (`‹ Prev` / `This Wk` / `Next ›`) Across Hub Views** (weekly_chores_household_hub.tsx, src/ParentMobileDashboard.tsx):
@@ -5663,3 +5667,17 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Captured the Nudge modal screenshot from `47171FDAP000A2` and updated [`src/ParentNudgeModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentNudgeModal.tsx) with full dark-theme styling (`dark:bg-slate-900`, `dark:bg-slate-800`, `dark:border-slate-700`, `dark:text-white`).
 - Identified why the Co-Parent's browser displayed `Sydney (14), Cadence (13), Mason (10), Koda (9), Keyanna (7)`: `ParentNudgeModal` already computes live ages from `userProfiles`, so a fresh browser without synced `localStorage` falls back to `DEFAULT_USER_PROFILES` in [`src/userProfiles.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/userProfiles.ts).
 - Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).
+
+---
+
+### Turn 211
+**Date / Time**: 2026-11-22T21:07:00Z
+
+**User Prompt**:
+> I think we have to go with option 2. I want everything to live update as a user edits and navigates the app. We do still need to be forward thinking to rolling this app out with the Clean Slate Protocol to new users who would install from the Play Store or App Store.
+> I'm also noticing some visual similarities between my app and some other apps and websites out there (colours, fonts, etc.). Are there some subtle changes we can make that would set ours apart?
+
+**Summary of Work Delivered**:
+- Wired live real-time Firestore sync for `userProfiles` and the Clean Slate household sheet across [`src/firebaseSync.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/firebaseSync.ts), [`src/userProfiles.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/userProfiles.ts), and [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx).
+- Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).
+- Proposed tailored visual identity differentiation options (fonts, surface palette, and tactile accents) to set the app apart from generic Tailwind slate/indigo apps.

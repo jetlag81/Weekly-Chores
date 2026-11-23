@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 19:37:00
+> **Export Date**: 2026-11-22 19:58:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,11 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Co-Parent Direct Hub Routing & Primary-Admin-Only Hub Switching** (src/CleanSlateOnboardingModal.tsx, functions/index.js, src/firebaseSync.ts, src/userProfiles.ts, src/ParentMobileDashboard.tsx, src/MinionDashboard.tsx, weekly_chores_household_hub.tsx):
+1. **Fixed ParentMobileDashboard Weekday Shift & Dynamic Kid Ages** (src/ParentMobileDashboard.tsx):
+   - Fixed `DAY_NAMES` and `FULL_DAY_NAMES` to be Monday-indexed (`0=Monday ... 6=Sunday`) matching `dayOfWeekIndex`, resolving Sunday Nov 22 displaying as Saturday Nov 22.
+   - Updated kid age badges in `ParentMobileDashboard` to compute live age from `calculateAge(getUserProfile(kidName)?.birthday)` instead of stale static `mem.age`.
+
+2. **Co-Parent Direct Hub Routing & Primary-Admin-Only Hub Switching** (src/CleanSlateOnboardingModal.tsx, functions/index.js, src/firebaseSync.ts, src/userProfiles.ts, src/ParentMobileDashboard.tsx, src/MinionDashboard.tsx, weekly_chores_household_hub.tsx):
    - Updated Co-Parent invite links to include `&parent=<FirstName>&role=coparent` and generalized `activeParentAdmin` / `getStoredActiveParentAdmin` to support any Co-Parent name (not just Thom/Meghan).
    - Locked Co-Parent devices (`deviceSession.isCoParent`) to their own **Co-Parent Command Page** and hid all hub-switching controls (Kids page switcher, per-kid `Page ↗`, Settings hub switcher, Nudge switch) so only the Primary Admin can navigate to other members' hubs while everyone else stays on their own page and can only view others' progress.
    - Locked Kid devices (`!viewingAsParent`) from switching to other kids' hubs in `MinionDashboard`.
@@ -5591,4 +5595,17 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Fixed Co-Parent invite links in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) and [`functions/index.js`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/functions/index.js) to pass `?mode=parent&parent=<FirstName>&role=coparent`.
 - Generalized `activeParentAdmin`, `DeviceSession.parentName`, `DeviceSession.isCoParent`, and `getStoredActiveParentAdmin()` in [`src/firebaseSync.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/firebaseSync.ts), [`src/userProfiles.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/userProfiles.ts), and [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx) so Co-Parent links open directly to that Co-Parent's Hub instead of defaulting to Thom's Hub.
 - Restricted hub switching to Primary Admin only (`!deviceSession.isCoParent` and `viewingAsParent`) across [`src/ParentMobileDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentMobileDashboard.tsx), [`src/MinionDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/MinionDashboard.tsx), and [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx)—Co-Parents and Kids stay locked to their own Hub and can only view others' progress.
+- Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).
+
+---
+
+### Turn 207
+**Date / Time**: 2026-11-22T19:58:00Z
+
+**User Prompt**:
+> In my hub in the app, it is saying that today is Saturday, Nov. 22nd. In the Co-Parent Command View, the kids' ages are listed incorrectly
+
+**Summary of Work Delivered**:
+- Fixed weekday off-by-one bug in [`src/ParentMobileDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentMobileDashboard.tsx): `DAY_NAMES` and `FULL_DAY_NAMES` were Sunday-indexed while `dayOfWeekIndex` is Monday-indexed (`0=Mon ... 6=Sun`), causing Sunday Nov 22 to display as Saturday Nov 22.
+- Updated kid age badges in [`src/ParentMobileDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentMobileDashboard.tsx) to calculate live ages via `calculateAge(getUserProfile(kidName)?.birthday)` with fallback to `mem?.age`.
 - Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).

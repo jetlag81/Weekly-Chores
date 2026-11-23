@@ -50,7 +50,7 @@ import {
   type ChorePhotoProof,
   type ChorePhotoRequest
 } from "./chorePhotoTypes";
-import { getStoredActiveParentAdmin, saveActiveParentAdmin, getUserProfile, getPreferredName } from "./userProfiles";
+import { getStoredActiveParentAdmin, saveActiveParentAdmin, getUserProfile, getPreferredName, calculateAge } from "./userProfiles";
 
 interface FamilyMember {
   name: string;
@@ -102,8 +102,8 @@ interface ParentMobileDashboardProps {
   onRegisterDismissModal?: (fn: () => boolean) => void;
 }
 
-const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const FULL_DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const FULL_DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
@@ -743,11 +743,15 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                             </h4>
                           );
                         })()}
-                        {mem?.age && (
-                          <span className="text-[10px] font-semibold text-slate-400 bg-slate-700/60 px-1.5 py-0.2 rounded">
-                            Age {mem.age}
-                          </span>
-                        )}
+                        {(() => {
+                          const profileAge = calculateAge(getUserProfile(kidName)?.birthday);
+                          const displayAge = profileAge ?? mem?.age;
+                          return displayAge ? (
+                            <span className="text-[10px] font-semibold text-slate-400 bg-slate-700/60 px-1.5 py-0.2 rounded">
+                              Age {displayAge}
+                            </span>
+                          ) : null;
+                        })()}
                         <span
                           className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
                             mem?.type === "biweekly"

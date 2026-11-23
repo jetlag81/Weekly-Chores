@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 22:22:00
+> **Export Date**: 2026-11-23 15:24:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,11 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Cross-Platform Push Notifications (Native Android + Web/PWA)** (android/app/src/main/java/com/household/choreshub/LocalPushPlugin.java, android/app/src/main/AndroidManifest.xml, src/pushNotificationService.ts, public/sw.js, src/HouseholdSettingsModal.tsx, src/ParentMobileDashboard.tsx, weekly_chores_household_hub.tsx):
+1. **Full System / Dark / Light Theme Audit & Parity Across All Modals & Drawers** (index.html, src/ParentInspectionModal.tsx, src/AllowanceLedgerModal.tsx, src/HouseholdActivityDrawer.tsx, src/InviteModal.tsx, src/FirebaseSettingsModal.tsx, src/InstallPwaModal.tsx, src/KidPairingScreen.tsx):
+   - Audited all UI components for hardcoded light-only surfaces (`bg-white`, `bg-slate-50`, `text-slate-900`, `border-slate-200`) and added full `dark:` Tailwind classes across **Sunday Inspection (`ParentInspectionModal`)**, **Allowance Ledger (`AllowanceLedgerModal`)**, **Live Activity Drawer (`HouseholdActivityDrawer`)**, **Device Pairing (`InviteModal`)**, **Firebase Cloud Sync (`FirebaseSettingsModal`)**, **Install PWA (`InstallPwaModal`)**, and **Kid Pairing Screen (`KidPairingScreen`)**.
+   - Added `color-scheme: dark` / `color-scheme: light` rules in `index.html` so native inputs, selects, date pickers, and scrollbars match System, Dark, and Light theme preferences automatically.
+
+2. **Cross-Platform Push Notifications (Native Android + Web/PWA)** (android/app/src/main/java/com/household/choreshub/LocalPushPlugin.java, android/app/src/main/AndroidManifest.xml, src/pushNotificationService.ts, public/sw.js, src/HouseholdSettingsModal.tsx, src/ParentMobileDashboard.tsx, weekly_chores_household_hub.tsx):
    - Added Android 13+ `POST_NOTIFICATIONS` permission and native `LocalPushPlugin.java` (`household_hub_alerts` high-importance notification channel) registered in `MainActivity.java`.
    - Built `src/pushNotificationService.ts` unifying native Android notifications and Web/PWA `ServiceWorkerRegistration.showNotification` (with `notificationclick` handler in `public/sw.js`).
    - Added a 1-tap **Enable Push Notifications** banner on the Parent/Co-Parent Hub, upgraded the **Settings → Notifications** tab with **Enable** and **Test** buttons, and wired real-time activity, nudge, praise, and photo proof events to trigger device notifications.
@@ -5815,4 +5819,26 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Added native Android 13+ push notification support via `POST_NOTIFICATIONS` in `AndroidManifest.xml` and a custom Capacitor plugin `LocalPushPlugin.java` (registered in `MainActivity.java`) creating the high-importance `household_hub_alerts` channel.
 - Created `src/pushNotificationService.ts` unifying native Android notifications and Web/PWA `ServiceWorkerRegistration.showNotification` (with `notificationclick` focus/open handling in `public/sw.js`).
 - Upgraded **Settings → Notifications** (`src/HouseholdSettingsModal.tsx`) with native + web permission handling and a **Test** notification button, added a 1-tap **Enable Push Notifications** prompt banner to `src/ParentMobileDashboard.tsx`, and wired incoming real-time activity, nudge/praise, and photo proof events in `weekly_chores_household_hub.tsx` to fire device push notifications.
+- Built APK, installed on Pixel (`47171FDAP000A2`), redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and pushed to `origin/main`.
+
+
+---
+
+### Turn 219
+**Date / Time**: 2026-11-23T15:24:00-06:00
+
+**User Request**:
+> There are still a lot of elements that are still showing in light theme even though it's set to "system." Inspect & Ledger for two. Can you go through thoroughly and make sure they're all following the settings?
+
+**Assistant Response**:
+- Audited every modal, drawer, and screen across `src/` for hardcoded light-only classes (`bg-white`, `bg-slate-50`, `text-slate-900`, `border-slate-200`) missing `dark:` variants.
+- Added complete `dark:` theme parity (following System, Dark, and Light settings) to:
+  - `src/ParentInspectionModal.tsx` (**Inspect**)
+  - `src/AllowanceLedgerModal.tsx` (**Ledger**)
+  - `src/HouseholdActivityDrawer.tsx` (**Activity**)
+  - `src/InviteModal.tsx` (**Device Pairing**)
+  - `src/FirebaseSettingsModal.tsx` (**Firebase Sync**)
+  - `src/InstallPwaModal.tsx` (**Install PWA**)
+  - `src/KidPairingScreen.tsx` (**Kid Pairing**)
+- Added `color-scheme: dark` / `color-scheme: light` to `index.html` so native inputs, `<select>` dropdowns, and scrollbars also follow System/Dark/Light mode.
 - Built APK, installed on Pixel (`47171FDAP000A2`), redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and pushed to `origin/main`.

@@ -88,8 +88,8 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto modal-safe-area">
-      <div className="bg-white rounded-3xl max-w-3xl w-full max-h-full flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-900/75 dark:bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto modal-safe-area">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-3xl w-full max-h-full flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Modal Header */}
         <div className="p-4 sm:p-5 bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white shrink-0 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -134,26 +134,26 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
         </div>
 
         {/* KPI Summary Cards */}
-        <div className="grid grid-cols-3 gap-2.5 p-4 bg-slate-50 border-b border-slate-200 shrink-0 text-xs">
-          <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs">
+        <div className="grid grid-cols-3 gap-2.5 p-4 bg-slate-50 dark:bg-slate-950/60 border-b border-slate-200 dark:border-slate-800 shrink-0 text-xs">
+          <div className="bg-white dark:bg-slate-800/80 p-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xs">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Earned</div>
-            <div className="text-xl sm:text-2xl font-black text-slate-900 mt-1">${totalAllTime}.00</div>
-            <div className="text-[10px] text-slate-500 mt-0.5">{records.length} weeks archived</div>
+            <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">${totalAllTime}.00</div>
+            <div className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{records.length} weeks archived</div>
           </div>
 
-          <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-200 shadow-2xs">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Paid Out</div>
-            <div className="text-xl sm:text-2xl font-black text-emerald-700 mt-1">${totalPaid}.00</div>
-            <div className="text-[10px] text-emerald-600 mt-0.5 flex items-center gap-1">
+          <div className="bg-emerald-50 dark:bg-emerald-950/40 p-3 rounded-2xl border border-emerald-200 dark:border-emerald-700/50 shadow-2xs">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Paid Out</div>
+            <div className="text-xl sm:text-2xl font-black text-emerald-700 dark:text-emerald-300 mt-1">${totalPaid}.00</div>
+            <div className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3" />
               <span>Fulfilled</span>
             </div>
           </div>
 
-          <div className="bg-amber-50 p-3 rounded-2xl border border-amber-200 shadow-2xs">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Pending Payout</div>
-            <div className="text-xl sm:text-2xl font-black text-amber-800 mt-1">${totalPending}.00</div>
-            <div className="text-[10px] text-amber-700 mt-0.5 flex items-center gap-1">
+          <div className="bg-amber-50 dark:bg-amber-950/40 p-3 rounded-2xl border border-amber-200 dark:border-amber-700/50 shadow-2xs">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-amber-800 dark:text-amber-300">Pending Payout</div>
+            <div className="text-xl sm:text-2xl font-black text-amber-800 dark:text-amber-300 mt-1">${totalPending}.00</div>
+            <div className="text-[10px] text-amber-700 dark:text-amber-400 mt-0.5 flex items-center gap-1">
               <Clock className="w-3 h-3" />
               <span>Awaiting payment</span>
             </div>
@@ -161,15 +161,15 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
         </div>
 
         {/* Historical Weeks Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 text-slate-800 flex-1">
+        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 text-slate-800 dark:text-slate-100 flex-1">
           {records.length === 0 ? (
             <div className="text-center py-16 px-4 space-y-3">
-              <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center">
                 <Wallet className="w-7 h-7" />
               </div>
               <div>
-                <h4 className="font-extrabold text-sm text-slate-800">No allowance history archived yet</h4>
-                <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                <h4 className="font-extrabold text-sm text-slate-800 dark:text-white">No allowance history archived yet</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
                   When you conduct Sunday inspection and tap <strong>Approve & Sign (✓ TV / MG)</strong>, the finalized allowance payouts are automatically logged and tracked here.
                 </p>
               </div>
@@ -183,25 +183,25 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
               return (
                 <div
                   key={rec.id}
-                  className="rounded-2xl border border-slate-200 overflow-hidden shadow-xs bg-white transition hover:border-slate-300"
+                  className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-xs bg-white dark:bg-slate-800/80 transition hover:border-slate-300 dark:hover:border-slate-600"
                 >
                   {/* Week Card Header */}
                   <div
                     onClick={() => setExpandedWeekId(isExpanded ? null : rec.id)}
-                    className="p-3.5 sm:px-4 bg-slate-50/80 hover:bg-slate-100/80 transition flex items-center justify-between cursor-pointer border-b border-slate-100 select-none"
+                    className="p-3.5 sm:px-4 bg-slate-50/80 dark:bg-slate-800/90 hover:bg-slate-100/80 dark:hover:bg-slate-800 transition flex items-center justify-between cursor-pointer border-b border-slate-100 dark:border-slate-700/70 select-none"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-2xs">
-                        <Calendar className="w-4 h-4 text-slate-600" />
+                      <div className="w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-2xs">
+                        <Calendar className="w-4 h-4 text-slate-600 dark:text-slate-300" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="font-extrabold text-sm text-slate-900">{rec.weekLabel}</h4>
+                          <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">{rec.weekLabel}</h4>
                           <span
                             className={`text-[10px] font-bold px-2 py-0.2 rounded-full ${
                               isWeekFullyPaid
-                                ? "bg-emerald-100 text-emerald-800"
-                                : "bg-amber-100 text-amber-800"
+                                ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300"
+                                : "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300"
                             }`}
                           >
                             {isWeekFullyPaid ? "All Paid ✓" : `${weekPaidCount} / ${rec.items.length} Paid`}
@@ -209,7 +209,7 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
                         </div>
                         <p className="text-[11px] text-slate-400 mt-0.5">
                           Signed by {rec.signedBy} • Total:{" "}
-                          <strong className="text-slate-800">${rec.totalAmount}.00</strong>
+                          <strong className="text-slate-800 dark:text-white">${rec.totalAmount}.00</strong>
                         </p>
                       </div>
                     </div>
@@ -221,7 +221,7 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
                           e.stopPropagation();
                           handleDeleteRecord(rec.id);
                         }}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 transition rounded-lg hover:bg-slate-200 cursor-pointer"
+                        className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
                         title="Delete record"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -236,9 +236,9 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
 
                   {/* Expanded Kid Payout Items */}
                   {isExpanded && (
-                    <div className="p-3.5 sm:p-4 space-y-3 bg-white">
+                    <div className="p-3.5 sm:p-4 space-y-3 bg-white dark:bg-slate-900/60">
                       {rec.parentNotes && (
-                        <div className="p-2.5 bg-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed">
+                        <div className="p-2.5 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-700/50 rounded-xl text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
                           <strong>Parent Notes:</strong> {rec.parentNotes}
                         </div>
                       )}
@@ -254,8 +254,8 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
                               key={item.kidName}
                               className={`p-3 rounded-xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${
                                 item.paid
-                                  ? "bg-slate-50/80 border-slate-200"
-                                  : "bg-white border-amber-200 shadow-2xs"
+                                  ? "bg-slate-50/80 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
+                                  : "bg-white dark:bg-slate-800/90 border-amber-200 dark:border-amber-600/50 shadow-2xs"
                               }`}
                             >
                               <div className="flex items-center gap-3">
@@ -270,15 +270,15 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-2">
-                                    <span className="font-extrabold text-slate-900">{item.kidName}</span>
+                                    <span className="font-extrabold text-slate-900 dark:text-white">{item.kidName}</span>
                                     <span className="text-[10px] text-slate-400">
                                       ({item.completedChores} / {item.scheduledChores} chores • {item.completionPct}%)
                                     </span>
                                   </div>
-                                  <div className="text-[11px] text-slate-500 mt-0.5">
+                                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                                     Base: ${item.baseAllowance}{" "}
                                     {item.bonusDelta !== 0 && (
-                                      <span className="font-semibold text-slate-700">
+                                      <span className="font-semibold text-slate-700 dark:text-slate-300">
                                         ({item.bonusDelta >= 0 ? `+$${item.bonusDelta}` : `-$${Math.abs(item.bonusDelta)}`})
                                       </span>
                                     )}
@@ -287,21 +287,21 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
                               </div>
 
                               {/* Amount & Paid Toggle */}
-                              <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-                                <div className="text-base font-black text-emerald-700">
+                              <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-700/70">
+                                <div className="text-base font-black text-emerald-700 dark:text-emerald-400">
                                   ${item.finalAmount}.00
                                 </div>
 
                                 {item.paid ? (
                                   <div className="flex items-center gap-1.5">
-                                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <span className="text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1">
                                       <CheckCircle2 className="w-3 h-3" />
                                       <span>Paid ({item.paymentMethod || "Cash"})</span>
                                     </span>
                                     <button
                                       type="button"
                                       onClick={() => handleTogglePayment(rec.id, item.kidName, true)}
-                                      className="text-[10px] font-semibold text-slate-400 hover:text-slate-700 hover:underline cursor-pointer"
+                                      className="text-[10px] font-semibold text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:underline cursor-pointer"
                                     >
                                       Undo
                                     </button>
@@ -312,7 +312,7 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
                                       <button
                                         type="button"
                                         onClick={() => onOpenRewardModal(item.kidName)}
-                                        className="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[11px] rounded-lg shadow-2xs transition cursor-pointer flex items-center gap-1"
+                                        className="px-2 py-1 bg-amber-50 dark:bg-amber-500/15 hover:bg-amber-100 dark:hover:bg-amber-500/25 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-500/40 font-bold text-[11px] rounded-lg shadow-2xs transition cursor-pointer flex items-center gap-1"
                                         title={`Open Digital Gift Card / Reward Hub for ${item.kidName}`}
                                       >
                                         <span>🎁</span>
@@ -323,7 +323,7 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
                                     <select
                                       defaultValue="Cash"
                                       id={`method-${rec.id}-${item.kidName}`}
-                                      className="text-[11px] py-1 px-1.5 bg-slate-100 border border-slate-200 rounded-lg text-slate-700 font-semibold focus:outline-none cursor-pointer"
+                                      className="text-[11px] py-1 px-1.5 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-200 font-semibold focus:outline-none cursor-pointer"
                                     >
                                       <option value="Cash">Cash</option>
                                       <option value="Savings">Savings</option>
@@ -362,8 +362,8 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 shrink-0 flex items-center justify-between">
-          <div className="text-xs text-slate-500">
+        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 shrink-0 flex items-center justify-between">
+          <div className="text-xs text-slate-500 dark:text-slate-400">
             {records.length} weekly records archived
           </div>
 
@@ -371,7 +371,7 @@ export const AllowanceLedgerModal: React.FC<AllowanceLedgerModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-300 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              className="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-200 hover:text-slate-800 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition cursor-pointer"
             >
               Close
             </button>

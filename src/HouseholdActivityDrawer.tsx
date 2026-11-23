@@ -80,9 +80,9 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/60 backdrop-blur-xs flex justify-end animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs flex justify-end animate-in fade-in duration-200">
       <div
-        className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col border-l border-slate-200 animate-in slide-in-from-right duration-250"
+        className="w-full max-w-md bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800 animate-in slide-in-from-right duration-250"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -158,14 +158,14 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
         </div>
 
         {/* Filter Pills */}
-        <div className="p-3 bg-slate-50 border-b border-slate-200 shrink-0 overflow-x-auto flex items-center gap-1.5 text-xs">
+        <div className="p-3 bg-slate-50 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800 shrink-0 overflow-x-auto flex items-center gap-1.5 text-xs">
           <button
             type="button"
             onClick={() => setSelectedKidFilter("All")}
             className={`px-3 py-1 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${
               selectedKidFilter === "All"
-                ? "bg-slate-900 text-white shadow-xs"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                ? "bg-slate-900 dark:bg-indigo-600 text-white shadow-xs"
+                : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700"
             }`}
           >
             All ({activities.length})
@@ -182,14 +182,14 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
                 className={`px-2.5 py-1 rounded-xl font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
                   selectedKidFilter === name
                     ? "bg-indigo-600 text-white shadow-xs"
-                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                    : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700"
                 }`}
               >
                 <span>{name}</span>
                 {count > 0 && (
                   <span
                     className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                      selectedKidFilter === name ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
+                      selectedKidFilter === name ? "bg-white/20 text-white" : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
                     }`}
                   >
                     {count}
@@ -205,7 +205,7 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
             className={`px-2.5 py-1 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${
               selectedKidFilter === "Parents"
                 ? "bg-amber-600 text-white shadow-xs"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+                : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700"
             }`}
           >
             Parents
@@ -216,12 +216,12 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {filteredActivities.length === 0 ? (
             <div className="text-center py-16 px-4 space-y-3">
-              <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center">
                 <Clock className="w-7 h-7" />
               </div>
               <div>
-                <h4 className="font-extrabold text-sm text-slate-800">No activities recorded yet</h4>
-                <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                <h4 className="font-extrabold text-sm text-slate-800 dark:text-white">No activities recorded yet</h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto">
                   When family members check off chores or parents sign off the week, they will appear here in real time.
                 </p>
               </div>
@@ -240,12 +240,12 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
                   key={act.id || `${act.timestamp}-${idx}`}
                   className={`p-3 rounded-2xl border transition shadow-2xs ${
                     isSignOff
-                      ? "bg-amber-50/70 border-amber-300"
+                      ? "bg-amber-50/70 dark:bg-amber-950/30 border-amber-300 dark:border-amber-600/50"
                       : isPhotoReq
-                      ? "bg-amber-50/60 border-amber-300"
+                      ? "bg-amber-50/60 dark:bg-amber-950/30 border-amber-300 dark:border-amber-600/50"
                       : isPhotoApproved
-                      ? "bg-emerald-50/70 border-emerald-300"
-                      : "bg-white border-slate-200 hover:border-slate-300"
+                      ? "bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-600/50"
+                      : "bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -261,7 +261,7 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="font-extrabold text-xs text-slate-900 truncate">
+                        <div className="font-extrabold text-xs text-slate-900 dark:text-white truncate">
                           {act.kidName}
                         </div>
                         <span className="text-[10px] text-slate-400 shrink-0 font-medium">
@@ -269,35 +269,35 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 text-xs text-slate-700 mt-1 font-semibold">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-200 mt-1 font-semibold">
                         {isSignOff ? (
                           <>
-                            <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
-                            <span className="text-amber-900 font-bold truncate">{act.taskTitle}</span>
+                            <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                            <span className="text-amber-900 dark:text-amber-200 font-bold truncate">{act.taskTitle}</span>
                           </>
                         ) : isPhotoReq ? (
                           <>
-                            <Camera className="w-4 h-4 text-amber-600 shrink-0" />
-                            <span className="text-amber-900 font-bold truncate">{act.taskTitle}</span>
+                            <Camera className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                            <span className="text-amber-900 dark:text-amber-200 font-bold truncate">{act.taskTitle}</span>
                           </>
                         ) : isPhotoApproved ? (
                           <>
-                            <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
-                            <span className="text-emerald-900 font-bold truncate">{act.taskTitle}</span>
+                            <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
+                            <span className="text-emerald-900 dark:text-emerald-200 font-bold truncate">{act.taskTitle}</span>
                           </>
                         ) : isNudge ? (
                           <>
-                            <MessageSquare className="w-4 h-4 text-indigo-600 shrink-0" />
-                            <span className="text-indigo-900 font-semibold truncate">{act.taskTitle}</span>
+                            <MessageSquare className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                            <span className="text-indigo-900 dark:text-indigo-200 font-semibold truncate">{act.taskTitle}</span>
                           </>
                         ) : isCheer ? (
                           <>
-                            <Heart className="w-4 h-4 text-rose-500 shrink-0" />
-                            <span className="text-slate-800 font-medium truncate">{act.taskTitle}</span>
+                            <Heart className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
+                            <span className="text-slate-800 dark:text-slate-200 font-medium truncate">{act.taskTitle}</span>
                           </>
                         ) : (
                           <>
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                             <span className="truncate">{act.taskTitle}</span>
                           </>
                         )}
@@ -312,7 +312,7 @@ export const HouseholdActivityDrawer: React.FC<HouseholdActivityDrawerProps> = (
 
         {/* Footer */}
         <div
-          className="p-4 bg-slate-50 border-t border-slate-200 shrink-0 text-center text-xs text-slate-500 drawer-safe-footer"
+          className="p-4 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 shrink-0 text-center text-xs text-slate-500 dark:text-slate-400 drawer-safe-footer"
           style={{ paddingBottom: "calc(1rem + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))" }}
         >
           Syncs live across connected household phones, tablets, and PCs.

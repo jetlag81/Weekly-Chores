@@ -293,8 +293,8 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto modal-safe-area">
-      <div className="bg-white rounded-3xl max-w-2xl w-full max-h-full flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-900/75 dark:bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 overflow-y-auto modal-safe-area">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full max-h-full flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700/80 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Modal Header */}
         <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white p-4 sm:p-5 shrink-0 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -356,15 +356,15 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
         <div
           className={`p-3.5 sm:px-5 flex items-center justify-between gap-3 text-xs border-b ${
             signOffStatus.done
-              ? "bg-emerald-50/90 border-emerald-200 text-emerald-900"
-              : "bg-amber-50/90 border-amber-200 text-amber-900"
+              ? "bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200"
+              : "bg-amber-50/90 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200"
           }`}
         >
           <div className="flex items-center gap-2.5">
             {signOffStatus.done ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+              <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
             )}
             <div>
               <div className="font-extrabold flex items-center gap-1.5">
@@ -372,8 +372,8 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
                 <span
                   className={`px-1.5 py-0.2 rounded font-mono text-[11px] ${
                     signOffStatus.done
-                      ? "bg-emerald-200 text-emerald-950 font-black"
-                      : "bg-amber-200 text-amber-950"
+                      ? "bg-emerald-200 dark:bg-emerald-900/80 text-emerald-950 dark:text-emerald-200 font-black"
+                      : "bg-amber-200 dark:bg-amber-900/80 text-amber-950 dark:text-amber-200"
                   }`}
                 >
                   {signOffStatus.done ? `✓ ${activeParentAdmin === "Meghan" ? "MG" : "TV"}` : "Initials Needed"}
@@ -411,14 +411,14 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
         </div>
 
         {/* Scrollable Content Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 text-slate-800 flex-1">
+        <div className="p-4 sm:p-5 overflow-y-auto space-y-4 text-slate-800 dark:text-slate-100 flex-1">
           {/* Kids Inspection List */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-500">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Child Room Inspections & Allowances
               </h3>
-              <span className="text-[11px] text-slate-400">Sunday Payout Calculation</span>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">Sunday Payout Calculation</span>
             </div>
 
             {allKidsList.map(kidName => {
@@ -443,11 +443,11 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
                   key={kidName}
                   className={`rounded-2xl border p-4 transition shadow-xs ${
                     isRoomApproved
-                      ? "bg-slate-50/70 border-emerald-300"
-                      : "bg-white border-slate-200 hover:border-slate-300"
+                      ? "bg-slate-50/70 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-600/50"
+                      : "bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
                   }`}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-700/70">
                     <div className="flex items-center gap-3">
                       <div
                         className="w-10 h-10 rounded-xl font-bold flex items-center justify-center text-sm shadow-xs"
@@ -461,25 +461,25 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="font-extrabold text-sm text-slate-900">{kidName}</h4>
+                          <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">{kidName}</h4>
                           {mem?.age && (
-                            <span className="text-[10px] font-semibold bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded">
+                            <span className="text-[10px] font-semibold bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 px-1.5 py-0.2 rounded">
                               Age {mem.age}
                             </span>
                           )}
                           <span
                             className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
                               mem?.type === "biweekly"
-                                ? "bg-pink-100 text-pink-700"
-                                : "bg-indigo-100 text-indigo-700"
+                                ? "bg-pink-100 dark:bg-pink-500/20 text-pink-700 dark:text-pink-300"
+                                : "bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300"
                             }`}
                           >
                             {mem?.type === "biweekly" ? "Bi-Weekly" : "Full-Time"}
                           </span>
                         </div>
-                        <div className="text-xs text-slate-500 mt-0.5">
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                           Weekly Chores:{" "}
-                          <strong className="text-slate-800">
+                          <strong className="text-slate-800 dark:text-white">
                             {stats.completed} / {stats.scheduled}
                           </strong>{" "}
                           ({stats.pct}%)
@@ -494,13 +494,13 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
                         onClick={() => handleToggleRoomInspection(kidName)}
                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                           isRoomApproved
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                            : "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200"
+                            ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40"
+                            : "bg-slate-100 dark:bg-slate-700/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600"
                         }`}
                       >
                         {isRoomApproved ? (
                           <>
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                             <span>Room Inspected ✓</span>
                           </>
                         ) : (
@@ -514,20 +514,20 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
                       <button
                         type="button"
                         onClick={() => setNudgeModalTarget({ kid: kidName, type: "praise" })}
-                        className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition flex items-center gap-1 cursor-pointer"
+                        className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 dark:bg-emerald-500/15 hover:bg-emerald-100 dark:hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 transition flex items-center gap-1 cursor-pointer"
                         title="Send Praise (Good Job GIF)"
                       >
-                        <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                         <span className="hidden sm:inline">Praise</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setNudgeModalTarget({ kid: kidName, type: "nudge" })}
-                        className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 transition flex items-center gap-1 cursor-pointer"
+                        className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-orange-50 dark:bg-orange-500/15 hover:bg-orange-100 dark:hover:bg-orange-500/25 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-500/30 transition flex items-center gap-1 cursor-pointer"
                         title="Send Nudge (Meh GIF)"
                       >
-                        <Bell className="w-3.5 h-3.5 text-orange-600" />
+                        <Bell className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
                         <span className="hidden sm:inline">Nudge</span>
                       </button>
                     </div>
@@ -536,36 +536,36 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
                   {/* Quick Inspection Checklist + Allowance Row */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 text-xs">
                     {/* Checklist Status */}
-                    <div className="space-y-1.5 bg-white p-2.5 rounded-xl border border-slate-100">
+                    <div className="space-y-1.5 bg-white dark:bg-slate-900/70 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/70">
                       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                         Checklist Verifications
                       </div>
-                      <div className="flex items-center justify-between text-slate-700">
+                      <div className="flex items-center justify-between text-slate-700 dark:text-slate-200">
                         <span className="flex items-center gap-1.5">
-                          <BedDouble className="w-3.5 h-3.5 text-indigo-500" />
+                          <BedDouble className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
                           <span>Bed Made & Room Tidy</span>
                         </span>
                         <span
                           className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${
                             stats.bedroomDone
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-amber-100 text-amber-800"
+                              ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300"
+                              : "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300"
                           }`}
                         >
                           {stats.bedroomDone ? "Verified ✓" : "Needs Tidy"}
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between text-slate-700">
+                      <div className="flex items-center justify-between text-slate-700 dark:text-slate-200">
                         <span className="flex items-center gap-1.5">
-                          <Shirt className="w-3.5 h-3.5 text-sky-500" />
+                          <Shirt className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
                           <span>Laundry Folded & Away</span>
                         </span>
                         <span
                           className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${
                             stats.laundryDone
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-slate-100 text-slate-600"
+                              ? "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300"
+                              : "bg-slate-100 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300"
                           }`}
                         >
                           {stats.laundryDone ? "Clean & Away ✓" : "Check Hamper"}
@@ -574,14 +574,14 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
                     </div>
 
                     {/* Allowance Calculator */}
-                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50/50 p-2.5 rounded-xl border border-emerald-200 space-y-1">
-                      <div className="flex items-center justify-between text-[10px] font-bold text-emerald-800 uppercase tracking-wider">
+                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50/50 dark:from-emerald-950/40 dark:to-teal-950/30 p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-700/50 space-y-1">
+                      <div className="flex items-center justify-between text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
                         <span>Weekly Allowance Payout</span>
                         <span>Base: ${baseAllowance}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <div className="text-xl font-black text-emerald-700 flex items-center">
-                          <DollarSign className="w-5 h-5 text-emerald-600 -mr-0.5" />
+                        <div className="text-xl font-black text-emerald-700 dark:text-emerald-300 flex items-center">
+                          <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400 -mr-0.5" />
                           {calculatedPayout}.00
                         </div>
 
@@ -590,27 +590,27 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
                           <button
                             type="button"
                             onClick={() => handleAdjustAllowance(kidName, -1)}
-                            className="w-6 h-6 rounded bg-white hover:bg-slate-100 border border-emerald-300 text-emerald-800 font-bold flex items-center justify-center cursor-pointer shadow-2xs"
+                            className="w-6 h-6 rounded bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-emerald-300 dark:border-emerald-600/60 text-emerald-800 dark:text-emerald-300 font-bold flex items-center justify-center cursor-pointer shadow-2xs"
                             title="Deduct $1"
                           >
                             -
                           </button>
-                          <span className="text-[10px] font-bold text-emerald-900 min-w-[28px] text-center">
+                          <span className="text-[10px] font-bold text-emerald-900 dark:text-emerald-200 min-w-[28px] text-center">
                             {bonusDelta >= 0 ? `+$${bonusDelta}` : `-$${Math.abs(bonusDelta)}`}
                           </span>
                           <button
                             type="button"
                             onClick={() => handleAdjustAllowance(kidName, 1)}
-                            className="w-6 h-6 rounded bg-white hover:bg-slate-100 border border-emerald-300 text-emerald-800 font-bold flex items-center justify-center cursor-pointer shadow-2xs"
+                            className="w-6 h-6 rounded bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-emerald-300 dark:border-emerald-600/60 text-emerald-800 dark:text-emerald-300 font-bold flex items-center justify-center cursor-pointer shadow-2xs"
                             title="Add $1 bonus"
                           >
                             +
                           </button>
                         </div>
                       </div>
-                      <div className="text-[10px] text-emerald-700/90 flex items-center justify-between">
+                      <div className="text-[10px] text-emerald-700/90 dark:text-emerald-300/80 flex items-center justify-between">
                         <span>{stats.pct >= 80 ? "100% Payout Earned 🎉" : `${stats.pct}% Chores Completed`}</span>
-                        {bonusDelta !== 0 && <span className="font-semibold text-emerald-900">Custom adjusted</span>}
+                        {bonusDelta !== 0 && <span className="font-semibold text-emerald-900 dark:text-emerald-200">Custom adjusted</span>}
                       </div>
                     </div>
                   </div>
@@ -620,17 +620,17 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
           </div>
 
           {/* Household Collective Checklists */}
-          <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200 space-y-2 text-xs">
-            <h4 className="font-extrabold text-slate-800 flex items-center gap-2">
-              <Award className="w-4 h-4 text-indigo-600" />
+          <div className="bg-slate-50 dark:bg-slate-800/70 rounded-2xl p-3.5 border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
+            <h4 className="font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+              <Award className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               <span>Collective Household Sunday Checklist</span>
             </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-600">
-              <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-300">
+              <div className="flex items-center gap-2 bg-white dark:bg-slate-900/70 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                 <span>Pet Care: Litter scoop & Herd feeding station clean</span>
               </div>
-              <div className="flex items-center gap-2 bg-white p-2 rounded-lg border border-slate-200">
+              <div className="flex items-center gap-2 bg-white dark:bg-slate-900/70 p-2 rounded-lg border border-slate-200 dark:border-slate-700">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                 <span>Kitchen: Dishwasher emptied & dishes clean</span>
               </div>
@@ -639,7 +639,7 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
 
           {/* Parent Encouragement / Notes */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-bold text-slate-700">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
               Parent Inspection Notes / Feedback for Kids:
             </label>
             <input
@@ -647,21 +647,21 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
               value={parentNotes}
               onChange={e => handleSaveNotes(e.target.value)}
               placeholder="e.g. Awesome job cleaning the basement and keeping rooms tidy! Keep up the great work!"
-              className="w-full text-xs p-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full text-xs p-2.5 bg-white dark:bg-slate-950 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 placeholder:text-slate-400 dark:placeholder:text-slate-500"
             />
           </div>
 
           {/* Monthly Incentive Preview */}
-          <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 p-3 rounded-2xl border border-amber-200/60 flex items-center justify-between text-xs">
+          <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 p-3 rounded-2xl border border-amber-200/60 dark:border-amber-500/30 flex items-center justify-between text-xs">
             <div className="flex items-center gap-2.5">
-              <Trophy className="w-4 h-4 text-amber-600 shrink-0" />
+              <Trophy className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
               <div>
-                <span className="font-extrabold text-amber-950">Active Monthly Incentive: </span>
-                <span className="text-amber-900 font-medium">{monthlyIncentive}</span>
+                <span className="font-extrabold text-amber-950 dark:text-amber-200">Active Monthly Incentive: </span>
+                <span className="text-amber-900 dark:text-amber-300/90 font-medium">{monthlyIncentive}</span>
               </div>
             </div>
             {topPerformer && (
-              <span className="text-[11px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full shrink-0">
+              <span className="text-[11px] font-bold bg-amber-100 dark:bg-amber-500/20 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded-full shrink-0">
                 Leader: {topPerformer.name} ({topPerformer.done})
               </span>
             )}
@@ -669,10 +669,10 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
         </div>
 
         {/* Modal Footer / Master Action */}
-        <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 shrink-0 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="text-xs text-slate-500 text-center sm:text-left">
-            <span className="font-bold text-slate-700">Official Stamp:</span> Stamping{" "}
-            <span className="font-mono font-bold text-slate-900">✓ TV / MG</span> updates row 18 in the printable
+        <div className="p-4 sm:p-5 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 shrink-0 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs text-slate-500 dark:text-slate-400 text-center sm:text-left">
+            <span className="font-bold text-slate-700 dark:text-slate-200">Official Stamp:</span> Stamping{" "}
+            <span className="font-mono font-bold text-slate-900 dark:text-white">✓ TV / MG</span> updates row 18 in the printable
             matrix across all synced devices.
           </div>
 
@@ -680,7 +680,7 @@ export const ParentInspectionModal: React.FC<ParentInspectionModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="w-1/2 sm:w-auto px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white border border-slate-300 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              className="w-1/2 sm:w-auto px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-200 hover:text-slate-800 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition cursor-pointer"
             >
               Done / Close
             </button>

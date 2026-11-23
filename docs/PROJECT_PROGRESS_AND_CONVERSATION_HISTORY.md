@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-23 15:58:00
+> **Export Date**: 2026-11-23 17:55:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,13 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Kids Check-In Picker Modal in Mobile Parent Hub** (src/ParentMobileDashboard.tsx):
+1. **Native iOS App Scaffold, Swift Plugins & macOS Cloud Build** (ios/, capacitor.config.ts, .github/workflows/ios-build.yml):
+   - Installed `@capacitor/ios@^8.6.0` and scaffolded the native Xcode project (`ios/App/App.xcodeproj`, Swift Package Manager).
+   - Configured `capacitor.config.ts` (`iosScheme: 'https'`, `contentInset: 'never'`, dark `#13111C` background) and `ios/App/App/Info.plist` (Camera, Photo Library, Contacts, and Location privacy descriptions + `choreshub://` custom URL scheme).
+   - Implemented native Swift plugins `ContactPickerPlugin.swift` (`CNContactPickerViewController`) and `LocalPushPlugin.swift` (`UNUserNotificationCenter`), registered via `HubBridgeViewController` in `SceneDelegate.swift` with foreground alert presentation in `AppDelegate.swift`.
+   - Added `.github/workflows/ios-build.yml` (`macos-15` runner) to build and package an unsigned `ChoresHub-unsigned.ipa` artifact on push to `main` or manual dispatch.
+
+2. **Kids Check-In Picker Modal in Mobile Parent Hub** (src/ParentMobileDashboard.tsx):
    - Replaced the direct jump into the first child's page on the **Kids** tile with a **Kids Check-In** modal listing every kid individually with their avatar, preferred name, dynamic age, today's chore progress bar, **Open Kid Page ↗** button, and **Edit Profile** button.
 
 2. **Master Chores Template & Registry Dark-Mode & Contrast Fix** (weekly_chores_household_hub.tsx):
@@ -5878,3 +5884,19 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Added a **Kids Check-In** picker modal in `src/ParentMobileDashboard.tsx` (with `.modal-safe-area`, dark/light/system theme support, and Android back-button dismissal).
 - Tapping the **Kids** tile now opens a list of all kids showing each child's avatar, preferred name, dynamic age, occupancy badge, and today's chore progress bar, with **Open Kid Page ↗** and **Edit Profile** buttons for each child.
 - Built APK, installed on Pixel (`47171FDAP000A2`), redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and pushed to `origin/main`.
+
+
+---
+
+### Turn 222
+**Date / Time**: 2026-11-23T17:55:00-06:00
+
+**User Request**:
+> Can we work on an iOS app version? The web app / PWA isn't the greatest.
+
+**Assistant Response**:
+- Installed `@capacitor/ios@^8.6.0` and scaffolded the native Xcode project (`ios/App/App.xcodeproj`) using Capacitor 8 Swift Package Manager.
+- Configured `capacitor.config.ts` and `ios/App/App/Info.plist` with iOS dark canvas settings, privacy usage descriptions (Camera, Photos, Contacts, Location), and the `choreshub://` URL scheme.
+- Built native Swift plugins `ios/App/App/ContactPickerPlugin.swift` (`CNContactPickerViewController`) and `ios/App/App/LocalPushPlugin.swift` (`UNUserNotificationCenter`), registered them via `HubBridgeViewController` in `SceneDelegate.swift`, added foreground notification presentation in `AppDelegate.swift`, and wired both files into `project.pbxproj`.
+- Created `.github/workflows/ios-build.yml` to compile and package an unsigned `ChoresHub-unsigned.ipa` on GitHub Actions `macos-15` runners on push to `main` or manual trigger.
+- Synced Capacitor iOS, committed, and pushed to `origin/main`.

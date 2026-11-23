@@ -1,0 +1,61 @@
+name: Build iOS App (Unsigned)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'weekly_chores_household_hub.tsx'
+      - 'index.html'
+      - 'capacitor.config.ts'
+      - 'ios/**'
+      - '.github/workflows/ios-build.yml'
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web production assets
+        run: npm run build
+
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios
+
+      - name: Build Unsigned iOS App (.app)
+        run: |
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath ios/build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package Unsigned .ipa for Sideloading / Inspection
+        run: |
+          mkdir -p ios/output/Payload
+          cp -R ios/build/Build/Products/Release-iphoneos/App.app ios/output/Payload/
+          cd ios/output && zip -r ChoresHub-unsigned.ipa Payload
+
+      - name: Upload Unsigned iOS Artifact (.ipa)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ChoresHub-iOS-Unsigned-IPA
+          path: ios/output/ChoresHub-unsigned.ipa
+          retention-days: 14

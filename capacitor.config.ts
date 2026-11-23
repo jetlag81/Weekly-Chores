@@ -12,7 +12,14 @@ const config: CapacitorConfig = {
     }
   },
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    iosScheme: 'https'
+  },
+  ios: {
+    contentInset: 'never',
+    backgroundColor: '#13111C',
+    allowsLinkPreview: false,
+    preferredContentMode: 'mobile'
   }
 };
 

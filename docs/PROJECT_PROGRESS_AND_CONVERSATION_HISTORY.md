@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 19:58:00
+> **Export Date**: 2026-11-22 20:20:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,12 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Fixed ParentMobileDashboard Weekday Shift & Dynamic Kid Ages** (src/ParentMobileDashboard.tsx):
+1. **Household Hub Master Data Dark Theme, Live Current Week & Confirmed Kids Week Toggle** (weekly_chores_household_hub.tsx):
+   - Styled the entire **Household Hub Master Data** tab (`activeTab === "roster"`) for full dark-theme continuity (`#0F172A` / `dark:bg-slate-900`, `dark:bg-slate-800`, `dark:text-white`).
+   - Replaced stale spreadsheet values (`2026-10-19`, static `"Kids Week"`) with live `activeSyncWeek || getCurrentWeekMonday().dateKey` and live `isBiWeeklyHereThisWeek` status.
+   - Added a **Kids Week** toggle button (both in the top bar and inside Schedule Configurations) backed by a persistent `weekly_chores_custody_flipped_v1` parity flip and a **"Switch Bi-Weekly Kids Week?"** confirmation modal.
+
+2. **Fixed ParentMobileDashboard Weekday Shift & Dynamic Kid Ages** (src/ParentMobileDashboard.tsx):
    - Fixed `DAY_NAMES` and `FULL_DAY_NAMES` to be Monday-indexed (`0=Monday ... 6=Sunday`) matching `dayOfWeekIndex`, resolving Sunday Nov 22 displaying as Saturday Nov 22.
    - Updated kid age badges in `ParentMobileDashboard` to compute live age from `calculateAge(getUserProfile(kidName)?.birthday)` instead of stale static `mem.age`.
 
@@ -5608,4 +5613,19 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 **Summary of Work Delivered**:
 - Fixed weekday off-by-one bug in [`src/ParentMobileDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentMobileDashboard.tsx): `DAY_NAMES` and `FULL_DAY_NAMES` were Sunday-indexed while `dayOfWeekIndex` is Monday-indexed (`0=Mon ... 6=Sun`), causing Sunday Nov 22 to display as Saturday Nov 22.
 - Updated kid age badges in [`src/ParentMobileDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentMobileDashboard.tsx) to calculate live ages via `calculateAge(getUserProfile(kidName)?.birthday)` with fallback to `mem?.age`.
+- Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).
+
+---
+
+### Turn 208
+**Date / Time**: 2026-11-22T20:20:00Z
+
+**User Prompt**:
+> In the app's household hub master data, it is still shown in light theme. It is also displaying inaccurate information such as the current week. I also think we need a Kid's Week toggle button in that hub that will change the bi-weekly kids schedule, but it should pop up a prompt asking if the user is sure they want to proceed.
+
+**Summary of Work Delivered**:
+- Updated the **Household Hub Master Data** tab (`activeTab === "roster"`) in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx):
+  1. Added full dark-theme classes (`dark:bg-slate-900`, `dark:bg-slate-800`, `dark:border-slate-800`, `dark:text-white`, `dark:text-slate-300`) across the Master Data card, Special Rules & Parameters, 4 summary cards, Household Members & Pets tables, Occupancy Categories, Special Rotation Groups, Schedule Configurations, and Master Chores header.
+  2. Replaced static spreadsheet week/custody text (`hubScheduleConfig.activeWeekStart` / `custodyRotation`) with live `activeSyncWeek || getCurrentWeekMonday().dateKey` and live `isBiWeeklyHereThisWeek` status.
+  3. Added a **Kids Week** toggle button + **"Switch Bi-Weekly Kids Week?"** confirmation modal (`showKidsWeekConfirm`) that flips the bi-weekly custody parity (`weekly_chores_custody_flipped_v1`) across the Weekly Schedule, Monthly Calendar, and Hub Master Data.
 - Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).

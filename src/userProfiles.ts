@@ -9,6 +9,17 @@ export type AgeTier = "junior" | "teen" | "adult";
 export type ProfileTierOverride = "auto" | "junior" | "teen" | "adult";
 export type HouseholdRole = "Parent" | "Kid";
 
+export interface ParentPaymentWallets {
+  gpayLinked?: boolean;
+  gpayHandle?: string;
+  applePayLinked?: boolean;
+  applePayHandle?: string;
+  interacLinked?: boolean;
+  interacEmail?: string;
+  cashAppLinked?: boolean;
+  cashAppHandle?: string;
+}
+
 export interface UserProfile {
   id: string; // Unique identifier (e.g. "sydney", "thom")
   name?: string; // Convenience alias for displayName / member name
@@ -25,6 +36,7 @@ export interface UserProfile {
   role: HouseholdRole;
   residency: "Full-Time" | "Bi-Weekly" | "Casual";
   favoriteColor?: string;
+  paymentWallets?: ParentPaymentWallets;
   updatedAt?: number;
 }
 

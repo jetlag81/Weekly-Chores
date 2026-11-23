@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 21:15:00
+> **Export Date**: 2026-11-22 21:31:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,11 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Signature Typography & Selectable Colour Palettes (Default: Midnight Plum & Coral)** (index.html, src/themeManager.ts, src/CleanSlateOnboardingModal.tsx):
+1. **Parent & Co-Parent Payout Wallets Linking in Hub Screen** (src/userProfiles.ts, src/ParentMobileDashboard.tsx):
+   - Added `ParentPaymentWallets` (`gpayLinked`/`gpayHandle`, `applePayLinked`/`applePayHandle`, `interacLinked`/`interacEmail`, `cashAppLinked`/`cashAppHandle`) to `UserProfile`, synced live via Firestore.
+   - Added a collapsible **Payout Wallets** card directly on the Parent / Co-Parent Hub screen so Co-Parents can link and save their own Google Pay, Apple Pay, Interac e-Transfer, or Cash App / Venmo handles.
+
+2. **Signature Typography & Selectable Colour Palettes (Default: Midnight Plum & Coral)** (index.html, src/themeManager.ts, src/CleanSlateOnboardingModal.tsx):
    - Upgraded typography to **Plus Jakarta Sans** (headings) + **DM Sans** (UI/tables) with `tabular-nums`.
    - Added 4 selectable household colour palettes (`plum-coral` default, `warm-terracotta`, `deep-forest`, `classic-slate`) driven by CSS variables on `html[data-palette]` for instant live preview without affecting `@media print`.
    - Added an **App Colour Palette** swatch picker directly in Step 1 of Clean Slate Onboarding.
@@ -5702,4 +5706,17 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   - **Deep Forest & Warm Gold** (`deep-forest`)
   - **Classic Slate & Indigo** (`classic-slate`)
 - Added a live-preview **App Colour Palette** swatch selector to Step 1 of [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx).
+- Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).
+
+---
+
+### Turn 213
+**Date / Time**: 2026-11-22T21:31:00Z
+
+**User Prompt**:
+> Can we add the option for the Co-Parent to link their G-Pay or Apple Pay, etc. in their Hub screen?
+
+**Summary of Work Delivered**:
+- Added `ParentPaymentWallets` to `UserProfile` in [`src/userProfiles.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/userProfiles.ts) (automatically persisted locally and synced live to Firestore).
+- Added a collapsible **Payout Wallets** card directly on the Parent / Co-Parent Hub screen in [`src/ParentMobileDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentMobileDashboard.tsx) supporting **Google Pay (G-Pay)**, **Apple Pay / Apple Cash**, **Interac e-Transfer**, and **Cash App / Venmo**.
 - Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).

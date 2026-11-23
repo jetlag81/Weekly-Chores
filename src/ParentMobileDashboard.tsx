@@ -50,7 +50,7 @@ import {
   type ChorePhotoProof,
   type ChorePhotoRequest
 } from "./chorePhotoTypes";
-import { getStoredActiveParentAdmin, saveActiveParentAdmin, getUserProfile, getPreferredName, calculateAge } from "./userProfiles";
+import { getStoredActiveParentAdmin, saveActiveParentAdmin, getUserProfile, saveUserProfile, getPreferredName, calculateAge, type ParentPaymentWallets } from "./userProfiles";
 
 interface FamilyMember {
   name: string;
@@ -146,6 +146,40 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
 }) => {
   const [internalAdmin, setInternalAdmin] = useState<string>(() => getStoredActiveParentAdmin());
   const currentAdmin = activeParentAdminProp || internalAdmin;
+  const [showMyWalletsCard, setShowMyWalletsCard] = useState(false);
+  const [walletDraft, setWalletDraft] = useState<ParentPaymentWallets>(() => {
+    const prof = getUserProfile(activeParentAdminProp || getStoredActiveParentAdmin());
+    return prof?.paymentWallets || {};
+  });
+  const [walletSavedFlash, setWalletSavedFlash] = useState(false);
+
+  useEffect(() => {
+    const prof = getUserProfile(currentAdmin);
+    setWalletDraft(prof?.paymentWallets || {});
+  }, [currentAdmin]);
+
+  const handleSaveMyWallets = () => {
+    const prof = getUserProfile(currentAdmin);
+    saveUserProfile({
+      ...prof,
+      role: "Parent",
+      paymentWallets: {
+        gpayLinked: Boolean(walletDraft.gpayLinked),
+        gpayHandle: (walletDraft.gpayHandle || "").trim(),
+        applePayLinked: Boolean(walletDraft.applePayLinked),
+        applePayHandle: (walletDraft.applePayHandle || "").trim(),
+        interacLinked: Boolean(walletDraft.interacLinked),
+        interacEmail: (walletDraft.interacEmail || "").trim(),
+        cashAppLinked: Boolean(walletDraft.cashAppLinked),
+        cashAppHandle: (walletDraft.cashAppHandle || "").trim()
+      }
+    });
+    setWalletSavedFlash(true);
+    setTimeout(() => {
+      setWalletSavedFlash(false);
+      setShowMyWalletsCard(false);
+    }, 1200);
+  };
 
   useEffect(() => {
     const handleSync = (e: any) => {
@@ -657,6 +691,146 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
           <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-400/10 text-amber-300 border border-amber-400/20 rounded-lg shrink-0">
             Goal: {monthlyGoalTarget}
           </span>
+        </div>
+
+        {/* Parent / Co-Parent Payout Wallets (G-Pay, Apple Pay, Interac, Cash App) */}
+        <div className="bg-slate-800/60 border border-slate-700/70 rounded-2xl overflow-hidden text-xs">
+          <button
+            type="button"
+            onClick={() => setShowMyWalletsCard(v => !v)}
+            className="w-full p-3 flex items-center justify-between gap-2 text-left hover:bg-slate-800/90 transition cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-sky-500/15 text-sky-400 border border-sky-500/20 flex items-center justify-center shrink-0 text-sm">
+                💳
+              </div>
+              <div className="min-w-0">
+                <div className="font-extrabold text-white text-[11px] leading-tight flex items-center gap-1.5 flex-wrap">
+                  <span>{getPreferredName(getUserProfile(currentAdmin), currentAdmin)}&apos;s Payout Wallets</span>
+                  {walletSavedFlash && (
+                    <span className="text-[10px] font-black text-emerald-400">Saved ✓</span>
+                  )}
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5 truncate">
+                  {[
+                    walletDraft.gpayLinked && "G-Pay",
+                    walletDraft.applePayLinked && "Apple Pay",
+                    walletDraft.interacLinked && "Interac",
+                    walletDraft.cashAppLinked && "Cash App / Venmo"
+                  ]
+                    .filter(Boolean)
+                    .join(" • ") || "Tap to link Google Pay, Apple Pay, Interac, or Cash App"}
+                </div>
+              </div>
+            </div>
+            <span className="text-[10px] font-bold text-indigo-300 shrink-0">
+              {showMyWalletsCard ? "Hide ▲" : "Link ▾"}
+            </span>
+          </button>
+
+          {showMyWalletsCard && (
+            <div className="px-3 pb-3 pt-1 border-t border-slate-700/60 space-y-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {/* Google Pay */}
+                <div className={`p-2.5 rounded-xl border space-y-1.5 ${walletDraft.gpayLinked ? "bg-sky-500/10 border-sky-400/50" : "bg-slate-900/70 border-slate-700"}`}>
+                  <label className="flex items-center justify-between gap-2 cursor-pointer">
+                    <span className="font-bold text-xs text-white">💳 Google Pay (G-Pay)</span>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(walletDraft.gpayLinked)}
+                      onChange={e => setWalletDraft(prev => ({ ...prev, gpayLinked: e.target.checked }))}
+                      className="w-4 h-4 accent-sky-500 rounded"
+                    />
+                  </label>
+                  {walletDraft.gpayLinked && (
+                    <input
+                      type="text"
+                      value={walletDraft.gpayHandle || ""}
+                      onChange={e => setWalletDraft(prev => ({ ...prev, gpayHandle: e.target.value }))}
+                      placeholder="G-Pay email or phone"
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-[11px]"
+                    />
+                  )}
+                </div>
+
+                {/* Apple Pay */}
+                <div className={`p-2.5 rounded-xl border space-y-1.5 ${walletDraft.applePayLinked ? "bg-slate-200/10 border-slate-300/50" : "bg-slate-900/70 border-slate-700"}`}>
+                  <label className="flex items-center justify-between gap-2 cursor-pointer">
+                    <span className="font-bold text-xs text-white">🍎 Apple Pay / Apple Cash</span>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(walletDraft.applePayLinked)}
+                      onChange={e => setWalletDraft(prev => ({ ...prev, applePayLinked: e.target.checked }))}
+                      className="w-4 h-4 accent-slate-300 rounded"
+                    />
+                  </label>
+                  {walletDraft.applePayLinked && (
+                    <input
+                      type="text"
+                      value={walletDraft.applePayHandle || ""}
+                      onChange={e => setWalletDraft(prev => ({ ...prev, applePayHandle: e.target.value }))}
+                      placeholder="Apple ID email or phone"
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-[11px]"
+                    />
+                  )}
+                </div>
+
+                {/* Interac e-Transfer */}
+                <div className={`p-2.5 rounded-xl border space-y-1.5 ${walletDraft.interacLinked ? "bg-amber-500/10 border-amber-400/50" : "bg-slate-900/70 border-slate-700"}`}>
+                  <label className="flex items-center justify-between gap-2 cursor-pointer">
+                    <span className="font-bold text-xs text-white">🏦 Interac e-Transfer</span>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(walletDraft.interacLinked)}
+                      onChange={e => setWalletDraft(prev => ({ ...prev, interacLinked: e.target.checked }))}
+                      className="w-4 h-4 accent-amber-500 rounded"
+                    />
+                  </label>
+                  {walletDraft.interacLinked && (
+                    <input
+                      type="email"
+                      value={walletDraft.interacEmail || ""}
+                      onChange={e => setWalletDraft(prev => ({ ...prev, interacEmail: e.target.value }))}
+                      placeholder="Bank e-Transfer email"
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-[11px]"
+                    />
+                  )}
+                </div>
+
+                {/* Cash App / Venmo */}
+                <div className={`p-2.5 rounded-xl border space-y-1.5 ${walletDraft.cashAppLinked ? "bg-emerald-500/10 border-emerald-400/50" : "bg-slate-900/70 border-slate-700"}`}>
+                  <label className="flex items-center justify-between gap-2 cursor-pointer">
+                    <span className="font-bold text-xs text-white">🟢 Cash App / Venmo</span>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(walletDraft.cashAppLinked)}
+                      onChange={e => setWalletDraft(prev => ({ ...prev, cashAppLinked: e.target.checked }))}
+                      className="w-4 h-4 accent-emerald-500 rounded"
+                    />
+                  </label>
+                  {walletDraft.cashAppLinked && (
+                    <input
+                      type="text"
+                      value={walletDraft.cashAppHandle || ""}
+                      onChange={e => setWalletDraft(prev => ({ ...prev, cashAppHandle: e.target.value }))}
+                      placeholder="$cashtag or @venmo"
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-[11px]"
+                    />
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSaveMyWallets}
+                  className="px-4 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition cursor-pointer shadow-sm"
+                >
+                  Save My Wallets
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Horizontal Day Selector Bar */}

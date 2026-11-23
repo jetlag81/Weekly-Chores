@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-23 15:36:00
+> **Export Date**: 2026-11-23 15:58:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,10 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Master Chores Template & Registry Dark-Mode & Contrast Fix** (weekly_chores_household_hub.tsx):
+1. **Kids Check-In Picker Modal in Mobile Parent Hub** (src/ParentMobileDashboard.tsx):
+   - Replaced the direct jump into the first child's page on the **Kids** tile with a **Kids Check-In** modal listing every kid individually with their avatar, preferred name, dynamic age, today's chore progress bar, **Open Kid Page ↗** button, and **Edit Profile** button.
+
+2. **Master Chores Template & Registry Dark-Mode & Contrast Fix** (weekly_chores_household_hub.tsx):
    - Fixed invisible dark-on-dark chore task text (`text-slate-900` → `dark:text-white`) and added full `dark:` theme parity across the Master Chores summary stat cards, search input, frequency/category filter pills, table header, rows, badges, instructions/notes sub-rows, empty state, and inline Add/Edit Master Chore forms.
 
 2. **Full System / Dark / Light Theme Audit & Parity Across All Modals & Drawers** (index.html, src/ParentInspectionModal.tsx, src/AllowanceLedgerModal.tsx, src/HouseholdActivityDrawer.tsx, src/InviteModal.tsx, src/FirebaseSettingsModal.tsx, src/InstallPwaModal.tsx, src/KidPairingScreen.tsx):
@@ -5860,4 +5863,18 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   - Chore task titles (`text-slate-900 dark:text-white`), row number pills, frequency/target-day/rotation-group/auto-nudge badges, and Instructions/Notes sub-rows.
   - All 4 summary stat cards (**Total Template Chores**, **Daily Chores**, **Once a Week**, **Bi-Weekly Tasks**), search box, frequency/category filter pills, table header, and empty state.
   - Both the inline **Add New Master Chore** form and the inline **Edit Master Chore** row form (including Target Day checkbox dropdown and Auto-Nudge controls).
+- Built APK, installed on Pixel (`47171FDAP000A2`), redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and pushed to `origin/main`.
+
+
+---
+
+### Turn 221
+**Date / Time**: 2026-11-23T15:58:00-06:00
+
+**User Request**:
+> In Daddio's Mobile Hub, when I click on the Kids tab, it brings me straight into Cadence's kid profile. I think we need a step in between that lists the kids profiles so that the parent can go into each one individually and check up on it.
+
+**Assistant Response**:
+- Added a **Kids Check-In** picker modal in `src/ParentMobileDashboard.tsx` (with `.modal-safe-area`, dark/light/system theme support, and Android back-button dismissal).
+- Tapping the **Kids** tile now opens a list of all kids showing each child's avatar, preferred name, dynamic age, occupancy badge, and today's chore progress bar, with **Open Kid Page ↗** and **Edit Profile** buttons for each child.
 - Built APK, installed on Pixel (`47171FDAP000A2`), redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and pushed to `origin/main`.

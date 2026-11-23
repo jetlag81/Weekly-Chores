@@ -335,12 +335,17 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>("appearance");
   const [showManageModal, setShowManageModal] = useState<boolean>(false);
   const [manageInitialTab, setManageInitialTab] = useState<ManageTab>("chores");
+  const [showKidsPickerModal, setShowKidsPickerModal] = useState<boolean>(false);
   const [selectedReviewProof, setSelectedReviewProof] = useState<ChorePhotoProof | null>(null);
   const [showPhotoInbox, setShowPhotoInbox] = useState<boolean>(false);
 
   useEffect(() => {
     if (onRegisterDismissModal) {
       onRegisterDismissModal(() => {
+        if (showKidsPickerModal) {
+          setShowKidsPickerModal(false);
+          return true;
+        }
         if (showManageModal) {
           setShowManageModal(false);
           return true;
@@ -360,7 +365,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
         return false;
       });
     }
-  }, [showManageModal, showSettingsModal, showPhotoInbox, selectedReviewProof, onRegisterDismissModal]);
+  }, [showKidsPickerModal, showManageModal, showSettingsModal, showPhotoInbox, selectedReviewProof, onRegisterDismissModal]);
 
   const [photoRequestsVersion, setPhotoRequestsVersion] = useState<number>(0);
   const pendingPhotoCount = getPendingPhotoProofsCount();
@@ -797,7 +802,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
           {isPrimaryAdmin ? (
             <button
               type="button"
-              onClick={() => onSwitchToMinionMode()}
+              onClick={() => setShowKidsPickerModal(true)}
               className="py-3 px-2 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center justify-center text-center transition cursor-pointer shadow-md group"
             >
               <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mb-1.5 group-hover:scale-105 transition">
@@ -1549,6 +1554,169 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
           onLaunchSpotlightTour={onLaunchSpotlightTour}
           onRestoreThomPreset={onRestoreThomPreset}
         />
+      )}
+
+      {/* Kids Profiles Check-In Picker Modal */}
+      {showKidsPickerModal && (
+        <div
+          className="modal-safe-area fixed inset-0 z-50 bg-slate-900/70 dark:bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
+          onClick={() => setShowKidsPickerModal(false)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/80 rounded-3xl max-w-md w-full max-h-full flex flex-col shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-4 bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-600 text-white flex items-center justify-between gap-2 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-white/20 flex items-center justify-center shadow-inner">
+                  <Users className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black tracking-tight leading-tight">
+                    Kids Check-In
+                  </h3>
+                  <p className="text-[11px] text-indigo-100">
+                    Choose a child to open their page or profile
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowKidsPickerModal(false)}
+                className="w-8 h-8 rounded-xl bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition cursor-pointer font-bold text-sm"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Kids List */}
+            <div className="p-4 space-y-2.5 overflow-y-auto flex-1">
+              {allKidsList.length === 0 ? (
+                <div className="p-6 text-center text-xs text-slate-500 dark:text-slate-400">
+                  No kids registered yet. Tap <strong>Members</strong> to add a child.
+                </div>
+              ) : (
+                allKidsList.map((kidName) => {
+                  const mem = familyMembers.find(
+                    (m) => m.name.toLowerCase() === kidName.toLowerCase()
+                  );
+                  const prof = getUserProfile(kidName, mem);
+                  const pref = getPreferredName(prof, kidName);
+                  const age = calculateAge(prof.birthday) ?? mem?.age;
+                  const kidChores = choresByKidForSelectedDay[kidName] || [];
+                  const doneCount = kidChores.filter((c) => c.done).length;
+                  const totalCount = kidChores.length;
+                  const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
+                  return (
+                    <div
+                      key={kidName}
+                      className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 space-y-2.5 shadow-2xs"
+                    >
+                      <div className="flex items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div
+                            className="w-11 h-11 rounded-2xl font-black text-base flex items-center justify-center shrink-0 overflow-hidden shadow-xs"
+                            style={{
+                              backgroundColor: mem?.color ? `${mem.color}25` : "#E0E7FF",
+                              color: mem?.color || "#4F46E5",
+                              border: `1.5px solid ${mem?.color || "#C7D2FE"}`
+                            }}
+                          >
+                            {prof.avatarUrl ? (
+                              <img
+                                src={prof.avatarUrl}
+                                alt={kidName}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span>{prof.avatarEmoji || kidName.substring(0, 2).toUpperCase()}</span>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-extrabold text-sm text-slate-900 dark:text-white truncate">
+                                {pref}
+                              </span>
+                              {prof.nickname && (
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                                  ({kidName})
+                                </span>
+                              )}
+                              {age !== null && age !== undefined && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-200/80 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                                  Age {age}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
+                              <span>
+                                Today: <strong className="text-slate-800 dark:text-slate-200">{doneCount}/{totalCount}</strong> ({pct}%)
+                              </span>
+                              <span>•</span>
+                              <span className={mem?.type === "biweekly" ? "text-pink-600 dark:text-pink-300 font-semibold" : "text-indigo-600 dark:text-indigo-300 font-semibold"}>
+                                {mem?.type === "biweekly" ? "Bi-Weekly" : "Full-Time"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Mini Progress Bar */}
+                      <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            pct === 100 ? "bg-emerald-500" : "bg-gradient-to-r from-amber-500 to-orange-500"
+                          }`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowKidsPickerModal(false);
+                            onSwitchToMinionMode(kidName);
+                          }}
+                          className="py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                        >
+                          <span>Open Kid Page ↗</span>
+                        </button>
+                        {onOpenMemberProfile && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowKidsPickerModal(false);
+                              onOpenMemberProfile(kidName);
+                            }}
+                            className="py-2 px-3 rounded-xl bg-slate-200/80 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <span>Edit Profile</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-3 bg-slate-50 dark:bg-slate-950/70 border-t border-slate-200 dark:border-slate-800 flex justify-end shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowKidsPickerModal(false)}
+                className="px-4 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Household Manage Modal (Add & Edit Chores, Members & Pets) */}

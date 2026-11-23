@@ -3,13 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#0F172A" />
+    <meta name="theme-color" content="#13111C" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Chores Hub" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" href="/icon.svg" />
     <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..800;1,9..40,400..700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
     <title>Weekly Chores & Household Hub</title>
     <script>
       if ('serviceWorker' in navigator) {
@@ -27,7 +30,7 @@
       tailwind.config = {
         darkMode: 'class'
       };
-      // Zero-flash Theme Initializer (Dark is Default)
+      // Zero-flash Theme & Palette Initializer (Dark + Midnight Plum & Coral Default)
       (function() {
         try {
           var stored = localStorage.getItem('weekly_chores_theme_mode_v1');
@@ -37,12 +40,55 @@
           } else {
             document.documentElement.classList.add('dark');
           }
+          var palette = localStorage.getItem('weekly_chores_color_palette_v1') || 'plum-coral';
+          document.documentElement.dataset.palette = palette;
         } catch (e) {
           document.documentElement.classList.add('dark');
+          document.documentElement.dataset.palette = 'plum-coral';
         }
       })();
     </script>
     <style>
+      :root {
+        --hub-canvas: #13111C;
+        --hub-surface: #1C1829;
+        --hub-elevated: #262138;
+        --hub-border: #332B4A;
+        --hub-accent: #F43F5E;
+        --hub-accent-hover: #FB7185;
+        --hub-secondary: #22D3EE;
+      }
+
+      html.dark[data-palette="plum-coral"] {
+        --hub-canvas: #13111C;
+        --hub-surface: #1C1829;
+        --hub-elevated: #262138;
+        --hub-border: #342C4C;
+        --hub-accent: #F43F5E;
+        --hub-accent-hover: #FB7185;
+        --hub-secondary: #22D3EE;
+      }
+
+      html.dark[data-palette="warm-terracotta"] {
+        --hub-canvas: #121417;
+        --hub-surface: #1B1E23;
+        --hub-elevated: #252930;
+        --hub-border: #343A44;
+        --hub-accent: #E07A5F;
+        --hub-accent-hover: #EC8F76;
+        --hub-secondary: #14B8A6;
+      }
+
+      html.dark[data-palette="deep-forest"] {
+        --hub-canvas: #0D1514;
+        --hub-surface: #13201E;
+        --hub-elevated: #1C2E2B;
+        --hub-border: #28423E;
+        --hub-accent: #10B981;
+        --hub-accent-hover: #34D399;
+        --hub-secondary: #F59E0B;
+      }
+
       html, body, #root {
         height: 100%;
         width: 100%;
@@ -51,16 +97,60 @@
         overflow-x: hidden;
         max-width: 100vw;
         box-sizing: border-box;
+        font-family: 'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      h1, h2, h3, h4 {
+        font-family: 'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif;
+        letter-spacing: -0.015em;
       }
 
       body {
-        background-color: #0F172A;
+        background-color: var(--hub-canvas);
         padding: 0;
         margin: 0;
+        font-variant-numeric: tabular-nums;
       }
 
       html:not(.dark) body {
         background-color: #F8FAFC;
+      }
+
+      /* Signature Household Palette Overrides (active for plum-coral, warm-terracotta, deep-forest) */
+      @media screen {
+        html.dark:not([data-palette="classic-slate"]) .dark\:bg-slate-950,
+        html.dark:not([data-palette="classic-slate"]) .bg-slate-950 {
+          background-color: var(--hub-canvas) !important;
+        }
+        html.dark:not([data-palette="classic-slate"]) .dark\:bg-slate-900,
+        html.dark:not([data-palette="classic-slate"]) .bg-slate-900 {
+          background-color: var(--hub-surface) !important;
+        }
+        html.dark:not([data-palette="classic-slate"]) .dark\:bg-slate-800,
+        html.dark:not([data-palette="classic-slate"]) .bg-slate-800 {
+          background-color: var(--hub-elevated) !important;
+        }
+        html.dark:not([data-palette="classic-slate"]) .dark\:border-slate-800,
+        html.dark:not([data-palette="classic-slate"]) .border-slate-800,
+        html.dark:not([data-palette="classic-slate"]) .dark\:border-slate-700,
+        html.dark:not([data-palette="classic-slate"]) .border-slate-700 {
+          border-color: var(--hub-border) !important;
+        }
+        html.dark:not([data-palette="classic-slate"]) .bg-indigo-600,
+        html.dark:not([data-palette="classic-slate"]) .dark\:bg-indigo-600 {
+          background-color: var(--hub-accent) !important;
+        }
+        html.dark:not([data-palette="classic-slate"]) .hover\:bg-indigo-500:hover,
+        html.dark:not([data-palette="classic-slate"]) .hover\:bg-indigo-700:hover,
+        html.dark:not([data-palette="classic-slate"]) .dark\:hover\:bg-indigo-500:hover {
+          background-color: var(--hub-accent-hover) !important;
+        }
+        html.dark:not([data-palette="classic-slate"]) .text-indigo-300,
+        html.dark:not([data-palette="classic-slate"]) .dark\:text-indigo-300,
+        html.dark:not([data-palette="classic-slate"]) .text-indigo-400,
+        html.dark:not([data-palette="classic-slate"]) .dark\:text-indigo-400 {
+          color: var(--hub-secondary) !important;
+        }
       }
 
       .modal-safe-area {

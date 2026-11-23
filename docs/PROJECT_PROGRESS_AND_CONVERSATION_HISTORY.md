@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 21:07:00
+> **Export Date**: 2026-11-22 21:15:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,12 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Real-Time Firestore Profile & Household Sheet Sync (Clean Slate Multi-Device)** (src/firebaseSync.ts, src/userProfiles.ts, weekly_chores_household_hub.tsx):
+1. **Signature Typography & Selectable Colour Palettes (Default: Midnight Plum & Coral)** (index.html, src/themeManager.ts, src/CleanSlateOnboardingModal.tsx):
+   - Upgraded typography to **Plus Jakarta Sans** (headings) + **DM Sans** (UI/tables) with `tabular-nums`.
+   - Added 4 selectable household colour palettes (`plum-coral` default, `warm-terracotta`, `deep-forest`, `classic-slate`) driven by CSS variables on `html[data-palette]` for instant live preview without affecting `@media print`.
+   - Added an **App Colour Palette** swatch picker directly in Step 1 of Clean Slate Onboarding.
+
+2. **Real-Time Firestore Profile & Household Sheet Sync (Clean Slate Multi-Device)** (src/firebaseSync.ts, src/userProfiles.ts, weekly_chores_household_hub.tsx):
    - Added `syncUserProfileToFirestore` / `subscribeToFirestoreUserProfiles` (`households/{id}/profiles/{memberId}`) so edits to birthdays, ages, nicknames, emails, avatars, and tier overrides propagate live across all paired Co-Parent and Kid devices.
    - Added `syncHouseholdSheetToFirestore` / `subscribeToFirestoreHouseholdSheet` (`households/{id}/meta/sheetData`) so Clean Slate onboarding rosters, pets, and master chores automatically sync to every invited device.
 
@@ -5681,3 +5686,20 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Wired live real-time Firestore sync for `userProfiles` and the Clean Slate household sheet across [`src/firebaseSync.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/firebaseSync.ts), [`src/userProfiles.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/userProfiles.ts), and [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx).
 - Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).
 - Proposed tailored visual identity differentiation options (fonts, surface palette, and tactile accents) to set the app apart from generic Tailwind slate/indigo apps.
+
+---
+
+### Turn 212
+**Date / Time**: 2026-11-22T21:15:00Z
+
+**User Prompt**:
+> Let's try C, but keep the other two on file. Actually, would it be too cumbersome to include "Colour Palette" as a user option during app setup?
+
+**Summary of Work Delivered**:
+- Implemented **Plus Jakarta Sans + DM Sans** typography and CSS-variable-driven **Colour Palettes** in [`index.html`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/index.html) and [`src/themeManager.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/themeManager.ts):
+  - **Midnight Plum & Coral** (`plum-coral`, new default)
+  - **Warm Charcoal & Terracotta** (`warm-terracotta`)
+  - **Deep Forest & Warm Gold** (`deep-forest`)
+  - **Classic Slate & Indigo** (`classic-slate`)
+- Added a live-preview **App Colour Palette** swatch selector to Step 1 of [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx).
+- Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).

@@ -8028,7 +8028,7 @@ function App({
             }} className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-950/50 rounded-lg transition cursor-pointer" title={`Edit ${pet.name}`}><Pen className="w-3.5 h-3.5" /></button>}<button type="button" onClick={() => handleDeleteRosterPet(pet.index_, pet.name)} className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg transition cursor-pointer" title={`Remove ${pet.name} from Household Pets`}><Trash2 className="w-3.5 h-3.5" /></button></div></td></tr>;
           })}</tbody></table></div></div><div className="mt-8 pt-5 border-t border-slate-200 dark:border-slate-800 space-y-3"><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Layers className="w-4 h-4 text-purple-600 dark:text-purple-400" /><h3 className="text-sm font-bold text-slate-900 dark:text-white">Occupancy Categories &amp; Rules</h3><span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">Rows 14–17</span></div></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">{hubOccupancyCategories.map(cat => <div key={cat.type} className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/60 space-y-2 shadow-2xs"><div className="flex items-center justify-between"><span className="font-bold text-sm text-slate-900 dark:text-white">{cat.type}</span><span className="text-[10px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-bold">Active</span></div><div className="text-[11px] font-semibold text-indigo-700 dark:text-indigo-300">{cat.description}</div><p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug"><strong>Rule:</strong>{" "}{cat.rules}</p></div>)}</div></div><div className="mt-8 pt-5 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-5 text-xs"><div className="space-y-3"><div className="flex items-center justify-between"><h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5"><Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /><span>Special Rotation Groups</span></h3><span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">Rows 20–25</span></div><div className="space-y-2">{hubSpecialGroups.map(grp => <div key={grp.name} className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-2xs"><div className="flex items-center justify-between"><span className="font-bold text-slate-900 dark:text-white">{grp.name}</span><span className="text-[10px] text-slate-400 font-medium">Group</span></div><div className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-snug">{grp.members}</div></div>)}</div></div><div className="space-y-3"><div className="flex items-center justify-between"><h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5"><Settings2 className="w-4 h-4 text-purple-600 dark:text-purple-400" /><span>Schedule Configurations</span></h3><span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">Live Hub Settings</span></div><div className="space-y-2"><div className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-2xs"><span className="font-bold text-slate-900 dark:text-white block">Active Week Start Date</span><div className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400 mt-0.5">{activeSyncWeek || getCurrentWeekMonday().dateKey}</div><span className="text-[10px] text-slate-500 dark:text-slate-400">Scope: Printable Weekly Schedule &amp; Mobile Hub</span></div><div className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-2xs space-y-2"><div className="flex items-center justify-between gap-2"><div><span className="font-bold text-slate-900 dark:text-white block">Custody Schedule Rotation</span><div className={`text-sm font-extrabold mt-0.5 ${isBiWeeklyHereThisWeek ? "text-emerald-600 dark:text-emerald-400" : "text-pink-600 dark:text-pink-400"}`}>{isBiWeeklyHereThisWeek ? "Kids Week (Active)" : "Off Week (Inactive)"}</div></div><button type="button" onClick={() => setShowKidsWeekConfirm(true)} className="px-3 py-1.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold text-[11px] shadow-xs transition cursor-pointer shrink-0">🔄 Toggle Kids Week</button></div><span className="text-[10px] text-slate-500 dark:text-slate-400 block">{"Bi-Weekly Schedule \u2022 Members: "}{familyMembers.filter(m => m.type === "biweekly").map(m => m.name).join(", ") || hubScheduleConfig.custodyMembers}</span></div><div className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-2xs"><span className="font-bold text-slate-900 dark:text-white block">Waste / Recycling Schedule Rotation</span><div className="text-xs font-semibold text-slate-700 dark:text-slate-300 mt-0.5">{hubScheduleConfig.wasteRotation}</div><span className="text-[10px] text-slate-500 dark:text-slate-400">{"Alternating weeks \u2022 Members: "}{hubScheduleConfig.wasteMembers}</span></div></div></div></div><div className="mt-8 pt-5 border-t border-slate-200 dark:border-slate-800 space-y-4"><div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4"><div><div className="flex items-center gap-2"><div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs"><ListTodo className="w-4 h-4" /></div><h3 className="text-base font-bold text-slate-900 dark:text-white">Master Chores Template &amp; Registry</h3><span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">{hubMasterChores.length}{" Tasks \u2022 Rows 5\u201315 (Cols 6\u201310)"}</span></div><p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Central chore configuration defining categories, target days, frequencies, and rotation groups. Changes made here persist directly back to the spreadsheet.</p></div><div className="flex flex-wrap items-center gap-2"><button onClick={() => {
             setShowInlineAddForm(prev => !prev);
-          }} className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition cursor-pointer" title="Add a new master chore">{showInlineAddForm ? <><X className="w-4 h-4" /><span>Close Add Chore</span></> : <><Plus className="w-4 h-4" /><span>Add Chore</span></>}</button></div></div>{showInlineAddForm && <div className="my-4 p-4 rounded-xl border-2 border-indigo-500 bg-indigo-50/50 shadow-md space-y-3 transition-all animate-fadeIn"><div className="flex items-center justify-between pb-2 border-b border-indigo-200"><div className="font-bold text-sm text-indigo-900 flex items-center gap-1.5"><Plus className="w-4 h-4 text-indigo-600" /><span>Add New Master Chore to Household Hub</span></div><button onClick={() => setShowInlineAddForm(false)} className="text-slate-400 hover:text-slate-700 p-1"><X className="w-4 h-4" /></button></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs"><div className="md:col-span-2"><label className="block font-bold text-slate-700 mb-1">{"Chore Task Description "}<span className="text-rose-500">{"*"}</span></label><input type="text" value={newMasterDraft.task} onChange={e => setNewMasterDraft(prev => ({
+          }} className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-sm transition cursor-pointer" title="Add a new master chore">{showInlineAddForm ? <><X className="w-4 h-4" /><span>Close Add Chore</span></> : <><Plus className="w-4 h-4" /><span>Add Chore</span></>}</button></div></div>{showInlineAddForm && <div className="my-4 p-4 rounded-xl border-2 border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 shadow-md space-y-3 transition-all animate-fadeIn"><div className="flex items-center justify-between pb-2 border-b border-indigo-200 dark:border-indigo-800/70"><div className="font-bold text-sm text-indigo-900 dark:text-indigo-200 flex items-center gap-1.5"><Plus className="w-4 h-4 text-indigo-600 dark:text-indigo-400" /><span>Add New Master Chore to Household Hub</span></div><button onClick={() => setShowInlineAddForm(false)} className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1"><X className="w-4 h-4" /></button></div><div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs"><div className="md:col-span-2"><label className="block font-bold text-slate-700 dark:text-slate-200 mb-1">{"Chore Task Description "}<span className="text-rose-500">{"*"}</span></label><input type="text" value={newMasterDraft.task} onChange={e => setNewMasterDraft(prev => ({
             ...{
               ...prev
             },
@@ -8037,12 +8037,12 @@ function App({
             if (e.key === "Enter" && newMasterDraft.task.trim()) {
               handleAddNewMasterChore(newMasterDraft);
             }
-          }} placeholder="e.g. Empty dishwasher, sanitize counters, sweep porch..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500" autoFocus /></div><div><label className="block font-bold text-slate-700 mb-1">Category</label><select value={newMasterDraft.category} onChange={e => setNewMasterDraft(prev => ({
+          }} placeholder="e.g. Empty dishwasher, sanitize counters, sweep porch..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" autoFocus /></div><div><label className="block font-bold text-slate-700 dark:text-slate-200 mb-1">Category</label><select value={newMasterDraft.category} onChange={e => setNewMasterDraft(prev => ({
             ...{
               ...prev
             },
             category: e.target.value
-          }))} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500">{CHORE_CATEGORIES.map(c => <option key={c.id} value={c.name}>{c.icon}{" "}{c.name}</option>)}</select></div><div><label className="block font-bold text-slate-700 mb-1">Frequency</label><select value={newMasterDraft.frequency} onChange={e => {
+          }))} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500">{CHORE_CATEGORIES.map(c => <option key={c.id} value={c.name}>{c.icon}{" "}{c.name}</option>)}</select></div><div><label className="block font-bold text-slate-700 dark:text-slate-200 mb-1">Frequency</label><select value={newMasterDraft.frequency} onChange={e => {
             const val = e.target.value;
             setNewMasterDraft(prev => ({
               ...{
@@ -8051,25 +8051,25 @@ function App({
               frequency: val,
               targetDay: val === "Daily" ? "Mon \u2013 Sun" : val === "Bi-Weekly" ? "Thursday Evening" : "Saturday"
             }));
-          }} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="Daily">Daily</option><option value="Once a Week">Once a Week</option><option value="Bi-Weekly">Bi-Weekly</option></select></div><div><label className="block font-bold text-slate-700 mb-1">Target Day(s)</label><select value={newMasterDraft.targetDay} onChange={e => setNewMasterDraft(prev => ({
+          }} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"><option value="Daily">Daily</option><option value="Once a Week">Once a Week</option><option value="Bi-Weekly">Bi-Weekly</option></select></div><div><label className="block font-bold text-slate-700 dark:text-slate-200 mb-1">Target Day(s)</label><select value={newMasterDraft.targetDay} onChange={e => setNewMasterDraft(prev => ({
             ...{
               ...prev
             },
             targetDay: e.target.value
-          }))} className="hidden" /><div className="relative"><button type="button" onClick={() => setOpenTargetDayDropdown(openTargetDayDropdown === "NEW_CHORE" ? null : "NEW_CHORE")} className="w-full flex items-center justify-between gap-2 text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 hover:border-indigo-400 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500"><span className="truncate">{newMasterDraft.targetDay || "Select days..."}</span><ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openTargetDayDropdown === "NEW_CHORE" ? "rotate-180 text-indigo-600" : ""}`} /></button>{openTargetDayDropdown === "NEW_CHORE" && <><div className="fixed inset-0 z-20" onClick={() => setOpenTargetDayDropdown(null)} /><div className="absolute left-0 top-full mt-1 z-30 w-60 bg-white rounded-xl border border-slate-200 shadow-xl p-2 space-y-1"><div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">Select Day(s)</div>{ALL_WEEK_DAYS.map(dayName => { const currentDays = newMasterDraft.selectedTargetDays || parseTargetDayState(newMasterDraft.targetDay).selectedDays; const isChecked = currentDays.includes(dayName); return <label key={dayName} className="flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-indigo-50/70 cursor-pointer select-none transition"><input type="checkbox" checked={isChecked} onChange={() => { const set = new Set(currentDays); if (set.has(dayName)) set.delete(dayName); else set.add(dayName); const nextDays = ALL_WEEK_DAYS.filter(d => set.has(d)); const nextTarget = formatTargetDayState(nextDays, Boolean(newMasterDraft.customTargetEnabled), newMasterDraft.customTargetText || ""); setNewMasterDraft(prev => ({ ...prev, selectedTargetDays: nextDays, targetDay: nextTarget })); }} className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" /><span className={`text-xs ${isChecked ? "font-bold text-indigo-950" : "font-medium text-slate-700"}`}>{dayName}</span></label>; })}<div className="pt-1.5 mt-1 border-t border-slate-100 space-y-1.5 px-2 pb-1"><label className="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" checked={Boolean(newMasterDraft.customTargetEnabled)} onChange={e => { const nextCustom = e.target.checked; const currentDays = newMasterDraft.selectedTargetDays || parseTargetDayState(newMasterDraft.targetDay).selectedDays; const nextTarget = formatTargetDayState(currentDays, nextCustom, newMasterDraft.customTargetText || ""); setNewMasterDraft(prev => ({ ...prev, customTargetEnabled: nextCustom, targetDay: nextTarget })); }} className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" /><span className={`text-xs ${newMasterDraft.customTargetEnabled ? "font-bold text-indigo-950" : "font-medium text-slate-700"}`}>Custom</span></label><input type="text" value={newMasterDraft.customTargetText || ""} onChange={e => { const val = e.target.value; const currentDays = newMasterDraft.selectedTargetDays || []; const nextTarget = formatTargetDayState(currentDays, true, val); setNewMasterDraft(prev => ({ ...prev, customTargetEnabled: true, customTargetText: val, targetDay: nextTarget })); }} placeholder="e.g. Thursday Evening..." className="w-full px-2 py-1 text-xs text-slate-800 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div></div></>}</div></div><div><label className="block font-bold text-slate-700 mb-1">Rotation Group</label><select value={newMasterDraft.rotationGroup === "All Non-Casual" ? "Non-Casual" : newMasterDraft.rotationGroup} onChange={e => setNewMasterDraft(prev => ({
+          }))} className="hidden" /><div className="relative"><button type="button" onClick={() => setOpenTargetDayDropdown(openTargetDayDropdown === "NEW_CHORE" ? null : "NEW_CHORE")} className="w-full flex items-center justify-between gap-2 text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium text-slate-800 dark:text-white hover:border-indigo-400 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500"><span className="truncate">{newMasterDraft.targetDay || "Select days..."}</span><ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${openTargetDayDropdown === "NEW_CHORE" ? "rotate-180 text-indigo-600 dark:text-indigo-400" : ""}`} /></button>{openTargetDayDropdown === "NEW_CHORE" && <><div className="fixed inset-0 z-20" onClick={() => setOpenTargetDayDropdown(null)} /><div className="absolute left-0 top-full mt-1 z-30 w-60 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl p-2 space-y-1"><div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">Select Day(s)</div>{ALL_WEEK_DAYS.map(dayName => { const currentDays = newMasterDraft.selectedTargetDays || parseTargetDayState(newMasterDraft.targetDay).selectedDays; const isChecked = currentDays.includes(dayName); return <label key={dayName} className="flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-indigo-50/70 dark:hover:bg-indigo-950/50 cursor-pointer select-none transition"><input type="checkbox" checked={isChecked} onChange={() => { const set = new Set(currentDays); if (set.has(dayName)) set.delete(dayName); else set.add(dayName); const nextDays = ALL_WEEK_DAYS.filter(d => set.has(d)); const nextTarget = formatTargetDayState(nextDays, Boolean(newMasterDraft.customTargetEnabled), newMasterDraft.customTargetText || ""); setNewMasterDraft(prev => ({ ...prev, selectedTargetDays: nextDays, targetDay: nextTarget })); }} className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer" /><span className={`text-xs ${isChecked ? "font-bold text-indigo-950 dark:text-indigo-200" : "font-medium text-slate-700 dark:text-slate-300"}`}>{dayName}</span></label>; })}<div className="pt-1.5 mt-1 border-t border-slate-100 dark:border-slate-800 space-y-1.5 px-2 pb-1"><label className="flex items-center gap-2.5 cursor-pointer select-none"><input type="checkbox" checked={Boolean(newMasterDraft.customTargetEnabled)} onChange={e => { const nextCustom = e.target.checked; const currentDays = newMasterDraft.selectedTargetDays || parseTargetDayState(newMasterDraft.targetDay).selectedDays; const nextTarget = formatTargetDayState(currentDays, nextCustom, newMasterDraft.customTargetText || ""); setNewMasterDraft(prev => ({ ...prev, customTargetEnabled: nextCustom, targetDay: nextTarget })); }} className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer" /><span className={`text-xs ${newMasterDraft.customTargetEnabled ? "font-bold text-indigo-950 dark:text-indigo-200" : "font-medium text-slate-700 dark:text-slate-300"}`}>Custom</span></label><input type="text" value={newMasterDraft.customTargetText || ""} onChange={e => { const val = e.target.value; const currentDays = newMasterDraft.selectedTargetDays || []; const nextTarget = formatTargetDayState(currentDays, true, val); setNewMasterDraft(prev => ({ ...prev, customTargetEnabled: true, customTargetText: val, targetDay: nextTarget })); }} placeholder="e.g. Thursday Evening..." className="w-full px-2 py-1 text-xs text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div></div></>}</div></div><div><label className="block font-bold text-slate-700 dark:text-slate-200 mb-1">Rotation Group</label><select value={newMasterDraft.rotationGroup === "All Non-Casual" ? "Non-Casual" : newMasterDraft.rotationGroup} onChange={e => setNewMasterDraft(prev => ({
             ...{
               ...prev
             },
             rotationGroup: e.target.value
-          }))} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"><optgroup label="Special Rotation Groups"><option value="Non-Casual">Non-Casual</option><option value="Kids">Kids</option><option value="Parents">Parents</option><option value="All">All</option></optgroup><optgroup label="Individual Members">{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</optgroup></select></div><div className="md:col-span-3"><label className="block font-bold text-slate-700 mb-1">Operational Notes / Routine</label><input type="text" value={newMasterDraft.notes} onChange={e => setNewMasterDraft(prev => ({
+          }))} className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"><optgroup label="Special Rotation Groups"><option value="Non-Casual">Non-Casual</option><option value="Kids">Kids</option><option value="Parents">Parents</option><option value="All">All</option></optgroup><optgroup label="Individual Members">{familyMembers.map(m => <option key={m.id} value={m.name}>{m.name}{" ("}{m.residency})</option>)}</optgroup></select></div><div className="md:col-span-3"><label className="block font-bold text-slate-700 dark:text-slate-200 mb-1">Operational Notes / Routine</label><input type="text" value={newMasterDraft.notes} onChange={e => setNewMasterDraft(prev => ({
             ...{
               ...prev
             },
             notes: e.target.value
-          }))} placeholder="Instructions, supplies, details or timing notes..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium" /></div><div className="md:col-span-3 p-3 bg-amber-50/70 border border-amber-200/90 rounded-xl space-y-2.5"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2"><label className="flex items-center gap-2 font-bold text-xs text-amber-950 cursor-pointer select-none"><input type="checkbox" checked={Boolean(newMasterDraft.nudgeEnabled)} onChange={e => setNewMasterDraft(prev => ({ ...prev, nudgeEnabled: e.target.checked }))} className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500 cursor-pointer" /><span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-amber-600" /><span>Enable Scheduled Auto-Nudge Reminder</span></span></label>{newMasterDraft.nudgeEnabled && <div className="flex items-center gap-2 text-xs"><span className="font-bold text-amber-900">Reminder Time:</span><input type="time" value={newMasterDraft.nudgeTime || "16:30"} onChange={e => setNewMasterDraft(prev => ({ ...prev, nudgeTime: e.target.value }))} className="px-2 py-1 text-xs font-bold bg-white border border-amber-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500" /><span className="text-[11px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-md">{formatTime24To12(newMasterDraft.nudgeTime || "16:30")}</span></div>}</div>{newMasterDraft.nudgeEnabled && <div className="space-y-2 pt-1 border-t border-amber-200/70 text-xs"><div className="flex items-center gap-1.5 flex-wrap"><span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider mr-1">Quick Presets:</span>{QUICK_NUDGE_TIME_PRESETS.map(preset => <button key={preset.time} type="button" onClick={() => setNewMasterDraft(prev => ({ ...prev, nudgeTime: preset.time, nudgeWindow: preset.window, nudgeMessage: prev.nudgeMessage || `Friendly reminder: please ${prev.task || "complete this chore"} (${preset.display})! ⏰` }))} className={`px-2 py-1 rounded-lg text-[10px] font-bold transition border ${newMasterDraft.nudgeTime === preset.time ? "bg-amber-600 text-white border-amber-700 shadow-xs" : "bg-white text-amber-900 border-amber-200 hover:bg-amber-100/70"}`}>{preset.label} ({preset.display})</button>)}</div><div className="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label className="block text-[10px] font-bold text-amber-900 uppercase tracking-wider mb-1">Target Time Window (shown on kid's chore card)</label><input type="text" value={newMasterDraft.nudgeWindow || ""} onChange={e => setNewMasterDraft(prev => ({ ...prev, nudgeWindow: e.target.value }))} placeholder="e.g. After School (3:30 – 5:30 PM), Before Supper..." className="w-full px-2.5 py-1 text-xs bg-white border border-amber-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium" /></div><div><label className="block text-[10px] font-bold text-amber-900 uppercase tracking-wider mb-1">Custom Nudge Message / Prompt</label><input type="text" value={newMasterDraft.nudgeMessage || ""} onChange={e => setNewMasterDraft(prev => ({ ...prev, nudgeMessage: e.target.value }))} placeholder="e.g. Friendly reminder to empty the dishwasher before supper! 🍽️" className="w-full px-2.5 py-1 text-xs bg-white border border-amber-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium" /></div></div></div>}</div></div><div className="flex justify-end gap-2 pt-2 border-t border-indigo-200"><button type="button" onClick={() => setShowInlineAddForm(false)} className="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition">Cancel</button><button type="button" onClick={() => handleAddNewMasterChore({ ...newMasterDraft, rotationGroup: newMasterDraft.rotationGroup === "All Non-Casual" ? "Non-Casual" : newMasterDraft.rotationGroup })} disabled={!newMasterDraft.task.trim()} className="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm disabled:opacity-40 transition flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /><span>Add Chore to Master List</span></button></div></div>}<div className="grid grid-cols-2 sm:grid-cols-4 gap-3"><div className="p-3 bg-slate-50 rounded-xl border border-slate-200"><span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Template Chores</span><div className="text-xl font-bold text-slate-900 mt-0.5">{hubMasterChores.length}{" Tasks"}</div><span className="text-[11px] text-slate-500">All registered tasks</span></div><div className="p-3 bg-blue-50/70 rounded-xl border border-blue-200"><span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">Daily Chores</span><div className="text-xl font-bold text-blue-900 mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("daily")).length}{" Tasks"}</div><span className="text-[11px] text-blue-600">Mon – Sun rotation</span></div><div className="p-3 bg-purple-50/70 rounded-xl border border-purple-200"><span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider block">Once a Week</span><div className="text-xl font-bold text-purple-900 mt-0.5">{hubMasterChores.filter(c => { const f = (c.frequency || "").toLowerCase(); return (f.includes("weekly") || f.includes("once")) && !f.includes("bi"); }).length}{" Tasks"}</div><span className="text-[11px] text-purple-600">Saturday & Sunday deep tasks</span></div><div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200"><span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider block">Bi-Weekly Tasks</span><div className="text-xl font-bold text-amber-900 mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("bi-weekly") || c.frequency.toLowerCase().includes("biweekly")).length}{" Tasks"}</div><span className="text-[11px] text-amber-700">Split Curbside Recycling & Waste</span></div></div><div className="pt-2 space-y-3"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div className="relative flex-1 max-w-md"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" /><input type="text" placeholder="Search chores by name, category, group, or notes..." value={masterSearchQuery} onChange={e => setMasterSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500" />{masterSearchQuery && <button onClick={() => setMasterSearchQuery("")} className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"><X className="w-3.5 h-3.5" /></button>}</div><div className="flex items-center gap-1.5 text-xs"><span className="text-slate-500 font-semibold mr-1">Frequency:</span><button onClick={() => setMasterFrequencyFilter("ALL")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "ALL" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>All</button><button onClick={() => setMasterFrequencyFilter("Daily")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Daily" ? "bg-blue-600 text-white" : "bg-blue-50 text-blue-700 hover:bg-blue-100"}`}>Daily</button><button onClick={() => setMasterFrequencyFilter("Once a Week")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Once a Week" ? "bg-purple-600 text-white" : "bg-purple-50 text-purple-700 hover:bg-purple-100"}`}>Weekly</button><button onClick={() => setMasterFrequencyFilter("Bi-Weekly")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Bi-Weekly" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-800 hover:bg-amber-100"}`}>Bi-Weekly</button></div></div><div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs"><span className="text-slate-400 font-semibold mr-1 shrink-0">Category:</span><button onClick={() => setMasterCategoryFilter("ALL")} className={`px-2.5 py-1 rounded-full font-semibold shrink-0 transition ${masterCategoryFilter === "ALL" ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>All Categories ({hubMasterChores.length})</button>{CHORE_CATEGORIES.map(cat => {
+          }))} placeholder="Instructions, supplies, details or timing notes..." className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-medium" /></div><div className="md:col-span-3 p-3 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/90 dark:border-amber-700/50 rounded-xl space-y-2.5"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2"><label className="flex items-center gap-2 font-bold text-xs text-amber-950 dark:text-amber-200 cursor-pointer select-none"><input type="checkbox" checked={Boolean(newMasterDraft.nudgeEnabled)} onChange={e => setNewMasterDraft(prev => ({ ...prev, nudgeEnabled: e.target.checked }))} className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500 cursor-pointer" /><span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" /><span>Enable Scheduled Auto-Nudge Reminder</span></span></label>{newMasterDraft.nudgeEnabled && <div className="flex items-center gap-2 text-xs"><span className="font-bold text-amber-900 dark:text-amber-300">Reminder Time:</span><input type="time" value={newMasterDraft.nudgeTime || "16:30"} onChange={e => setNewMasterDraft(prev => ({ ...prev, nudgeTime: e.target.value }))} className="px-2 py-1 text-xs font-bold bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-600/60 rounded-lg text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500" /><span className="text-[11px] font-bold text-amber-800 dark:text-amber-200 bg-amber-100/80 dark:bg-amber-500/20 px-2 py-0.5 rounded-md">{formatTime24To12(newMasterDraft.nudgeTime || "16:30")}</span></div>}</div>{newMasterDraft.nudgeEnabled && <div className="space-y-2 pt-1 border-t border-amber-200/70 dark:border-amber-700/50 text-xs"><div className="flex items-center gap-1.5 flex-wrap"><span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider mr-1">Quick Presets:</span>{QUICK_NUDGE_TIME_PRESETS.map(preset => <button key={preset.time} type="button" onClick={() => setNewMasterDraft(prev => ({ ...prev, nudgeTime: preset.time, nudgeWindow: preset.window, nudgeMessage: prev.nudgeMessage || `Friendly reminder: please ${prev.task || "complete this chore"} (${preset.display})! ⏰` }))} className={`px-2 py-1 rounded-lg text-[10px] font-bold transition border ${newMasterDraft.nudgeTime === preset.time ? "bg-amber-600 text-white border-amber-700 shadow-xs" : "bg-white dark:bg-slate-900 text-amber-900 dark:text-amber-200 border-amber-200 dark:border-amber-700/60 hover:bg-amber-100/70 dark:hover:bg-amber-950/60"}`}>{preset.label} ({preset.display})</button>)}</div><div className="grid grid-cols-1 sm:grid-cols-2 gap-2"><div><label className="block text-[10px] font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wider mb-1">Target Time Window (shown on kid's chore card)</label><input type="text" value={newMasterDraft.nudgeWindow || ""} onChange={e => setNewMasterDraft(prev => ({ ...prev, nudgeWindow: e.target.value }))} placeholder="e.g. After School (3:30 – 5:30 PM), Before Supper..." className="w-full px-2.5 py-1 text-xs bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 rounded-lg text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium" /></div><div><label className="block text-[10px] font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wider mb-1">Custom Nudge Message / Prompt</label><input type="text" value={newMasterDraft.nudgeMessage || ""} onChange={e => setNewMasterDraft(prev => ({ ...prev, nudgeMessage: e.target.value }))} placeholder="e.g. Friendly reminder to empty the dishwasher before supper! 🍽️" className="w-full px-2.5 py-1 text-xs bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 rounded-lg text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium" /></div></div></div>}</div></div><div className="flex justify-end gap-2 pt-2 border-t border-indigo-200 dark:border-indigo-800/70"><button type="button" onClick={() => setShowInlineAddForm(false)} className="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition">Cancel</button><button type="button" onClick={() => handleAddNewMasterChore({ ...newMasterDraft, rotationGroup: newMasterDraft.rotationGroup === "All Non-Casual" ? "Non-Casual" : newMasterDraft.rotationGroup })} disabled={!newMasterDraft.task.trim()} className="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm disabled:opacity-40 transition flex items-center gap-1.5"><Plus className="w-3.5 h-3.5" /><span>Add Chore to Master List</span></button></div></div>}<div className="grid grid-cols-2 sm:grid-cols-4 gap-3"><div className="p-3 bg-slate-50 dark:bg-slate-800/70 rounded-xl border border-slate-200 dark:border-slate-700"><span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total Template Chores</span><div className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">{hubMasterChores.length}{" Tasks"}</div><span className="text-[11px] text-slate-500 dark:text-slate-400">All registered tasks</span></div><div className="p-3 bg-blue-50/70 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-800/60"><span className="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider block">Daily Chores</span><div className="text-xl font-bold text-blue-900 dark:text-white mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("daily")).length}{" Tasks"}</div><span className="text-[11px] text-blue-600 dark:text-blue-300/80">Mon – Sun rotation</span></div><div className="p-3 bg-purple-50/70 dark:bg-purple-950/40 rounded-xl border border-purple-200 dark:border-purple-800/60"><span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 uppercase tracking-wider block">Once a Week</span><div className="text-xl font-bold text-purple-900 dark:text-white mt-0.5">{hubMasterChores.filter(c => { const f = (c.frequency || "").toLowerCase(); return (f.includes("weekly") || f.includes("once")) && !f.includes("bi"); }).length}{" Tasks"}</div><span className="text-[11px] text-purple-600 dark:text-purple-300/80">Saturday & Sunday deep tasks</span></div><div className="p-3 bg-amber-50/70 dark:bg-amber-950/40 rounded-xl border border-amber-200 dark:border-amber-800/60"><span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider block">Bi-Weekly Tasks</span><div className="text-xl font-bold text-amber-900 dark:text-white mt-0.5">{hubMasterChores.filter(c => c.frequency.toLowerCase().includes("bi-weekly") || c.frequency.toLowerCase().includes("biweekly")).length}{" Tasks"}</div><span className="text-[11px] text-amber-700 dark:text-amber-300/80">Split Curbside Recycling & Waste</span></div></div><div className="pt-2 space-y-3"><div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div className="relative flex-1 max-w-md"><Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" /><input type="text" placeholder="Search chores by name, category, group, or notes..." value={masterSearchQuery} onChange={e => setMasterSearchQuery(e.target.value)} className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:bg-white dark:focus:bg-slate-950 focus:ring-1 focus:ring-indigo-500 placeholder:text-slate-400 dark:placeholder:text-slate-500" />{masterSearchQuery && <button onClick={() => setMasterSearchQuery("")} className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white"><X className="w-3.5 h-3.5" /></button>}</div><div className="flex items-center gap-1.5 text-xs flex-wrap"><span className="text-slate-500 dark:text-slate-400 font-semibold mr-1">Frequency:</span><button onClick={() => setMasterFrequencyFilter("ALL")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "ALL" ? "bg-slate-900 dark:bg-indigo-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"}`}>All</button><button onClick={() => setMasterFrequencyFilter("Daily")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Daily" ? "bg-blue-600 text-white" : "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60"}`}>Daily</button><button onClick={() => setMasterFrequencyFilter("Once a Week")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Once a Week" ? "bg-purple-600 text-white" : "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60"}`}>Weekly</button><button onClick={() => setMasterFrequencyFilter("Bi-Weekly")} className={`px-2.5 py-1 rounded-md font-semibold transition ${masterFrequencyFilter === "Bi-Weekly" ? "bg-amber-600 text-white" : "bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60"}`}>Bi-Weekly</button></div></div><div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs"><span className="text-slate-400 font-semibold mr-1 shrink-0">Category:</span><button onClick={() => setMasterCategoryFilter("ALL")} className={`px-2.5 py-1 rounded-full font-semibold shrink-0 transition ${masterCategoryFilter === "ALL" ? "bg-slate-800 dark:bg-indigo-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"}`}>All Categories ({hubMasterChores.length})</button>{CHORE_CATEGORIES.map(cat => {
             const count = hubMasterChores.filter(c => c.category.toLowerCase() === cat.name.toLowerCase()).length;
-            return <button key={cat.id} onClick={() => setMasterCategoryFilter(cat.name)} className={`px-2.5 py-1 rounded-full font-semibold shrink-0 transition flex items-center gap-1.5 border ${masterCategoryFilter === cat.name ? "ring-2 ring-slate-800 shadow-xs" : "opacity-85 hover:opacity-100"} ${cat.bg} ${cat.text} ${cat.border}`}><span>{cat.icon}</span><span>{cat.name}</span><span className="text-[10px] opacity-75">({count})</span></button>;
-          })}</div></div><div className="overflow-x-auto min-w-0 border border-slate-200 rounded-xl shadow-2xs"><table className="w-full text-left text-xs min-w-[650px]"><thead className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3 w-10 text-center">#</th><th className="p-3">Chore / Task</th><th className="p-3">Category</th><th className="p-3">Frequency</th><th className="p-3">Target Day(s)</th><th className="p-3">Rotation Group</th><th className="p-3">Auto-Nudge ⏰</th><th className="p-3 text-right">Actions</th></tr></thead><tbody>{filteredMasterChores.map((ch, idx) => {
+            return <button key={cat.id} onClick={() => setMasterCategoryFilter(cat.name)} className={`px-2.5 py-1 rounded-full font-semibold shrink-0 transition flex items-center gap-1.5 border ${masterCategoryFilter === cat.name ? "ring-2 ring-slate-800 dark:ring-white shadow-xs" : "opacity-85 hover:opacity-100"} ${cat.bg} ${cat.text} ${cat.border}`}><span>{cat.icon}</span><span>{cat.name}</span><span className="text-[10px] opacity-75">({count})</span></button>;
+          })}</div></div><div className="overflow-x-auto min-w-0 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xs"><table className="w-full text-left text-xs min-w-[650px]"><thead className="bg-slate-100/80 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700 font-bold uppercase text-[10px] tracking-wider"><tr><th className="p-3 w-10 text-center">#</th><th className="p-3">Chore / Task</th><th className="p-3">Category</th><th className="p-3">Frequency</th><th className="p-3">Target Day(s)</th><th className="p-3">Rotation Group</th><th className="p-3">Auto-Nudge ⏰</th><th className="p-3 text-right">Actions</th></tr></thead><tbody>{filteredMasterChores.map((ch, idx) => {
             const isEditing = editingMasterIndex === ch.index_;
             const catConfig = CHORE_CATEGORIES.find(c => c.name.toLowerCase() === (ch.category || "").toLowerCase()) || CHORE_CATEGORIES[3];
             const draftCatConfig = isEditing && (masterInlineDraft == null ? void 0 : masterInlineDraft.category)
@@ -8117,21 +8117,21 @@ function App({
 
             if (isEditing) {
               return (
-                <tr key={`edit-${ch.index_ || ch.task}-${idx}`} className="border-y-2 border-indigo-500 bg-indigo-50/70 shadow-xs">
+                <tr key={`edit-${ch.index_ || ch.task}-${idx}`} className="border-y-2 border-indigo-500 bg-indigo-50/70 dark:bg-indigo-950/40 shadow-xs">
                   <td colSpan={8} className="p-4 sm:p-5">
                     <div className="space-y-3.5 max-w-4xl">
                       {/* Header */}
-                      <div className="flex items-center justify-between pb-2.5 border-b border-indigo-200">
+                      <div className="flex items-center justify-between pb-2.5 border-b border-indigo-200 dark:border-indigo-800/70">
                         <div className="flex items-center gap-2">
                           <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">
                             {idx + 1}
                           </span>
                           <div>
-                            <div className="text-sm font-bold text-indigo-950 flex items-center gap-1.5">
-                              <Pen className="w-3.5 h-3.5 text-indigo-600" />
-                              <span>Editing Master Chore: <span className="underline decoration-indigo-300">{ch.task}</span></span>
+                            <div className="text-sm font-bold text-indigo-950 dark:text-white flex items-center gap-1.5">
+                              <Pen className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                              <span>Editing Master Chore: <span className="underline decoration-indigo-300 dark:decoration-indigo-500">{ch.task}</span></span>
                             </div>
-                            <p className="text-[11px] text-slate-500">Configure chore details, cadence, rotation, and auto-nudges</p>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400">Configure chore details, cadence, rotation, and auto-nudges</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -8142,7 +8142,7 @@ function App({
                               setEditingMasterIndex(null);
                               setMasterInlineDraft(null);
                             }}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition cursor-pointer"
+                            className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
                           >
                             Cancel (Esc)
                           </button>
@@ -8161,7 +8161,7 @@ function App({
                       {/* Form Grid */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                         <div className="md:col-span-2">
-                          <label className="block font-bold text-slate-700 mb-1">
+                          <label className="block font-bold text-slate-700 dark:text-slate-200 mb-1">
                             Chore Task Description <span className="text-rose-500">*</span>
                           </label>
                           <input
@@ -8177,16 +8177,16 @@ function App({
                               }
                             }}
                             placeholder="e.g. Empty dishwasher, sweep porch..."
-                            className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             autoFocus
                           />
                         </div>
                         <div>
-                          <label className="block font-bold text-slate-700 mb-1">Category</label>
+                          <label className="block font-bold text-slate-700 dark:text-slate-200 mb-1">Category</label>
                           <select
                             value={draftCatConfig.name}
                             onChange={e => setMasterInlineDraft(prev => ({ ...prev, category: e.target.value }))}
-                            className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                            className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
                           >
                             {CHORE_CATEGORIES.map(c => (
                               <option key={c.id} value={c.name}>{c.icon} {c.name}</option>
@@ -8194,7 +8194,7 @@ function App({
                           </select>
                         </div>
                         <div>
-                          <label className="block font-bold text-slate-700 mb-1">Frequency</label>
+                          <label className="block font-bold text-slate-700 dark:text-slate-200 mb-1">Frequency</label>
                           <select
                             value={draftFreqVal}
                             onChange={e => {
@@ -8210,7 +8210,7 @@ function App({
                                 customTargetText: nextParsed.customText
                               }));
                             }}
-                            className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                            className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
                           >
                             <option value="Daily">Daily</option>
                             <option value="Once a Week">Once a Week</option>
@@ -8218,25 +8218,25 @@ function App({
                           </select>
                         </div>
                         <div>
-                          <label className="block font-bold text-slate-700 mb-1">Target Day(s)</label>
+                          <label className="block font-bold text-slate-700 dark:text-slate-200 mb-1">Target Day(s)</label>
                           <div className="relative">
                             <button
                               type="button"
                               onClick={() => setOpenTargetDayDropdown(isTargetDayOpen ? null : ch.index_)}
-                              className="w-full flex items-center justify-between gap-2 text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 hover:border-indigo-400 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                              className="w-full flex items-center justify-between gap-2 text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium text-slate-800 dark:text-white hover:border-indigo-400 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500"
                             >
                               <span className="truncate">{formatTargetDayState(draftSelectedDays, draftCustomEnabled, draftCustomText)}</span>
-                              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${isTargetDayOpen ? "rotate-180 text-indigo-600" : ""}`} />
+                              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${isTargetDayOpen ? "rotate-180 text-indigo-600 dark:text-indigo-400" : ""}`} />
                             </button>
                             {isTargetDayOpen && (
                               <>
                                 <div className="fixed inset-0 z-20" onClick={() => setOpenTargetDayDropdown(null)} />
-                                <div className="absolute left-0 top-full mt-1 z-30 w-60 bg-white rounded-xl border border-slate-200 shadow-xl p-2 space-y-1">
-                                  <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">Select Day(s)</div>
+                                <div className="absolute left-0 top-full mt-1 z-30 w-60 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl p-2 space-y-1">
+                                  <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">Select Day(s)</div>
                                   {ALL_WEEK_DAYS.map(dayName => {
                                     const isChecked = draftSelectedDays.includes(dayName);
                                     return (
-                                      <label key={dayName} className="flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-indigo-50/70 cursor-pointer select-none transition">
+                                      <label key={dayName} className="flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-indigo-50/70 dark:hover:bg-indigo-950/50 cursor-pointer select-none transition">
                                         <input
                                           type="checkbox"
                                           checked={isChecked}
@@ -8252,13 +8252,13 @@ function App({
                                               targetDay: nextTarget
                                             }));
                                           }}
-                                          className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                          className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                                         />
-                                        <span className={`text-xs ${isChecked ? "font-bold text-indigo-950" : "font-medium text-slate-700"}`}>{dayName}</span>
+                                        <span className={`text-xs ${isChecked ? "font-bold text-indigo-950 dark:text-indigo-200" : "font-medium text-slate-700 dark:text-slate-300"}`}>{dayName}</span>
                                       </label>
                                     );
                                   })}
-                                  <div className="pt-1.5 mt-1 border-t border-slate-100 space-y-1.5 px-2 pb-1">
+                                  <div className="pt-1.5 mt-1 border-t border-slate-100 dark:border-slate-800 space-y-1.5 px-2 pb-1">
                                     <label className="flex items-center gap-2.5 cursor-pointer select-none">
                                       <input
                                         type="checkbox"
@@ -8272,9 +8272,9 @@ function App({
                                             targetDay: nextTarget
                                           }));
                                         }}
-                                        className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                        className="w-3.5 h-3.5 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                                       />
-                                      <span className={`text-xs ${draftCustomEnabled ? "font-bold text-indigo-950" : "font-medium text-slate-700"}`}>Custom</span>
+                                      <span className={`text-xs ${draftCustomEnabled ? "font-bold text-indigo-950 dark:text-indigo-200" : "font-medium text-slate-700 dark:text-slate-300"}`}>Custom</span>
                                     </label>
                                     <input
                                       type="text"
@@ -8291,7 +8291,7 @@ function App({
                                       }}
                                       onKeyDown={e => { if (e.key === "Enter") { setOpenTargetDayDropdown(null); } }}
                                       placeholder="e.g. Thursday Evening..."
-                                      className="w-full px-2 py-1 text-xs text-slate-800 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                      className="w-full px-2 py-1 text-xs text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg focus:bg-white dark:focus:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                     />
                                   </div>
                                 </div>
@@ -8300,11 +8300,11 @@ function App({
                           </div>
                         </div>
                         <div>
-                          <label className="block font-bold text-slate-700 mb-1">Rotation Group</label>
+                          <label className="block font-bold text-slate-700 dark:text-slate-200 mb-1">Rotation Group</label>
                           <select
                             value={draftGroupVal}
                             onChange={e => setMasterInlineDraft(prev => ({ ...prev, rotationGroup: e.target.value }))}
-                            className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                            className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-medium text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
                           >
                             <optgroup label="Special Rotation Groups">
                               <option value="Non-Casual">Non-Casual</option>
@@ -8320,7 +8320,7 @@ function App({
                           </select>
                         </div>
                         <div className="md:col-span-3">
-                          <label className="block font-bold text-slate-700 mb-1">Operational Notes / Routine</label>
+                          <label className="block font-bold text-slate-700 dark:text-slate-200 mb-1">Operational Notes / Routine</label>
                           <input
                             type="text"
                             value={masterInlineDraft?.notes || ""}
@@ -8329,12 +8329,12 @@ function App({
                               if (e.key === "Enter") saveChoreInlineEdit();
                             }}
                             placeholder="Instructions, supplies, details or timing notes..."
-                            className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
+                            className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
                           />
                         </div>
-                        <div className="md:col-span-3 p-3 bg-amber-50/70 border border-amber-200/90 rounded-xl space-y-2.5">
+                        <div className="md:col-span-3 p-3 bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/90 dark:border-amber-700/50 rounded-xl space-y-2.5">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <label className="flex items-center gap-2 font-bold text-xs text-amber-950 cursor-pointer select-none">
+                            <label className="flex items-center gap-2 font-bold text-xs text-amber-950 dark:text-amber-200 cursor-pointer select-none">
                               <input
                                 type="checkbox"
                                 checked={Boolean(masterInlineDraft?.nudgeEnabled)}
@@ -8342,29 +8342,29 @@ function App({
                                 className="w-4 h-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
                               />
                               <span className="flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5 text-amber-600" />
+                                <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                                 <span>Enable Scheduled Auto-Nudge Reminder</span>
                               </span>
                             </label>
                             {masterInlineDraft?.nudgeEnabled && (
                               <div className="flex items-center gap-2 text-xs">
-                                <span className="font-bold text-amber-900">Reminder Time:</span>
+                                <span className="font-bold text-amber-900 dark:text-amber-300">Reminder Time:</span>
                                 <input
                                   type="time"
                                   value={masterInlineDraft?.nudgeTime || "16:30"}
                                   onChange={e => setMasterInlineDraft(prev => ({ ...prev, nudgeTime: e.target.value }))}
-                                  className="px-2 py-1 text-xs font-bold bg-white border border-amber-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                  className="px-2 py-1 text-xs font-bold bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-600/60 rounded-lg text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                                 />
-                                <span className="text-[11px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded-md">
+                                <span className="text-[11px] font-bold text-amber-800 dark:text-amber-200 bg-amber-100/80 dark:bg-amber-500/20 px-2 py-0.5 rounded-md">
                                   {formatTime24To12(masterInlineDraft?.nudgeTime || "16:30")}
                                 </span>
                               </div>
                             )}
                           </div>
                           {masterInlineDraft?.nudgeEnabled && (
-                            <div className="space-y-2 pt-1 border-t border-amber-200/70 text-xs">
+                            <div className="space-y-2 pt-1 border-t border-amber-200/70 dark:border-amber-700/50 text-xs">
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider mr-1">Quick Presets:</span>
+                                <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider mr-1">Quick Presets:</span>
                                 {QUICK_NUDGE_TIME_PRESETS.map(preset => (
                                   <button
                                     key={preset.time}
@@ -8375,7 +8375,7 @@ function App({
                                       nudgeWindow: preset.window,
                                       nudgeMessage: prev?.nudgeMessage || `Friendly reminder: please ${((masterInlineDraft == null ? void 0 : masterInlineDraft.task) || ch.task) || "complete this chore"} (${preset.display})! ⏰`
                                     }))}
-                                    className={`px-2 py-1 rounded-lg text-[10px] font-bold transition border cursor-pointer ${masterInlineDraft?.nudgeTime === preset.time ? "bg-amber-600 text-white border-amber-700 shadow-xs" : "bg-white text-amber-900 border-amber-200 hover:bg-amber-100/70"}`}
+                                    className={`px-2 py-1 rounded-lg text-[10px] font-bold transition border cursor-pointer ${masterInlineDraft?.nudgeTime === preset.time ? "bg-amber-600 text-white border-amber-700 shadow-xs" : "bg-white dark:bg-slate-900 text-amber-900 dark:text-amber-200 border-amber-200 dark:border-amber-700/60 hover:bg-amber-100/70 dark:hover:bg-amber-950/60"}`}
                                   >
                                     {preset.label} ({preset.display})
                                   </button>
@@ -8383,7 +8383,7 @@ function App({
                               </div>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <div>
-                                  <label className="block text-[10px] font-bold text-amber-900 uppercase tracking-wider mb-1">
+                                  <label className="block text-[10px] font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wider mb-1">
                                     Target Time Window (shown on kid's chore card)
                                   </label>
                                   <input
@@ -8391,11 +8391,11 @@ function App({
                                     value={masterInlineDraft?.nudgeWindow || ""}
                                     onChange={e => setMasterInlineDraft(prev => ({ ...prev, nudgeWindow: e.target.value }))}
                                     placeholder="e.g. After School (3:30 – 5:30 PM), Before Supper..."
-                                    className="w-full px-2.5 py-1 text-xs bg-white border border-amber-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
+                                    className="w-full px-2.5 py-1 text-xs bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 rounded-lg text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
                                   />
                                 </div>
                                 <div>
-                                  <label className="block text-[10px] font-bold text-amber-900 uppercase tracking-wider mb-1">
+                                  <label className="block text-[10px] font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wider mb-1">
                                     Custom Nudge Message / Prompt
                                   </label>
                                   <input
@@ -8403,7 +8403,7 @@ function App({
                                     value={masterInlineDraft?.nudgeMessage || ""}
                                     onChange={e => setMasterInlineDraft(prev => ({ ...prev, nudgeMessage: e.target.value }))}
                                     placeholder="e.g. Friendly reminder to empty the dishwasher before supper! 🍽️"
-                                    className="w-full px-2.5 py-1 text-xs bg-white border border-amber-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
+                                    className="w-full px-2.5 py-1 text-xs bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-700/60 rounded-lg text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium"
                                   />
                                 </div>
                               </div>
@@ -8413,14 +8413,14 @@ function App({
                       </div>
 
                       {/* Footer Controls */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-indigo-200">
-                        <div className="flex items-center gap-1.5 text-slate-500 text-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-indigo-200 dark:border-indigo-800/70">
+                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-xs">
                           <span className="text-[11px] font-medium">Reorder:</span>
                           <button
                             type="button"
                             onClick={() => handleMoveChore(ch, "up")}
                             disabled={idx === 0}
-                            className="p-1 text-slate-600 hover:text-indigo-600 hover:bg-white rounded border border-slate-200 disabled:opacity-20 transition cursor-pointer"
+                            className="p-1 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 disabled:opacity-20 transition cursor-pointer"
                             title="Move chore up"
                           >
                             <ArrowUp className="w-3.5 h-3.5" />
@@ -8429,16 +8429,16 @@ function App({
                             type="button"
                             onClick={() => handleMoveChore(ch, "down")}
                             disabled={idx === filteredMasterChores.length - 1}
-                            className="p-1 text-slate-600 hover:text-indigo-600 hover:bg-white rounded border border-slate-200 disabled:opacity-20 transition cursor-pointer"
+                            className="p-1 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 disabled:opacity-20 transition cursor-pointer"
                             title="Move chore down"
                           >
                             <ArrowDown className="w-3.5 h-3.5" />
                           </button>
-                          <span className="text-slate-300 mx-1">|</span>
+                          <span className="text-slate-300 dark:text-slate-700 mx-1">|</span>
                           <button
                             type="button"
                             onClick={() => handleDeleteMasterChore(ch.index_, ch.task)}
-                            className="text-rose-600 hover:text-rose-800 text-[11px] font-semibold flex items-center gap-1 hover:underline ml-1 cursor-pointer"
+                            className="text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 text-[11px] font-semibold flex items-center gap-1 hover:underline ml-1 cursor-pointer"
                           >
                             <Trash2 className="w-3 h-3" />
                             <span>Delete chore</span>
@@ -8452,7 +8452,7 @@ function App({
                               setEditingMasterIndex(null);
                               setMasterInlineDraft(null);
                             }}
-                            className="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200 transition cursor-pointer"
+                            className="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer"
                           >
                             Cancel
                           </button>
@@ -8475,12 +8475,12 @@ function App({
 
             return (
               <React.Fragment key={`${ch.index_ || ch.task}-${idx}`}>
-                <tr className={`transition ${idx > 0 ? "border-t border-slate-200" : ""} hover:bg-slate-50/70`}>
+                <tr className={`transition ${idx > 0 ? "border-t border-slate-200 dark:border-slate-800" : ""} hover:bg-slate-50/70 dark:hover:bg-slate-800/50`}>
                   <td className="px-3 pt-3 pb-1.5 text-center align-middle">
-                    <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 font-bold inline-flex items-center justify-center text-[10px]">{idx + 1}</span>
+                    <span className="w-5 h-5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold inline-flex items-center justify-center text-[10px]">{idx + 1}</span>
                   </td>
-                  <td className="px-3 pt-3 pb-1.5 font-semibold text-slate-800 min-w-[180px] align-middle">
-                    <span className="font-bold text-slate-900 leading-snug">{ch.task}</span>
+                  <td className="px-3 pt-3 pb-1.5 font-semibold text-slate-800 dark:text-slate-100 min-w-[180px] align-middle">
+                    <span className="font-bold text-slate-900 dark:text-white leading-snug">{ch.task}</span>
                   </td>
                   <td className="px-3 pt-3 pb-1.5 align-middle">
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold text-[11px] border ${catConfig.bg} ${catConfig.text} ${catConfig.border}`}>
@@ -8489,39 +8489,39 @@ function App({
                     </span>
                   </td>
                   <td className="px-3 pt-3 pb-1.5 align-middle">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg font-bold text-[11px] border ${freqVal === "Bi-Weekly" ? "bg-amber-50 text-amber-800 border-amber-200" : freqVal === "Daily" ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-purple-50 text-purple-700 border-purple-200"}`}>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg font-bold text-[11px] border ${freqVal === "Bi-Weekly" ? "bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-700/60" : freqVal === "Daily" ? "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700/60" : "bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700/60"}`}>
                       {freqVal}
                     </span>
                   </td>
                   <td className="px-3 pt-3 pb-1.5 align-middle">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-semibold text-[11px] bg-slate-100 text-slate-800 border border-slate-200">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg font-semibold text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
                       {currentTargetDay}
                     </span>
                   </td>
                   <td className="px-3 pt-3 pb-1.5 align-middle">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg font-bold text-[11px] border ${groupVal === "Non-Casual" ? "bg-purple-50 text-purple-800 border-purple-200" : groupVal === "Kids" ? "bg-indigo-50 text-indigo-800 border-indigo-200" : groupVal === "Parents" ? "bg-amber-100 text-amber-900 border-amber-300" : groupVal === "All" ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-sky-50 text-sky-800 border-sky-200"}`}>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg font-bold text-[11px] border ${groupVal === "Non-Casual" ? "bg-purple-50 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-700/60" : groupVal === "Kids" ? "bg-indigo-50 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700/60" : groupVal === "Parents" ? "bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-700/60" : groupVal === "All" ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700/60" : "bg-sky-50 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300 border-sky-200 dark:border-sky-700/60"}`}>
                       {groupVal}
                     </span>
                   </td>
                   <td className="px-3 pt-3 pb-1.5 align-middle">
                     {nudgeRule?.enabled ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold text-[11px] bg-amber-50 text-amber-900 border border-amber-200" title={`Auto-nudge at ${formatTime24To12(nudgeRule.time)}`}>
-                        <Clock className="w-3.5 h-3.5 text-amber-600" />
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold text-[11px] bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-700/60" title={`Auto-nudge at ${formatTime24To12(nudgeRule.time)}`}>
+                        <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                         <span>{formatTime24To12(nudgeRule.time)}</span>
                         {nudgeRule.targetWindow ? (
-                          <span className="text-[10px] text-amber-700/80 font-normal hidden lg:inline">({nudgeRule.targetWindow})</span>
+                          <span className="text-[10px] text-amber-700/80 dark:text-amber-300/80 font-normal hidden lg:inline">({nudgeRule.targetWindow})</span>
                         ) : null}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium text-slate-400 bg-slate-50 border border-slate-200/60">Off</span>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800/70 border border-slate-200/60 dark:border-slate-700">Off</span>
                     )}
                   </td>
                   <td className="px-3 pt-3 pb-1.5 text-right whitespace-nowrap align-middle">
                     <div className="inline-flex items-center justify-end gap-1">
-                      <button type="button" onClick={() => handleMoveChore(ch, "up")} disabled={idx === 0} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-20 rounded-lg transition cursor-pointer" title="Move chore up">
+                      <button type="button" onClick={() => handleMoveChore(ch, "up")} disabled={idx === 0} className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 disabled:opacity-20 rounded-lg transition cursor-pointer" title="Move chore up">
                         <ArrowUp className="w-3.5 h-3.5" />
                       </button>
-                      <button type="button" onClick={() => handleMoveChore(ch, "down")} disabled={idx === filteredMasterChores.length - 1} className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 disabled:opacity-20 rounded-lg transition cursor-pointer" title="Move chore down">
+                      <button type="button" onClick={() => handleMoveChore(ch, "down")} disabled={idx === filteredMasterChores.length - 1} className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 disabled:opacity-20 rounded-lg transition cursor-pointer" title="Move chore down">
                         <ArrowDown className="w-3.5 h-3.5" />
                       </button>
                       <button
@@ -8547,30 +8547,30 @@ function App({
                             nudgeMessage: existingRule?.message || ""
                           });
                         }}
-                        className="p-1.5 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition cursor-pointer"
+                        className="p-1.5 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-lg transition cursor-pointer"
                         title={`Edit ${ch.task}`}
                       >
                         <Pen className="w-3.5 h-3.5" />
                       </button>
-                      <button type="button" onClick={() => handleDeleteMasterChore(ch.index_, ch.task)} className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition cursor-pointer" title={`Remove "${ch.task}"`}>
+                      <button type="button" onClick={() => handleDeleteMasterChore(ch.index_, ch.task)} className="p-1.5 text-rose-500 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg transition cursor-pointer" title={`Remove "${ch.task}"`}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </td>
                 </tr>
-                <tr className="hover:bg-slate-50/70">
+                <tr className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50">
                   <td className="px-3 pb-3 pt-0" />
                   <td colSpan={7} className="px-3 pb-3 pt-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-slate-50/90 border border-slate-200/80 text-[11px] text-slate-600 leading-snug">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3 py-1.5 rounded-lg bg-slate-50/90 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 text-[11px] text-slate-600 dark:text-slate-300 leading-snug">
                       <div>
-                        <span className="font-bold text-slate-700">Instructions / Notes:</span>{" "}
-                        {ch.notes || <span className="italic text-slate-400">No instructions</span>}
+                        <span className="font-bold text-slate-700 dark:text-slate-200">Instructions / Notes:</span>{" "}
+                        {ch.notes || <span className="italic text-slate-400 dark:text-slate-500">No instructions</span>}
                       </div>
                       {nudgeRule?.enabled && (
-                        <div className="flex items-center gap-1.5 text-amber-800 shrink-0 text-[11px] font-medium bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/60">
-                          <Clock className="w-3 h-3 text-amber-600" />
+                        <div className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300 shrink-0 text-[11px] font-medium bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-700/60">
+                          <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
                           <span>Auto-Nudge: <strong>{formatTime24To12(nudgeRule.time)}</strong></span>
-                          {nudgeRule.targetWindow && <span className="text-amber-700/80">({nudgeRule.targetWindow})</span>}
+                          {nudgeRule.targetWindow && <span className="text-amber-700/80 dark:text-amber-300/80">({nudgeRule.targetWindow})</span>}
                         </div>
                       )}
                     </div>
@@ -8578,7 +8578,7 @@ function App({
                 </tr>
               </React.Fragment>
             );
-          })}</tbody></table>{filteredMasterChores.length === 0 && <div className="p-8 text-center bg-white text-slate-500"><ListTodo className="w-8 h-8 text-slate-300 mx-auto mb-2" /><p className="font-semibold">No chores match the current filters</p>{hubMasterChores.length === 0 ? <button onClick={() => setShowInlineAddForm(true)} className="mt-3 text-xs font-bold px-3 py-1.5 bg-indigo-600 text-white rounded-lg">Add First Chore</button> : <button onClick={() => { setMasterCategoryFilter("ALL"); setMasterFrequencyFilter("ALL"); setMasterSearchQuery(""); }} className="mt-3 text-xs font-bold px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg">Reset Filters</button>}</div>}</div></div></div></div>}</main>{activeDayModal && <div className="modal-safe-area fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-full"><div className="p-3.5 sm:p-4 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0"><div className="flex items-center gap-2 min-w-0"><button type="button" onClick={() => {
+          })}</tbody></table>{filteredMasterChores.length === 0 && <div className="p-8 text-center bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400"><ListTodo className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" /><p className="font-semibold text-slate-700 dark:text-slate-200">No chores match the current filters</p>{hubMasterChores.length === 0 ? <button onClick={() => setShowInlineAddForm(true)} className="mt-3 text-xs font-bold px-3 py-1.5 bg-indigo-600 text-white rounded-lg">Add First Chore</button> : <button onClick={() => { setMasterCategoryFilter("ALL"); setMasterFrequencyFilter("ALL"); setMasterSearchQuery(""); }} className="mt-3 text-xs font-bold px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg">Reset Filters</button>}</div>}</div></div></div></div>}</main>{activeDayModal && <div className="modal-safe-area fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"><div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-full"><div className="p-3.5 sm:p-4 bg-slate-900 text-white flex items-center justify-between gap-2 shrink-0"><div className="flex items-center gap-2 min-w-0"><button type="button" onClick={() => {
             const p = parseDateKey(activeDayModal);
             if (!p) return;
             const prevD = new Date(p.year, p.month, p.day - 1);

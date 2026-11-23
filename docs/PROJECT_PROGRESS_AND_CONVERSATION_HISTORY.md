@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-23 15:24:00
+> **Export Date**: 2026-11-23 15:36:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,10 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Full System / Dark / Light Theme Audit & Parity Across All Modals & Drawers** (index.html, src/ParentInspectionModal.tsx, src/AllowanceLedgerModal.tsx, src/HouseholdActivityDrawer.tsx, src/InviteModal.tsx, src/FirebaseSettingsModal.tsx, src/InstallPwaModal.tsx, src/KidPairingScreen.tsx):
+1. **Master Chores Template & Registry Dark-Mode & Contrast Fix** (weekly_chores_household_hub.tsx):
+   - Fixed invisible dark-on-dark chore task text (`text-slate-900` → `dark:text-white`) and added full `dark:` theme parity across the Master Chores summary stat cards, search input, frequency/category filter pills, table header, rows, badges, instructions/notes sub-rows, empty state, and inline Add/Edit Master Chore forms.
+
+2. **Full System / Dark / Light Theme Audit & Parity Across All Modals & Drawers** (index.html, src/ParentInspectionModal.tsx, src/AllowanceLedgerModal.tsx, src/HouseholdActivityDrawer.tsx, src/InviteModal.tsx, src/FirebaseSettingsModal.tsx, src/InstallPwaModal.tsx, src/KidPairingScreen.tsx):
    - Audited all UI components for hardcoded light-only surfaces (`bg-white`, `bg-slate-50`, `text-slate-900`, `border-slate-200`) and added full `dark:` Tailwind classes across **Sunday Inspection (`ParentInspectionModal`)**, **Allowance Ledger (`AllowanceLedgerModal`)**, **Live Activity Drawer (`HouseholdActivityDrawer`)**, **Device Pairing (`InviteModal`)**, **Firebase Cloud Sync (`FirebaseSettingsModal`)**, **Install PWA (`InstallPwaModal`)**, and **Kid Pairing Screen (`KidPairingScreen`)**.
    - Added `color-scheme: dark` / `color-scheme: light` rules in `index.html` so native inputs, selects, date pickers, and scrollbars match System, Dark, and Light theme preferences automatically.
 
@@ -5841,4 +5844,20 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   - `src/InstallPwaModal.tsx` (**Install PWA**)
   - `src/KidPairingScreen.tsx` (**Kid Pairing**)
 - Added `color-scheme: dark` / `color-scheme: light` to `index.html` so native inputs, `<select>` dropdowns, and scrollbars also follow System/Dark/Light mode.
+- Built APK, installed on Pixel (`47171FDAP000A2`), redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and pushed to `origin/main`.
+
+
+---
+
+### Turn 220
+**Date / Time**: 2026-11-23T15:36:00-06:00
+
+**User Request**:
+> Check the Master Chores Template & Registry. There are still some light-themed elements and some of the font is now not visible because of the dark background. Take a screenshot if you'd like.
+
+**Assistant Response**:
+- Fixed dark-mode text contrast and light-only surfaces throughout the **Master Chores Template & Registry** in `weekly_chores_household_hub.tsx`:
+  - Chore task titles (`text-slate-900 dark:text-white`), row number pills, frequency/target-day/rotation-group/auto-nudge badges, and Instructions/Notes sub-rows.
+  - All 4 summary stat cards (**Total Template Chores**, **Daily Chores**, **Once a Week**, **Bi-Weekly Tasks**), search box, frequency/category filter pills, table header, and empty state.
+  - Both the inline **Add New Master Chore** form and the inline **Edit Master Chore** row form (including Target Day checkbox dropdown and Auto-Nudge controls).
 - Built APK, installed on Pixel (`47171FDAP000A2`), redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and pushed to `origin/main`.

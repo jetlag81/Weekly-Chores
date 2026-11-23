@@ -41,12 +41,21 @@ public class ContactPickerPlugin extends Plugin {
 
     @PermissionCallback
     private void contactsPermsCallback(PluginCall call) {
-        // Launch picker even if READ_CONTACTS was denied (name & phone still work via ACTION_PICK grant)
         launchContactPicker(call);
     }
 
     private void launchContactPicker(PluginCall call) {
-        Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
+        boolean hasContactsPerm =
+            ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_CONTACTS)
+                == PackageManager.PERMISSION_GRANTED;
+
+        // Use Contacts.CONTENT_URI for a clean 1-row-per-person list when READ_CONTACTS is granted;
+        // fallback to Phone.CONTENT_URI only if permission was denied.
+        Uri pickerUri = hasContactsPerm
+            ? ContactsContract.Contacts.CONTENT_URI
+            : ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
+
+        Intent intent = new Intent(Intent.ACTION_PICK, pickerUri);
         startActivityForResult(call, intent, "handleContactResult");
     }
 
@@ -61,63 +70,112 @@ public class ContactPickerPlugin extends Plugin {
         }
 
         Uri contactUri = result.getData().getData();
-        String[] projection = new String[] {
-            ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
-            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-            ContactsContract.CommonDataKinds.Phone.NUMBER
-        };
+        boolean hasContactsPerm =
+            ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_CONTACTS)
+                == PackageManager.PERMISSION_GRANTED;
 
-        try (Cursor cursor = getContext().getContentResolver().query(contactUri, projection, null, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) {
-                int idIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID);
-                int nameIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
-                int numIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+        String contactId = null;
+        String name = "";
+        String phone = "";
+        String email = "";
 
-                String contactId = idIdx >= 0 ? cursor.getString(idIdx) : null;
-                String name = nameIdx >= 0 ? cursor.getString(nameIdx) : "";
-                String phone = numIdx >= 0 ? cursor.getString(numIdx) : "";
-                String email = "";
-
-                if (
-                    contactId != null &&
-                    ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_CONTACTS)
-                        == PackageManager.PERMISSION_GRANTED
-                ) {
-                    try (
-                        Cursor emailCursor = getContext().getContentResolver().query(
-                            ContactsContract.CommonDataKinds.Email.CONTENT_URI,
-                            new String[] { ContactsContract.CommonDataKinds.Email.ADDRESS },
-                            ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
-                            new String[] { contactId },
-                            null
-                        )
-                    ) {
-                        if (emailCursor != null && emailCursor.moveToFirst()) {
-                            int emailIdx = emailCursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS);
-                            if (emailIdx >= 0) {
-                                String found = emailCursor.getString(emailIdx);
-                                if (found != null) {
-                                    email = found.trim();
-                                }
-                            }
-                        }
-                    } catch (Exception ignored) {
-                        // Gracefully omit email if unavailable
-                    }
+        if (hasContactsPerm && contactUri.toString().contains("/contacts/")) {
+            String[] contactProj = new String[] {
+                ContactsContract.Contacts._ID,
+                ContactsContract.Contacts.DISPLAY_NAME
+            };
+            try (Cursor cursor = getContext().getContentResolver().query(contactUri, contactProj, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int idIdx = cursor.getColumnIndex(ContactsContract.Contacts._ID);
+                    int nameIdx = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME);
+                    contactId = idIdx >= 0 ? cursor.getString(idIdx) : null;
+                    name = nameIdx >= 0 && cursor.getString(nameIdx) != null ? cursor.getString(nameIdx).trim() : "";
                 }
-
-                JSObject ret = new JSObject();
-                ret.put("name", name != null ? name.trim() : "");
-                ret.put("phoneNumber", phone != null ? phone.trim() : "");
-                ret.put("email", email);
-                call.resolve(ret);
+            } catch (Exception e) {
+                call.reject("Failed to read contact: " + e.getMessage());
                 return;
             }
-        } catch (Exception e) {
-            call.reject("Failed to read selected contact: " + e.getMessage());
-            return;
+
+            if (contactId != null) {
+                // Query phone numbers and prefer Mobile over Home/Work/Other
+                String bestPhone = "";
+                int bestPriority = Integer.MAX_VALUE;
+                try (
+                    Cursor phoneCursor = getContext().getContentResolver().query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        new String[] {
+                            ContactsContract.CommonDataKinds.Phone.NUMBER,
+                            ContactsContract.CommonDataKinds.Phone.TYPE
+                        },
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                        new String[] { contactId },
+                        null
+                    )
+                ) {
+                    if (phoneCursor != null) {
+                        int numIdx = phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+                        int typeIdx = phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE);
+                        while (phoneCursor.moveToNext()) {
+                            String candidate = numIdx >= 0 ? phoneCursor.getString(numIdx) : null;
+                            if (candidate == null || candidate.trim().isEmpty()) continue;
+                            int type = typeIdx >= 0 ? phoneCursor.getInt(typeIdx) : ContactsContract.CommonDataKinds.Phone.TYPE_OTHER;
+                            int priority = (type == ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE) ? 0
+                                : (type == ContactsContract.CommonDataKinds.Phone.TYPE_MAIN) ? 1
+                                : (type == ContactsContract.CommonDataKinds.Phone.TYPE_HOME) ? 2
+                                : 3;
+                            if (priority < bestPriority) {
+                                bestPriority = priority;
+                                bestPhone = candidate.trim();
+                                if (priority == 0) break;
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+                phone = bestPhone;
+
+                // Query primary email
+                try (
+                    Cursor emailCursor = getContext().getContentResolver().query(
+                        ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                        new String[] { ContactsContract.CommonDataKinds.Email.ADDRESS },
+                        ContactsContract.CommonDataKinds.Email.CONTACT_ID + " = ?",
+                        new String[] { contactId },
+                        null
+                    )
+                ) {
+                    if (emailCursor != null && emailCursor.moveToFirst()) {
+                        int emailIdx = emailCursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS);
+                        if (emailIdx >= 0 && emailCursor.getString(emailIdx) != null) {
+                            email = emailCursor.getString(emailIdx).trim();
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        } else {
+            // Fallback path when READ_CONTACTS was denied (Phone.CONTENT_URI picker)
+            String[] projection = new String[] {
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                ContactsContract.CommonDataKinds.Phone.NUMBER
+            };
+            try (Cursor cursor = getContext().getContentResolver().query(contactUri, projection, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int nameIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
+                    int numIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+                    name = nameIdx >= 0 && cursor.getString(nameIdx) != null ? cursor.getString(nameIdx).trim() : "";
+                    phone = numIdx >= 0 && cursor.getString(numIdx) != null ? cursor.getString(numIdx).trim() : "";
+                }
+            } catch (Exception e) {
+                call.reject("Failed to read selected contact: " + e.getMessage());
+                return;
+            }
         }
 
-        call.reject("No contact data returned");
+        JSObject ret = new JSObject();
+        ret.put("name", name);
+        ret.put("phoneNumber", phone);
+        ret.put("email", email);
+        call.resolve(ret);
     }
 }

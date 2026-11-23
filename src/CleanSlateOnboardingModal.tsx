@@ -13,6 +13,21 @@ import { Capacitor, registerPlugin } from "@capacitor/core";
 const NativeContactPicker = registerPlugin<{
   pickContact: () => Promise<{ name?: string; phoneNumber?: string; email?: string }>;
 }>("ContactPicker");
+
+const formatPhoneNumber = (raw: string): string => {
+  let digits = String(raw || "").replace(/\D/g, "");
+  if (digits.length === 11 && digits.startsWith("1")) {
+    digits = digits.slice(1);
+  } else if (digits.length > 10 && digits.startsWith("1")) {
+    digits = digits.slice(1, 11);
+  } else if (digits.length > 10) {
+    digits = digits.slice(0, 10);
+  }
+  if (digits.length === 0) return "";
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+};
 import {
   Sparkles,
   MapPin,
@@ -468,7 +483,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       setCoParentFirstName(parts[0] || "");
       setCoParentLastName(parts.slice(1).join(" ") || adminLastName.trim() || "");
     }
-    if (contact.phone) setCoParentPhone(contact.phone);
+    if (contact.phone) setCoParentPhone(formatPhoneNumber(contact.phone));
     if (contact.email) setCoParentEmail(contact.email);
     setCoParentContactNote(`Loaded "${contact.fullName || contact.phone || contact.email}" from contacts — review & tap Add Co-Parent.`);
     setCoParentMode("manual");
@@ -487,7 +502,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       setKidFirstName(parts[0] || "");
       setKidLastName(parts.slice(1).join(" ") || adminLastName.trim() || "");
     }
-    if (contact.phone) setKidPhone(contact.phone);
+    if (contact.phone) setKidPhone(formatPhoneNumber(contact.phone));
     if (contact.email) setKidEmail(contact.email);
     setKidContactNote(`Loaded "${contact.fullName || contact.phone || contact.email}" — pick their Birthday & tap Add to Household.`);
     setKidMode("manual");
@@ -1056,7 +1071,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                     <input
                       type="tel"
                       value={adminPhone}
-                      onChange={(e) => setAdminPhone(e.target.value)}
+                      onChange={(e) => setAdminPhone(formatPhoneNumber(e.target.value))}
                       placeholder="(555) 123-4567"
                       className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold focus:outline-none focus:border-indigo-500"
                     />
@@ -1337,7 +1352,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                           <input
                             type="tel"
                             value={coParentPhone}
-                            onChange={(e) => setCoParentPhone(e.target.value)}
+                            onChange={(e) => setCoParentPhone(formatPhoneNumber(e.target.value))}
                             placeholder="(555) 123-4567"
                             className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
                           />
@@ -1451,7 +1466,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                         <input
                           type="tel"
                           value={kidPhone}
-                          onChange={(e) => setKidPhone(e.target.value)}
+                          onChange={(e) => setKidPhone(formatPhoneNumber(e.target.value))}
                           placeholder="(555) 123-4567"
                           className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold"
                         />

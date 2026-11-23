@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 18:01:00
+> **Export Date**: 2026-11-22 18:16:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,11 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Cross-Platform Cloud Function Invite Service (Twilio SMS + Resend Email)** (functions/index.js, functions/package.json, firebase.json, src/inviteService.ts, src/CleanSlateOnboardingModal.tsx):
+1. **Deduplicated Android Contact Picker & Standardized `(###) ###-####` Phone Formatting** (ContactPickerPlugin.java, src/CleanSlateOnboardingModal.tsx):
+   - Switched `ContactPickerPlugin` from `Phone.CONTENT_URI` to `ContactsContract.Contacts.CONTENT_URI` when `READ_CONTACTS` is granted so Android shows 1 clean row per person instead of duplicate phone rows, automatically preferring their Mobile number and pulling Email.
+   - Added `formatPhoneNumber()` across Admin, Co-Parent, and Kid phone inputs (and imported contacts) so all numbers display uniformly as `(###) ###-####`.
+
+2. **Cross-Platform Cloud Function Invite Service (Twilio SMS + Resend Email)** (functions/index.js, functions/package.json, firebase.json, src/inviteService.ts, src/CleanSlateOnboardingModal.tsx):
    - Scaffolded Firebase Cloud Function `sendFamilyInvites` (`functions/index.js`) using Node 20 built-in `fetch` + Firebase Secrets for **Twilio SMS** and **Resend Email** (Google Play & Apple App Store compliant).
    - Added `firebase.json` covering Firestore rules, Functions (`nodejs20`), and Firebase Hosting (`dist/`).
    - Added `src/inviteService.ts` and wired Step 6 **Finish & Send Invites** to automatically dispatch invites when `VITE_INVITE_FUNCTION_URL` is configured, while keeping manual Text/Email/Copy buttons as fallback.
@@ -5509,4 +5513,17 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   1. Added [`firebase.json`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/firebase.json), [`functions/package.json`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/functions/package.json), and [`functions/index.js`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/functions/index.js) (`sendFamilyInvites` HTTPS v2 function dispatching SMS via Twilio and Email via Resend using Firebase Secret Manager).
   2. Added [`src/inviteService.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/inviteService.ts) and updated [`.env.example`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/.env.example) with `VITE_INVITE_FUNCTION_URL` and `VITE_PUBLIC_HUB_URL`.
   3. Wired Step 6 **Finish & Send Invites** in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) to automatically dispatch invites for Co-Parents & Kids 12+ when `VITE_INVITE_FUNCTION_URL` is configured, with non-blocking fallback to manual Text/Email/Copy buttons.
+- Rebuilt and installed the updated APK onto `47171FDAP000A2`.
+
+---
+
+### Turn 202
+**Date / Time**: 2026-11-22T18:16:00Z
+
+**User Prompt**:
+> The app doesn't open my contacts list very cleanly. When it opens, it displays every contact's number (work, home, mobile) on a different line, and a lot of them are the same number but in different formats (+13067412404 or (306) 741-2404 or 13067412404, etc.). Can we also standardize how the number fills the field in our app? Once populated, I want the number to be displayed like: (###) ###-####
+
+**Summary of Work Delivered**:
+- Updated [`ContactPickerPlugin.java`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/android/app/src/main/java/com/household/choreshub/ContactPickerPlugin.java) to launch Android's picker with `ContactsContract.Contacts.CONTENT_URI` (1 clean row per contact) instead of `Phone.CONTENT_URI`, then query the selected contact's phone numbers prioritizing `TYPE_MOBILE` and pulling their primary email.
+- Added `formatPhoneNumber()` in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) to strip country code `+1` / `1` and format all Admin, Co-Parent, and Kid phone numbers (both contact-imported and typed) uniformly as `(###) ###-####`.
 - Rebuilt and installed the updated APK onto `47171FDAP000A2`.

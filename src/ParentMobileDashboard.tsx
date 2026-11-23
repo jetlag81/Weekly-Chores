@@ -26,12 +26,14 @@ import {
   Gift,
   Settings,
   Camera,
-  Clock
+  Clock,
+  SlidersHorizontal
 } from "lucide-react";
 import { getChoreCanonicalKey, normalizeTaskName } from "./choreUtils";
 import { getKidRewardProfile } from "./rewardAccounts";
 import { ThemeToggle } from "./ThemeToggle";
 import { HouseholdSettingsModal, type SettingsTab } from "./HouseholdSettingsModal";
+import { HouseholdManageModal, type ManageTab } from "./HouseholdManageModal";
 import { unpairKid, broadcastLocalUpdate, subscribeToRealtimeSync } from "./firebaseSync";
 import { saveActivityEvent, playHouseholdRemoteChime } from "./activityFeed";
 import { ParentPhotoReviewModal } from "./ParentPhotoReviewModal";
@@ -102,6 +104,52 @@ interface ParentMobileDashboardProps {
   onLaunchSpotlightTour?: () => void;
   onRestoreThomPreset?: () => void;
   onRegisterDismissModal?: (fn: () => boolean) => void;
+  rosterPets?: Array<any>;
+  onAddChore?: (
+    choreName: string,
+    details: {
+      frequency: "daily" | "weekly" | "biweekly";
+      category: string;
+      defaultWho: string;
+      notes: string;
+      dayOfWeek?: number;
+    }
+  ) => void;
+  onEditChore?: (
+    choreIndex: number,
+    editData: {
+      task: string;
+      oldTask: string;
+      category: string;
+      frequency: string;
+      targetDay: string;
+      rotationGroup: string;
+      notes: string;
+    }
+  ) => void;
+  onDeleteChore?: (choreIndex: number, taskTitle: string) => void;
+  onAddMember?: (data: {
+    firstName: string;
+    lastName?: string;
+    nickname?: string;
+    birthday?: string;
+    email?: string;
+    role: "Parent" | "Kid";
+    residency: string;
+    active: boolean;
+  }) => void;
+  onUpdateMember?: (
+    rowIndex_: number,
+    patch: { name?: string; role?: string; residency?: string; active?: boolean }
+  ) => void;
+  onDeleteMember?: (rowIndex_: number, name: string) => void;
+  onOpenMemberProfile?: (memberName: string) => void;
+  onAddPet?: (name: string, type: string, routine: string, care: string, active: boolean) => void;
+  onUpdatePet?: (
+    rowIndex_: number,
+    patch: { name?: string; type?: string; routine?: string; care?: string; active?: boolean }
+  ) => void;
+  onDeletePet?: (rowIndex_: number, petName: string) => void;
 }
 
 const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -142,7 +190,18 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   onOpenCleanSlateModal,
   onLaunchSpotlightTour,
   onRestoreThomPreset,
-  onRegisterDismissModal
+  onRegisterDismissModal,
+  rosterPets = [],
+  onAddChore,
+  onEditChore,
+  onDeleteChore,
+  onAddMember,
+  onUpdateMember,
+  onDeleteMember,
+  onOpenMemberProfile,
+  onAddPet,
+  onUpdatePet,
+  onDeletePet
 }) => {
   const [internalAdmin, setInternalAdmin] = useState<string>(() => getStoredActiveParentAdmin());
   const currentAdmin = activeParentAdminProp || internalAdmin;
@@ -261,12 +320,18 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   };
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
   const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>("appearance");
+  const [showManageModal, setShowManageModal] = useState<boolean>(false);
+  const [manageInitialTab, setManageInitialTab] = useState<ManageTab>("chores");
   const [selectedReviewProof, setSelectedReviewProof] = useState<ChorePhotoProof | null>(null);
   const [showPhotoInbox, setShowPhotoInbox] = useState<boolean>(false);
 
   useEffect(() => {
     if (onRegisterDismissModal) {
       onRegisterDismissModal(() => {
+        if (showManageModal) {
+          setShowManageModal(false);
+          return true;
+        }
         if (showSettingsModal) {
           setShowSettingsModal(false);
           return true;
@@ -282,7 +347,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
         return false;
       });
     }
-  }, [showSettingsModal, showPhotoInbox, selectedReviewProof, onRegisterDismissModal]);
+  }, [showManageModal, showSettingsModal, showPhotoInbox, selectedReviewProof, onRegisterDismissModal]);
 
   const [photoRequestsVersion, setPhotoRequestsVersion] = useState<number>(0);
   const pendingPhotoCount = getPendingPhotoProofsCount();
@@ -465,7 +530,12 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
         <div className="flex items-center justify-between gap-2 sm:gap-3">
           {/* Brand & Parent Persona (Dedicated to this parent) */}
           <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center shadow-md shadow-orange-500/20 text-white shrink-0 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => onOpenMemberProfile?.(currentAdmin)}
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center shadow-md shadow-orange-500/20 text-white shrink-0 overflow-hidden cursor-pointer hover:brightness-110 transition"
+              title="Tap to edit your profile & custom photo avatar"
+            >
               {getUserProfile(currentAdmin)?.avatarUrl ? (
                 <img
                   src={getUserProfile(currentAdmin).avatarUrl}
@@ -475,7 +545,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
               ) : (
                 <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
               )}
-            </div>
+            </button>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <h1 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight leading-tight truncate">
@@ -666,8 +736,8 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
             <span className="text-xs font-black text-white leading-tight">Rewards</span>
           </button>
 
-          {/* Switch to Kid Minions Mode (Primary Admin Only) */}
-          {isPrimaryAdmin && (
+          {/* Switch to Kid Minions Mode (Primary Admin) or Manage Household (Co-Parent) */}
+          {isPrimaryAdmin ? (
             <button
               type="button"
               onClick={() => onSwitchToMinionMode()}
@@ -678,7 +748,60 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
               </div>
               <span className="text-xs font-black text-white leading-tight">Kids</span>
             </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setManageInitialTab("chores");
+                setShowManageModal(true);
+              }}
+              className="py-3 px-2 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center justify-center text-center transition cursor-pointer shadow-md group"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mb-1.5 group-hover:scale-105 transition">
+                <SlidersHorizontal className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-black text-white leading-tight">Manage</span>
+            </button>
           )}
+        </div>
+
+        {/* Manage Chores, Members & Pets Quick Bar (Primary Parent & Co-Parent) */}
+        <div className="bg-slate-800/60 border border-slate-700/70 rounded-2xl p-2.5 flex items-center justify-between gap-2">
+          <span className="text-[11px] font-extrabold text-slate-300 pl-1 shrink-0">
+            Add / Edit:
+          </span>
+          <div className="grid grid-cols-3 gap-1.5 flex-1">
+            <button
+              type="button"
+              onClick={() => {
+                setManageInitialTab("chores");
+                setShowManageModal(true);
+              }}
+              className="py-1.5 px-2 rounded-xl bg-slate-900/80 hover:bg-indigo-600/25 border border-slate-700 hover:border-indigo-400/50 text-indigo-200 font-bold text-[11px] transition cursor-pointer text-center"
+            >
+              📋 Chores
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setManageInitialTab("members");
+                setShowManageModal(true);
+              }}
+              className="py-1.5 px-2 rounded-xl bg-slate-900/80 hover:bg-indigo-600/25 border border-slate-700 hover:border-indigo-400/50 text-indigo-200 font-bold text-[11px] transition cursor-pointer text-center"
+            >
+              👥 Members
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setManageInitialTab("pets");
+                setShowManageModal(true);
+              }}
+              className="py-1.5 px-2 rounded-xl bg-slate-900/80 hover:bg-amber-600/25 border border-slate-700 hover:border-amber-400/50 text-amber-200 font-bold text-[11px] transition cursor-pointer text-center"
+            >
+              🐾 Pets
+            </button>
+          </div>
         </div>
 
         {/* Monthly Incentive Bar */}
@@ -1368,6 +1491,28 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
           onOpenCleanSlateModal={onOpenCleanSlateModal}
           onLaunchSpotlightTour={onLaunchSpotlightTour}
           onRestoreThomPreset={onRestoreThomPreset}
+        />
+      )}
+
+      {/* Household Manage Modal (Add & Edit Chores, Members & Pets) */}
+      {showManageModal && (
+        <HouseholdManageModal
+          isOpen={showManageModal}
+          onClose={() => setShowManageModal(false)}
+          initialTab={manageInitialTab}
+          hubMasterChores={hubMasterChores}
+          familyMembers={familyMembers}
+          rosterPets={rosterPets}
+          onAddChore={onAddChore}
+          onEditChore={onEditChore}
+          onDeleteChore={onDeleteChore}
+          onAddMember={onAddMember}
+          onUpdateMember={onUpdateMember}
+          onDeleteMember={onDeleteMember}
+          onOpenMemberProfile={onOpenMemberProfile}
+          onAddPet={onAddPet}
+          onUpdatePet={onUpdatePet}
+          onDeletePet={onDeletePet}
         />
       )}
 

@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 21:39:00
+> **Export Date**: 2026-11-22 21:50:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,11 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Custom Photo Avatar Upload for Parents & 12+ Teens** (src/userProfiles.ts, src/UserProfileModal.tsx, src/ParentMobileDashboard.tsx):
+1. **Co-Parent & Mobile Hub Management for Chores, Members & Pets** (src/HouseholdManageModal.tsx, src/ParentMobileDashboard.tsx, weekly_chores_household_hub.tsx):
+   - Built a dark-themed, safe-area compliant `HouseholdManageModal` with 3 tabs (**Chores**, **Members**, **Pets**) supporting full Add, Edit, and Delete operations synced live across all paired devices.
+   - Added a dedicated **Manage** tile to the Co-Parent Quick Command grid, a 3-pill **Add / Edit: Chores | Members | Pets** quick bar on both Parent and Co-Parent Hubs, clickable Hub header avatar to open own profile, and rendered `UserProfileModal` directly inside the mobile parent view.
+
+2. **Custom Photo Avatar Upload for Parents & 12+ Teens** (src/userProfiles.ts, src/UserProfileModal.tsx, src/ParentMobileDashboard.tsx):
    - Added `avatarUrl` to `UserProfile` (center-cropped & compressed 160x160 JPEG Data URL synced live via Firestore).
    - Added **📷 Upload Photo** / **Remove Photo** controls in `UserProfileModal` for Parents and Kids 12+ (keeping 11 & Under on kid-safe emojis), and rendered uploaded avatars in the Profile header and Parent/Co-Parent Hub header.
 
@@ -5738,3 +5742,18 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Added center-cropped 160x160 JPEG photo upload (`📷 Upload Photo` / `Remove Photo`) in [`src/UserProfileModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/UserProfileModal.tsx) gated to Parents and Kids 12+ (`ageTier === "teen" | "adult"`), keeping 11 & Under on kid-safe emojis.
 - Rendered uploaded avatars in the Profile modal header and [`src/ParentMobileDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentMobileDashboard.tsx) Hub header.
 - Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).
+
+
+---
+
+### Turn 215
+**Date / Time**: 2026-11-22T21:50:00-06:00
+
+**User Request**:
+> The co-parent hub should have the option to add & edit chores, members and pets
+
+**Assistant Response**:
+- Created `src/HouseholdManageModal.tsx`: a dark-themed, safe-area compliant mobile manager with **Chores**, **Members**, and **Pets** tabs supporting Add, Edit, and Delete (plus 1-tap Member Profile / Avatar editing) synced live to Firestore.
+- Updated `src/ParentMobileDashboard.tsx`: added a **Manage** tile in the Co-Parent 4-tile command bar, added an **Add / Edit: Chores | Members | Pets** quick bar for both Primary Parent and Co-Parent, made the Hub header avatar clickable to edit your own profile/avatar, and wired Android back-button dismissal.
+- Updated `weekly_chores_household_hub.tsx`: passed `rosterPets` and all live chore, member, pet, and profile callbacks into `ParentMobileDashboard`, and rendered `UserProfileModal` in the mobile parent view.
+- Built APK, installed on Pixel (`47171FDAP000A2`), redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and pushed to `origin/main`.

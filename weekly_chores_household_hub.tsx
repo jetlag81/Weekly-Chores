@@ -6838,6 +6838,39 @@ function App({
           }}
           onRestoreThomPreset={handleRestoreThomsPreset}
           onRegisterDismissModal={(fn) => { parentMobileCloserRef.current = fn; }}
+          rosterPets={rosterPets}
+          onAddChore={(choreName, details) => handleAddNewChore(choreName, details)}
+          onEditChore={(choreIndex, editData) => handleSavePrintableChoreEdit(choreIndex, editData)}
+          onDeleteChore={(choreIndex, taskTitle) => handleDeletePrintableChore(choreIndex, taskTitle)}
+          onAddMember={(mData) => {
+            const fullName = [mData.firstName, mData.lastName].filter(Boolean).join(" ");
+            const primaryName = mData.firstName || fullName;
+            handleAddRosterMember(
+              primaryName,
+              mData.role,
+              mData.residency,
+              mData.role === "Parent" ? "Parents, Non-Casual, All" : "Kids, Non-Casual, All",
+              mData.active
+            );
+            saveUserProfile({
+              id: primaryName.toLowerCase(),
+              name: primaryName,
+              firstName: mData.firstName,
+              lastName: mData.lastName,
+              nickname: mData.nickname,
+              birthday: mData.birthday || "",
+              email: mData.email || "",
+              role: mData.role,
+              residency: mData.residency
+            });
+            setProfilesVersion(v => v + 1);
+          }}
+          onUpdateMember={(rowIndex_, patch) => handleUpdateRosterMember(rowIndex_, patch)}
+          onDeleteMember={(rowIndex_, name) => handleDeleteRosterMember(rowIndex_, name)}
+          onOpenMemberProfile={(memberName) => setProfileModalTarget(memberName)}
+          onAddPet={(name, type, routine, care, active) => handleAddRosterPet(name, type, routine, care, active)}
+          onUpdatePet={(rowIndex_, patch) => handleUpdateRosterPet(rowIndex_, patch)}
+          onDeletePet={(rowIndex_, petName) => handleDeleteRosterPet(rowIndex_, petName)}
         />
 
         {/* Sunday Parent Inspection & Sign-off Modal */}
@@ -6984,6 +7017,23 @@ function App({
           onRestoreThomPreset={handleRestoreThomsPreset}
           onRegisterBackHandler={(fn) => { cleanSlateBackRef.current = fn; }}
         />
+
+        {/* User Profile Customization & Avatar Modal (also available in Mobile Parent & Co-Parent Hub) */}
+        {profileModalTarget && (
+          <UserProfileModal
+            isOpen={!!profileModalTarget}
+            onClose={() => setProfileModalTarget(null)}
+            profile={getUserProfile(
+              profileModalTarget,
+              familyMembers.find(m => m.name.toLowerCase() === profileModalTarget.toLowerCase())
+            )}
+            isParentEditor={true}
+            onSaveProfile={(updated) => {
+              saveUserProfile(updated);
+              setProfilesVersion(v => v + 1);
+            }}
+          />
+        )}
 
         {/* Mobile "Press back again to exit" Toast */}
         <BackToExitToast visible={showParentExitToast} message={parentExitToastMsg} />

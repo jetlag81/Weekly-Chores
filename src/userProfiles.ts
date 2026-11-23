@@ -270,18 +270,18 @@ const STORAGE_KEY_ACTIVE_ADMIN = "weekly_chores_active_parent_admin";
 /**
  * Get the currently active parent administrator for this hub ("Thom" | "Meghan")
  */
-export function getStoredActiveParentAdmin(): "Thom" | "Meghan" {
+export function getStoredActiveParentAdmin(): string {
   try {
     const saved = localStorage.getItem(STORAGE_KEY_ACTIVE_ADMIN);
-    if (saved === "Meghan" || saved === "Thom") return saved;
+    if (saved && saved.trim()) return saved.trim();
   } catch {}
   return "Thom";
 }
 
 /**
- * Set the currently active parent administrator for this hub ("Thom" | "Meghan")
+ * Set the currently active parent administrator for this hub
  */
-export function saveActiveParentAdmin(admin: "Thom" | "Meghan"): void {
+export function saveActiveParentAdmin(admin: string): void {
   try {
     localStorage.setItem(STORAGE_KEY_ACTIVE_ADMIN, admin);
     if (typeof window !== "undefined") {

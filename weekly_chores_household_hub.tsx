@@ -2019,7 +2019,7 @@ function App({
   const [isSpeakingAudio, setIsSpeakingAudio] = useState(false);
   const [profileModalTarget, setProfileModalTarget] = useState<string | null>(null);
   const [profilesVersion, setProfilesVersion] = useState(0);
-  const [activeParentAdmin, setActiveParentAdmin] = useState<"Thom" | "Meghan">(() => getStoredActiveParentAdmin());
+  const [activeParentAdmin, setActiveParentAdmin] = useState<string>(() => getStoredActiveParentAdmin());
   const [showRosterAccordion, setShowRosterAccordion] = useState(false);
   const [scheduleViewMode, setScheduleViewMode] = useState<"day" | "table">("day");
   const [selectedScheduleDayIdx, setSelectedScheduleDayIdx] = useState<number>(() => {
@@ -2222,14 +2222,21 @@ function App({
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
     } else if (params.get("parent") || params.get("admin") || (modeParam === "parent" && params.get("user"))) {
-      const pParam = params.get("parent") || params.get("admin") || params.get("user") || "";
-      const cleanParent: "Thom" | "Meghan" = pParam.toLowerCase().includes("meghan") ? "Meghan" : "Thom";
+      const pParam = (params.get("parent") || params.get("admin") || params.get("user") || "").trim();
+      const setupCfg = getHouseholdSetupConfig();
+      const primaryAdminLower = (setupCfg?.adminName || "Thom").trim().toLowerCase();
+      const cleanParent = pParam || "Thom";
+      const roleParam = (params.get("role") || "").toLowerCase();
+      const isCoParent =
+        roleParam === "coparent" ||
+        (Boolean(pParam) && pParam.toLowerCase() !== primaryAdminLower);
       setActiveParentAdmin(cleanParent);
       saveActiveParentAdmin(cleanParent);
       const cur = getStoredDeviceSession();
       const newSession: DeviceSession = {
         role: "admin",
         parentName: cleanParent,
+        isCoParent,
         householdId: cur.householdId || "household_family_hub",
         deviceId: cur.deviceId,
         parentPin: "1234"
@@ -2241,6 +2248,7 @@ function App({
         const url = new URL(window.location.href);
         url.searchParams.delete("kid");
         url.searchParams.set("parent", cleanParent);
+        if (isCoParent) url.searchParams.set("role", "coparent");
         window.history.replaceState({}, document.title, url.toString());
       } catch { }
     } else if (kidParam) {
@@ -6743,7 +6751,8 @@ function App({
           onToggleDesktopView={toggleParentViewMode}
           activitiesCount={activities.length}
           activeParentAdmin={activeParentAdmin}
-          onSwitchParentAdmin={handleSwitchActiveAdmin}
+          onSwitchParentAdmin={!deviceSession.isCoParent ? handleSwitchActiveAdmin : undefined}
+          isPrimaryAdmin={!deviceSession.isCoParent}
           lastInspectedKid={lastInspectedKid}
           onClearCompletedTasks={() => handleClearAllCompletedTasks(true)}
           onOpenCleanSlateModal={() => setShowCleanSlateModal(true)}
@@ -6862,32 +6871,36 @@ function App({
               setNotice(type === "praise" ? `⭐ Praise sent to ${targetKid}!` : `🧹 Nudge sent to ${targetKid}!`);
               setTimeout(() => setNotice(null), 4000);
             }}
-            onSwitchToKid={(targetKid) => {
-              setLastInspectedKid(targetKid);
-              const cur = getStoredDeviceSession();
-              const parentAdmin = activeParentAdmin || cur.parentName || "Thom";
-              const newSession: DeviceSession = {
-                role: "kid",
-                householdId: cur.householdId || "household_family_hub",
-                kidName: targetKid,
-                deviceId: cur.deviceId,
-                parentPin: cur.parentPin || "1234",
-                viewingAsParent: parentAdmin
-              };
-              saveDeviceSession(newSession);
-              setDeviceSession(newSession);
-              setShowNudgeModal(false);
-              setNudgeModalTarget(null);
-              try {
-                const url = new URL(window.location.href);
-                url.searchParams.delete("parent");
-                url.searchParams.set("kid", targetKid);
-                url.searchParams.set("fromParent", parentAdmin);
-                window.history.replaceState({}, document.title, url.toString());
-              } catch { }
-              setNotice(`Viewing ${targetKid}'s Minion page as ${parentAdmin}! 🎒`);
-              setTimeout(() => setNotice(null), 3500);
-            }}
+            onSwitchToKid={
+              !deviceSession.isCoParent
+                ? (targetKid) => {
+                    setLastInspectedKid(targetKid);
+                    const cur = getStoredDeviceSession();
+                    const parentAdmin = activeParentAdmin || cur.parentName || "Thom";
+                    const newSession: DeviceSession = {
+                      role: "kid",
+                      householdId: cur.householdId || "household_family_hub",
+                      kidName: targetKid,
+                      deviceId: cur.deviceId,
+                      parentPin: cur.parentPin || "1234",
+                      viewingAsParent: parentAdmin
+                    };
+                    saveDeviceSession(newSession);
+                    setDeviceSession(newSession);
+                    setShowNudgeModal(false);
+                    setNudgeModalTarget(null);
+                    try {
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("parent");
+                      url.searchParams.set("kid", targetKid);
+                      url.searchParams.set("fromParent", parentAdmin);
+                      window.history.replaceState({}, document.title, url.toString());
+                    } catch { }
+                    setNotice(`Viewing ${targetKid}'s Minion page as ${parentAdmin}! 🎒`);
+                    setTimeout(() => setNotice(null), 3500);
+                  }
+                : undefined
+            }
           />
         )}
 
@@ -8844,32 +8857,36 @@ function App({
             setNotice(type === "praise" ? `⭐ Praise sent to ${targetKid}!` : `🧹 Nudge sent to ${targetKid}!`);
             setTimeout(() => setNotice(null), 4000);
           }}
-          onSwitchToKid={(targetKid) => {
-            setLastInspectedKid(targetKid);
-            const cur = getStoredDeviceSession();
-            const parentAdmin = activeParentAdmin || cur.parentName || "Thom";
-            const newSession: DeviceSession = {
-              role: "kid",
-              householdId: cur.householdId || "household_family_hub",
-              kidName: targetKid,
-              deviceId: cur.deviceId,
-              parentPin: cur.parentPin || "1234",
-              viewingAsParent: parentAdmin
-            };
-            saveDeviceSession(newSession);
-            setDeviceSession(newSession);
-            setShowNudgeModal(false);
-            setNudgeModalTarget(null);
-            try {
-              const url = new URL(window.location.href);
-              url.searchParams.delete("parent");
-              url.searchParams.set("kid", targetKid);
-              url.searchParams.set("fromParent", parentAdmin);
-              window.history.replaceState({}, document.title, url.toString());
-            } catch { }
-            setNotice(`Viewing ${targetKid}'s Minion page as ${parentAdmin}! 🎒`);
-            setTimeout(() => setNotice(null), 3500);
-          }}
+          onSwitchToKid={
+            !deviceSession.isCoParent
+              ? (targetKid) => {
+                  setLastInspectedKid(targetKid);
+                  const cur = getStoredDeviceSession();
+                  const parentAdmin = activeParentAdmin || cur.parentName || "Thom";
+                  const newSession: DeviceSession = {
+                    role: "kid",
+                    householdId: cur.householdId || "household_family_hub",
+                    kidName: targetKid,
+                    deviceId: cur.deviceId,
+                    parentPin: cur.parentPin || "1234",
+                    viewingAsParent: parentAdmin
+                  };
+                  saveDeviceSession(newSession);
+                  setDeviceSession(newSession);
+                  setShowNudgeModal(false);
+                  setNudgeModalTarget(null);
+                  try {
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete("parent");
+                    url.searchParams.set("kid", targetKid);
+                    url.searchParams.set("fromParent", parentAdmin);
+                    window.history.replaceState({}, document.title, url.toString());
+                  } catch { }
+                  setNotice(`Viewing ${targetKid}'s Minion page as ${parentAdmin}! 🎒`);
+                  setTimeout(() => setNotice(null), 3500);
+                }
+              : undefined
+          }
         />
       )}
 
@@ -8883,20 +8900,25 @@ function App({
           familyMembers={familyMembers}
           activeSyncWeek={activeSyncWeek}
           householdId={deviceSession.householdId || "household_family_hub"}
-          onSwitchToKid={(kName) => {
-            setShowSettingsModal(false);
-            const kidSession: DeviceSession = {
-              role: "kid",
-              kidName: kName,
-              householdId: deviceSession.householdId || "household_family_hub",
-              deviceId: deviceSession.deviceId || "local_dev",
-              parentPin: deviceSession.parentPin || "1234"
-            };
-            saveDeviceSession(kidSession);
-            setDeviceSession(kidSession);
-            setNotice(`👀 Switched to Minion view for ${kName}`);
-            setTimeout(() => setNotice(null), 3500);
-          }}
+          onSwitchToKid={
+            !deviceSession.isCoParent
+              ? (kName) => {
+                  setShowSettingsModal(false);
+                  const kidSession: DeviceSession = {
+                    role: "kid",
+                    kidName: kName,
+                    householdId: deviceSession.householdId || "household_family_hub",
+                    deviceId: deviceSession.deviceId || "local_dev",
+                    parentPin: deviceSession.parentPin || "1234",
+                    viewingAsParent: activeParentAdmin || deviceSession.parentName || "Thom"
+                  };
+                  saveDeviceSession(kidSession);
+                  setDeviceSession(kidSession);
+                  setNotice(`👀 Switched to Minion view for ${kName}`);
+                  setTimeout(() => setNotice(null), 3500);
+                }
+              : undefined
+          }
           onOpenRewardPayoutModal={(kName) => {
             setShowSettingsModal(false);
             setRewardPayoutKid(kName || allKidsList[0] || "Sydney");

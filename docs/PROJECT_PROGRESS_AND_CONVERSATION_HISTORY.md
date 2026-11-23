@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 19:07:00
+> **Export Date**: 2026-11-22 19:37:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,12 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Live Firebase Hosting Deployment (`https://family-chores-hub.web.app`)**:
+1. **Co-Parent Direct Hub Routing & Primary-Admin-Only Hub Switching** (src/CleanSlateOnboardingModal.tsx, functions/index.js, src/firebaseSync.ts, src/userProfiles.ts, src/ParentMobileDashboard.tsx, src/MinionDashboard.tsx, weekly_chores_household_hub.tsx):
+   - Updated Co-Parent invite links to include `&parent=<FirstName>&role=coparent` and generalized `activeParentAdmin` / `getStoredActiveParentAdmin` to support any Co-Parent name (not just Thom/Meghan).
+   - Locked Co-Parent devices (`deviceSession.isCoParent`) to their own **Co-Parent Command Page** and hid all hub-switching controls (Kids page switcher, per-kid `Page ↗`, Settings hub switcher, Nudge switch) so only the Primary Admin can navigate to other members' hubs while everyone else stays on their own page and can only view others' progress.
+   - Locked Kid devices (`!viewingAsParent`) from switching to other kids' hubs in `MinionDashboard`.
+
+2. **Live Firebase Hosting Deployment (`https://family-chores-hub.web.app`)**:
    - Restored Firebase project `family-chores-hub` (`992354326987`) and deployed `dist/` (76 files) to Firebase Hosting at `https://family-chores-hub.web.app` so texted Co-Parent / Kid invite links, QR codes, and computer browsers can access the live Household Hub from anywhere.
 
 2. **Excluded Co-Parents & Primary Parents from Monthly Reward Leaderboard** (src/householdOnboardingConfig.ts, weekly_chores_household_hub.tsx):
@@ -5573,3 +5578,17 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 **Summary of Work Delivered**:
 - Fixed `getUserProfileByName(m.name)` → `getUserProfile(m.name)` in `rankedMembers` inside [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx).
 - Rebuilt `dist/`, redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and reinstalled the updated APK onto `47171FDAP000A2`.
+
+---
+
+### Turn 206
+**Date / Time**: 2026-11-22T19:37:00Z
+
+**User Prompt**:
+> Now the link worked, but the Co-Parent's link opened up to Thom's Hub and should only open to the Co-Parent's Hub. Also, everyone but the admin should only have their own page and not be able to navigate to other's hubs. All they can do is view other's progress.
+
+**Summary of Work Delivered**:
+- Fixed Co-Parent invite links in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) and [`functions/index.js`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/functions/index.js) to pass `?mode=parent&parent=<FirstName>&role=coparent`.
+- Generalized `activeParentAdmin`, `DeviceSession.parentName`, `DeviceSession.isCoParent`, and `getStoredActiveParentAdmin()` in [`src/firebaseSync.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/firebaseSync.ts), [`src/userProfiles.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/userProfiles.ts), and [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx) so Co-Parent links open directly to that Co-Parent's Hub instead of defaulting to Thom's Hub.
+- Restricted hub switching to Primary Admin only (`!deviceSession.isCoParent` and `viewingAsParent`) across [`src/ParentMobileDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentMobileDashboard.tsx), [`src/MinionDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/MinionDashboard.tsx), and [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx)—Co-Parents and Kids stay locked to their own Hub and can only view others' progress.
+- Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).

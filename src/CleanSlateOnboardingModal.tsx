@@ -2523,9 +2523,13 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                             <button
                               type="button"
                               onClick={() => {
+                                const memberLink =
+                                  m.role === "Parent"
+                                    ? `${originBase}/?mode=parent&parent=${encodeURIComponent(m.firstName)}&role=coparent`
+                                    : `${originBase}/?kid=${encodeURIComponent(m.firstName)}&code=${encodeURIComponent(m.inviteCode)}`;
                                 try {
                                   navigator.clipboard.writeText(
-                                    `Join ${householdName || "our Household Hub"}! Open ${originBase}/?${m.role === "Parent" ? "mode=parent" : `kid=${encodeURIComponent(m.firstName)}&code=${encodeURIComponent(m.inviteCode)}`} or enter code ${m.inviteCode}.`
+                                    `Join ${householdName || "our Household Hub"}! Open ${memberLink} or enter code ${m.inviteCode}.`
                                   );
                                   setCopiedCodeId(m.id);
                                   setTimeout(() => setCopiedCodeId(null), 2000);
@@ -2548,7 +2552,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
 
                             <a
                               href={`sms:${(m.phoneNumber || "").replace(/[^\d+]/g, "")}?body=${encodeURIComponent(
-                                `Join ${householdName || "our Household Hub"}! Tap ${originBase}/?${m.role === "Parent" ? "mode=parent" : `kid=${encodeURIComponent(m.firstName)}&code=${encodeURIComponent(m.inviteCode)}`} or enter invite code ${m.inviteCode}.`
+                                `Join ${householdName || "our Household Hub"}! Tap ${originBase}/?${m.role === "Parent" ? `mode=parent&parent=${encodeURIComponent(m.firstName)}&role=coparent` : `kid=${encodeURIComponent(m.firstName)}&code=${encodeURIComponent(m.inviteCode)}`} or enter invite code ${m.inviteCode}.`
                               )}`}
                               className="px-2.5 py-1 rounded-lg bg-emerald-600/25 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-200 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
                             >
@@ -2560,7 +2564,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                                 href={`mailto:${encodeURIComponent(m.email)}?subject=${encodeURIComponent(
                                   `Join ${householdName || "our Household Hub"}`
                                 )}&body=${encodeURIComponent(
-                                  `Hi ${m.firstName},\n\nJoin ${householdName || "our Household Hub"}!\nLink: ${originBase}/?${m.role === "Parent" ? "mode=parent" : `kid=${encodeURIComponent(m.firstName)}&code=${encodeURIComponent(m.inviteCode)}`}\nInvite Code: ${m.inviteCode}`
+                                  `Hi ${m.firstName},\n\nJoin ${householdName || "our Household Hub"}!\nLink: ${originBase}/?${m.role === "Parent" ? `mode=parent&parent=${encodeURIComponent(m.firstName)}&role=coparent` : `kid=${encodeURIComponent(m.firstName)}&code=${encodeURIComponent(m.inviteCode)}`}\nInvite Code: ${m.inviteCode}`
                                 )}`}
                                 className="px-2.5 py-1 rounded-lg bg-sky-600/25 hover:bg-sky-600/40 border border-sky-500/40 text-sky-200 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
                               >

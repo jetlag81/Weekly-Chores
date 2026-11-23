@@ -2597,10 +2597,14 @@ export const MinionDashboard: React.FC<MinionDashboardProps> = ({
             unpairKid(kName || currentKid.name);
             onExitMinionMode();
           }}
-          onSwitchToKid={(kName) => {
-            setShowSettingsModal(false);
-            onKidSwitched?.(kName);
-          }}
+          onSwitchToKid={
+            viewingAsParent
+              ? (kName) => {
+                  setShowSettingsModal(false);
+                  onKidSwitched?.(kName);
+                }
+              : undefined
+          }
           viewingAsParent={viewingAsParent}
         />
       )}

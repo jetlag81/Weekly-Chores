@@ -102,7 +102,7 @@ exports.sendFamilyInvites = onRequest(
 
       const joinUrl =
         r.role === "Parent"
-          ? `${safeHub}/?mode=parent`
+          ? `${safeHub}/?mode=parent&parent=${encodeURIComponent(r.firstName || "")}&role=coparent`
           : `${safeHub}/?kid=${encodeURIComponent(r.firstName || "")}&code=${encodeURIComponent(r.inviteCode || "")}`;
 
       const textBody = `${safeAdmin} invited you to join ${safeHouse}! Open ${joinUrl} or enter invite code ${r.inviteCode}.`;

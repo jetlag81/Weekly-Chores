@@ -91,8 +91,9 @@ interface ParentMobileDashboardProps {
   onSwitchToMinionMode: (kidName?: string) => void;
   onToggleDesktopView: () => void;
   activitiesCount?: number;
-  activeParentAdmin?: "Thom" | "Meghan";
-  onSwitchParentAdmin?: (admin: "Thom" | "Meghan") => void;
+  activeParentAdmin?: string;
+  onSwitchParentAdmin?: (admin: string) => void;
+  isPrimaryAdmin?: boolean;
   lastInspectedKid?: string | null;
   onClearCompletedTasks?: () => void;
   onOpenCleanSlateModal?: () => void;
@@ -131,6 +132,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   activitiesCount = 0,
   activeParentAdmin: activeParentAdminProp,
   onSwitchParentAdmin,
+  isPrimaryAdmin = true,
   lastInspectedKid,
   onClearCompletedTasks,
   onOpenCleanSlateModal,
@@ -138,13 +140,13 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   onRestoreThomPreset,
   onRegisterDismissModal
 }) => {
-  const [internalAdmin, setInternalAdmin] = useState<"Thom" | "Meghan">(() => getStoredActiveParentAdmin());
+  const [internalAdmin, setInternalAdmin] = useState<string>(() => getStoredActiveParentAdmin());
   const currentAdmin = activeParentAdminProp || internalAdmin;
 
   useEffect(() => {
     const handleSync = (e: any) => {
-      if (e?.detail === "Thom" || e?.detail === "Meghan") {
-        setInternalAdmin(e.detail);
+      if (typeof e?.detail === "string" && e.detail.trim()) {
+        setInternalAdmin(e.detail.trim());
       } else {
         setInternalAdmin(getStoredActiveParentAdmin());
       }
@@ -153,7 +155,8 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
     return () => window.removeEventListener("household_active_admin_updated", handleSync);
   }, []);
 
-  const handleSwitchAdmin = (admin: "Thom" | "Meghan") => {
+  const handleSwitchAdmin = (admin: string) => {
+    if (!isPrimaryAdmin) return;
     setInternalAdmin(admin);
     saveActiveParentAdmin(admin);
     if (onSwitchParentAdmin) onSwitchParentAdmin(admin);
@@ -437,7 +440,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                 </span>
               </div>
               <div className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium truncate">
-                Parent Command Page
+                {isPrimaryAdmin ? "Parent Command Page" : "Co-Parent Command Page"}
               </div>
             </div>
           </div>
@@ -617,17 +620,19 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
             <span className="text-xs font-black text-white leading-tight">Rewards</span>
           </button>
 
-          {/* Switch to Kid Minions Mode */}
-          <button
-            type="button"
-            onClick={() => onSwitchToMinionMode()}
-            className="py-3 px-2 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center justify-center text-center transition cursor-pointer shadow-md group"
-          >
-            <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mb-1.5 group-hover:scale-105 transition">
-              <Users className="w-5 h-5" />
-            </div>
-            <span className="text-xs font-black text-white leading-tight">Kids</span>
-          </button>
+          {/* Switch to Kid Minions Mode (Primary Admin Only) */}
+          {isPrimaryAdmin && (
+            <button
+              type="button"
+              onClick={() => onSwitchToMinionMode()}
+              className="py-3 px-2 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 rounded-2xl flex flex-col items-center justify-center text-center transition cursor-pointer shadow-md group"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 flex items-center justify-center mb-1.5 group-hover:scale-105 transition">
+                <Users className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-black text-white leading-tight">Kids</span>
+            </button>
+          )}
         </div>
 
         {/* Monthly Incentive Bar */}
@@ -796,15 +801,17 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
                         <span className="hidden xs:inline">Cards</span>
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => onSwitchToMinionMode(kidName)}
-                      className="px-2 py-1 rounded-xl text-[11px] font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 transition flex items-center gap-1 cursor-pointer"
-                      title={`Open ${kidName}'s Kid Page`}
-                    >
-                      <Users className="w-3 h-3 text-indigo-400" />
-                      <span className="hidden xs:inline">Page ↗</span>
-                    </button>
+                    {isPrimaryAdmin && (
+                      <button
+                        type="button"
+                        onClick={() => onSwitchToMinionMode(kidName)}
+                        className="px-2 py-1 rounded-xl text-[11px] font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 transition flex items-center gap-1 cursor-pointer"
+                        title={`Open ${kidName}'s Kid Page`}
+                      >
+                        <Users className="w-3 h-3 text-indigo-400" />
+                        <span className="hidden xs:inline">Page ↗</span>
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => toggleKidExpanded(kidName)}
@@ -1121,10 +1128,14 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
           familyMembers={familyMembers}
           activeSyncWeek={activeSyncWeek}
           initialTab={settingsInitialTab}
-          onSwitchToKid={(kName) => {
-            setShowSettingsModal(false);
-            onSwitchToMinionMode(kName);
-          }}
+          onSwitchToKid={
+            isPrimaryAdmin
+              ? (kName) => {
+                  setShowSettingsModal(false);
+                  onSwitchToMinionMode(kName);
+                }
+              : undefined
+          }
           onOpenRewardPayoutModal={(kName) => {
             setShowSettingsModal(false);
             onOpenRewardModal?.(kName);

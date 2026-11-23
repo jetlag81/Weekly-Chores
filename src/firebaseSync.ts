@@ -30,10 +30,11 @@ export interface DeviceSession {
   householdId: string;
   kidName?: string;
   kidMemberId?: string;
-  parentName?: "Thom" | "Meghan";
+  parentName?: string;
+  isCoParent?: boolean;
   deviceId: string;
   parentPin?: string;
-  viewingAsParent?: "Thom" | "Meghan";
+  viewingAsParent?: string;
 }
 
 export interface HouseholdInvite {

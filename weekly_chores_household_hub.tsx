@@ -6447,7 +6447,14 @@ function App({
         const nameLower = (m.name || "").toLowerCase().trim();
         const roleLower = String(m.role || "").toLowerCase();
         if (nameLower === "thom" || nameLower === "meghan") return false;
-        if (roleLower.includes("overlord") || roleLower.includes("overseer") || roleLower.includes("parent")) return false;
+        if (
+          roleLower.includes("overlord") ||
+          roleLower.includes("overseer") ||
+          roleLower.includes("parent") ||
+          roleLower.includes("admin")
+        ) return false;
+        const prof = getUserProfileByName(m.name);
+        if (prof && String(prof.role || "").toLowerCase() === "parent") return false;
         return true;
       })
       .map(m => {

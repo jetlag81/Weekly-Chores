@@ -908,17 +908,28 @@ export function buildSheetDataFromOnboarding(
   const dailyChores = activeChores.filter(c => c.frequency === "Daily");
   const weeklyChores = activeChores.filter(c => c.frequency !== "Daily");
 
+  const isParentMember = (m: OnboardingMemberDraft) => {
+    const r = String(m.role || "").toLowerCase();
+    return r === "parent" || r === "admin" || r === "coparent";
+  };
+  const isCasualMember = (m: OnboardingMemberDraft) =>
+    String(m.residency || "").toLowerCase() === "casual";
+  const isBiWeeklyMember = (m: OnboardingMemberDraft) => {
+    const res = String(m.residency || "").toLowerCase();
+    return res === "bi-weekly" || res === "biweekly" || res === "weekends";
+  };
+
   const nonCasualNames = members
-    .filter(m => m.occupancyPreset !== "casual")
+    .filter(m => !isCasualMember(m))
     .map(m => m.firstName || "Member");
   const kidNames = members
-    .filter(m => m.role === "kid")
+    .filter(m => !isParentMember(m))
     .map(m => m.firstName || "Kid");
   const parentNames = members
-    .filter(m => m.role !== "kid")
+    .filter(m => isParentMember(m))
     .map(m => m.firstName || "Parent");
   const biWeeklyKids = members
-    .filter(m => m.occupancyPreset === "biweekly")
+    .filter(m => !isParentMember(m) && isBiWeeklyMember(m))
     .map(m => m.firstName);
 
   const workerPool = nonCasualNames.length > 0 ? nonCasualNames : [config.adminName || "Admin"];
@@ -1030,25 +1041,25 @@ export function buildSheetDataFromOnboarding(
     const m = members[i];
     const c = activeChores[i];
     const mOccupancy = m
-      ? m.occupancyPreset === "biweekly"
+      ? isBiWeeklyMember(m)
         ? "Bi-Weekly"
-        : m.occupancyPreset === "casual"
+        : isCasualMember(m)
           ? "Casual"
           : "Full-Time"
       : null;
     const mGroups = m
-      ? m.role === "kid"
-        ? m.occupancyPreset === "casual"
+      ? !isParentMember(m)
+        ? isCasualMember(m)
           ? "All"
           : "Kids, Non-Casual, All"
         : "Parents, Non-Casual, All"
       : null;
     const mRoleTitle = m
-      ? m.role === "admin"
-        ? "Supreme Overlord"
-        : m.role === "coparent"
-          ? "Overseer Supreme"
-          : "Minion"
+      ? isParentMember(m)
+        ? (m.firstName || "").toLowerCase() === (config.adminName || "").toLowerCase() || i === 0
+          ? "Parent Admin (Primary)"
+          : "Co-Parent Admin"
+        : "Minion"
       : null;
 
     sheet1Rows.push({

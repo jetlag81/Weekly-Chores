@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 18:16:00
+> **Export Date**: 2026-11-22 18:36:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,11 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Deduplicated Android Contact Picker & Standardized `(###) ###-####` Phone Formatting** (ContactPickerPlugin.java, src/CleanSlateOnboardingModal.tsx):
+1. **Excluded Co-Parents & Primary Parents from Monthly Reward Leaderboard** (src/householdOnboardingConfig.ts, weekly_chores_household_hub.tsx):
+   - Fixed `buildSheetDataFromOnboarding()` so `role: "Parent"` members receive `"Parent Admin (Primary)"` / `"Co-Parent Admin"` instead of `"Minion"`, and mapped `residency` properly (`Full-Time`, `Bi-Weekly`, `Casual`).
+   - Updated `rankedMembers` in `weekly_chores_household_hub.tsx` to also cross-check `getUserProfileByName(m.name)?.role === "Parent"` and `"admin"` roles so Co-Parents are excluded immediately even for already-saved households.
+
+2. **Deduplicated Android Contact Picker & Standardized `(###) ###-####` Phone Formatting** (ContactPickerPlugin.java, src/CleanSlateOnboardingModal.tsx):
    - Switched `ContactPickerPlugin` from `Phone.CONTENT_URI` to `ContactsContract.Contacts.CONTENT_URI` when `READ_CONTACTS` is granted so Android shows 1 clean row per person instead of duplicate phone rows, automatically preferring their Mobile number and pulling Email.
    - Added `formatPhoneNumber()` across Admin, Co-Parent, and Kid phone inputs (and imported contacts) so all numbers display uniformly as `(###) ###-####`.
 
@@ -5526,4 +5530,19 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 **Summary of Work Delivered**:
 - Updated [`ContactPickerPlugin.java`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/android/app/src/main/java/com/household/choreshub/ContactPickerPlugin.java) to launch Android's picker with `ContactsContract.Contacts.CONTENT_URI` (1 clean row per contact) instead of `Phone.CONTENT_URI`, then query the selected contact's phone numbers prioritizing `TYPE_MOBILE` and pulling their primary email.
 - Added `formatPhoneNumber()` in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) to strip country code `+1` / `1` and format all Admin, Co-Parent, and Kid phone numbers (both contact-imported and typed) uniformly as `(###) ###-####`.
+- Rebuilt and installed the updated APK onto `47171FDAP000A2`.
+
+---
+
+### Turn 203
+**Date / Time**: 2026-11-22T18:36:00Z
+
+**User Prompt**:
+> When I texted the link to the Co-Parent, it goes to a Firebase "Site not found" page. I also noticed that the Co-Parent is included in the monthly reward leaderboard and shouln't be.
+
+**Summary of Work Delivered**:
+- Fixed Co-Parent inclusion in the Monthly Reward Leaderboard:
+  - Fixed [`src/householdOnboardingConfig.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/householdOnboardingConfig.ts) (`buildSheetDataFromOnboarding`) so `role: "Parent"` members get `"Parent Admin (Primary)"` / `"Co-Parent Admin"` rather than `"Minion"`, and properly reads `m.residency`.
+  - Updated `rankedMembers` in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx) to also exclude any member whose saved `UserProfile.role === "Parent"` or whose role includes `"admin"`.
+- Explained why `https://family-chores-hub.web.app` showed Firebase "Site not found" (Firebase Hosting hasn't been deployed yet) and provided the exact 2-step `firebase login` + `firebase deploy --only hosting` commands to publish `dist/` live.
 - Rebuilt and installed the updated APK onto `47171FDAP000A2`.

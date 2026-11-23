@@ -9,10 +9,16 @@ import {
   ClipboardList,
   PawPrint,
   UserCircle,
-  Link2
+  Link2,
+  Send,
+  Mail,
+  MessageSquare,
+  QrCode
 } from "lucide-react";
 import { getUserProfile, getPreferredName, calculateAge, getEffectiveAgeTier } from "./userProfiles";
 import { getPublicHubBaseUrl } from "./inviteService";
+import { getHouseholdSetupConfig } from "./householdOnboardingConfig";
+import { QRCodeDisplay } from "./QRCodeDisplay";
 
 export type ManageTab = "chores" | "members" | "pets";
 
@@ -146,6 +152,10 @@ export const HouseholdManageModal: React.FC<HouseholdManageModalProps> = ({
   // Edit Member state
   const [editingMemberRow, setEditingMemberRow] = useState<number | null>(null);
   const [copiedMemberLink, setCopiedMemberLink] = useState<string | null>(null);
+  const [resendInviteTarget, setResendInviteTarget] = useState<string | null>(null);
+  const [resendPhone, setResendPhone] = useState("");
+  const [resendEmail, setResendEmail] = useState("");
+  const [showResendQr, setShowResendQr] = useState(false);
   const [memberDraft, setMemberDraft] = useState<{
     name: string;
     role: string;
@@ -849,11 +859,20 @@ export const HouseholdManageModal: React.FC<HouseholdManageModalProps> = ({
                     );
                   }
 
+                  const isResendOpen = resendInviteTarget === member.name;
+                  const baseHubUrl = getPublicHubBaseUrl();
+                  const isParentMember = String(member.role || "").toLowerCase().includes("parent");
+                  const memberDirectLink = isParentMember
+                    ? `${baseHubUrl}/?mode=parent&parent=${encodeURIComponent(member.name)}&role=coparent`
+                    : `${baseHubUrl}/?kid=${encodeURIComponent(member.name)}`;
+                  const houseTitle = getHouseholdSetupConfig()?.householdName || "our Household Hub";
+
                   return (
                     <div
                       key={`${member.index_}-${member.name}`}
-                      className="p-3 rounded-2xl bg-slate-800/70 border border-slate-700/70 flex items-center justify-between gap-2"
+                      className="rounded-2xl bg-slate-800/70 border border-slate-700/70 overflow-hidden"
                     >
+                    <div className="p-3 flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-base shrink-0 overflow-hidden">
                           {prof.avatarUrl && (prof.role === "Parent" || tier === "adult" || tier === "teen") ? (
@@ -890,33 +909,24 @@ export const HouseholdManageModal: React.FC<HouseholdManageModalProps> = ({
                         <button
                           type="button"
                           onClick={() => {
-                            const base = getPublicHubBaseUrl();
-                            const isParent = String(member.role || "").toLowerCase().includes("parent");
-                            const link = isParent
-                              ? `${base}/?mode=parent&parent=${encodeURIComponent(member.name)}&role=coparent`
-                              : `${base}/?kid=${encodeURIComponent(member.name)}`;
-                            try {
-                              navigator.clipboard.writeText(link);
-                            } catch {}
-                            setCopiedMemberLink(member.name);
-                            setTimeout(() => setCopiedMemberLink(null), 2000);
+                            if (isResendOpen) {
+                              setResendInviteTarget(null);
+                              setShowResendQr(false);
+                            } else {
+                              setResendInviteTarget(member.name);
+                              setResendEmail(prof.email || "");
+                              setResendPhone("");
+                              setShowResendQr(false);
+                            }
                           }}
                           className={`p-1.5 rounded-lg transition cursor-pointer ${
-                            copiedMemberLink === member.name
+                            isResendOpen
                               ? "bg-emerald-600 text-white"
                               : "bg-emerald-500/20 hover:bg-emerald-600 text-emerald-300 hover:text-white"
                           }`}
-                          title={
-                            copiedMemberLink === member.name
-                              ? "Copied invite link!"
-                              : `Copy direct invite link for ${member.name}`
-                          }
+                          title={`Re-send invite to ${member.name} (SMS, Email, Link or QR)`}
                         >
-                          {copiedMemberLink === member.name ? (
-                            <Check className="w-3.5 h-3.5" />
-                          ) : (
-                            <Link2 className="w-3.5 h-3.5" />
-                          )}
+                          <Send className="w-3.5 h-3.5" />
                         </button>
                         {onOpenMemberProfile && (
                           <button
@@ -967,6 +977,108 @@ export const HouseholdManageModal: React.FC<HouseholdManageModalProps> = ({
                           </button>
                         )}
                       </div>
+                    </div>
+
+                    {/* Inline Re-Send Invite Panel (SMS, Email, Copy Link, QR Code) */}
+                    {isResendOpen && (
+                      <div className="px-3 pb-3 pt-2 border-t border-slate-700/70 bg-slate-900/70 space-y-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[11px] font-extrabold text-emerald-300">
+                            Re-Send Invite to {pref} ({isParentMember ? "Co-Parent Hub" : "Kid Dashboard"})
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setResendInviteTarget(null)}
+                            className="text-[10px] font-bold text-slate-400 hover:text-white cursor-pointer"
+                          >
+                            Close
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="tel"
+                            value={resendPhone}
+                            onChange={e => setResendPhone(e.target.value)}
+                            placeholder="Phone (for SMS)"
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-[11px]"
+                          />
+                          <input
+                            type="email"
+                            value={resendEmail}
+                            onChange={e => setResendEmail(e.target.value)}
+                            placeholder="Email (for Mail)"
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-[11px]"
+                          />
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <a
+                            href={`sms:${resendPhone.replace(/[^\d+]/g, "")}?body=${encodeURIComponent(
+                              `Hi ${pref}! Tap this link to open your ${isParentMember ? "Co-Parent Hub" : "Kid Chore Dashboard"} in ${houseTitle}: ${memberDirectLink}`
+                            )}`}
+                            className="px-2.5 py-1.5 rounded-lg bg-emerald-600/25 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-200 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                          >
+                            <MessageSquare className="w-3 h-3" />
+                            <span>Text (SMS)</span>
+                          </a>
+
+                          <a
+                            href={`mailto:${encodeURIComponent(resendEmail.trim())}?subject=${encodeURIComponent(
+                              `Join ${houseTitle}`
+                            )}&body=${encodeURIComponent(
+                              `Hi ${pref},\n\nTap this link to open your ${isParentMember ? "Co-Parent Hub" : "Kid Chore Dashboard"} in ${houseTitle}:\n${memberDirectLink}`
+                            )}`}
+                            className="px-2.5 py-1.5 rounded-lg bg-sky-600/25 hover:bg-sky-600/40 border border-sky-500/40 text-sky-200 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                          >
+                            <Mail className="w-3 h-3" />
+                            <span>Email</span>
+                          </a>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              try {
+                                navigator.clipboard.writeText(memberDirectLink);
+                              } catch {}
+                              setCopiedMemberLink(member.name);
+                              setTimeout(() => setCopiedMemberLink(null), 2000);
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg bg-indigo-600/25 hover:bg-indigo-600/40 border border-indigo-500/40 text-indigo-200 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                          >
+                            {copiedMemberLink === member.name ? (
+                              <>
+                                <Check className="w-3 h-3 text-emerald-400" />
+                                <span>Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Link2 className="w-3 h-3" />
+                                <span>Copy Link</span>
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setShowResendQr(v => !v)}
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                          >
+                            <QrCode className="w-3 h-3" />
+                            <span>{showResendQr ? "Hide QR" : "QR Code"}</span>
+                          </button>
+                        </div>
+
+                        {showResendQr && (
+                          <div className="p-2.5 rounded-xl bg-white flex flex-col items-center gap-1.5">
+                            <QRCodeDisplay value={memberDirectLink} size={136} />
+                            <span className="text-[10px] font-bold text-slate-700">
+                              Scan with {pref}&apos;s phone or tablet
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     </div>
                   );
                 })}

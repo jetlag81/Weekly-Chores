@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 22:05:00
+> **Export Date**: 2026-11-22 22:10:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,10 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Instant Kid Link Routing & Live Hosting Invite URLs** (weekly_chores_household_hub.tsx, src/HouseholdSettingsModal.tsx, src/InviteModal.tsx, src/HouseholdManageModal.tsx):
+1. **Re-Send Invite Panel Post-Setup (SMS, Email, Copy Link & QR Code)** (src/HouseholdManageModal.tsx):
+   - Added a **Re-Send Invite** (`Send` icon) button on every member card in **Manage → Members** (accessible from both Primary Parent and Co-Parent Hubs) that opens an inline invite panel with Text (SMS), Email, Copy Link, and scannable QR Code using the live `https://family-chores-hub.web.app` URL.
+
+2. **Instant Kid Link Routing & Live Hosting Invite URLs** (weekly_chores_household_hub.tsx, src/HouseholdSettingsModal.tsx, src/InviteModal.tsx, src/HouseholdManageModal.tsx):
    - Fixed kid invite links (`?kid=Koda&code=...` or `?kid=Koda`) opening to the Parent Hub by synchronously initializing `deviceSession` from URL query parameters on frame 1 (zero Parent Hub flash), keeping `?kid=<Name>` in the URL, redeeming invite codes in the background without leaving Kid Mode, and showing the Kid Pairing screen (never Parent Hub) for code-only `?join=...` links.
    - Replaced stale `.trycloudflare.com` default URLs in `HouseholdSettingsModal` and `InviteModal` with `getPublicHubBaseUrl()` (`https://family-chores-hub.web.app`).
    - Added a 1-tap **Copy Invite Link** button (`🔗`) per member in `HouseholdManageModal`.
@@ -5778,4 +5781,18 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   - Updated `weekly_chores_household_hub.tsx` to synchronously parse `?kid=` / `?minion=` / `?parent=` inside `useState(() => ...)` so kids land directly on their Kid Dashboard on frame 1 with zero Parent Hub flash, keep `?kid=<Name>` in the URL, redeem `code=`/`join=` in the background without leaving Kid Mode, and show `KidPairingScreen` (not Parent Hub) for code-only `?join=` links.
   - Updated `HouseholdSettingsModal.tsx` and `InviteModal.tsx` to default to `getPublicHubBaseUrl()` (`https://family-chores-hub.web.app`).
   - Added a 1-tap **Copy Invite Link** button (`🔗`) for each member in `HouseholdManageModal.tsx`.
+- Built APK, installed on Pixel (`47171FDAP000A2`), redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and pushed to `origin/main`.
+
+
+---
+
+### Turn 217
+**Date / Time**: 2026-11-22T22:10:00-06:00
+
+**User Request**:
+> Oh, also need an option to re-send an invite after the initial setup is completed.
+
+**Assistant Response**:
+- Added a **Re-Send Invite** (`Send` icon) action on every household member in `src/HouseholdManageModal.tsx` (**Manage → Members**), available on both the Primary Parent Hub and Co-Parent Hub.
+- Tapping it expands an inline invite panel with **Text (SMS)**, **Email**, **Copy Link**, and **QR Code** (`QRCodeDisplay`) pre-targeted to that member's exact Kid Dashboard (`?kid=<Name>`) or Co-Parent Hub (`?mode=parent&parent=<Name>&role=coparent`) on `https://family-chores-hub.web.app`.
 - Built APK, installed on Pixel (`47171FDAP000A2`), redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and pushed to `origin/main`.

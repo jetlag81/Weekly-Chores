@@ -76,6 +76,12 @@ import { QRCodeDisplay } from "./QRCodeDisplay";
 import { isStandalone, promptPwaInstall } from "./pwaManager";
 import { getHouseholdSetupConfig } from "./householdOnboardingConfig";
 import { getPublicHubBaseUrl } from "./inviteService";
+import {
+  getPushPermissionStatus,
+  requestPushNotifications,
+  sendDeviceNotification,
+  type PushPermissionStatus
+} from "./pushNotificationService";
 
 export type SettingsTab =
   | "appearance"
@@ -137,12 +143,11 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
   const [celebrationSounds, setCelebrationSounds] = useState<boolean>(() => isCelebrationSoundEnabled());
   const [activityChimes, setActivityChimes] = useState<boolean>(() => isChimeSoundEnabled());
   const [voiceNarration, setVoiceNarration] = useState<boolean>(() => isVoiceNarrationEnabled());
-  const [pushStatus, setPushStatus] = useState<string>(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      return Notification.permission;
-    }
-    return "unsupported";
-  });
+  const [pushStatus, setPushStatus] = useState<PushPermissionStatus>("prompt");
+
+  useEffect(() => {
+    getPushPermissionStatus().then(setPushStatus).catch(() => {});
+  }, [isOpen]);
 
   // Rewards & Gaming Handles
   const [selectedKidForRewards, setSelectedKidForRewards] = useState<string>(currentKidName);
@@ -261,20 +266,16 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
   };
 
   const handleRequestPushNotification = async () => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      try {
-        const perm = await Notification.requestPermission();
-        setPushStatus(perm);
-        if (perm === "granted") {
-          new Notification("Household Chores Hub", {
-            body: "Chore notifications and praises are now active on this device!",
-            icon: "/favicon.ico"
-          });
-        }
-      } catch (err) {
-        console.warn("Notification request error:", err);
-      }
-    }
+    const status = await requestPushNotifications();
+    setPushStatus(status);
+  };
+
+  const handleSendTestPush = async () => {
+    await sendDeviceNotification({
+      title: "Household Hub Test 🔔",
+      body: "Push notifications are working! Chores, praises & nudges will appear here.",
+      tag: "test_alert"
+    });
   };
 
   // Save Rewards Profile
@@ -837,14 +838,14 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
                     </div>
                     <div>
                       <div className="text-xs font-black text-slate-900 dark:text-white">
-                        Browser Push Notifications
+                        Device Push Notifications
                       </div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                         {pushStatus === "granted"
-                          ? "✓ Active: Praises and reminders appear on lock screen"
+                          ? "✓ Active: Chore alerts, praises & nudges appear on lock screen"
                           : pushStatus === "denied"
-                          ? "Blocked in browser permissions"
-                          : "Receive nudges, praises, and Sunday inspection alerts"}
+                          ? "Blocked in device/browser permissions"
+                          : "Receive nudges, praises, photo proofs & Sunday inspection alerts"}
                       </div>
                     </div>
                   </div>
@@ -858,9 +859,18 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
                       Enable
                     </button>
                   ) : (
-                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
-                      Enabled ✓
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleSendTestPush}
+                        className="py-1 px-2 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-purple-600 hover:text-white text-slate-700 dark:text-slate-200 text-[10px] font-bold cursor-pointer transition"
+                      >
+                        Test
+                      </button>
+                      <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                        Enabled ✓
+                      </span>
+                    </div>
                   )}
                 </div>
 

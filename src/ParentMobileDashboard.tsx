@@ -53,6 +53,7 @@ import {
   type ChorePhotoRequest
 } from "./chorePhotoTypes";
 import { getStoredActiveParentAdmin, saveActiveParentAdmin, getUserProfile, saveUserProfile, getPreferredName, calculateAge, type ParentPaymentWallets } from "./userProfiles";
+import { getPushPermissionStatus, requestPushNotifications, type PushPermissionStatus } from "./pushNotificationService";
 
 interface FamilyMember {
   name: string;
@@ -211,6 +212,18 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
     return prof?.paymentWallets || {};
   });
   const [walletSavedFlash, setWalletSavedFlash] = useState(false);
+  const [pushBannerStatus, setPushBannerStatus] = useState<PushPermissionStatus>("granted");
+  const [pushBannerDismissed, setPushBannerDismissed] = useState<boolean>(() => {
+    try {
+      return sessionStorage.getItem("weekly_chores_push_banner_dismissed") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    getPushPermissionStatus().then(setPushBannerStatus).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const prof = getUserProfile(currentAdmin);
@@ -638,6 +651,50 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
         className="p-4 space-y-4 max-w-lg mx-auto w-full pb-32"
         style={{ paddingBottom: "calc(7rem + max(env(safe-area-inset-bottom, 0px), var(--safe-area-inset-bottom, 0px)))" }}
       >
+        {/* One-Tap Push Notifications Prompt Banner (shown until enabled or dismissed) */}
+        {pushBannerStatus === "prompt" && !pushBannerDismissed && (
+          <div className="p-3 rounded-2xl bg-indigo-950/80 border border-indigo-500/40 flex items-center justify-between gap-2.5 shadow-md">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center justify-center shrink-0">
+                <Bell className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-extrabold text-white leading-tight">
+                  Enable Push Notifications
+                </div>
+                <div className="text-[10px] text-indigo-200/80 truncate">
+                  Get instant alerts for chore completions, nudges &amp; photo proofs
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={async () => {
+                  const status = await requestPushNotifications();
+                  setPushBannerStatus(status);
+                }}
+                className="px-2.5 py-1.5 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white font-black text-[11px] transition cursor-pointer"
+              >
+                Enable
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setPushBannerDismissed(true);
+                  try {
+                    sessionStorage.setItem("weekly_chores_push_banner_dismissed", "true");
+                  } catch {}
+                }}
+                className="px-1.5 py-1 text-slate-400 hover:text-white text-xs font-bold cursor-pointer"
+                title="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Streamlined Sunday Inspection Action Bar */}
         <div
           onClick={onOpenInspection}

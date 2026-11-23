@@ -73,6 +73,7 @@ import { ParentRewardPayoutModal } from "./src/ParentRewardPayoutModal";
 import { ParentMobileDashboard } from "./src/ParentMobileDashboard";
 import { ParentPhotoReviewModal } from "./src/ParentPhotoReviewModal";
 import { ParentPhotoInboxModal } from "./src/ParentPhotoInboxModal";
+import { sendDeviceNotification } from "./src/pushNotificationService";
 import {
   getPhotoProofForChore,
   getPendingPhotoProofsCount,
@@ -2474,11 +2475,16 @@ function App({
           return updated;
         });
 
-        // If the event came from another device and is a completion or signoff, play remote chime and display toast!
+        // If the event came from another device and is a completion or signoff, play remote chime, display toast & fire push notification!
         const myDeviceId = (deviceSession == null ? void 0 : deviceSession.deviceId) || "local_dev";
         if (msg.event.deviceId !== myDeviceId && msg.event.action !== "uncompleted") {
           playHouseholdRemoteChime();
           setActiveToastEvent(msg.event);
+          sendDeviceNotification({
+            title: `${msg.event.kidName || "Household Hub"}`,
+            body: msg.event.taskTitle || "New household update!",
+            tag: `activity_${msg.event.id || "live"}`
+          });
         }
         return;
       }
@@ -2650,7 +2656,14 @@ function App({
       } else if (msg.type === "ALL_DEVICES_RESET") {
         setDeviceSession((prev: any) => ({ role: "admin", householdId: "household_family_hub", deviceId: prev.deviceId, parentPin: "1234" }));
       } else if (msg.type === "PHOTO_REQUESTED") {
-        if (msg.request) savePhotoRequest(msg.request);
+        if (msg.request) {
+          savePhotoRequest(msg.request);
+          sendDeviceNotification({
+            title: "Photo Proof Requested 📸",
+            body: `${msg.request.requestedBy || "Parent"} asked ${msg.request.kidName} for a photo of "${msg.request.taskTitle}"`,
+            tag: `photo_req_${msg.request.id || "live"}`
+          });
+        }
         setPhotoRequestsVersion(v => v + 1);
       } else if (msg.type === "PHOTO_PROOF_SUBMITTED") {
         if (msg.proof) {
@@ -2658,6 +2671,11 @@ function App({
           setNotice(`📸 ${msg.proof.kidName} submitted photo proof for "${msg.proof.taskTitle}"!`);
           setTimeout(() => setNotice(null), 4000);
           playHouseholdRemoteChime();
+          sendDeviceNotification({
+            title: "Photo Proof Submitted 📸",
+            body: `${msg.proof.kidName} submitted photo proof for "${msg.proof.taskTitle}"`,
+            tag: `photo_proof_${msg.proof.id || "live"}`
+          });
         }
         setPhotoRequestsVersion(v => v + 1);
       } else if (msg.type === "PHOTO_PROOF_VERIFIED") {

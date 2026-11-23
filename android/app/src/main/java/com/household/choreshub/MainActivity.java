@@ -12,6 +12,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(ContactPickerPlugin.class);
+        registerPlugin(LocalPushPlugin.class);
         setTheme(R.style.AppTheme_NoActionBar);
         EdgeToEdge.enable(this);
         super.onCreate(savedInstanceState);

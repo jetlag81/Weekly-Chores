@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 22:10:00
+> **Export Date**: 2026-11-22 22:22:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,12 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Re-Send Invite Panel Post-Setup (SMS, Email, Copy Link & QR Code)** (src/HouseholdManageModal.tsx):
+1. **Cross-Platform Push Notifications (Native Android + Web/PWA)** (android/app/src/main/java/com/household/choreshub/LocalPushPlugin.java, android/app/src/main/AndroidManifest.xml, src/pushNotificationService.ts, public/sw.js, src/HouseholdSettingsModal.tsx, src/ParentMobileDashboard.tsx, weekly_chores_household_hub.tsx):
+   - Added Android 13+ `POST_NOTIFICATIONS` permission and native `LocalPushPlugin.java` (`household_hub_alerts` high-importance notification channel) registered in `MainActivity.java`.
+   - Built `src/pushNotificationService.ts` unifying native Android notifications and Web/PWA `ServiceWorkerRegistration.showNotification` (with `notificationclick` handler in `public/sw.js`).
+   - Added a 1-tap **Enable Push Notifications** banner on the Parent/Co-Parent Hub, upgraded the **Settings → Notifications** tab with **Enable** and **Test** buttons, and wired real-time activity, nudge, praise, and photo proof events to trigger device notifications.
+
+2. **Re-Send Invite Panel Post-Setup (SMS, Email, Copy Link & QR Code)** (src/HouseholdManageModal.tsx):
    - Added a **Re-Send Invite** (`Send` icon) button on every member card in **Manage → Members** (accessible from both Primary Parent and Co-Parent Hubs) that opens an inline invite panel with Text (SMS), Email, Copy Link, and scannable QR Code using the live `https://family-chores-hub.web.app` URL.
 
 2. **Instant Kid Link Routing & Live Hosting Invite URLs** (weekly_chores_household_hub.tsx, src/HouseholdSettingsModal.tsx, src/InviteModal.tsx, src/HouseholdManageModal.tsx):
@@ -5795,4 +5800,19 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 **Assistant Response**:
 - Added a **Re-Send Invite** (`Send` icon) action on every household member in `src/HouseholdManageModal.tsx` (**Manage → Members**), available on both the Primary Parent Hub and Co-Parent Hub.
 - Tapping it expands an inline invite panel with **Text (SMS)**, **Email**, **Copy Link**, and **QR Code** (`QRCodeDisplay`) pre-targeted to that member's exact Kid Dashboard (`?kid=<Name>`) or Co-Parent Hub (`?mode=parent&parent=<Name>&role=coparent`) on `https://family-chores-hub.web.app`.
+- Built APK, installed on Pixel (`47171FDAP000A2`), redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and pushed to `origin/main`.
+
+
+---
+
+### Turn 218
+**Date / Time**: 2026-11-22T22:22:00-06:00
+
+**User Request**:
+> And enable push notifications
+
+**Assistant Response**:
+- Added native Android 13+ push notification support via `POST_NOTIFICATIONS` in `AndroidManifest.xml` and a custom Capacitor plugin `LocalPushPlugin.java` (registered in `MainActivity.java`) creating the high-importance `household_hub_alerts` channel.
+- Created `src/pushNotificationService.ts` unifying native Android notifications and Web/PWA `ServiceWorkerRegistration.showNotification` (with `notificationclick` focus/open handling in `public/sw.js`).
+- Upgraded **Settings → Notifications** (`src/HouseholdSettingsModal.tsx`) with native + web permission handling and a **Test** notification button, added a 1-tap **Enable Push Notifications** prompt banner to `src/ParentMobileDashboard.tsx`, and wired incoming real-time activity, nudge/praise, and photo proof events in `weekly_chores_household_hub.tsx` to fire device push notifications.
 - Built APK, installed on Pixel (`47171FDAP000A2`), redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and pushed to `origin/main`.

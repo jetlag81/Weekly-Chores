@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 18:57:00
+> **Export Date**: 2026-11-22 19:07:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -5561,3 +5561,15 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 **Summary of Work Delivered**:
 - Verified `family-chores-hub` (`992354326987`) was restored via `firebase projects:list` and deployed `dist/` to Firebase Hosting (`firebase deploy --only hosting --project family-chores-hub`).
 - Confirmed live production URL: `https://family-chores-hub.web.app`.
+
+---
+
+### Turn 205
+**Date / Time**: 2026-11-22T19:07:00Z
+
+**User Prompt**:
+> Now I get this when the link opens: ReferenceError: getUserProfileByName is not defined
+
+**Summary of Work Delivered**:
+- Fixed `getUserProfileByName(m.name)` → `getUserProfile(m.name)` in `rankedMembers` inside [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx).
+- Rebuilt `dist/`, redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and reinstalled the updated APK onto `47171FDAP000A2`.

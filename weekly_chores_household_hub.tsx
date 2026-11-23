@@ -6453,7 +6453,7 @@ function App({
           roleLower.includes("parent") ||
           roleLower.includes("admin")
         ) return false;
-        const prof = getUserProfileByName(m.name);
+        const prof = getUserProfile(m.name);
         if (prof && String(prof.role || "").toLowerCase() === "parent") return false;
         return true;
       })

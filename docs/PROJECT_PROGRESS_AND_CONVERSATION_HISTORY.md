@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 20:20:00
+> **Export Date**: 2026-11-22 20:34:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,10 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Household Hub Master Data Dark Theme, Live Current Week & Confirmed Kids Week Toggle** (weekly_chores_household_hub.tsx):
+1. **1-Tap Week Navigation (`‹ Prev` / `This Wk` / `Next ›`) Across Hub Views** (weekly_chores_household_hub.tsx, src/ParentMobileDashboard.tsx):
+   - Added `handleShiftActiveWeek(deltaWeeks)` and `handleJumpToThisWeek()` so parents can jump ahead to Next Week (or back to This Week) in 1 tap from the **Weekly Schedule** toolbar, **Household Hub Master Data** header, and **Mobile Command View** 7-day strip to redistribute chores ahead of time.
+
+2. **Household Hub Master Data Dark Theme, Live Current Week & Confirmed Kids Week Toggle** (weekly_chores_household_hub.tsx):
    - Styled the entire **Household Hub Master Data** tab (`activeTab === "roster"`) for full dark-theme continuity (`#0F172A` / `dark:bg-slate-900`, `dark:bg-slate-800`, `dark:text-white`).
    - Replaced stale spreadsheet values (`2026-10-19`, static `"Kids Week"`) with live `activeSyncWeek || getCurrentWeekMonday().dateKey` and live `isBiWeeklyHereThisWeek` status.
    - Added a **Kids Week** toggle button (both in the top bar and inside Schedule Configurations) backed by a persistent `weekly_chores_custody_flipped_v1` parity flip and a **"Switch Bi-Weekly Kids Week?"** confirmation modal.
@@ -5628,4 +5631,19 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   1. Added full dark-theme classes (`dark:bg-slate-900`, `dark:bg-slate-800`, `dark:border-slate-800`, `dark:text-white`, `dark:text-slate-300`) across the Master Data card, Special Rules & Parameters, 4 summary cards, Household Members & Pets tables, Occupancy Categories, Special Rotation Groups, Schedule Configurations, and Master Chores header.
   2. Replaced static spreadsheet week/custody text (`hubScheduleConfig.activeWeekStart` / `custodyRotation`) with live `activeSyncWeek || getCurrentWeekMonday().dateKey` and live `isBiWeeklyHereThisWeek` status.
   3. Added a **Kids Week** toggle button + **"Switch Bi-Weekly Kids Week?"** confirmation modal (`showKidsWeekConfirm`) that flips the bi-weekly custody parity (`weekly_chores_custody_flipped_v1`) across the Weekly Schedule, Monthly Calendar, and Hub Master Data.
+- Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).
+
+---
+
+### Turn 209
+**Date / Time**: 2026-11-22T20:34:00Z
+
+**User Prompt**:
+> I need a simple way to jump to the next week in the Hub if I want to redistribute ahead of time.
+
+**Summary of Work Delivered**:
+- Added `handleShiftActiveWeek(deltaWeeks)` and `handleJumpToThisWeek()` in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx) and wired compact **`‹ Prev` | `This Wk` | `Next ›`** week-navigation controls into:
+  1. **Weekly Schedule** toolbar (right beside **Distribute** for 1-tap ahead-of-time redistribution).
+  2. **Household Hub Master Data** header bar.
+  3. **Parent Mobile Command View** ([`src/ParentMobileDashboard.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/ParentMobileDashboard.tsx)) above the 7-day strip.
 - Rebuilt APK, installed on `47171FDAP000A2`, and redeployed Firebase Hosting (`https://family-chores-hub.web.app`).

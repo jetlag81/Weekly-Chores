@@ -94,6 +94,8 @@ interface ParentMobileDashboardProps {
   activeParentAdmin?: string;
   onSwitchParentAdmin?: (admin: string) => void;
   isPrimaryAdmin?: boolean;
+  onShiftWeek?: (deltaWeeks: number) => void;
+  onJumpToThisWeek?: () => void;
   lastInspectedKid?: string | null;
   onClearCompletedTasks?: () => void;
   onOpenCleanSlateModal?: () => void;
@@ -133,6 +135,8 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   activeParentAdmin: activeParentAdminProp,
   onSwitchParentAdmin,
   isPrimaryAdmin = true,
+  onShiftWeek,
+  onJumpToThisWeek,
   lastInspectedKid,
   onClearCompletedTasks,
   onOpenCleanSlateModal,
@@ -657,18 +661,49 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
 
         {/* Horizontal Day Selector Bar */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="w-4 h-4 text-amber-400" />
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-300">
+          <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Calendar className="w-4 h-4 text-amber-400 shrink-0" />
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-300 truncate">
                 Chores for {FULL_DAY_NAMES[activeDay?.dayOfWeekIndex || 0]} ({MONTH_NAMES[activeDay?.month || 0]} {activeDay?.day})
               </h3>
             </div>
-            {activeDay?.dateKey === todayDateKey && (
-              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                Today
-              </span>
-            )}
+            <div className="flex items-center gap-1 shrink-0">
+              {onShiftWeek && (
+                <button
+                  type="button"
+                  onClick={() => onShiftWeek(-1)}
+                  className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[10px] font-bold transition cursor-pointer"
+                  title="Previous Week"
+                >
+                  ‹ Prev
+                </button>
+              )}
+              {activeDay?.dateKey === todayDateKey ? (
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Today
+                </span>
+              ) : onJumpToThisWeek ? (
+                <button
+                  type="button"
+                  onClick={onJumpToThisWeek}
+                  className="px-2 py-0.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold transition cursor-pointer"
+                  title="Jump back to This Week"
+                >
+                  This Wk
+                </button>
+              ) : null}
+              {onShiftWeek && (
+                <button
+                  type="button"
+                  onClick={() => onShiftWeek(1)}
+                  className="px-2 py-0.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-400/40 text-indigo-200 text-[10px] font-bold transition cursor-pointer"
+                  title="Jump to Next Week"
+                >
+                  Next Wk ›
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-7 gap-1.5 bg-slate-800/60 p-1.5 rounded-2xl border border-slate-700/70">

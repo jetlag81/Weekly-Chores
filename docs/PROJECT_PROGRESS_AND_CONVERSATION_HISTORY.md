@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 17:48:00
+> **Export Date**: 2026-11-22 18:01:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,12 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Member Email Field & Native Contact Email Import** (src/CleanSlateOnboardingModal.tsx, src/householdOnboardingConfig.ts, ContactPickerPlugin.java, AndroidManifest.xml):
+1. **Cross-Platform Cloud Function Invite Service (Twilio SMS + Resend Email)** (functions/index.js, functions/package.json, firebase.json, src/inviteService.ts, src/CleanSlateOnboardingModal.tsx):
+   - Scaffolded Firebase Cloud Function `sendFamilyInvites` (`functions/index.js`) using Node 20 built-in `fetch` + Firebase Secrets for **Twilio SMS** and **Resend Email** (Google Play & Apple App Store compliant).
+   - Added `firebase.json` covering Firestore rules, Functions (`nodejs20`), and Firebase Hosting (`dist/`).
+   - Added `src/inviteService.ts` and wired Step 6 **Finish & Send Invites** to automatically dispatch invites when `VITE_INVITE_FUNCTION_URL` is configured, while keeping manual Text/Email/Copy buttons as fallback.
+
+2. **Member Email Field & Native Contact Email Import** (src/CleanSlateOnboardingModal.tsx, src/householdOnboardingConfig.ts, ContactPickerPlugin.java, AndroidManifest.xml):
    - Added Email Address fields to Step 2 Co-Parent and Kids creation forms (`coParentEmail`, `kidEmail`), saved on `OnboardingMemberDraft.email` and `UserProfile.email`.
    - Upgraded Android `ContactPickerPlugin` (with optional `READ_CONTACTS` permission) and Web Contact Picker to auto-populate Name, Phone Number, and Email from imported contacts.
    - Displayed member emails in Step 2 Household Members and Step 6 Review & Send Family Invites, alongside a `✉️ Email Invite` action.
@@ -5490,3 +5495,18 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Upgraded [`ContactPickerPlugin.java`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/android/app/src/main/java/com/household/choreshub/ContactPickerPlugin.java) and [`AndroidManifest.xml`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/android/app/src/main/AndroidManifest.xml) (`READ_CONTACTS` with graceful fallback) so importing an existing contact populates Name, Phone Number, and Email automatically.
 - Explained the technical & store-policy tradeoffs for automatic background SMS (`SmsManager` sideload-only vs. Cloud Functions + Twilio/Resend for Play Store & iOS).
 - Rebuilt and deployed the updated APK to `47171FDAP000A2`.
+
+---
+
+### Turn 201
+**Date / Time**: 2026-11-22T18:01:00Z
+
+**User Prompt**:
+> Let's go with option 1. I want this to be a cross-platform app so, the more universal the options the better.
+
+**Summary of Work Delivered**:
+- Implemented the cross-platform Cloud Function invite architecture (Android, iOS, Web & store-compliant):
+  1. Added [`firebase.json`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/firebase.json), [`functions/package.json`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/functions/package.json), and [`functions/index.js`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/functions/index.js) (`sendFamilyInvites` HTTPS v2 function dispatching SMS via Twilio and Email via Resend using Firebase Secret Manager).
+  2. Added [`src/inviteService.ts`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/inviteService.ts) and updated [`.env.example`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/.env.example) with `VITE_INVITE_FUNCTION_URL` and `VITE_PUBLIC_HUB_URL`.
+  3. Wired Step 6 **Finish & Send Invites** in [`src/CleanSlateOnboardingModal.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/src/CleanSlateOnboardingModal.tsx) to automatically dispatch invites for Co-Parents & Kids 12+ when `VITE_INVITE_FUNCTION_URL` is configured, with non-blocking fallback to manual Text/Email/Copy buttons.
+- Rebuilt and installed the updated APK onto `47171FDAP000A2`.

@@ -59,6 +59,11 @@ import {
 import { saveUserProfile, generateInitials, type UserProfile } from "./userProfiles";
 import { saveKidRewardProfile } from "./rewardAccounts";
 import { QRCodeDisplay } from "./QRCodeDisplay";
+import {
+  sendFamilyInvitesBatch,
+  getPublicHubBaseUrl,
+  getInviteFunctionUrl
+} from "./inviteService";
 
 interface CleanSlateOnboardingModalProps {
   isOpen: boolean;
@@ -209,6 +214,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const [verifiedMembers, setVerifiedMembers] = useState<Record<string, boolean>>({});
   const [skippedDeviceKids, setSkippedDeviceKids] = useState<Record<string, boolean>>({});
+  const [isSendingInvites, setIsSendingInvites] = useState<boolean>(false);
   const [launchTourAfterFinish, setLaunchTourAfterFinish] = useState<boolean>(true);
 
   // Address autocomplete effect (strictly filtered by selected country + optional GPS bias)
@@ -679,12 +685,44 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
     setNewChorePhoto(false);
   };
 
-  const handleFinishWizard = () => {
-    backupCurrentHouseholdBeforeCleanSlate();
+  const handleFinishWizard = async () => {
+    if (isSendingInvites) return;
+    setIsSendingInvites(true);
 
     const finalAdminName = adminFirstName.trim() || "Admin";
     const finalAdminLast = adminLastName.trim() || "";
     const finalAdminNick = adminNickname.trim() || finalAdminName;
+    const finalHouseName = householdName.trim() || `${finalAdminName}'s Hub`;
+
+    // Automatically dispatch SMS/Email invites via Firebase Cloud Function when configured
+    const autoInviteRecipients = members.filter(m => {
+      const isUnder12 =
+        m.role === "Kid" &&
+        m.ageStatusOverride !== "teen" &&
+        (m.ageStatusOverride === "junior" || m.age < 12);
+      return !isUnder12 && Boolean((m.phoneNumber || "").trim() || (m.email || "").trim());
+    });
+
+    if (autoInviteRecipients.length > 0 && getInviteFunctionUrl()) {
+      try {
+        await sendFamilyInvitesBatch({
+          householdName: finalHouseName,
+          adminName: finalAdminName,
+          recipients: autoInviteRecipients.map(m => ({
+            id: m.id,
+            firstName: m.firstName,
+            role: m.role,
+            inviteCode: m.inviteCode,
+            phoneNumber: m.phoneNumber,
+            email: m.email
+          }))
+        });
+      } catch {
+        // Non-blocking: finish onboarding even if cloud dispatch fails
+      }
+    }
+
+    backupCurrentHouseholdBeforeCleanSlate();
 
     // Build complete member list including the primary Admin
     const adminDraft: OnboardingMemberDraft = {
@@ -845,6 +883,7 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
       monthlyGoalTarget,
       startSpotlightTour: launchTourAfterFinish
     });
+    setIsSendingInvites(false);
   };
 
   const stepTitles = [
@@ -2327,10 +2366,8 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
               (verifiedMembers["admin"] ? 1 : 0) +
               members.filter(m => verifiedMembers[m.id]).length;
 
-            const originBase =
-              typeof window !== "undefined" && window.location.origin && !window.location.origin.startsWith("file:")
-                ? window.location.origin
-                : "https://family-chores-hub.web.app";
+            const originBase = getPublicHubBaseUrl();
+            const hasCloudAutoSend = Boolean(getInviteFunctionUrl());
 
             return (
               <div className="space-y-4">
@@ -2362,6 +2399,12 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
                   </div>
 
                   {/* Primary Admin & Household Summary */}
+                  <div className="text-[10.5px] px-2.5 py-1.5 rounded-xl bg-slate-900/70 border border-slate-700/70 text-slate-300">
+                    {hasCloudAutoSend
+                      ? "⚡ Cloud Auto-Send is active — tapping Finish & Send Invites will automatically text/email Co-Parents & Kids 12+."
+                      : "☁️ Cloud Auto-Send ready for Firebase deployment — use Text/Email Invite buttons below or deploy functions/sendFamilyInvites for 1-tap auto-send."}
+                  </div>
+
                   <div className="p-3 rounded-xl bg-slate-900 border border-indigo-500/40 space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 space-y-0.5">
@@ -2678,11 +2721,12 @@ export const CleanSlateOnboardingModal: React.FC<CleanSlateOnboardingModalProps>
           ) : (
             <button
               type="button"
+              disabled={isSendingInvites}
               onClick={handleFinishWizard}
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-lg transition cursor-pointer"
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 disabled:opacity-60 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-lg transition cursor-pointer"
             >
               <Send className="w-4 h-4" />
-              <span>Finish &amp; Send Invites</span>
+              <span>{isSendingInvites ? "Sending Invites..." : "Finish & Send Invites"}</span>
             </button>
           )}
         </div>

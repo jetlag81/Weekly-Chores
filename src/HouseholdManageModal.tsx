@@ -8,9 +8,11 @@ import {
   Users,
   ClipboardList,
   PawPrint,
-  UserCircle
+  UserCircle,
+  Link2
 } from "lucide-react";
 import { getUserProfile, getPreferredName, calculateAge, getEffectiveAgeTier } from "./userProfiles";
+import { getPublicHubBaseUrl } from "./inviteService";
 
 export type ManageTab = "chores" | "members" | "pets";
 
@@ -143,6 +145,7 @@ export const HouseholdManageModal: React.FC<HouseholdManageModalProps> = ({
 
   // Edit Member state
   const [editingMemberRow, setEditingMemberRow] = useState<number | null>(null);
+  const [copiedMemberLink, setCopiedMemberLink] = useState<string | null>(null);
   const [memberDraft, setMemberDraft] = useState<{
     name: string;
     role: string;
@@ -884,6 +887,37 @@ export const HouseholdManageModal: React.FC<HouseholdManageModalProps> = ({
                         </div>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const base = getPublicHubBaseUrl();
+                            const isParent = String(member.role || "").toLowerCase().includes("parent");
+                            const link = isParent
+                              ? `${base}/?mode=parent&parent=${encodeURIComponent(member.name)}&role=coparent`
+                              : `${base}/?kid=${encodeURIComponent(member.name)}`;
+                            try {
+                              navigator.clipboard.writeText(link);
+                            } catch {}
+                            setCopiedMemberLink(member.name);
+                            setTimeout(() => setCopiedMemberLink(null), 2000);
+                          }}
+                          className={`p-1.5 rounded-lg transition cursor-pointer ${
+                            copiedMemberLink === member.name
+                              ? "bg-emerald-600 text-white"
+                              : "bg-emerald-500/20 hover:bg-emerald-600 text-emerald-300 hover:text-white"
+                          }`}
+                          title={
+                            copiedMemberLink === member.name
+                              ? "Copied invite link!"
+                              : `Copy direct invite link for ${member.name}`
+                          }
+                        >
+                          {copiedMemberLink === member.name ? (
+                            <Check className="w-3.5 h-3.5" />
+                          ) : (
+                            <Link2 className="w-3.5 h-3.5" />
+                          )}
+                        </button>
                         {onOpenMemberProfile && (
                           <button
                             type="button"

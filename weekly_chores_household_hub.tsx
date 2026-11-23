@@ -2010,9 +2010,65 @@ function App({
   const [choreOrderOverrides, setChoreOrderOverrides] = useState(null);
   const [editingPrintableChore, setEditingPrintableChore] = useState(null);
   const [deletingChoreTarget, setDeletingChoreTarget] = useState(null);
-  const [deviceSession, setDeviceSession] = useState(() => getStoredDeviceSession());
+  const [deviceSession, setDeviceSession] = useState<DeviceSession>(() => {
+    const cur = getStoredDeviceSession();
+    if (typeof window === "undefined") return cur;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const kidParam = (params.get("kid") || params.get("minion") || "").trim();
+      const parentParam = (params.get("parent") || params.get("admin") || "").trim();
+      const modeParam = (params.get("mode") || "").trim().toLowerCase();
+      const userParam = (params.get("user") || "").trim();
+
+      if (kidParam) {
+        const fromParent = (params.get("fromParent") || params.get("parentOrigin") || "").trim();
+        const kidSession: DeviceSession = {
+          role: "kid",
+          householdId: cur.householdId || "household_family_hub",
+          kidName: kidParam,
+          deviceId: cur.deviceId,
+          parentPin: cur.parentPin || "1234",
+          viewingAsParent: fromParent ? (fromParent as any) : undefined
+        };
+        saveDeviceSession(kidSession);
+        return kidSession;
+      }
+
+      if (parentParam || (modeParam === "parent" && userParam)) {
+        const pName = parentParam || userParam || "Thom";
+        const setupCfg = getHouseholdSetupConfig();
+        const primaryAdminLower = (setupCfg?.adminName || "Thom").trim().toLowerCase();
+        const roleParam = (params.get("role") || "").toLowerCase();
+        const isCoParent =
+          roleParam === "coparent" ||
+          (Boolean(pName) && pName.toLowerCase() !== primaryAdminLower);
+        const parentSession: DeviceSession = {
+          role: "admin",
+          parentName: pName,
+          isCoParent,
+          householdId: cur.householdId || "household_family_hub",
+          deviceId: cur.deviceId,
+          parentPin: cur.parentPin || "1234"
+        };
+        saveDeviceSession(parentSession);
+        saveActiveParentAdmin(pName);
+        return parentSession;
+      }
+    } catch { }
+    return cur;
+  });
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [showPairingScreen, setShowPairingScreen] = useState(false);
+  const [showPairingScreen, setShowPairingScreen] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const hasJoin = Boolean(params.get("join") || params.get("code") || params.get("invite"));
+      const hasKid = Boolean(params.get("kid") || params.get("minion"));
+      return hasJoin && !hasKid;
+    } catch {
+      return false;
+    }
+  });
   const [showFirebaseModal, setShowFirebaseModal] = useState(false);
   const [showPwaModal, setShowPwaModal] = useState(false);
   const [showInspectionModal, setShowInspectionModal] = useState(false);
@@ -2191,13 +2247,64 @@ function App({
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const joinCode = params.get("join") || params.get("code") || params.get("invite");
-    const kidParam = params.get("kid") || params.get("minion");
-    const modeParam = params.get("mode");
+    const joinCode = (params.get("join") || params.get("code") || params.get("invite") || "").trim();
+    const kidParam = (params.get("kid") || params.get("minion") || "").trim();
+    const modeParam = (params.get("mode") || "").trim().toLowerCase();
 
-    if (joinCode) {
+    if (kidParam) {
+      // Kid link (?kid=Koda or ?kid=Koda&code=HERD-XX): lock into Kid Mode immediately
       const cur = getStoredDeviceSession();
-      redeemKidInvite(joinCode.toUpperCase().trim(), cur.deviceId).then(res => {
+      const fromParent = (params.get("fromParent") || params.get("parentOrigin") || "").trim();
+      const newSession: DeviceSession = {
+        role: "kid",
+        householdId: cur.householdId || "household_family_hub",
+        kidName: kidParam,
+        deviceId: cur.deviceId,
+        parentPin: cur.parentPin || "1234",
+        viewingAsParent: fromParent ? (fromParent as any) : undefined
+      };
+      saveDeviceSession(newSession);
+      setDeviceSession(newSession);
+      setShowPairingScreen(false);
+      if (joinCode) {
+        // Redeem invite code in background to record device pairing without ever leaving Kid Mode
+        redeemKidInvite(joinCode.toUpperCase(), cur.deviceId).then(res => {
+          if (res.success && res.invite?.householdId && res.invite.householdId !== newSession.householdId) {
+            const updatedSession: DeviceSession = {
+              ...newSession,
+              householdId: res.invite.householdId,
+              kidName: res.invite.kidName || kidParam
+            };
+            saveDeviceSession(updatedSession);
+            setDeviceSession(updatedSession);
+          }
+        }).catch(() => {});
+        try {
+          sessionStorage.setItem("household_just_paired_kid", kidParam);
+        } catch {}
+        setNotice(`🎉 Connected to ${kidParam}'s Kid Mode!`);
+        setTimeout(() => setNotice(null), 4000);
+      }
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("parent");
+        url.searchParams.delete("admin");
+        url.searchParams.delete("role");
+        url.searchParams.delete("mode");
+        url.searchParams.delete("code");
+        url.searchParams.delete("join");
+        url.searchParams.delete("invite");
+        url.searchParams.set("kid", kidParam);
+        if (fromParent) {
+          url.searchParams.set("fromParent", fromParent);
+        }
+        window.history.replaceState({}, document.title, url.toString());
+      } catch { }
+    } else if (joinCode) {
+      // Code-only invite link (?join=HERD-XX): keep on Kid Pairing screen while redeeming
+      const cur = getStoredDeviceSession();
+      setShowPairingScreen(true);
+      redeemKidInvite(joinCode.toUpperCase(), cur.deviceId).then(res => {
         if (res.success && res.invite) {
           const newSession: DeviceSession = {
             role: "kid",
@@ -2214,27 +2321,16 @@ function App({
           setShowPairingScreen(false);
           setNotice(`🎉 Connected to ${res.invite.kidName}'s Kid Mode!`);
           setTimeout(() => setNotice(null), 4000);
-        } else if (kidParam) {
-          // Graceful fallback: activate Kid mode for this kid directly
-          const newSession: DeviceSession = {
-            role: "kid",
-            householdId: cur.householdId || "household_family_hub",
-            kidName: kidParam,
-            deviceId: cur.deviceId,
-            parentPin: "1234"
-          };
-          saveDeviceSession(newSession);
           try {
-            sessionStorage.setItem("household_just_paired_kid", kidParam);
+            const url = new URL(window.location.href);
+            url.searchParams.delete("join");
+            url.searchParams.delete("code");
+            url.searchParams.delete("invite");
+            url.searchParams.set("kid", res.invite.kidName);
+            window.history.replaceState({}, document.title, url.toString());
           } catch {}
-          setDeviceSession(newSession);
-          setShowPairingScreen(false);
-          setNotice(`🎉 Connected to ${kidParam}'s Kid Mode!`);
-          setTimeout(() => setNotice(null), 4000);
         }
       });
-      const cleanUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
     } else if (params.get("parent") || params.get("admin") || (modeParam === "parent" && params.get("user"))) {
       const pParam = (params.get("parent") || params.get("admin") || params.get("user") || "").trim();
       const setupCfg = getHouseholdSetupConfig();
@@ -2263,31 +2359,6 @@ function App({
         url.searchParams.delete("kid");
         url.searchParams.set("parent", cleanParent);
         if (isCoParent) url.searchParams.set("role", "coparent");
-        window.history.replaceState({}, document.title, url.toString());
-      } catch { }
-    } else if (kidParam) {
-      const cur = getStoredDeviceSession();
-      const fromParent = (params.get("fromParent") || params.get("parentOrigin") || "") as "Thom" | "Meghan" | "";
-      const validFromParent: "Thom" | "Meghan" | undefined =
-        fromParent === "Thom" || fromParent === "Meghan" ? fromParent : cur.viewingAsParent;
-      const newSession: DeviceSession = {
-        role: "kid",
-        householdId: cur.householdId || "household_family_hub",
-        kidName: kidParam,
-        deviceId: cur.deviceId,
-        parentPin: "1234",
-        viewingAsParent: validFromParent
-      };
-      saveDeviceSession(newSession);
-      setDeviceSession(newSession);
-      setShowPairingScreen(false);
-      try {
-        const url = new URL(window.location.href);
-        url.searchParams.delete("parent");
-        url.searchParams.set("kid", kidParam);
-        if (validFromParent) {
-          url.searchParams.set("fromParent", validFromParent);
-        }
         window.history.replaceState({}, document.title, url.toString());
       } catch { }
     } else if (modeParam === "parent" || modeParam === "admin") {

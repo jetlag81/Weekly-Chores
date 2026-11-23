@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 21:50:00
+> **Export Date**: 2026-11-22 22:05:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,12 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Co-Parent & Mobile Hub Management for Chores, Members & Pets** (src/HouseholdManageModal.tsx, src/ParentMobileDashboard.tsx, weekly_chores_household_hub.tsx):
+1. **Instant Kid Link Routing & Live Hosting Invite URLs** (weekly_chores_household_hub.tsx, src/HouseholdSettingsModal.tsx, src/InviteModal.tsx, src/HouseholdManageModal.tsx):
+   - Fixed kid invite links (`?kid=Koda&code=...` or `?kid=Koda`) opening to the Parent Hub by synchronously initializing `deviceSession` from URL query parameters on frame 1 (zero Parent Hub flash), keeping `?kid=<Name>` in the URL, redeeming invite codes in the background without leaving Kid Mode, and showing the Kid Pairing screen (never Parent Hub) for code-only `?join=...` links.
+   - Replaced stale `.trycloudflare.com` default URLs in `HouseholdSettingsModal` and `InviteModal` with `getPublicHubBaseUrl()` (`https://family-chores-hub.web.app`).
+   - Added a 1-tap **Copy Invite Link** button (`🔗`) per member in `HouseholdManageModal`.
+
+2. **Co-Parent & Mobile Hub Management for Chores, Members & Pets** (src/HouseholdManageModal.tsx, src/ParentMobileDashboard.tsx, weekly_chores_household_hub.tsx):
    - Built a dark-themed, safe-area compliant `HouseholdManageModal` with 3 tabs (**Chores**, **Members**, **Pets**) supporting full Add, Edit, and Delete operations synced live across all paired devices.
    - Added a dedicated **Manage** tile to the Co-Parent Quick Command grid, a 3-pill **Add / Edit: Chores | Members | Pets** quick bar on both Parent and Co-Parent Hubs, clickable Hub header avatar to open own profile, and rendered `UserProfileModal` directly inside the mobile parent view.
 
@@ -5756,4 +5761,21 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Created `src/HouseholdManageModal.tsx`: a dark-themed, safe-area compliant mobile manager with **Chores**, **Members**, and **Pets** tabs supporting Add, Edit, and Delete (plus 1-tap Member Profile / Avatar editing) synced live to Firestore.
 - Updated `src/ParentMobileDashboard.tsx`: added a **Manage** tile in the Co-Parent 4-tile command bar, added an **Add / Edit: Chores | Members | Pets** quick bar for both Primary Parent and Co-Parent, made the Hub header avatar clickable to edit your own profile/avatar, and wired Android back-button dismissal.
 - Updated `weekly_chores_household_hub.tsx`: passed `rosterPets` and all live chore, member, pet, and profile callbacks into `ParentMobileDashboard`, and rendered `UserProfileModal` in the mobile parent view.
+- Built APK, installed on Pixel (`47171FDAP000A2`), redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and pushed to `origin/main`.
+
+
+---
+
+### Turn 216
+**Date / Time**: 2026-11-22T22:05:00-06:00
+
+**User Request**:
+> When Koda (added kid user) opened the link, it opened to a parent hub
+
+**Assistant Response**:
+- **Root Cause**: `deviceSession` initialized asynchronously after defaulting to `role: "admin"` (Parent Hub), and `?kid=Koda&code=...` hit `if (joinCode)` before `kidParam`, stripping `?kid=Koda` from the URL while waiting on `redeemKidInvite()` against Firestore/local bridge. Additionally, `HouseholdSettingsModal` and `InviteModal` still defaulted to old `.trycloudflare.com` tunnel URLs.
+- **Fix**:
+  - Updated `weekly_chores_household_hub.tsx` to synchronously parse `?kid=` / `?minion=` / `?parent=` inside `useState(() => ...)` so kids land directly on their Kid Dashboard on frame 1 with zero Parent Hub flash, keep `?kid=<Name>` in the URL, redeem `code=`/`join=` in the background without leaving Kid Mode, and show `KidPairingScreen` (not Parent Hub) for code-only `?join=` links.
+  - Updated `HouseholdSettingsModal.tsx` and `InviteModal.tsx` to default to `getPublicHubBaseUrl()` (`https://family-chores-hub.web.app`).
+  - Added a 1-tap **Copy Invite Link** button (`🔗`) for each member in `HouseholdManageModal.tsx`.
 - Built APK, installed on Pixel (`47171FDAP000A2`), redeployed Firebase Hosting (`https://family-chores-hub.web.app`), and pushed to `origin/main`.

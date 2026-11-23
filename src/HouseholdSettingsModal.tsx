@@ -75,6 +75,7 @@ import {
 import { QRCodeDisplay } from "./QRCodeDisplay";
 import { isStandalone, promptPwaInstall } from "./pwaManager";
 import { getHouseholdSetupConfig } from "./householdOnboardingConfig";
+import { getPublicHubBaseUrl } from "./inviteService";
 
 export type SettingsTab =
   | "appearance"
@@ -153,7 +154,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
 
   // QR Code & Pairing
   const [selectedKidForQr, setSelectedKidForQr] = useState<string>(currentKidName);
-  const [tunnelUrl, setTunnelUrl] = useState<string>("https://silent-option-circle-medical.trycloudflare.com");
+  const [tunnelUrl, setTunnelUrl] = useState<string>(() => getPublicHubBaseUrl());
   const [qrTarget, setQrTarget] = useState<"tunnel" | "local">("tunnel");
   const [copiedQrLink, setCopiedQrLink] = useState(false);
 

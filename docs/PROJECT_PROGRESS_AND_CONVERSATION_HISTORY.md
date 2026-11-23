@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-22 18:36:00
+> **Export Date**: 2026-11-22 18:57:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,10 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Excluded Co-Parents & Primary Parents from Monthly Reward Leaderboard** (src/householdOnboardingConfig.ts, weekly_chores_household_hub.tsx):
+1. **Live Firebase Hosting Deployment (`https://family-chores-hub.web.app`)**:
+   - Restored Firebase project `family-chores-hub` (`992354326987`) and deployed `dist/` (76 files) to Firebase Hosting at `https://family-chores-hub.web.app` so texted Co-Parent / Kid invite links, QR codes, and computer browsers can access the live Household Hub from anywhere.
+
+2. **Excluded Co-Parents & Primary Parents from Monthly Reward Leaderboard** (src/householdOnboardingConfig.ts, weekly_chores_household_hub.tsx):
    - Fixed `buildSheetDataFromOnboarding()` so `role: "Parent"` members receive `"Parent Admin (Primary)"` / `"Co-Parent Admin"` instead of `"Minion"`, and mapped `residency` properly (`Full-Time`, `Bi-Weekly`, `Casual`).
    - Updated `rankedMembers` in `weekly_chores_household_hub.tsx` to also cross-check `getUserProfileByName(m.name)?.role === "Parent"` and `"admin"` roles so Co-Parents are excluded immediately even for already-saved households.
 
@@ -5546,3 +5549,15 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
   - Updated `rankedMembers` in [`weekly_chores_household_hub.tsx`](file:///c:/Dev%20Projects/Weekly_Chores/Weekly-Chores/weekly_chores_household_hub.tsx) to also exclude any member whose saved `UserProfile.role === "Parent"` or whose role includes `"admin"`.
 - Explained why `https://family-chores-hub.web.app` showed Firebase "Site not found" (Firebase Hosting hasn't been deployed yet) and provided the exact 2-step `firebase login` + `firebase deploy --only hosting` commands to publish `dist/` live.
 - Rebuilt and installed the updated APK onto `47171FDAP000A2`.
+
+---
+
+### Turn 204
+**Date / Time**: 2026-11-22T18:57:00Z
+
+**User Prompt**:
+> Can you check it again? I had selected an incorrect project for deletion but have now restored it
+
+**Summary of Work Delivered**:
+- Verified `family-chores-hub` (`992354326987`) was restored via `firebase projects:list` and deployed `dist/` to Firebase Hosting (`firebase deploy --only hosting --project family-chores-hub`).
+- Confirmed live production URL: `https://family-chores-hub.web.app`.

@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-23 17:55:00
+> **Export Date**: 2026-11-23 18:05:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -5900,3 +5900,15 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Built native Swift plugins `ios/App/App/ContactPickerPlugin.swift` (`CNContactPickerViewController`) and `ios/App/App/LocalPushPlugin.swift` (`UNUserNotificationCenter`), registered them via `HubBridgeViewController` in `SceneDelegate.swift`, added foreground notification presentation in `AppDelegate.swift`, and wired both files into `project.pbxproj`.
 - Created `.github/workflows/ios-build.yml` to compile and package an unsigned `ChoresHub-unsigned.ipa` on GitHub Actions `macos-15` runners on push to `main` or manual trigger.
 - Synced Capacitor iOS, committed, and pushed to `origin/main`.
+
+
+---
+
+### Turn 223
+**Date / Time**: 2026-11-23T18:05:00-06:00
+
+**User Request**:
+> [fatal] The Capacitor CLI requires NodeJS >=22.0.0
+
+**Assistant Response**:
+- Bumped `node-version` from `'20'` to `'22'` in `.github/workflows/ios-build.yml` to satisfy Capacitor 8 CLI's Node.js >=22.0.0 requirement, committed, and pushed to `origin/main` to re-trigger the macOS cloud build.

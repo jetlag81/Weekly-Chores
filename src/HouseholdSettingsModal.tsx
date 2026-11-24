@@ -110,6 +110,7 @@ interface HouseholdSettingsModalProps {
   onOpenCleanSlateModal?: () => void;
   onLaunchSpotlightTour?: () => void;
   onRestoreThomPreset?: () => void;
+  onOpenSwitchDeviceRole?: () => void;
   viewingAsParent?: "Thom" | "Meghan";
 }
 
@@ -132,6 +133,7 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
   onOpenCleanSlateModal,
   onLaunchSpotlightTour,
   onRestoreThomPreset,
+  onOpenSwitchDeviceRole,
   viewingAsParent
 }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
@@ -1618,6 +1620,31 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
               ) : (
                 /* Parent PIN Management & Device Pairing in Parent Mode */
                 <div className="space-y-4 pt-1">
+                  {onOpenSwitchDeviceRole && (
+                    <div className="p-4 bg-indigo-50/80 dark:bg-indigo-950/40 rounded-2xl border border-indigo-200 dark:border-indigo-700/60 space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <div className="text-xs font-black text-indigo-950 dark:text-white">
+                            Switch Device User / Co-Parent Setup
+                          </div>
+                          <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
+                            Assign this phone to a specific Co-Parent (e.g. Meghan), Kid, or paste an invite link.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onClose();
+                          onOpenSwitchDeviceRole();
+                        }}
+                        className="w-full py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs transition cursor-pointer shadow-xs"
+                      >
+                        Switch Device Role / Join as Co-Parent
+                      </button>
+                    </div>
+                  )}
+
                   <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">

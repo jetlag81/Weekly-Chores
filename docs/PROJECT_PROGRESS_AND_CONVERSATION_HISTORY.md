@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-23 18:05:00
+> **Export Date**: 2026-11-23 19:57:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,12 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **Native iOS App Scaffold, Swift Plugins & macOS Cloud Build** (ios/, capacitor.config.ts, .github/workflows/ios-build.yml):
+1. **First-Launch Welcome & Role Chooser + Native Deep Linking (`choreshub://`)** (src/FirstLaunchWelcomeScreen.tsx, weekly_chores_household_hub.tsx, src/HouseholdSettingsModal.tsx, src/ParentMobileDashboard.tsx):
+   - Added a **First-Launch Welcome Screen** on any brand-new install (iOS, Android, or Web with no prior session) letting users either **Join with Invite Link / Code**, **Join as Co-Parent / Parent** (locking the device permanently to e.g. Meghan's Co-Parent Hub), or **Start New Household Setup** (Clean Slate 7-step wizard) instead of defaulting to Thom's Hub.
+   - Added a **Switch Device Role / Join as Co-Parent** button in **Settings → PIN & Security** so an already-installed phone can switch to Meghan's Co-Parent Hub (or any Kid) in 2 taps.
+   - Added `@capacitor/app` `appUrlOpen` deep-link listener so `choreshub://open?mode=parent&parent=Meghan&role=coparent` or `choreshub://open?kid=Koda` opens directly into the matching hub in the native iOS/Android app.
+
+2. **Native iOS App Scaffold, Swift Plugins & macOS Cloud Build** (ios/, capacitor.config.ts, .github/workflows/ios-build.yml):
    - Installed `@capacitor/ios@^8.6.0` and scaffolded the native Xcode project (`ios/App/App.xcodeproj`, Swift Package Manager).
    - Configured `capacitor.config.ts` (`iosScheme: 'https'`, `contentInset: 'never'`, dark `#13111C` background) and `ios/App/App/Info.plist` (Camera, Photo Library, Contacts, and Location privacy descriptions + `choreshub://` custom URL scheme).
    - Implemented native Swift plugins `ContactPickerPlugin.swift` (`CNContactPickerViewController`) and `LocalPushPlugin.swift` (`UNUserNotificationCenter`), registered via `HubBridgeViewController` in `SceneDelegate.swift` with foreground alert presentation in `AppDelegate.swift`.
@@ -5912,3 +5917,18 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 
 **Assistant Response**:
 - Bumped `node-version` from `'20'` to `'22'` in `.github/workflows/ios-build.yml` to satisfy Capacitor 8 CLI's Node.js >=22.0.0 requirement, committed, and pushed to `origin/main` to re-trigger the macOS cloud build.
+
+
+---
+
+### Turn 224
+**Date / Time**: 2026-11-23T19:57:00-06:00
+
+**User Request**:
+> It installed and is working so I think we have the functionality. I installed it on my co-parent's phone and it loaded straight to Thom's Hub. That will need to be changed, especially for anyone doing a fresh install. How can we change Meghan's app to perform specifically as her hub?
+
+**Assistant Response**:
+- Created `src/FirstLaunchWelcomeScreen.tsx` shown automatically on any fresh install (iOS/Android/Web with no saved session) with 3 tabs: **Invite Link / Code**, **Co-Parent / Parent Sign-In** (locks the device permanently to e.g. Meghan's Co-Parent Hub), and **New Family** (Clean Slate 7-step setup).
+- Added a **Switch Device Role / Join as Co-Parent** action inside **Settings → PIN & Security** (`HouseholdSettingsModal.tsx` & `ParentMobileDashboard.tsx`) so Meghan's already-installed iPhone can switch to her Co-Parent Hub anytime without reinstalling.
+- Wired `@capacitor/app` `appUrlOpen` deep-link handling in `weekly_chores_household_hub.tsx` so `choreshub://open?mode=parent&parent=Meghan&role=coparent` or `choreshub://open?kid=Koda` routes directly inside the native iOS/Android app.
+- Built APK (Pixel), synced iOS, deployed Firebase Hosting, and pushed to `origin/main` (triggering a fresh macOS iOS `.ipa` build on GitHub Actions).

@@ -104,6 +104,7 @@ interface ParentMobileDashboardProps {
   onOpenCleanSlateModal?: () => void;
   onLaunchSpotlightTour?: () => void;
   onRestoreThomPreset?: () => void;
+  onOpenSwitchDeviceRole?: () => void;
   onRegisterDismissModal?: (fn: () => boolean) => void;
   rosterPets?: Array<any>;
   onAddChore?: (
@@ -191,6 +192,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   onOpenCleanSlateModal,
   onLaunchSpotlightTour,
   onRestoreThomPreset,
+  onOpenSwitchDeviceRole,
   onRegisterDismissModal,
   rosterPets = [],
   onAddChore,
@@ -1553,6 +1555,7 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
           onOpenCleanSlateModal={onOpenCleanSlateModal}
           onLaunchSpotlightTour={onLaunchSpotlightTour}
           onRestoreThomPreset={onRestoreThomPreset}
+          onOpenSwitchDeviceRole={onOpenSwitchDeviceRole}
         />
       )}
 

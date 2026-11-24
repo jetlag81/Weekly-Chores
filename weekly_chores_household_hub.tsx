@@ -64,6 +64,8 @@ import {
 import { MinionDashboard } from "./src/MinionDashboard";
 import { InviteModal } from "./src/InviteModal";
 import { KidPairingScreen } from "./src/KidPairingScreen";
+import { FirstLaunchWelcomeScreen } from "./src/FirstLaunchWelcomeScreen";
+import { App as CapApp } from "@capacitor/app";
 import { FirebaseSettingsModal } from "./src/FirebaseSettingsModal";
 import { InstallPwaModal } from "./src/InstallPwaModal";
 import { ParentInspectionModal } from "./src/ParentInspectionModal";
@@ -2011,6 +2013,28 @@ function App({
   const [choreOrderOverrides, setChoreOrderOverrides] = useState(null);
   const [editingPrintableChore, setEditingPrintableChore] = useState(null);
   const [deletingChoreTarget, setDeletingChoreTarget] = useState(null);
+  // Detect brand-new native/web install BEFORE getStoredDeviceSession() creates a default admin session
+  const [showFirstLaunchWelcome, setShowFirstLaunchWelcome] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const hasDirectParam = Boolean(
+        params.get("kid") ||
+          params.get("minion") ||
+          params.get("parent") ||
+          params.get("admin") ||
+          params.get("join") ||
+          params.get("code") ||
+          params.get("invite") ||
+          params.get("mode")
+      );
+      if (hasDirectParam) return false;
+      const hasExistingSession = Boolean(localStorage.getItem("household_hub_device_session_v1"));
+      return !hasExistingSession;
+    } catch {
+      return false;
+    }
+  });
   const [deviceSession, setDeviceSession] = useState<DeviceSession>(() => {
     const cur = getStoredDeviceSession();
     if (typeof window === "undefined") return cur;
@@ -2462,6 +2486,65 @@ function App({
       if (unsubSheet) unsubSheet();
     };
   }, [deviceSession == null ? void 0 : deviceSession.householdId]);
+
+  // Handle native iOS / Android deep links (e.g. choreshub://open?mode=parent&parent=Meghan&role=coparent or choreshub://open?kid=Koda)
+  useEffect(() => {
+    let listenerHandle: any = null;
+    try {
+      CapApp.addListener("appUrlOpen", (event: { url?: string }) => {
+        const rawUrl = event?.url || "";
+        if (!rawUrl || !rawUrl.includes("?")) return;
+        const params = new URLSearchParams(rawUrl.slice(rawUrl.indexOf("?")));
+        const kidParam = (params.get("kid") || params.get("minion") || "").trim();
+        const parentParam = (params.get("parent") || params.get("admin") || params.get("user") || "").trim();
+        const roleParam = (params.get("role") || "").toLowerCase();
+        const cur = getStoredDeviceSession();
+
+        if (kidParam) {
+          const kidSession: DeviceSession = {
+            role: "kid",
+            kidName: kidParam,
+            householdId: cur.householdId || "household_family_hub",
+            deviceId: cur.deviceId,
+            parentPin: cur.parentPin || "1234"
+          };
+          saveDeviceSession(kidSession);
+          setDeviceSession(kidSession);
+          setShowFirstLaunchWelcome(false);
+          setShowPairingScreen(false);
+          setNotice(`🎉 Opened ${kidParam}'s Kid Dashboard!`);
+          setTimeout(() => setNotice(null), 3500);
+        } else if (parentParam) {
+          const setupCfg = getHouseholdSetupConfig();
+          const primaryLower = (setupCfg?.adminName || "Thom").trim().toLowerCase();
+          const isCoParent = roleParam === "coparent" || parentParam.toLowerCase() !== primaryLower;
+          const parentSession: DeviceSession = {
+            role: "admin",
+            parentName: parentParam,
+            isCoParent,
+            householdId: cur.householdId || "household_family_hub",
+            deviceId: cur.deviceId,
+            parentPin: cur.parentPin || "1234"
+          };
+          saveDeviceSession(parentSession);
+          saveActiveParentAdmin(parentParam);
+          setActiveParentAdmin(parentParam);
+          setDeviceSession(parentSession);
+          setShowFirstLaunchWelcome(false);
+          setShowPairingScreen(false);
+          setNotice(`👑 Opened ${parentParam}'s ${isCoParent ? "Co-Parent" : "Admin"} Hub!`);
+          setTimeout(() => setNotice(null), 3500);
+        }
+      }).then((h) => {
+        listenerHandle = h;
+      }).catch(() => {});
+    } catch {}
+    return () => {
+      if (listenerHandle && typeof listenerHandle.remove === "function") {
+        listenerHandle.remove();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const unsub = subscribeToRealtimeSync((msg: any) => {
@@ -6751,6 +6834,56 @@ function App({
 
   const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
+  if (showFirstLaunchWelcome) {
+    const canDismissWelcome = Boolean(
+      typeof window !== "undefined" && localStorage.getItem("household_hub_device_session_v1")
+    );
+    return (
+      <FirstLaunchWelcomeScreen
+        onCancel={canDismissWelcome ? () => setShowFirstLaunchWelcome(false) : undefined}
+        onJoinedAsParent={(parentName, isCoParent, householdId) => {
+          const cur = getStoredDeviceSession();
+          const newSession: DeviceSession = {
+            role: "admin",
+            parentName,
+            isCoParent,
+            householdId: householdId || cur.householdId || "household_family_hub",
+            deviceId: cur.deviceId,
+            parentPin: cur.parentPin || "1234"
+          };
+          saveDeviceSession(newSession);
+          saveActiveParentAdmin(parentName);
+          setActiveParentAdmin(parentName);
+          setDeviceSession(newSession);
+          setShowFirstLaunchWelcome(false);
+          setShowPairingScreen(false);
+          setNotice(`👑 Welcome, ${parentName}! Locked to your ${isCoParent ? "Co-Parent" : "Admin"} Hub.`);
+          setTimeout(() => setNotice(null), 4000);
+        }}
+        onJoinedAsKid={(kidName, householdId) => {
+          const cur = getStoredDeviceSession();
+          const kidSession: DeviceSession = {
+            role: "kid",
+            kidName,
+            householdId: householdId || cur.householdId || "household_family_hub",
+            deviceId: cur.deviceId,
+            parentPin: cur.parentPin || "1234"
+          };
+          saveDeviceSession(kidSession);
+          setDeviceSession(kidSession);
+          setShowFirstLaunchWelcome(false);
+          setShowPairingScreen(false);
+          setNotice(`🎉 Welcome, ${kidName}! Connected to your Kid Dashboard.`);
+          setTimeout(() => setNotice(null), 4000);
+        }}
+        onStartNewHousehold={() => {
+          setShowFirstLaunchWelcome(false);
+          setShowCleanSlateModal(true);
+        }}
+      />
+    );
+  }
+
   if (showPairingScreen) {
     return (
       <KidPairingScreen
@@ -6926,6 +7059,7 @@ function App({
             setShowSpotlightTour(true);
           }}
           onRestoreThomPreset={handleRestoreThomsPreset}
+          onOpenSwitchDeviceRole={() => setShowFirstLaunchWelcome(true)}
           onRegisterDismissModal={(fn) => { parentMobileCloserRef.current = fn; }}
           rosterPets={rosterPets}
           onAddChore={(choreName, details) => handleAddNewChore(choreName, details)}
@@ -9191,6 +9325,7 @@ function App({
           onOpenCleanSlateModal={() => setShowCleanSlateModal(true)}
           onLaunchSpotlightTour={() => setShowSpotlightTour(true)}
           onRestoreThomPreset={handleRestoreThomsPreset}
+          onOpenSwitchDeviceRole={() => setShowFirstLaunchWelcome(true)}
         />
       )}
 

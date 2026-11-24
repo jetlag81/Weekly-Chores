@@ -2028,8 +2028,14 @@ function App({
           params.get("invite") ||
           params.get("mode")
       );
-      if (hasDirectParam) return false;
-      const hasExistingSession = Boolean(localStorage.getItem("household_hub_device_session_v1"));
+      if (hasDirectParam) {
+        localStorage.setItem("household_device_onboarded_v1", "true");
+        return false;
+      }
+      const hasExistingSession = Boolean(
+        localStorage.getItem("household_hub_device_session") ||
+          localStorage.getItem("household_device_onboarded_v1") === "true"
+      );
       return !hasExistingSession;
     } catch {
       return false;
@@ -6836,7 +6842,9 @@ function App({
 
   if (showFirstLaunchWelcome) {
     const canDismissWelcome = Boolean(
-      typeof window !== "undefined" && localStorage.getItem("household_hub_device_session_v1")
+      typeof window !== "undefined" &&
+        (localStorage.getItem("household_hub_device_session") ||
+          localStorage.getItem("household_device_onboarded_v1") === "true")
     );
     return (
       <FirstLaunchWelcomeScreen
@@ -6853,6 +6861,9 @@ function App({
           };
           saveDeviceSession(newSession);
           saveActiveParentAdmin(parentName);
+          try {
+            localStorage.setItem("household_device_onboarded_v1", "true");
+          } catch {}
           setActiveParentAdmin(parentName);
           setDeviceSession(newSession);
           setShowFirstLaunchWelcome(false);
@@ -6870,6 +6881,9 @@ function App({
             parentPin: cur.parentPin || "1234"
           };
           saveDeviceSession(kidSession);
+          try {
+            localStorage.setItem("household_device_onboarded_v1", "true");
+          } catch {}
           setDeviceSession(kidSession);
           setShowFirstLaunchWelcome(false);
           setShowPairingScreen(false);
@@ -6877,6 +6891,9 @@ function App({
           setTimeout(() => setNotice(null), 4000);
         }}
         onStartNewHousehold={() => {
+          try {
+            localStorage.setItem("household_device_onboarded_v1", "true");
+          } catch {}
           setShowFirstLaunchWelcome(false);
           setShowCleanSlateModal(true);
         }}

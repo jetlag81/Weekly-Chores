@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-23 19:57:00
+> **Export Date**: 2026-11-23 20:33:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -5932,3 +5932,17 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 - Added a **Switch Device Role / Join as Co-Parent** action inside **Settings → PIN & Security** (`HouseholdSettingsModal.tsx` & `ParentMobileDashboard.tsx`) so Meghan's already-installed iPhone can switch to her Co-Parent Hub anytime without reinstalling.
 - Wired `@capacitor/app` `appUrlOpen` deep-link handling in `weekly_chores_household_hub.tsx` so `choreshub://open?mode=parent&parent=Meghan&role=coparent` or `choreshub://open?kid=Koda` routes directly inside the native iOS/Android app.
 - Built APK (Pixel), synced iOS, deployed Firebase Hosting, and pushed to `origin/main` (triggering a fresh macOS iOS `.ipa` build on GitHub Actions).
+
+
+---
+
+### Turn 225
+**Date / Time**: 2026-11-23T20:33:00-06:00
+
+**User Request**:
+> It's good, except now every time we open the app on either phone, it starts at the welcom screen. After the initial setup, it shouldn't show that anymore unless the app is reset.
+
+**Assistant Response**:
+- Fixed the `localStorage` session key typo in `weekly_chores_household_hub.tsx` (`household_hub_device_session_v1` → `household_hub_device_session`, plus an explicit `household_device_onboarded_v1` flag set once setup/join completes).
+- Once a device is set up, it now opens straight into its assigned hub on every subsequent launch and only shows the Welcome screen on a fresh install or reset.
+- Built & installed updated APK on Pixel, deployed Firebase Hosting, and pushed to `origin/main` (triggering a fresh macOS iOS `.ipa` build).

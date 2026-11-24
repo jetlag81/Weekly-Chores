@@ -105,6 +105,10 @@ interface ParentMobileDashboardProps {
   onLaunchSpotlightTour?: () => void;
   onRestoreThomPreset?: () => void;
   onOpenSwitchDeviceRole?: () => void;
+  isBiWeeklyHereThisWeek?: boolean;
+  onToggleKidsWeek?: () => void;
+  onFactoryResetApp?: () => void;
+  onDeleteAccount?: () => void;
   onRegisterDismissModal?: (fn: () => boolean) => void;
   rosterPets?: Array<any>;
   onAddChore?: (
@@ -193,6 +197,10 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
   onLaunchSpotlightTour,
   onRestoreThomPreset,
   onOpenSwitchDeviceRole,
+  isBiWeeklyHereThisWeek,
+  onToggleKidsWeek,
+  onFactoryResetApp,
+  onDeleteAccount,
   onRegisterDismissModal,
   rosterPets = [],
   onAddChore,
@@ -583,27 +591,6 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
 
           {/* Top Actions: Activity Feed, Camera, Theme & Settings Menu */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            {/* View Mode Toggle Pill: Mobile vs Desktop Table (Desktop/Tablet Only - mobile uses bottom dock) */}
-            <div className="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner">
-              <button
-                type="button"
-                className="px-2 py-1 rounded-lg text-[11px] font-bold bg-amber-500 text-slate-950 shadow-xs flex items-center gap-1"
-                title="Current: Mobile Streamlined View"
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span className="hidden xs:inline">Mobile</span>
-              </button>
-              <button
-                type="button"
-                onClick={onToggleDesktopView}
-                className="px-2 py-1 rounded-lg text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center gap-1 cursor-pointer"
-                title="Switch to Full Spreadsheet View"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span className="hidden xs:inline">Table</span>
-              </button>
-            </div>
-
             {/* Live Household Activity Feed Button */}
             <button
               type="button"
@@ -1514,14 +1501,17 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
             <span className="text-[10px] font-bold">Activity</span>
           </button>
 
-          {/* Toggle Full Desktop Spreadsheet */}
+          {/* Manage Household (Chores, Members & Pets) */}
           <button
             type="button"
-            onClick={onToggleDesktopView}
+            onClick={() => {
+              setManageInitialTab("chores");
+              setShowManageModal(true);
+            }}
             className="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition cursor-pointer"
           >
-            <LayoutGrid className="w-5 h-5" />
-            <span className="text-[10px] font-bold">Table</span>
+            <SlidersHorizontal className="w-5 h-5" />
+            <span className="text-[10px] font-bold">Manage</span>
           </button>
         </div>
       </nav>
@@ -1556,6 +1546,10 @@ export const ParentMobileDashboard: React.FC<ParentMobileDashboardProps> = ({
           onLaunchSpotlightTour={onLaunchSpotlightTour}
           onRestoreThomPreset={onRestoreThomPreset}
           onOpenSwitchDeviceRole={onOpenSwitchDeviceRole}
+          isBiWeeklyHereThisWeek={isBiWeeklyHereThisWeek}
+          onToggleKidsWeek={onToggleKidsWeek}
+          onFactoryResetApp={onFactoryResetApp}
+          onDeleteAccount={onDeleteAccount}
         />
       )}
 

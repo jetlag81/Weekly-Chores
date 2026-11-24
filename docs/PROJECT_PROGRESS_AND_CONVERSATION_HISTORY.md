@@ -1,6 +1,6 @@
 # Household Hub — Project Progress & Conversation History
 
-> **Export Date**: 2026-11-23 20:33:00
+> **Export Date**: 2026-11-23 20:50:00
 > **Project**: Weekly Chores Household Hub
 > **Repository**: https://github.com/jetlag81/Weekly-Chores
 
@@ -8,7 +8,12 @@
 
 ## Major Features & Engineering Milestones Delivered
 
-1. **First-Launch Welcome & Role Chooser + Native Deep Linking (`choreshub://`)** (src/FirstLaunchWelcomeScreen.tsx, weekly_chores_household_hub.tsx, src/HouseholdSettingsModal.tsx, src/ParentMobileDashboard.tsx):
+1. **Unified Mobile-First Admin Hub, Account & Reset Sub-Menu, and Cross-Platform App Invites** (android/app/src/main/AndroidManifest.xml, src/firebaseSync.ts, src/FirstLaunchWelcomeScreen.tsx, src/HouseholdManageModal.tsx, src/ParentMobileDashboard.tsx, src/HouseholdSettingsModal.tsx, weekly_chores_household_hub.tsx):
+   - Unified the Parent & Co-Parent Admin Hub into a single mobile-first layout (removed the `Mobile | Table` view switcher from header & bottom dock, replacing the bottom `Table` tab with `Manage`).
+   - Added a dedicated **Account & Reset** sub-menu tab in `HouseholdSettingsModal` consolidating Switch Device Role, Bi-Weekly Kids Week Toggle, Clear Completed Chores, Clean Slate Setup Wizard, Factory Reset App, and Delete Household Account (with typed `DELETE` confirmation).
+   - Added Android `choreshub://` + `https://family-chores-hub.web.app` deep-link intent filters to `AndroidManifest.xml`, and wired `saveInviteCodeToFirestore` (supporting both Kids and Co-Parents) into **Re-Send Invite** and **First-Launch Welcome Screen**.
+
+2. **First-Launch Welcome & Role Chooser + Native Deep Linking (`choreshub://`)** (src/FirstLaunchWelcomeScreen.tsx, weekly_chores_household_hub.tsx, src/HouseholdSettingsModal.tsx, src/ParentMobileDashboard.tsx):
    - Added a **First-Launch Welcome Screen** on any brand-new install (iOS, Android, or Web with no prior session) letting users either **Join with Invite Link / Code**, **Join as Co-Parent / Parent** (locking the device permanently to e.g. Meghan's Co-Parent Hub), or **Start New Household Setup** (Clean Slate 7-step wizard) instead of defaulting to Thom's Hub.
    - Added a **Switch Device Role / Join as Co-Parent** button in **Settings → PIN & Security** so an already-installed phone can switch to Meghan's Co-Parent Hub (or any Kid) in 2 taps.
    - Added `@capacitor/app` `appUrlOpen` deep-link listener so `choreshub://open?mode=parent&parent=Meghan&role=coparent` or `choreshub://open?kid=Koda` opens directly into the matching hub in the native iOS/Android app.
@@ -5945,4 +5950,19 @@ Executed a comprehensive screen-by-screen audit on the connected Google Pixel 9 
 **Assistant Response**:
 - Fixed the `localStorage` session key typo in `weekly_chores_household_hub.tsx` (`household_hub_device_session_v1` → `household_hub_device_session`, plus an explicit `household_device_onboarded_v1` flag set once setup/join completes).
 - Once a device is set up, it now opens straight into its assigned hub on every subsequent launch and only shows the Welcome screen on a fresh install or reset.
+- Built & installed updated APK on Pixel, deployed Firebase Hosting, and pushed to `origin/main` (triggering a fresh macOS iOS `.ipa` build).
+
+
+---
+
+### Turn 226
+**Date / Time**: 2026-11-23T20:50:00-06:00
+
+**User Request**:
+> Yes, let's get that done. I'd like to start moving away from the web app version and get it solely as an Android / iOS app with an accessible web page if desired. I'd like to rework the admin hub so that it doesn't have two versions within the app (table & mobile). I want to move over to a fully mobile layout and have a sub-menu for things like app reset, account delete, and any other major change options there could be.
+
+**Assistant Response**:
+- **Android Deep Links & Cross-Platform Invite Codes**: Added `choreshub://` and `https://family-chores-hub.web.app` intent filters to `AndroidManifest.xml`, added `saveInviteCodeToFirestore` (with `role: "Parent" | "Kid"`) in `src/firebaseSync.ts`, updated **Re-Send Invite** in `src/HouseholdManageModal.tsx` to generate & display live Firestore-synced 6-character pairing codes alongside links/QR, and updated `FirstLaunchWelcomeScreen.tsx` to route both Kid and Co-Parent invite codes.
+- **Unified Mobile-First Admin Hub**: Locked `parentViewPreference` to `"mobile"` in `weekly_chores_household_hub.tsx`, removed the `Mobile | Table` header switcher from `src/ParentMobileDashboard.tsx`, and replaced the bottom dock `Table` tab with **`Manage`**.
+- **Account & Reset Sub-Menu**: Added a dedicated **Account & Reset** tab in `src/HouseholdSettingsModal.tsx` with Switch Device Role, Bi-Weekly Kids Week Toggle, Clear Completed Chores, Clean Slate Setup Wizard, Factory Reset App, and Delete Household Account (requiring typed `DELETE` confirmation).
 - Built & installed updated APK on Pixel, deployed Firebase Hosting, and pushed to `origin/main` (triggering a fresh macOS iOS `.ipa` build).

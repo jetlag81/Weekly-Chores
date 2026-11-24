@@ -19,6 +19,7 @@ import { getUserProfile, getPreferredName, calculateAge, getEffectiveAgeTier } f
 import { getPublicHubBaseUrl } from "./inviteService";
 import { getHouseholdSetupConfig } from "./householdOnboardingConfig";
 import { QRCodeDisplay } from "./QRCodeDisplay";
+import { generateKidInviteCode, saveInviteCodeToFirestore } from "./firebaseSync";
 
 export type ManageTab = "chores" | "members" | "pets";
 
@@ -153,6 +154,7 @@ export const HouseholdManageModal: React.FC<HouseholdManageModalProps> = ({
   const [editingMemberRow, setEditingMemberRow] = useState<number | null>(null);
   const [copiedMemberLink, setCopiedMemberLink] = useState<string | null>(null);
   const [resendInviteTarget, setResendInviteTarget] = useState<string | null>(null);
+  const [resendInviteCode, setResendInviteCode] = useState<string>("");
   const [resendPhone, setResendPhone] = useState("");
   const [resendEmail, setResendEmail] = useState("");
   const [showResendQr, setShowResendQr] = useState(false);
@@ -913,10 +915,17 @@ export const HouseholdManageModal: React.FC<HouseholdManageModalProps> = ({
                               setResendInviteTarget(null);
                               setShowResendQr(false);
                             } else {
+                              const freshCode = generateKidInviteCode();
+                              setResendInviteCode(freshCode);
                               setResendInviteTarget(member.name);
                               setResendEmail(prof.email || "");
                               setResendPhone("");
                               setShowResendQr(false);
+                              saveInviteCodeToFirestore({
+                                code: freshCode,
+                                memberName: member.name,
+                                role: isParentMember ? "Parent" : "Kid"
+                              }).catch(() => {});
                             }
                           }}
                           className={`p-1.5 rounded-lg transition cursor-pointer ${
@@ -995,6 +1004,15 @@ export const HouseholdManageModal: React.FC<HouseholdManageModalProps> = ({
                           </button>
                         </div>
 
+                        {resendInviteCode && (
+                          <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-950/90 border border-emerald-500/30 text-[11px]">
+                            <span className="text-slate-400">App Pairing Code:</span>
+                            <span className="font-mono font-black tracking-widest text-emerald-300 select-all">
+                              {resendInviteCode}
+                            </span>
+                          </div>
+                        )}
+
                         <div className="grid grid-cols-2 gap-2">
                           <input
                             type="tel"
@@ -1015,7 +1033,7 @@ export const HouseholdManageModal: React.FC<HouseholdManageModalProps> = ({
                         <div className="flex flex-wrap items-center gap-1.5">
                           <a
                             href={`sms:${resendPhone.replace(/[^\d+]/g, "")}?body=${encodeURIComponent(
-                              `Hi ${pref}! Tap this link to open your ${isParentMember ? "Co-Parent Hub" : "Kid Chore Dashboard"} in ${houseTitle}: ${memberDirectLink}`
+                              `Hi ${pref}! Join ${houseTitle} in the Chores Hub app with code ${resendInviteCode}, or open: ${memberDirectLink}`
                             )}`}
                             className="px-2.5 py-1.5 rounded-lg bg-emerald-600/25 hover:bg-emerald-600/40 border border-emerald-500/40 text-emerald-200 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
                           >
@@ -1027,7 +1045,7 @@ export const HouseholdManageModal: React.FC<HouseholdManageModalProps> = ({
                             href={`mailto:${encodeURIComponent(resendEmail.trim())}?subject=${encodeURIComponent(
                               `Join ${houseTitle}`
                             )}&body=${encodeURIComponent(
-                              `Hi ${pref},\n\nTap this link to open your ${isParentMember ? "Co-Parent Hub" : "Kid Chore Dashboard"} in ${houseTitle}:\n${memberDirectLink}`
+                              `Hi ${pref},\n\nJoin ${houseTitle} in the Chores Hub app!\n\nPairing Code: ${resendInviteCode}\nDirect Link: ${memberDirectLink}`
                             )}`}
                             className="px-2.5 py-1.5 rounded-lg bg-sky-600/25 hover:bg-sky-600/40 border border-sky-500/40 text-sky-200 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
                           >

@@ -89,6 +89,7 @@ export type SettingsTab =
   | "rewards"
   | "qrcode"
   | "security"
+  | "account"
   | "about";
 
 interface HouseholdSettingsModalProps {
@@ -111,6 +112,10 @@ interface HouseholdSettingsModalProps {
   onLaunchSpotlightTour?: () => void;
   onRestoreThomPreset?: () => void;
   onOpenSwitchDeviceRole?: () => void;
+  isBiWeeklyHereThisWeek?: boolean;
+  onToggleKidsWeek?: () => void;
+  onFactoryResetApp?: () => void;
+  onDeleteAccount?: () => void;
   viewingAsParent?: "Thom" | "Meghan";
 }
 
@@ -134,6 +139,10 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
   onLaunchSpotlightTour,
   onRestoreThomPreset,
   onOpenSwitchDeviceRole,
+  isBiWeeklyHereThisWeek,
+  onToggleKidsWeek,
+  onFactoryResetApp,
+  onDeleteAccount,
   viewingAsParent
 }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
@@ -173,6 +182,8 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
   const [parentPin, setParentPin] = useState("1234");
   const [newPinInput, setNewPinInput] = useState("");
   const [pinUpdatedNotice, setPinUpdatedNotice] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [showDeleteAccountBox, setShowDeleteAccountBox] = useState(false);
 
   // PWA Install State
   const [installStatus, setInstallStatus] = useState<string>("");
@@ -493,6 +504,21 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
               <Lock className="w-3.5 h-3.5" />
               <span>{viewMode === "minion" ? "Parent Access" : "PIN & Security"}</span>
             </button>
+
+            {viewMode === "parent" && (
+              <button
+                type="button"
+                onClick={() => setActiveTab("account")}
+                className={`py-1.5 px-3 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === "account"
+                    ? "bg-rose-600 text-white shadow-xs font-black"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>Account &amp; Reset</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -1737,7 +1763,215 @@ export const HouseholdSettingsModal: React.FC<HouseholdSettingsModalProps> = ({
             </div>
           )}
 
-          {/* TAB 6: APP & SYNC INFO */}
+          {/* TAB 6: ACCOUNT, SCHEDULE & RESET (MAJOR CHANGES SUB-MENU) */}
+          {activeTab === "account" && viewMode === "parent" && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                  Account, Schedule &amp; Reset
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Major household changes, device switching, app reset, and account deletion.
+                </p>
+              </div>
+
+              {/* Switch Device Role / Sign Out */}
+              {onOpenSwitchDeviceRole && (
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-black text-slate-900 dark:text-white">
+                      Switch Device Role / Sign Out
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Re-assign this phone to a Co-Parent, Kid, or paste a new invite link.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onOpenSwitchDeviceRole();
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shrink-0 cursor-pointer transition"
+                  >
+                    Switch
+                  </button>
+                </div>
+              )}
+
+              {/* Bi-Weekly Kids Week Toggle */}
+              {onToggleKidsWeek && (
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-black text-slate-900 dark:text-white">
+                      Bi-Weekly Custody Rotation
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Currently:{" "}
+                      <strong className={isBiWeeklyHereThisWeek ? "text-emerald-600 dark:text-emerald-400" : "text-pink-600 dark:text-pink-400"}>
+                        {isBiWeeklyHereThisWeek ? "Kids Week (Active)" : "Off Week (Inactive)"}
+                      </strong>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm(`Switch this week's Bi-Weekly Kids Schedule to ${isBiWeeklyHereThisWeek ? "Off Week (Inactive)" : "Kids Week (Active)"}?`)) {
+                        onToggleKidsWeek();
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs shrink-0 cursor-pointer transition"
+                  >
+                    🔄 Toggle
+                  </button>
+                </div>
+              )}
+
+              {/* Clear Completed Tasks */}
+              {onClearCompletedTasks && (
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-black text-slate-900 dark:text-white">
+                      Clear Completed Chores
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Uncheck all completed chores for a fresh week without changing your roster.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm("Clear all completed chore checkmarks?")) {
+                        onClearCompletedTasks();
+                        onClose();
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shrink-0 cursor-pointer transition"
+                  >
+                    Clear
+                  </button>
+                </div>
+              )}
+
+              {/* Re-run Clean Slate Household Setup */}
+              {onOpenCleanSlateModal && (
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-black text-slate-900 dark:text-white">
+                      Clean Slate Household Setup
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Re-run the 7-step setup wizard to rebuild your family roster, pets, and chores.
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm("Open the Clean Slate 7-step setup wizard?")) {
+                        onClose();
+                        onOpenCleanSlateModal();
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold text-xs shrink-0 cursor-pointer transition"
+                  >
+                    Setup
+                  </button>
+                </div>
+              )}
+
+              {/* Danger Zone: Factory Reset & Delete Account */}
+              <div className="p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 space-y-3">
+                <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300 font-black text-xs uppercase tracking-wider">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  <span>Danger Zone</span>
+                </div>
+
+                {/* Factory Reset App */}
+                {onFactoryResetApp && (
+                  <div className="flex items-center justify-between gap-3 pt-1">
+                    <div>
+                      <div className="text-xs font-extrabold text-slate-900 dark:text-white">
+                        Factory Reset App on This Device
+                      </div>
+                      <div className="text-[11px] text-slate-600 dark:text-slate-400">
+                        Clears local session, theme, and cache and returns to the Welcome Screen.
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm("Reset Chores Hub on this device? You will return to the First-Launch Welcome Screen.")) {
+                          onClose();
+                          onFactoryResetApp();
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-rose-600/20 hover:bg-rose-600 text-rose-700 dark:text-rose-300 hover:text-white border border-rose-500/40 font-bold text-xs shrink-0 cursor-pointer transition"
+                    >
+                      App Reset
+                    </button>
+                  </div>
+                )}
+
+                {/* Delete Household Account */}
+                {onDeleteAccount && (
+                  <div className="pt-2.5 border-t border-rose-200/70 dark:border-rose-800/50 space-y-2.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-extrabold text-rose-800 dark:text-rose-300">
+                          Delete Household Account &amp; Data
+                        </div>
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400">
+                          Permanently removes your household profile and resets this device to clean slate.
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowDeleteAccountBox(v => !v);
+                          setDeleteConfirmText("");
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shrink-0 cursor-pointer transition"
+                      >
+                        {showDeleteAccountBox ? "Cancel" : "Delete"}
+                      </button>
+                    </div>
+
+                    {showDeleteAccountBox && (
+                      <div className="p-3 rounded-xl bg-white dark:bg-slate-950 border border-rose-400/50 space-y-2">
+                        <p className="text-[11px] font-bold text-rose-700 dark:text-rose-300">
+                          Type <span className="font-mono underline">DELETE</span> below to permanently delete your household account and wipe this device:
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={deleteConfirmText}
+                            onChange={e => setDeleteConfirmText(e.target.value)}
+                            placeholder="Type DELETE"
+                            className="flex-1 px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-rose-300 dark:border-rose-700 text-xs font-mono font-bold text-slate-900 dark:text-white"
+                          />
+                          <button
+                            type="button"
+                            disabled={deleteConfirmText.trim().toUpperCase() !== "DELETE"}
+                            onClick={() => {
+                              setShowDeleteAccountBox(false);
+                              setDeleteConfirmText("");
+                              onClose();
+                              onDeleteAccount();
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 disabled:opacity-40 text-white font-black text-xs cursor-pointer transition"
+                          >
+                            Confirm Delete
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 7: APP & SYNC INFO */}
           {activeTab === "about" && (
             <div className="space-y-4">
               <div>

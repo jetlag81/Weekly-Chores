@@ -81,7 +81,11 @@ export const FirstLaunchWelcomeScreen: React.FC<FirstLaunchWelcomeScreenProps> =
           const cur = getStoredDeviceSession();
           const res = await redeemKidInvite(codeParam.toUpperCase(), cur.deviceId);
           if (res.success && res.invite) {
-            onJoinedAsKid(res.invite.kidName, res.invite.householdId);
+            if (res.invite.role === "Parent") {
+              onJoinedAsParent(res.invite.kidName, true, res.invite.householdId);
+            } else {
+              onJoinedAsKid(res.invite.kidName, res.invite.householdId);
+            }
             return;
           }
           setError(res.error || "Invite code not found. Ask a parent to copy your direct invite link.");
@@ -96,7 +100,11 @@ export const FirstLaunchWelcomeScreen: React.FC<FirstLaunchWelcomeScreenProps> =
       const cur = getStoredDeviceSession();
       const res = await redeemKidInvite(raw.toUpperCase(), cur.deviceId);
       if (res.success && res.invite) {
-        onJoinedAsKid(res.invite.kidName, res.invite.householdId);
+        if (res.invite.role === "Parent") {
+          onJoinedAsParent(res.invite.kidName, true, res.invite.householdId);
+        } else {
+          onJoinedAsKid(res.invite.kidName, res.invite.householdId);
+        }
         return;
       }
       setError(res.error || "Invite code not found. You can also paste the full invite link or switch to the Parent tab.");

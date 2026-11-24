@@ -41,6 +41,7 @@ export interface HouseholdInvite {
   code: string;
   householdId: string;
   kidName: string;
+  role?: "Parent" | "Kid";
   createdAt: number;
   expiresAt: number;
   claimed: boolean;
@@ -560,6 +561,49 @@ export async function createKidInvite(kidName: string, householdId: string): Pro
     });
   }
 
+  return invite;
+}
+
+/**
+ * Persists a specific invite code (for either a Kid or a Co-Parent) to localStorage + Firestore
+ * so 6-character codes generated in Clean Slate Step 6 or Re-Send Invite work across Android & iOS.
+ */
+export async function saveInviteCodeToFirestore(params: {
+  code: string;
+  memberName: string;
+  role: "Parent" | "Kid";
+  householdId?: string;
+}): Promise<HouseholdInvite> {
+  const cleanCode = params.code.trim().toUpperCase();
+  const hId = params.householdId || getStoredDeviceSession().householdId || "household_family_hub";
+  const invite: HouseholdInvite = {
+    code: cleanCode,
+    householdId: hId,
+    kidName: params.memberName.trim(),
+    role: params.role,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 14 * 24 * 60 * 60 * 1000,
+    claimed: false
+  };
+
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_LOCAL_INVITES);
+    const invites: HouseholdInvite[] = raw ? JSON.parse(raw) : [];
+    const filtered = invites.filter(i => i.code.toUpperCase() !== cleanCode);
+    filtered.push(invite);
+    localStorage.setItem(STORAGE_KEY_LOCAL_INVITES, JSON.stringify(filtered));
+  } catch {}
+
+  const { db } = initFirebase();
+  if (db) {
+    try {
+      const ref = doc(db, "households", hId, "invites", cleanCode);
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 3000));
+      await Promise.race([setDoc(ref, invite), timeoutPromise]);
+    } catch (e) {
+      console.warn("Firestore invite code sync warning:", e);
+    }
+  }
   return invite;
 }
 

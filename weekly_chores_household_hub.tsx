@@ -2214,19 +2214,8 @@ function App({
     setTimeout(() => setNotice(null), 3000);
   };
 
-  // Parent View Mode Preference: "mobile" vs "table" (stored in localStorage)
-  const [parentViewPreference, setParentViewPreference] = useState<"mobile" | "table">(() => {
-    try {
-      const saved = localStorage.getItem("parent_view_mode_preference");
-      if (saved === "table" || saved === "mobile") return saved;
-      if (typeof window !== "undefined" && (window.innerWidth < 768 || isStandalone())) {
-        return "mobile";
-      }
-      return "table";
-    } catch {
-      return "table";
-    }
-  });
+  // Unified Mobile-First Parent Hub (single layout across Android, iOS & Web)
+  const [parentViewPreference, setParentViewPreference] = useState<"mobile" | "table">("mobile");
 
   const toggleParentViewMode = () => {
     setParentViewPreference(prev => {
@@ -7077,6 +7066,29 @@ function App({
           }}
           onRestoreThomPreset={handleRestoreThomsPreset}
           onOpenSwitchDeviceRole={() => setShowFirstLaunchWelcome(true)}
+          isBiWeeklyHereThisWeek={isBiWeeklyHereThisWeek}
+          onToggleKidsWeek={handleConfirmToggleKidsWeek}
+          onFactoryResetApp={() => {
+            try {
+              localStorage.removeItem("household_hub_device_session");
+              localStorage.removeItem("household_device_onboarded_v1");
+              localStorage.removeItem("weekly_chores_active_parent_admin");
+              localStorage.removeItem("parent_view_mode_preference");
+              sessionStorage.clear();
+            } catch {}
+            setShowFirstLaunchWelcome(true);
+            setNotice("App reset on this device. Choose how to set up or join.");
+            setTimeout(() => setNotice(null), 4000);
+          }}
+          onDeleteAccount={() => {
+            try {
+              localStorage.clear();
+              sessionStorage.clear();
+            } catch {}
+            setShowFirstLaunchWelcome(true);
+            setNotice("Household account data cleared on this device.");
+            setTimeout(() => setNotice(null), 4000);
+          }}
           onRegisterDismissModal={(fn) => { parentMobileCloserRef.current = fn; }}
           rosterPets={rosterPets}
           onAddChore={(choreName, details) => handleAddNewChore(choreName, details)}
